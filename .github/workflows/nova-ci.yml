@@ -27,7 +27,7 @@ jobs:
     - name: Validate Slot Structure
       run: |
         echo "🏗️ Validating NOVA 10-slot architecture..."
-        python -c "
+        python <<EOF
 import os
 expected_slots = [
     'slot01_truth_anchor',
@@ -47,7 +47,7 @@ if missing:
     exit(1)
 else:
     print('✅ All 10 slots present')
-"
+EOF
 
     - name: Test Slot 6 Enhancement
       run: |
@@ -55,7 +55,7 @@ else:
         if [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
           echo "✅ Slot 6 implementation found"
           echo "⚠️ Detailed testing skipped (import path complexity)"
-          python -c "
+          python <<EOF
 import sys
 import os
 sys.path.insert(0, os.path.abspath('slots'))
@@ -67,7 +67,7 @@ try:
 except Exception as e:
     print(f'❌ Slot 6 test failed: {e}')
     exit(1)
-"
+EOF
         else
           echo "⚠️ Slot 6 implementation not found (expected for documentation-only commits)"
         fi
