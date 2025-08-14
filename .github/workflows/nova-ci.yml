@@ -39,9 +39,9 @@ expected_slots = [
     'slot05_constellation',
     'slot06_cultural_synthesis',
     'slot07_production_controls',
-    'slot08_narrative_engine',
-    'slot09_agent_mesh',
-    'slot10_integrity_patch'
+    'slot08_memory_ethics',
+    'slot09_distortion_protection',
+    'slot10_civilization_deployment'
 ]
 missing = [s for s in expected_slots if not os.path.exists(os.path.join('slots', s))]
 if missing:
