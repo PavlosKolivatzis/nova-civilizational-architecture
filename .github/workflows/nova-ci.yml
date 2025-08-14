@@ -24,7 +24,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest markdown pyyaml
         
-    # --- THIS IS THE CORRECTED STEP ---
     - name: Validate Slot Structure
       run: |
         echo "🏗️ Validating NOVA 10-slot architecture..."
@@ -44,14 +43,13 @@ jobs:
             print('✅ All 10 slots present')
         "
         
-        - name: Test Slot 6 Enhancement
+    - name: Test Slot 6 Enhancement
       run: |
         echo "🧪 Testing Slot 6 v6.5 multicultural truth synthesis..."
         if [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
           python -c "
 import sys
 import os
-# Correctly add the parent directory of the module to the Python path
 sys.path.insert(0, os.path.abspath('slots/slot06_cultural_synthesis'))
 try:
     from multicultural_truth_synthesis import MulticulturalTruthSynthesis
@@ -66,12 +64,11 @@ except Exception as e:
           echo "⚠️ Slot 6 implementation not found (expected for documentation-only commits)"
         fi
         
-        
     - name: Validate Enhancement Files
       run: |
         echo "📋 Validating enhancement documentation..."
-        files=(\"Slot6_enhancement.md\" \"Slot10_patches.md\" \"integration_guide.md\" \"testing_framework.md\")
-        for file in \"\${files[@]}\"; do
+        files=("Slot6_enhancement.md" "Slot10_patches.md" "integration_guide.md" "testing_framework.md")
+        for file in "\${files[@]}"; do
           if [ -f \"$file\" ]; then
             echo \"✅ $file found\"
           else
@@ -90,3 +87,4 @@ except Exception as e:
         echo "Deployment Readiness: ✅ Production-grade"
         echo "================================================"
         echo "🚀 NOVA ready for civilizational deployment!"
+        
