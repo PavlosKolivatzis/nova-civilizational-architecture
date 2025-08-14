@@ -24,8 +24,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest markdown pyyaml
 
-    - name: Validate Slot Structure
-      run: |
+        - name: Validate Slot Structure
+        - run: |
         set -e
         echo "🏗️ Validating NOVA 10-slot architecture..."
         echo "import os" > ci_validate_slots.py
@@ -39,7 +39,7 @@ jobs:
         echo "    'slot07_production_controls'," >> ci_validate_slots.py
         echo "    'slot08_memory_ethics'," >> ci_validate_slots.py
         echo "    'slot09_distortion_protection'," >> ci_validate_slots.py
-        echo "    'slot10_civilization_deployment'" >> ci_validate_slots.py
+        echo "    'slot10_civilizational_deployment'" >> ci_validate_slots.py
         echo "]" >> ci_validate_slots.py
         echo "missing = [s for s in expected_slots if not os.path.exists(os.path.join('slots', s))]" >> ci_validate_slots.py
         echo "if missing:" >> ci_validate_slots.py
