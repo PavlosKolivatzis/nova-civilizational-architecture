@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVA Slot 6 - Multicultural Truth Synthesis Live Testing</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f8fafc;
+            --bg-dark: #1e293b;
+            --text-light: #334155;
+            --text-dark: #e2e8f0;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .testing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control.textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-header h3 {
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .details-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .detail-item {
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: #6b7280;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .testing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 NOVA Slot 6 Live Testing</h1>
+            <p>Production-grade multicultural truth synthesis engine with secular methodology extraction and forbidden element filtering</p>
+        </div>
+
+        <div class="testing-grid">
+            <!-- Institution Configuration -->
+            <div class="card">
+                <h3>🏛️ Institution Configuration</h3>
+                <div class="form-group">
+                    <label for="institutionName">Institution Name</label>
+                    <input type="text" id="institutionName" class="form-control" placeholder="Harvard University" value="Harvard University">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="region">Region</label>
+                        <select id="region" class="form-control">
+                            <option value="US">United States</option>
+                            <option value="EU">Europe</option>
+                            <option value="EA">East Asia</option>
+                            <option value="LA">Latin America</option>
+                            <option value="AF">Africa</option>
+                            <option value="ME">Middle East</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="language">Primary Language</label>
+                        <select id="language" class="form-control">
+                            <option value="en">English</option>
+                            <option value="de">German</option>
+                            <option value="fr">French</option>
+                            <option value="es">Spanish</option>
+                            <option value="ja">Japanese</option>
+                            <option value="zh">Chinese</option>
+                            <option value="ar">Arabic</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="empiricism">Empiricism Priority</label>
+                        <input type="range" id="empiricism" class="form-control" min="0" max="1" step="0.1" value="0.8">
+                        <span id="empiricismValue">0.8</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="foresight">Foresight Priority</label>
+                        <input type="range" id="foresight" class="form-control" min="0" max="1" step="0.1" value="0.6">
+                        <span id="foresightValue">0.6</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guardrail Testing -->
+            <div class="card">
+                <h3>🛡️ Guardrail Testing</h3>
+                <div class="form-group">
+                    <label for="testContent">Test Content</label>
+                    <textarea id="testContent" class="form-control textarea" placeholder="Enter content to test cultural adaptation and guardrail validation...">We propose implementing evidence-based educational reforms to improve learning outcomes across diverse student populations.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="institutionType">Institution Type</label>
+                    <select id="institutionType" class="form-control">
+                        <option value="academic">Academic</option>
+                        <option value="media">Media</option>
+                        <option value="government">Government</option>
+                        <option value="ngo">NGO</option>
+                        <option value="corporate">Corporate</option>
+                    </select>
+                </div>
+
+                <button id="analyzeBtn" class="btn">
+                    <span id="analyzeText">🧪 Analyze Cultural Profile</span>
+                    <div id="loading" class="loading">
+                        <div class="spinner"></div>
+                        Processing...
+                    </div>
+                </button>
+
+                <button id="testGuardrailsBtn" class="btn" style="margin-left: 1rem;">
+                    🛡️ Test Guardrails
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section hidden">
+            <div class="results-header">
+                <h3>📊 Analysis Results</h3>
+                <div id="statusBadge" class="status-badge status-success">✅ Analysis Complete</div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div id="adaptationEffectiveness" class="metric-value">0.847</div>
+                    <div class="metric-label">Adaptation Effectiveness</div>
+                </div>
+                <div class="metric-card">
+                    <div id="individualismIndex" class="metric-value">0.750</div>
+                    <div class="metric-label">Individualism Index</div>
+                </div>
+                <div class="metric-card">
+                    <div id="complianceScore" class="metric-value">1.000</div>
+                    <div class="metric-label">Compliance Score</div>
+                </div>
+                <div class="metric-card">
+                    <div id="culturalContext" class="metric-value">MIXED</div>
+                    <div class="metric-label">Cultural Context</div>
+                </div>
+            </div>
+
+            <!-- Detailed Results -->
+            <div class="details-section">
+                <h4 style="margin-bottom: 1rem; color: #374151;">📋 Detailed Analysis</h4>
+                <div class="details-grid">
+                    <div>
+                        <div class="detail-item">
+                            <div class="detail-label">Power Distance</div>
+                            <div id="powerDistance" class="detail-value">0.400</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Uncertainty Avoidance</div>
+                            <div id="uncertaintyAvoidance" class="detail-value">0.450</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Long-term Orientation</div>
+                            <div id="longTermOrientation" class="detail-value">0.500</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Guardrail Result</div>
+                            <div id="guardrailResult" class="detail-value">APPROVED</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="detail-item">
+                            <div class="detail-label">Greek Logic Weight</div>
+                            <div id="greekLogic" class="detail-value">0.800</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Scientific Empiricism</div>
+                            <div id="scientificEmpiricism" class="detail-value">0.900</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Confucian Precision</div>
+                            <div id="confucianPrecision" class="detail-value">0.700</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Violations Detected</div>
+                            <div id="violations" class="detail-value">None</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate your Slot 6 MulticulturalTruthSynthesis engine
+        class MockMulticulturalTruthSynthesis {
+            constructor() {
+                this.methodProfile = {
+                    "greek_logic": 0.8,
+                    "buddhist_impermanence": 0.7,
+                    "confucian_precision": 0.7,
+                    "indigenous_longterm": 0.8,
+                    "scientific_empiricism": 0.9,
+                };
+                
+                this.regionBiases = {
+                    "EU": {individualism_index: 0.6, power_distance: 0.45, uncertainty_avoidance: 0.55, long_term_orientation: 0.6},
+                    "US": {individualism_index: 0.75, power_distance: 0.4, uncertainty_avoidance: 0.45, long_term_orientation: 0.5},
+                    "EA": {individualism_index: 0.45, power_distance: 0.55, uncertainty_avoidance: 0.6, long_term_orientation: 0.7},
+                    "LA": {individualism_index: 0.5, power_distance: 0.55, uncertainty_avoidance: 0.55, long_term_orientation: 0.55},
+                    "AF": {individualism_index: 0.48, power_distance: 0.58, uncertainty_avoidance: 0.57, long_term_orientation: 0.55},
+                    "ME": {individualism_index: 0.44, power_distance: 0.62, uncertainty_avoidance: 0.6, long_term_orientation: 0.6},
+                };
+                
+                this.forbiddenElements = new Set([
+                    "divine_revelation", "spiritual_authority", "faith_based_claims",
+                    "toxic_positivity", "cultural_supremacy", "mystical_bypassing"
+                ]);
+            }
+
+            analyzeCulturalContext(institutionName, context) {
+                const region = context.region || "US";
+                const language = context.language || "en";
+                const clarity = context.clarity_priority || 0.5;
+                const foresight = context.foresight_priority || 0.5;
+                const empiricism = context.empiricism_priority || 0.5;
+
+                // Base profile from region
+                const base = {
+                    individualism_index: 0.5,
+                    power_distance: 0.5,
+                    uncertainty_avoidance: 0.5,
+                    long_term_orientation: 0.5,
+                    ...this.regionBiases[region]
+                };
+
+                // Language precision bonus
+                const precisionBonus = ["de", "el", "fi", "ja"].includes(language) ? 0.05 : 0.0;
+                const methodProfile = {...this.methodProfile};
+                methodProfile.confucian_precision = Math.min(1.0, methodProfile.confucian_precision + precisionBonus);
+
+                // Calculate adaptation effectiveness
+                const adaptationEffectiveness = this.scoreAdaptation(methodProfile, clarity, foresight, empiricism);
+
+                // Determine cultural context
+                let culturalContext = "MIXED";
+                if (base.individualism_index >= 0.65) {
+                    culturalContext = "INDIVIDUALIST";
+                } else if (base.power_distance >= 0.6) {
+                    culturalContext = "COLLECTIVIST";
+                }
+
+                return {
+                    individualism_index: Math.round(base.individualism_index * 1000) / 1000,
+                    power_distance: Math.round(base.power_distance * 1000) / 1000,
+                    uncertainty_avoidance: Math.round(base.uncertainty_avoidance * 1000) / 1000,
+                    long_term_orientation: Math.round(base.long_term_orientation * 1000) / 1000,
+                    adaptation_effectiveness: Math.round(adaptationEffectiveness * 1000) / 1000,
+                    cultural_context: culturalContext,
+                    method_profile: methodProfile,
+                    guardrail_compliance: true,
+                    principle_preservation_score: 1.0
+                };
+            }
+
+            validateCulturalDeployment(profile, institutionType, payload) {
+                const violations = [];
+                const recommendations = [];
+
+                // Scan for forbidden elements
+                const content = JSON.stringify(payload).toLowerCase();
+                const forbiddenHits = [];
+                for (const forbidden of this.forbiddenElements) {
+                    if (content.includes(forbidden.replace('_', ' '))) {
+                        forbiddenHits.push(forbidden);
+                    }
+                }
+
+                if (forbiddenHits.length > 0) {
+                    violations.push(`FORBIDDEN_ELEMENTS:${forbiddenHits.join(',')}`);
+                }
+
+                // Check adaptation bounds
+                const maxSafeAdapt = this.maxSafeAdaptation(profile);
+                if (profile.adaptation_effectiveness > maxSafeAdapt) {
+                    violations.push("ADAPTATION_BOUNDS_EXCEEDED");
+                    recommendations.push(`Reduce adaptation_effectiveness to ≤ ${maxSafeAdapt.toFixed(2)}`);
+                }
+
+                const complianceScore = Math.max(0.0, 1.0 - 0.5 * forbiddenHits.length);
+
+                let result = "APPROVED";
+                if (violations.length > 0) {
+                    if (violations.includes("ADAPTATION_BOUNDS_EXCEEDED") && forbiddenHits.length === 0) {
+                        result = "REQUIRES_TRANSFORMATION";
+                    } else {
+                        result = forbiddenHits.length > 0 ? "BLOCKED_PRINCIPLE_VIOLATION" : "BLOCKED_ADAPTATION_BOUNDS";
+                    }
+                }
+
+                return {
+                    result,
+                    compliance_score: Math.round(complianceScore * 1000) / 1000,
+                    violations,
+                    recommendations,
+                    transformation_required: result === "REQUIRES_TRANSFORMATION",
+                    max_safe_adaptation: Math.round(maxSafeAdapt * 1000) / 1000
+                };
+            }
+
+            scoreAdaptation(methods, clarity, foresight, empiricism) {
+                const score = (
+                    0.35 * methods.scientific_empiricism * empiricism +
+                    0.25 * methods.greek_logic * clarity +
+                    0.25 * methods.indigenous_longterm * foresight +
+                    0.10 * methods.confucian_precision * clarity +
+                    0.05 * methods.buddhist_impermanence * (1 - Math.abs(0.5 - foresight) * 2)
+                );
+                return Math.max(0.0, Math.min(1.0, score));
+            }
+
+            maxSafeAdaptation(profile) {
+                const pd = profile.power_distance;
+                const ua = profile.uncertainty_avoidance;
+                const base = 0.45;
+                const penalty = 0.25 * pd + 0.15 * ua;
+                return Math.max(0.15, Math.min(0.85, base + (0.15 - penalty)));
+            }
+        }
+
+        // Initialize the engine
+        const engine = new MockMulticulturalTruthSynthesis();
+        let currentProfile = null;
+
+        // DOM elements
+        const empiricismSlider = document.getElementById('empiricism');
+        const foresightSlider = document.getElementById('foresight');
+        const empiricismValue = document.getElementById('empiricismValue');
+        const foresightValue = document.getElementById('foresightValue');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const testGuardrailsBtn = document.getElementById('testGuardrailsBtn');
+        const loading = document.getElementById('loading');
+        const analyzeText = document.getElementById('analyzeText');
+        const resultsSection = document.getElementById('resultsSection');
+
+        // Update slider values
+        empiricismSlider.addEventListener('input', (e) => {
+            empiricismValue.textContent = e.target.value;
+        });
+
+        foresightSlider.addEventListener('input', (e) => {
+            foresightValue.textContent = e.target.value;
+        });
+
+        // Analyze button handler
+        analyzeBtn.addEventListener('click', async () => {
+            // Show loading state
+            analyzeText.style.display = 'none';
+            loading.classList.add('active');
+            analyzeBtn.disabled = true;
+
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Get form values
+            const institutionName = document.getElementById('institutionName').value;
+            const region = document.getElementById('region').value;
+            const language = document.getElementById('language').value;
+            const empiricism = parseFloat(document.getElementById('empiricism').value);
+            const foresight = parseFloat(document.getElementById('foresight').value);
+
+            // Analyze cultural context
+            const context = {
+                region,
+                language,
+                empiricism_priority: empiricism,
+                foresight_priority: foresight,
+                clarity_priority: 0.8  // Default
+            };
+
+            currentProfile = engine.analyzeCulturalContext(institutionName, context);
+
+            // Update UI
+            displayResults(currentProfile, null);
+
+            // Hide loading state
+            loading.classList.remove('active');
+            analyzeText.style.display = 'inline';
+            analyzeBtn.disabled = false;
+        });
+
+        // Test guardrails button handler
+        testGuardrailsBtn.addEventListener('click', async () => {
+            if (!currentProfile) {
+                alert('Please analyze cultural profile first');
+                return;
+            }
+
+            const testContent = document.getElementById('testContent').value;
+            const institutionType = document.getElementById('institutionType').value;
+
+            const payload = {
+                content: testContent,
+                messaging: {}
+            };
+
+            const guardrailResult = engine.validateCulturalDeployment(currentProfile, institutionType, payload);
+
+            // Update UI with guardrail results
+            displayResults(currentProfile, guardrailResult);
+        });
+
+        function displayResults(profile, guardrailResult) {
+            // Show results section
+            resultsSection.classList.remove('hidden');
+
+            // Update status badge
+            const statusBadge = document.getElementById('statusBadge');
+            if (guardrailResult) {
+                if (guardrailResult.result === 'APPROVED') {
+                    statusBadge.textContent = '✅ Guardrails Passed';
+                    statusBadge.className = 'status-badge status-success';
+                } else if (guardrailResult.result === 'REQUIRES_TRANSFORMATION') {
+                    statusBadge.textContent = '⚠️ Transformation Required';
+                    statusBadge.className = 'status-badge status-warning';
+                } else {
+                    statusBadge.textContent = '❌ Blocked';
+                    statusBadge.className = 'status-badge status-danger';
+                }
+            } else {
+                statusBadge.textContent = '✅ Analysis Complete';
+                statusBadge.className = 'status-badge status-success';
+            }
+
+            // Update metric cards
+            document.getElementById('adaptationEffectiveness').textContent = profile.adaptation_effectiveness.toFixed(3);
+            document.getElementById('individualismIndex').textContent = profile.individualism_index.toFixed(3);
+            document.getElementById('complianceScore').textContent = guardrailResult ? guardrailResult.compliance_score.toFixed(3) : '1.000';
+            document.getElementById('culturalContext').textContent = profile.cultural_context;
+
+            // Update detailed values
+            document.getElementById('powerDistance').textContent = profile.power_distance.toFixed(3);
+            document.getElementById('uncertaintyAvoidance').textContent = profile.uncertainty_avoidance.toFixed(3);
+            document.getElementById('longTermOrientation').textContent = profile.long_term_orientation.toFixed(3);
+            document.getElementById('guardrailResult').textContent = guardrailResult ? guardrailResult.result : 'NOT_TESTED';
+            document.getElementById('greekLogic').textContent = profile.method_profile.greek_logic.toFixed(3);
+            document.getElementById('scientificEmpiricism').textContent = profile.method_profile.scientific_empiricism.toFixed(3);
+            document.getElementById('confucianPrecision').textContent = profile.method_profile.confucian_precision.toFixed(3);
+            document.getElementById('violations').textContent = guardrailResult && guardrailResult.violations.length > 0 ? guardrailResult.violations.join(', ') : 'None';
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
