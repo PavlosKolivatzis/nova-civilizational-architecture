@@ -9,27 +9,28 @@ on:
 jobs:
   validate-architecture:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout NOVA Architecture
       uses: actions/checkout@v4
-      
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pytest markdown pyyaml
-        
-        - name: Validate Slot Structure
-  shell: bash
-  run: |
-    echo "🏗️ Validating NOVA 10-slot architecture..."
-    cat > ci_validate_slots.py <<'PY'
-import os, sys
+
+    - name: Validate Slot Structure
+      shell: bash
+      run: |
+        set -e
+        echo "🏗️ Validating NOVA 10-slot architecture..."
+        cat > ci_validate_slots.py <<'PY'
+import os
 expected_slots = [
     'slot01_truth_anchor',
     'slot02_deltathresh',
@@ -38,27 +39,26 @@ expected_slots = [
     'slot05_constellation',
     'slot06_cultural_synthesis',
     'slot07_production_controls',
-    'slot08_memory_ethics',
-    'slot09_distortion_protection',
-    'slot10_civilizational_deployment'
+    'slot08_narrative_engine',
+    'slot09_agent_mesh',
+    'slot10_integrity_patch'
 ]
 missing = [s for s in expected_slots if not os.path.exists(os.path.join('slots', s))]
 if missing:
     print("❌ Missing slots:", missing)
-    sys.exit(1)
+    exit(1)
 print("✅ All 10 slots present")
 PY
-    python -u ci_validate_slots.py
-
+        python ci_validate_slots.py
 
     - name: Test Slot 6 Enhancement
-  shell: bash
-  run: |
-    echo "🧪 Testing Slot 6 v6.5 multicultural truth synthesis..."
-    if [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
-      echo "✅ Slot 6 implementation found"
-      # Write temp test script
-      cat > ci_test_slot6.py <<'PY'
+      shell: bash
+      run: |
+        set -e
+        echo "🧪 Testing Slot 6 v6.5 multicultural truth synthesis..."
+        if [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
+          echo "✅ Slot 6 implementation found"
+          cat > ci_test_slot6.py <<'PY'
 import sys, os
 sys.path.insert(0, os.path.abspath('slots'))
 try:
@@ -68,21 +68,20 @@ try:
     print(f"✅ Slot 6 test passed: effectiveness={profile.adaptation_effectiveness:.3f}")
 except Exception as e:
     print(f"❌ Slot 6 test failed: {e}")
-    raise
+    exit(1)
 PY
-      # Run it
-      python -u ci_test_slot6.py
-    else
-      echo "⚠️ Slot 6 implementation not found (documentation-only commit)"
-    fi
+          python ci_test_slot6.py
+        else
+          echo "⚠️ Slot 6 implementation not found (documentation-only commit)"
+        fi
 
-        
-   - name: Validate Enhancement Files
-  shell: bash
-  run: |
-    echo "📋 Validating enhancement documentation..."
-    cat > ci_validate_docs.py <<'PY'
-import os, sys
+    - name: Validate Enhancement Files
+      shell: bash
+      run: |
+        set -e
+        echo "📋 Validating enhancement documentation..."
+        cat > ci_validate_docs.py <<'PY'
+import os
 required_files = [
     "Slot6_enhancement.md",
     "Slot10_patches.md",
@@ -92,12 +91,11 @@ required_files = [
 missing = [f for f in required_files if not os.path.exists(f)]
 if missing:
     print("❌ Missing required documentation:", missing)
-    sys.exit(1)
+    exit(1)
 print("✅ All required enhancement docs present")
 PY
-    python -u ci_validate_docs.py
+        python ci_validate_docs.py
 
-        
     - name: Architecture Health Check
       run: |
         echo "🌍 NOVA Civilizational Architecture Health Summary"
@@ -109,7 +107,7 @@ PY
         echo "Deployment Readiness: ✅ Production-grade"
         echo "=================================================="
         echo "🚀 NOVA Status: READY FOR CIVILIZATIONAL DEPLOYMENT!"
-        
+
     - name: Final Validation Summary
       run: |
         echo "🎉 NOVA CI/CD Pipeline Completed Successfully!"
