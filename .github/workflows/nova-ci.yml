@@ -9,45 +9,53 @@ on:
 jobs:
   validate-architecture:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout NOVA Architecture
       uses: actions/checkout@v4
-      
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pytest markdown pyyaml
-        
+
     - name: Validate Slot Structure
-    -  run: |
+      run: |
         echo "🏗️ Validating NOVA 10-slot architecture..."
         python -c "
-        import os
-        expected_slots = ['slot01_truth_anchor', 'slot02_deltathresh', 'slot03_emotional_matrix', 'slot04_tri_engine', 'slot05_constellation', 'slot06_cultural_synthesis', 'slot07_production_controls', 'slot08_memory_ethics', 'slot09_distortion_protection', 'slot10_civilizational_deployment']
-        missing = [s for s in expected_slots if not os.path.exists(f'slots/{s}')]
-        if missing: 
-            print(f'❌ Missing slots: {missing}')
-            exit(1)
-        else:
-            print('✅ All 10 slots present')
-        "
-        
+import os
+expected_slots = [
+    'slot01_truth_anchor',
+    'slot02_deltathresh',
+    'slot03_emotional_matrix',
+    'slot04_tri_engine',
+    'slot05_constellation',
+    'slot06_cultural_synthesis',
+    'slot07_production_controls',
+    'slot08_narrative_engine',
+    'slot09_agent_mesh',
+    'slot10_integrity_patch'
+]
+missing = [s for s in expected_slots if not os.path.exists(f'slots/{s}')]
+if missing:
+    print(f'❌ Missing slots: {missing}')
+    exit(1)
+else:
+    print('✅ All 10 slots present')
+"
+
     - name: Test Slot 6 Enhancement
       run: |
         echo "🧪 Testing Slot 6 v6.5 multicultural truth synthesis..."
         if [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
           echo "✅ Slot 6 implementation found"
           echo "⚠️ Detailed testing skipped (import path complexity)"
-        else
-          echo "⚠️ Slot 6 implementation not found (expected for documentation-only commits)"
-        fi
-        
+          python -c "
 import sys
 import os
 sys.path.insert(0, os.path.abspath('slots'))
@@ -55,27 +63,27 @@ try:
     from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
     engine = MulticulturalTruthSynthesis()
     profile = engine.analyze_cultural_context('Test', {'region': 'EU'})
-    print(f'✅ Slot 6 test passed: effectiveness={profile.adaptation_effectiveness:.3f}')
+    print(f'✅ Slot 6 test passed: effectiveness={{profile.adaptation_effectiveness:.3f}}')
 except Exception as e:
     print(f'❌ Slot 6 test failed: {e}')
     exit(1)
 "
-    else
-        echo "⚠️ Slot 6 implementation not found (expected for documentation-only commits)"
-    fi
-        
+        else
+          echo "⚠️ Slot 6 implementation not found (expected for documentation-only commits)"
+        fi
+
     - name: Validate Enhancement Files
       run: |
         echo "📋 Validating enhancement documentation..."
-        files=(\"Slot6_enhancement.md\" \"Slot10_patches.md\" \"integration_guide.md\" \"testing_framework.md\")
-        for file in \"\${files[@]}\"; do
-          if [ -f \"$file\" ]; then
-            echo \"✅ $file found\"
+        files=("Slot6_enhancement.md" "Slot10_patches.md" "integration_guide.md" "testing_framework.md")
+        for file in "${files[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ $file found"
           else
-            echo \"⚠️ $file missing\"
+            echo "⚠️ $file missing"
           fi
         done
-        
+
     - name: Architecture Health Check
       run: |
         echo "🌍 NOVA Civilizational Architecture Health Summary:"
