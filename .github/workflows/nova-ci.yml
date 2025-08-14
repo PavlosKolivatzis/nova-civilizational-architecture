@@ -28,20 +28,20 @@ jobs:
       run: |
         echo "🏗️ Validating NOVA 10-slot architecture..."
         python -c "
-        import os
-        expected_slots = [
-            'slot01_truth_anchor', 'slot02_deltathresh', 'slot03_emotional_matrix',
-            'slot04_tri_engine', 'slot05_constellation', 'slot06_cultural_synthesis',
-            'slot07_production_controls', 'slot08_memory_ethics', 
-            'slot09_distortion_protection', 'slot10_civilizational_deployment'
-        ]
-        missing = [s for s in expected_slots if not os.path.exists(f'slots/{s}')]
-        if missing: 
-            print(f'❌ Missing slots: {missing}')
-            exit(1)
-        else:
-            print('✅ All 10 slots present')
-        "
+import os
+expected_slots = [
+    'slot01_truth_anchor', 'slot02_deltathresh', 'slot03_emotional_matrix',
+    'slot04_tri_engine', 'slot05_constellation', 'slot06_cultural_synthesis',
+    'slot07_production_controls', 'slot08_memory_ethics', 
+    'slot09_distortion_protection', 'slot10_civilizational_deployment'
+]
+missing = [s for s in expected_slots if not os.path.exists(f'slots/{s}')]
+if missing: 
+    print(f'❌ Missing slots: {missing}')
+    exit(1)
+else:
+    print('✅ All 10 slots present')
+"
         
     - name: Test Slot 6 Enhancement
       run: |
@@ -50,9 +50,9 @@ jobs:
           python -c "
 import sys
 import os
-sys.path.insert(0, os.path.abspath('slots/slot06_cultural_synthesis'))
+sys.path.insert(0, os.path.abspath('slots'))
 try:
-    from multicultural_truth_synthesis import MulticulturalTruthSynthesis
+    from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
     engine = MulticulturalTruthSynthesis()
     profile = engine.analyze_cultural_context('Test', {'region': 'EU'})
     print(f'✅ Slot 6 test passed: effectiveness={profile.adaptation_effectiveness:.3f}')
@@ -67,8 +67,8 @@ except Exception as e:
     - name: Validate Enhancement Files
       run: |
         echo "📋 Validating enhancement documentation..."
-        files=("Slot6_enhancement.md" "Slot10_patches.md" "integration_guide.md" "testing_framework.md")
-        for file in "\${files[@]}"; do
+        files=(\"Slot6_enhancement.md\" \"Slot10_patches.md\" \"integration_guide.md\" \"testing_framework.md\")
+        for file in \"\${files[@]}\"; do
           if [ -f \"$file\" ]; then
             echo \"✅ $file found\"
           else
