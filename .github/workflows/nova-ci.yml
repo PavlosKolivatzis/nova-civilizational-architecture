@@ -27,27 +27,19 @@ jobs:
     - name: Validate Slot Structure
       run: |
         echo "🏗️ Validating NOVA 10-slot architecture..."
-        python <<EOF
-import os
-expected_slots = [
-    'slot01_truth_anchor',
-    'slot02_deltathresh',
-    'slot03_emotional_matrix',
-    'slot04_tri_engine',
-    'slot05_constellation',
-    'slot06_cultural_synthesis',
-    'slot07_production_controls',
-    'slot08_narrative_engine',
-    'slot09_agent_mesh',
-    'slot10_integrity_patch'
-]
-missing = [s for s in expected_slots if not os.path.exists(f'slots/{s}')]
-if missing:
-    print(f'❌ Missing slots: {missing}')
-    exit(1)
-else:
-    print('✅ All 10 slots present')
-EOF
+        slots=("slot01_truth_anchor" "slot02_deltathresh" "slot03_emotional_matrix" "slot04_tri_engine" "slot05_constellation" "slot06_cultural_synthesis" "slot07_production_controls" "slot08_memory_ethics" "slot09_distortion_protection" "slot10_civilizational_deployment")
+        missing=()
+        for slot in "${slots[@]}"; do
+          if [ ! -d "slots/$slot" ]; then
+            missing+=("$slot")
+          fi
+        done
+        if [ ${#missing[@]} -ne 0 ]; then
+          echo "❌ Missing slots: ${missing[*]}"
+          exit 1
+        else
+          echo "✅ All 10 slots present"
+        fi
 
     - name: Test Slot 6 Enhancement
       run: |
