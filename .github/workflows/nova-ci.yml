@@ -60,9 +60,9 @@ except Exception as e:
     print(f'❌ Slot 6 test failed: {e}')
     exit(1)
 "
-        else
-          echo "⚠️ Slot 6 implementation not found (expected for documentation-only commits)"
-        fi
+    else
+        echo "⚠️ Slot 6 implementation not found (expected for documentation-only commits)"
+    fi
         
     - name: Validate Enhancement Files
       run: |
