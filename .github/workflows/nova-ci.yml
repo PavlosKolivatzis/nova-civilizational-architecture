@@ -24,8 +24,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest markdown pyyaml
 
-        - name: Validate Slot Structure
-        - run: |
+    - name: Validate Slot Structure
+      run: |
         set -e
         echo "🏗️ Validating NOVA 10-slot architecture..."
         echo "import os" > ci_validate_slots.py
