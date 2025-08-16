@@ -1,0 +1,18 @@
+{
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "interface/test_slot6_live.html"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "app.py"
+    }
+  ]
+}
