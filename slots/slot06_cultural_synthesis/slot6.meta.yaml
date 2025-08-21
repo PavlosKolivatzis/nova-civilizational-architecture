@@ -1,8 +1,8 @@
 slot: 6
 name: Adaptive Synthesis Engine
 version: "7.4.1"
-entry_point: slot6/engine.py:AdaptiveSynthesisEngine
-adapter: slot6/engine.py:MulticulturalTruthSynthesisAdapter
+entry_point: slot06_cultural_synthesis/multicultural_truth_synthesis.py:AdaptiveSynthesisEngine
+adapter: slot06_cultural_synthesis/multicultural_truth_synthesis.py:MulticulturalTruthSynthesisAdapter
 description: |
   Production-hardened multicultural truth synthesis and bounded ethical simulation.
   Integrates Slot 5 constellation budgets, provides Slot 10 compatibility interface.
@@ -22,6 +22,6 @@ metrics:
   - successful_simulations
   - guardrail_blocks
 ci:
-  workflow: .github/workflows/ci.yml
+  workflow: .github/workflows/nova-ci.yml
   tests:
     - tests/test_smoke.py
