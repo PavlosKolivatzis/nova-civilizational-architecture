@@ -4,7 +4,7 @@ import sys
 
 # Add the slots directory to the Python path to find our module
 sys.path.insert(0, os.path.abspath('slots'))
-from slot06_cultural_truth_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
 
 # Initialize the Flask app and the Slot 6 engine
 app = Flask(__name__, template_folder='.')
