@@ -117,7 +117,7 @@ class AdaptiveSynthesisEngine:
     _TRIGGER_TERMS = (r"imagine|what\\s+if|pretend|role-?\\s*play|simulate|perspective|"
                       r"experience|understand\\s+how|feel\\s+like|empathize")
     _TRIGGER_PATTERN = re.compile(rf"(?<!\\w)({_TRIGGER_TERMS})(?!\\w)", flags=re.IGNORECASE)
-    _FORBIDDEN_PATTERN = re.compile(r"\\b(" + "|".join(map(re.escape, _FORBIDDEN_CANON.values())) + r")\\b")
+    _FORBIDDEN_PATTERN = re.compile(r"\b(" + "|".join(map(re.escape, _FORBIDDEN_CANON.values())) + r")\b")
     _CLEAN_PATTERN = re.compile(r"[^a-z0-9_ ]+")
     def __init__(self, deterministic_fingerprint: str = None, config: EngineConfig = None) -> None:
         self._cfg = config or EngineConfig()
