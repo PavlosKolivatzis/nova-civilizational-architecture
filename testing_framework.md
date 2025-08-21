@@ -9,7 +9,7 @@
 ```python
 # test_slot6_import.py
 try:
-    from nova.slot6_multicultural_truth_synthesis import (
+     from slot06_cultural_synthesis.multicultural_truth_synthesis import (
         MulticulturalTruthSynthesis, 
         CulturalProfile, 
         CulturalContext
@@ -24,7 +24,7 @@ except ImportError as e:
     print(f"❌ Import failed: {e}")
 except Exception as e:
     print(f"❌ Initialization failed: {e}")Test 2: Cultural Analysis Test# test_cultural_analysis.py
-from nova.slot6_multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
 
 def test_cultural_analysis():
     engine = MulticulturalTruthSynthesis()
@@ -55,7 +55,7 @@ def test_cultural_analysis():
 
 if __name__ == "__main__":
     test_cultural_analysis()Test 3: Guardrail Validation Test# test_guardrails.py
-from nova.slot6_multicultural_truth_synthesis import (
+from slot06_cultural_synthesis.multicultural_truth_synthesis import (
     MulticulturalTruthSynthesis, 
     CulturalProfile, 
     CulturalContext
@@ -114,7 +114,7 @@ def create_mock_slots():
     )
     
     # Real Slot 6
-    from nova.slot6_multicultural_truth_synthesis import MulticulturalTruthSynthesis
+    from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
     slot6 = MulticulturalTruthSynthesis()
     
     # Mock Slot 9
@@ -182,7 +182,7 @@ async def test_deployment_scenario():
 
 if __name__ == "__main__":
     asyncio.run(test_deployment_scenario())Comprehensive Test SuiteTest 5: Performance Metrics Test# test_performance_metrics.py
-from nova.slot6_multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
 import time
 
 def test_performance_metrics():
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     test_performance_metrics()Test 6: Thread Safety Test# test_thread_safety.py
 import threading
 import time
-from nova.slot6_multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
 
 def test_thread_safety():
     engine = MulticulturalTruthSynthesis()
@@ -310,7 +310,7 @@ echo "🔍 NOVA Enhancement Validation"
 echo "================================"
 
 echo "Testing Slot 6 import..."
-python -c "from nova.slot6_multicultural_truth_synthesis import MulticulturalTruthSynthesis; print('✅ Import successful')"
+python -c "from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis; print('✅ Import successful')"
 
 echo "Testing basic functionality..."
 python test_slot6_import.py
@@ -327,4 +327,4 @@ python test_performance_metrics.py
 echo "Testing thread safety..."
 python test_thread_safety.py
 
-echo "✅ All tests completed"Expected Test ResultsSuccessful Integration IndicatorsImport Tests:✅ No import errors✅ Engine instantiates successfully✅ All classes and enums availableCultural Analysis:✅ Different regions produce different profiles✅ Adaptation effectiveness varies by context✅ Method profiles reflect regional characteristicsGuardrail Tests:✅ Clean content passes validation✅ Forbidden elements trigger blocks✅ Bounds violations suggest transformationsPerformance Tests:✅ Metrics increment correctly✅ Thread-safe operations✅ EMA preservation rate updatesTroubleshooting Failed TestsImport Failures:Check file location: nova/slot6_multicultural_truth_synthesis.pyVerify Python path includes nova directoryCheck for syntax errors in Slot 6 fileCultural Analysis Issues:Verify regional biases are loadingCheck method profile calculationsEnsure adaptation effectiveness is in [0,1] rangeGuardrail Failures:Test forbidden element detectionVerify bounds calculationsCheck transformation logicIntegration Issues:Confirm Slot 10 patches applied correctlyTest mock slot managers workVerify async operations completeProduction Readiness Checklist[ ] All import tests pass[ ] Cultural analysis produces expected ranges[ ] Guardrails block forbidden content[ ] Metrics track correctly[ ] Thread safety confirmed[ ] Rate limiting works (if Slot 10 patched)[ ] Health monitoring cancellable (if Slot 10 patched)[ ] No memory leaks in extended testing[ ] Performance acceptable under loadNext StepsAfter all tests pass:Deploy to staging environmentMonitor metrics in real usageTune parameters based on dataExpand test coverage for edge casesDocument operational proceduresReady for production deployment! 🚀---
+echo "✅ All tests completed"Expected Test ResultsSuccessful Integration IndicatorsImport Tests:✅ No import errors✅ Engine instantiates successfully✅ All classes and enums availableCultural Analysis:✅ Different regions produce different profiles✅ Adaptation effectiveness varies by context✅ Method profiles reflect regional characteristicsGuardrail Tests:✅ Clean content passes validation✅ Forbidden elements trigger blocks✅ Bounds violations suggest transformationsPerformance Tests:✅ Metrics increment correctly✅ Thread-safe operations✅ EMA preservation rate updatesTroubleshooting Failed TestsImport Failures:Check file location: slot06_cultural_synthesis/multicultural_truth_synthesis.pyVerify Python path includes nova directoryCheck for syntax errors in Slot 6 fileCultural Analysis Issues:Verify regional biases are loadingCheck method profile calculationsEnsure adaptation effectiveness is in [0,1] rangeGuardrail Failures:Test forbidden element detectionVerify bounds calculationsCheck transformation logicIntegration Issues:Confirm Slot 10 patches applied correctlyTest mock slot managers workVerify async operations completeProduction Readiness Checklist[ ] All import tests pass[ ] Cultural analysis produces expected ranges[ ] Guardrails block forbidden content[ ] Metrics track correctly[ ] Thread safety confirmed[ ] Rate limiting works (if Slot 10 patched)[ ] Health monitoring cancellable (if Slot 10 patched)[ ] No memory leaks in extended testing[ ] Performance acceptable under loadNext StepsAfter all tests pass:Deploy to staging environmentMonitor metrics in real usageTune parameters based on dataExpand test coverage for edge casesDocument operational proceduresReady for production deployment! 🚀---
