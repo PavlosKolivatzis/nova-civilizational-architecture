@@ -2,7 +2,10 @@ name: NOVA Civilizational Architecture CI
 
 on:
   push:
-    branches: [ main, enhancement/*, slot-* ]
+    branches:     
+      - main
+      - 'enhancement/*'
+      - 'slot-*'
   pull_request:
     branches: [ main ]
 
