@@ -1,24 +1,16 @@
-#!/usr/bin/env python3
-"""Quick test of Slot 6 v6.5 implementation"""
-
-try:
-    from multicultural_truth_synthesis import (
-        MulticulturalTruthSynthesis,
-        CulturalContext,
-        DeploymentGuardrailResult
-    )
-    print("✅ Imports successful")
-    
-    # Basic instantiation test
-    engine = MulticulturalTruthSynthesis()
-    print("✅ Engine initialization successful")
-    
-    # Quick analysis test
-    profile = engine.analyze_cultural_context(
-        "Test University", 
-        {"region": "EU", "language": "en", "empiricism_priority": 0.8}
-    )
-    print(f"✅ Cultural analysis: {profile.adaptation_effectiveness:.3f}")
-    
-    print("\n🎯 SLOT 6 V6.5 IMPLEMENTATION: VALIDATED ✅")
-    
+import json
+from slot6.engine import AdaptiveSynthesisEngine, MulticulturalTruthSynthesisAdapter, SimulationResult
+def test_basic_approve():
+    eng = AdaptiveSynthesisEngine()
+    res = eng.analyze_and_simulate("Test", {"content": "perspective on global data"}, {"region": "EU", "educational_context": True})
+    assert res.simulation_status in (SimulationResult.APPROVED, SimulationResult.APPROVED_WITH_TRANSFORMATION)
+def test_forbidden_block():
+    eng = AdaptiveSynthesisEngine()
+    res = eng.analyze_and_simulate("Test", {"content": "guided by divine revelation only"}, {})
+    assert res.simulation_status == SimulationResult.BLOCKED_BY_GUARDRAIL
+    assert res.violations
+def test_adapter():
+    eng = AdaptiveSynthesisEngine()
+    ad = MulticulturalTruthSynthesisAdapter(eng)
+    prof = ad.analyze_cultural_context("Org", {"region": "US"})
+    assert 0.0 <= prof.adaptation_effectiveness <= 1.0
