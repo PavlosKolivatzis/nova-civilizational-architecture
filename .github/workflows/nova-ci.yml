@@ -54,16 +54,16 @@ jobs:
     - name: Test Slot 6 Enhancement
       run: |
         set -e
-        echo "🧪 Testing Slot 6 v6.5 multicultural truth synthesis..."
+          echo "🧪 Testing Slot 6 v7.4.1 adaptive synthesis engine..."
         if [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
           echo "✅ Slot 6 implementation found"
           echo "import sys, os" > ci_test_slot6.py
           echo "sys.path.insert(0, os.path.abspath('slots'))" >> ci_test_slot6.py
           echo "try:" >> ci_test_slot6.py
-          echo "    from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis" >> ci_test_slot6.py
-          echo "    engine = MulticulturalTruthSynthesis()" >> ci_test_slot6.py
+          echo "    from slot06_cultural_synthesis.multicultural_truth_synthesis import AdaptiveSynthesisEngine, MulticulturalTruthSynthesisAdapter" >> ci_test_slot6.py
+          echo "    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())" >> ci_test_slot6.py
           echo "    profile = engine.analyze_cultural_context('TestInstitution', {'region':'EU'})" >> ci_test_slot6.py
-          echo "    print(f'✅ Slot 6 test passed: effectiveness={profile.adaptation_effectiveness:.3f}')" >> ci_test_slot6.py
+          echo "    print(f'✅ Slot 6 v7.4.1 test passed: effectiveness={profile.adaptation_effectiveness:.3f}')" >> ci_test_slot6.py
           echo "except Exception as e:" >> ci_test_slot6.py
           echo "    print(f'❌ Slot 6 test failed: {e}')" >> ci_test_slot6.py
           echo "    exit(1)" >> ci_test_slot6.py
