@@ -1,5 +1,9 @@
 import json
-from slot6.engine import AdaptiveSynthesisEngine, MulticulturalTruthSynthesisAdapter, SimulationResult
+from multicultural_truth_synthesis import (
+    AdaptiveSynthesisEngine,
+    MulticulturalTruthSynthesisAdapter,
+    SimulationResult,
+)
 def test_basic_approve():
     eng = AdaptiveSynthesisEngine()
     res = eng.analyze_and_simulate("Test", {"content": "perspective on global data"}, {"region": "EU", "educational_context": True})
