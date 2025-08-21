@@ -24,4 +24,4 @@ metrics:
 ci:
   workflow: .github/workflows/nova-ci.yml
   tests:
-    - tests/test_smoke.py
+    - slots/slot06_cultural_synthesis/test_implementation.py
