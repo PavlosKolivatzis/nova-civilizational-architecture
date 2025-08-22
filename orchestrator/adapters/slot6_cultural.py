@@ -12,7 +12,7 @@ try:
         GuardrailValidationResult,
         DeploymentGuardrailResult,
     )
-ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
+    ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
     AVAILABLE = True
 except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
     logging.getLogger(__name__).exception(
@@ -42,7 +42,7 @@ except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
     class DeploymentGuardrailResult:  # type: ignore
         ERROR = "ERROR"
 
-    _ENGINE = None
+    ENGINE = None
 
 
 class Slot6Adapter:
@@ -54,7 +54,7 @@ class Slot6Adapter:
         if not self.available:
             return CulturalProfile()
         try:
-            return _ENGINE.analyze_cultural_context(institution_name, context)
+            return ENGINE.analyze_cultural_context(institution_name, context)
         except Exception:
             return CulturalProfile()
 
@@ -64,7 +64,7 @@ class Slot6Adapter:
         if not self.available:
             return GuardrailValidationResult(result=DeploymentGuardrailResult.ERROR)
         try:
-            return _ENGINE.validate_cultural_deployment(profile, institution_type, payload)
+           return ENGINE.validate_cultural_deployment(profile, institution_type, payload)
         except Exception:
             return GuardrailValidationResult(result=DeploymentGuardrailResult.ERROR)
 
