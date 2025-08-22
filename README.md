@@ -23,3 +23,22 @@ Production-grade multicultural truth synthesis engine with 10-slot cognitive arc
 
 ## 🔒 Repository Status
 **Private** - Strategic development phase
+
+## ⚙️ Orchestrator & Slot-10 Deployment
+
+The asynchronous `NovaOrchestrator` wraps Slot 6 cultural guardrails and
+optionally enables Slot 10 node deployment. Enable it via feature flags:
+
+- `NOVA_SLOT10_ENABLED` – activate Slot 10 deployer (default `false`)
+- `NOVA_GM_ENABLED` – turn on geometric-memory caching (default `false`)
+- `NOVA_LOG_LEVEL` – logging verbosity (default `INFO`)
+
+Usage:
+
+```bash
+export NOVA_SLOT10_ENABLED=true
+python app.py --deploy "MIT_AI_Lab" --type academic
+```
+
+The system degrades gracefully if optional modules like TRI or ΔTHRESH
+are absent.
