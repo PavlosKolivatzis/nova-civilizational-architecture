@@ -5,9 +5,8 @@ from typing import Dict, Any, Tuple
 from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     CulturalProfile,
     GuardrailValidationResult,
-    DeploymentGuardrailResult,
 )
-
+from frameworks.enums import DeploymentGuardrailResult
 from .models import MLSDecision
 
 
