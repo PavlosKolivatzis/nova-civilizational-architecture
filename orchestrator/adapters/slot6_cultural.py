@@ -1,6 +1,6 @@
-from __future__ import annotations
-
+from __future__ import annotations             
 from dataclasses import dataclass, field
+from frameworks.enums import DeploymentGuardrailResult
 from typing import Any, Dict
 import logging
 
@@ -10,7 +10,7 @@ try:
         MulticulturalTruthSynthesisAdapter,
         CulturalProfile,
         GuardrailValidationResult,
-        DeploymentGuardrailResult,
+        
     )
     ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
     AVAILABLE = True
@@ -32,16 +32,14 @@ except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
 
     @dataclass
     class GuardrailValidationResult:  # type: ignore
-        result: Any = "ERROR"
+        result: DeploymentGuardrailResult = DeploymentGuardrailResult.ERROR
         compliance_score: float = 0.0
         violations: list[str] = field(default_factory=list)
         recommendations: list[str] = field(default_factory=list)
         transformation_required: bool = False
         max_safe_adaptation: float = 0.0
 
-    class DeploymentGuardrailResult:  # type: ignore
-        ERROR = "ERROR"
-
+    
     ENGINE = None
 
 
