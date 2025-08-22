@@ -89,6 +89,66 @@ def validate():
     return jsonify(validation_dict)
 
 if __name__ == '__main__':
-    print("🚀 Starting NOVA Slot 6 Live Testing Server...")
-    print("🌍 Open your browser and navigate to http://127.0.0.1:5000")
-    app.run(debug=True)
+    if os.getenv("NOVA_SLOT10_ENABLED", "false").lower() == "true":
+        import argparse
+        import asyncio
+        from orchestrator.core import NovaOrchestrator
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--deploy")
+        parser.add_argument("--type", dest="type", default="generic")
+        args = parser.parse_args()
+
+        async def main() -> None:
+            orchestrator = NovaOrchestrator()
+            if args.deploy:
+                res = await orchestrator.bus.publish(
+                    "deploy.node",
+                    {
+                        "institution_name": args.deploy,
+                        "institution_type": args.type,
+                        "payload": {"content": "demo", "secure": True},
+                        "region": "US",
+                    },
+                )
+                if res:
+                    print(res[0])
+            else:
+                print("No deployment target provided")
+
+        asyncio.run(main())
+    else:
+        print("🚀 Starting NOVA Slot 6 Live Testing Server...")
+        print("🌍 Open your browser and navigate to http://127.0.0.1:5000")
+        app.run(debug=True) if os.getenv("NOVA_SLOT10_ENABLED", "false").lower() == "true":
+        import argparse
+        import asyncio
+        from orchestrator.core import NovaOrchestrator
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--deploy")
+        parser.add_argument("--type", dest="type", default="generic")
+        args = parser.parse_args()
+
+        async def main() -> None:
+            orchestrator = NovaOrchestrator()
+            if args.deploy:
+                res = await orchestrator.bus.publish(
+                    "deploy.node",
+                    {
+                        "institution_name": args.deploy,
+                        "institution_type": args.type,
+                        "payload": {"content": "demo", "secure": True},
+                        "region": "US",
+                    },
+                )
+                if res:
+                    print(res[0])
+            else:
+                print("No deployment target provided")
+
+        asyncio.run(main())
+    else:
+        print("🚀 Starting NOVA Slot 6 Live Testing Server...")
+        print("🌍 Open your browser and navigate to http://127.0.0.1:5000")
+        app.run(debug=True)
