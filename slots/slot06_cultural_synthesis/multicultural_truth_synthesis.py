@@ -15,6 +15,7 @@ splitting into: engine.py, adapter.py, serializers.py.
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from enum import Enum
+from frameworks.enums import DeploymentGuardrailResult
 from typing import Any, Dict, List, Optional, Iterable, Mapping
 import time
 import hashlib
@@ -49,12 +50,7 @@ class SimulationResult(Enum):
     APPROVED_WITH_TRANSFORMATION = "approved_with_transformation"
     BLOCKED_BY_GUARDRAIL = "blocked_by_guardrail"
     DEFERRED_NO_CONSENT = "deferred_no_consent"
-class DeploymentGuardrailResult(Enum):
-    APPROVED = "APPROVED"
-    REQUIRES_TRANSFORMATION = "REQUIRES_TRANSFORMATION"
-    BLOCKED_PRINCIPLE_VIOLATION = "BLOCKED_PRINCIPLE_VIOLATION"
-    BLOCKED_CULTURAL_SENSITIVITY = "BLOCKED_CULTURAL_SENSITIVITY"
-    ERROR = "ERROR"
+    
 @dataclass(frozen=True)
 class EngineMetrics:
     total_analyses: int
