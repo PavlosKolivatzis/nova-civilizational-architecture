@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, render_template
-import os
-import time
+
+
 
 from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     AdaptiveSynthesisEngine,
@@ -19,14 +19,14 @@ def index():
     return render_template("test_slot6_live.html")
 
 
-@app.route("/api/analyze", methods=["POST", "OPTIONS"])
+@app.route("/api/analyze", methods=["POST"])
 def analyze():
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-        return response
+
+
+
+
+
+    
 
     data = request.get_json() or {}
     content = data.get("content")
@@ -35,7 +35,7 @@ def analyze():
         return jsonify({"error": "Missing required fields: content and cultural_context"}), 400
     try:
         profile = cultural_synthesis_engine.analyze_cultural_context(content, context)
-        analysis = {
+        result = {
             "individualism_index": profile.individualism_index,
             "power_distance": profile.power_distance,
             "uncertainty_avoidance": profile.uncertainty_avoidance,
@@ -44,9 +44,9 @@ def analyze():
             "cultural_context": profile.cultural_context.value,
             "method_profile": profile.method_profile,
         }
-        response = jsonify({"status": "success", "analysis": analysis, "timestamp": time.time()})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        return response
+        return jsonify({"ok": True, **result})
+
+    
     except ValueError as e:
         return jsonify({"error": f"Invalid input: {str(e)}"}), 400
     except Exception as e:
