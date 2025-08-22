@@ -68,7 +68,11 @@ def validate():
 
     institution_type = data.get('institutionType')
     payload = data.get('payload')
-    
+    if not institution_type or not payload:
+        return jsonify({"error": "institutionType and payload are required"}), 400
+
+    if 'content' not in payload:
+        return jsonify({"error": "payload.content is required"}), 400
     # Use the engine to validate the deployment
     validation_result = engine.validate_cultural_deployment(profile, institution_type, payload)
     
