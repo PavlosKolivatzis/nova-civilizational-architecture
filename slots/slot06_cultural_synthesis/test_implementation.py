@@ -1,3 +1,4 @@
+
 import json
 from slot06_cultural_synthesis.multicultural_truth_synthesis import (
     AdaptiveSynthesisEngine,
@@ -18,3 +19,5 @@ def test_adapter():
     ad = MulticulturalTruthSynthesisAdapter(eng)
     prof = ad.analyze_cultural_context("Org", {"region": "US"})
     assert 0.0 <= prof.adaptation_effectiveness <= 1.0
+
+
