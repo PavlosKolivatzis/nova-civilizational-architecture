@@ -12,6 +12,8 @@ try:
         GuardrailValidationResult,
         DeploymentGuardrailResult,
     )
+ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
+    AVAILABLE = True
 except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
     logging.getLogger(__name__).exception(
         "Failed to import Slot 6 cultural synthesis: %s", exc
@@ -38,14 +40,12 @@ except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
         max_safe_adaptation: float = 0.0
 
     class DeploymentGuardrailResult:  # type: ignore
-        APPROVED = "APPROVED"
-        REQUIRES_TRANSFORMATION = "REQUIRES_TRANSFORMATION"
-        BLOCKED_PRINCIPLE_VIOLATION = "BLOCKED_PRINCIPLE_VIOLATION"
-        BLOCKED_CULTURAL_SENSITIVITY = "BLOCKED_CULTURAL_SENSITIVITY"
         ERROR = "ERROR"
-else:
-    _ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
-    AVAILABLE = True
+
+    _ENGINE = None
+
+
+class Slot6Adapter:
 
     def __init__(self) -> None:
         self.available = AVAILABLE
