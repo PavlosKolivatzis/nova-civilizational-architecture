@@ -1,4 +1,4 @@
-README.md
+
 # NOVA SLOT 6 — Adaptive Synthesis Engine v7.4.1
 ΔTHRESH v6.6 | Unified Cultural & Ethical Simulation
 
