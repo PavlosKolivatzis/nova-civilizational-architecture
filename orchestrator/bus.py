@@ -46,9 +46,12 @@ class EventBus:
             try:
                 res = await asyncio.wait_for(h(payload), timeout=self._timeout)
                 results.append(res)
-                self._update_metrics(time.perf_counter() - start)
+
             except Exception:
-                self.metrics.errors += 1
+                self.metrics.errors += 1 
+            finally:
+                self._update_metrics(time.perf_counter() - start)
+                
         return results
 
     def _update_metrics(self, duration: float) -> None:
