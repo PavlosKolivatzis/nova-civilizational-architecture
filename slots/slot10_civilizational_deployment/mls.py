@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Any, Tuple
 
-from slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     CulturalProfile,
     GuardrailValidationResult,
     DeploymentGuardrailResult,
