@@ -1,6 +1,6 @@
 
 import json
-from slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     AdaptiveSynthesisEngine,
     MulticulturalTruthSynthesisAdapter,
     SimulationResult,
