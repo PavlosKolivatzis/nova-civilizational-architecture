@@ -11,28 +11,7 @@ from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
 
 # Initialize the Flask app and the Slot 6 engine adapter
 app = Flask(__name__, template_folder='interface')
-engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
-
-
-@app.route('/')
-def index():
-    return render_template('test_slot6_live.html')
-
-
-@app.route('/api/analyze', methods=['POST'])
-@app.route('/api/cultural/analyze', methods=['POST'])
-def analyze():
-    try:
-        data = request.get_json()
-        if data is None:
-            return jsonify({"error": "JSON payload required"}), 400
-
-        required_fields = ['content', 'cultural_context']
-        missing_fields = [f for f in required_fields if f not in data]
-        if missing_fields:
-            return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
-
-        profile = engine.analyze_cultural_context(
+profile = cultural_synthesis_engine.analyze_cultural_context(
             data['content'], data['cultural_context']
         )
         analysis = {
@@ -58,19 +37,7 @@ def analyze():
 
 
 @app.route('/api/analyze', methods=['OPTIONS'])
-def analyze_options():
-    response = jsonify({})
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-    response.headers.add('Access-Control-Allow-Methods', 'POST')
-    return response
-
-@app.route('/api/validate', methods=['POST'])
-def validate():
-    """API endpoint to perform guardrail validation."""
-    data = request.json
-    
-    # Re-create a CulturalProfile object from the provided profile data
+@@ -74,51 +74,51 @@ def validate():
     profile_data = data.get('profile')
     if not profile_data:
         return jsonify({"error": "Profile data is required"}), 400
@@ -96,7 +63,7 @@ def validate():
     if 'content' not in payload:
         return jsonify({"error": "payload.content is required"}), 400
     # Use the engine to validate the deployment
-    validation_result = engine.validate_cultural_deployment(profile, institution_type, payload)
+    validation_result = cultural_synthesis_engine.validate_cultural_deployment(profile, institution_type, payload)
     
     # Convert the result to a dictionary
     validation_dict = {
