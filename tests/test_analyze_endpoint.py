@@ -20,4 +20,6 @@ def test_analyze_endpoint_validation(client):
         'cultural_context': {'type': 'western'}
     })
     assert response.status_code == 200
-    assert 'analysis' in response.get_json()
+    data = response.get_json()
+    assert data.get('ok') is True
+    assert 'individualism_index' in data
