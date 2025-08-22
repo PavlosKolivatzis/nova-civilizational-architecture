@@ -1,26 +1,19 @@
 # Slot 10: Civilizational Deployment
 
-## Status: Production Ready ✅
-Complete civilizational-scale deployment with cultural integration.
+Lightweight deployment layer wrapping Slot 6 cultural guardrails.
 
-## Components:
-- Institutional network deployment infrastructure
-- MetaLegitimacySeal validation system
-- Cultural context integration (Slot 6 enhanced)
-- Real-time operational monitoring dashboard
-- API interface for external integrations
+## Modules
 
-## Integration Points:
-- Orchestrates all slots for global deployment
-- Cultural validation through enhanced Slot 6
-- Truth verification via Slot 4 TRI engine
-- Security clearance through Slot 9 protection
-- Health monitoring via Slot 7 controls
+- `models.py` – deployment enums and result dataclasses
+- `mls.py` – MetaLegitimacySeal final validator
+- `phase_space.py` – NovaPhaseSpaceSimulator topology snapshot
+- `deployer.py` – InstitutionalNodeDeployer pipeline
 
-## Production Features:
-- Rate limiting and deployment controls
-- WebSocket real-time monitoring
-- Cultural diversity-weighted interventions
-- Automatic transformation and optimization
-- Civilizational-scale operational metrics
-  
+## Event Flow
+
+- `content.validate` → `content.approved` / `content.blocked`
+- `deploy.node` → register node via Slot 10
+- `system.status` → uptime and slot availability
+
+Enable via `NOVA_SLOT10_ENABLED=true`. Optional caches and TRI/ΔTHRESH
+are used when present; missing components degrade gracefully.
