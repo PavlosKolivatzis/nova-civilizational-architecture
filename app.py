@@ -4,16 +4,17 @@ import sys
 
 # Add the slots directory to the Python path to find our module
 sys.path.insert(0, os.path.abspath('slots'))
-from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    AdaptiveSynthesisEngine,
+    MulticulturalTruthSynthesisAdapter,
+    CulturalProfile,
+    CulturalContext,
+)
 
-# Initialize the Flask app and the Slot 6 engine
+# Initialize the Flask app and the Slot 6 engine adapter
 app = Flask(__name__, template_folder='.')
-engine = MulticulturalTruthSynthesis()
+engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
 
-@app.route('/')
-def index():
-    """Serve the main HTML testing page."""
-    # We will use 'interface.html' as the filename for the testing page
     return render_template('interface.html')
 
 @app.route('/api/analyze', methods=['POST'])
