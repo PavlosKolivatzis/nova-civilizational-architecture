@@ -8,7 +8,8 @@ from typing import Any, Dict, Optional
 
 from ..bus import EventBus
 from ..adapters.slot4_tri import Slot4TRIAdapter
-from ..adapters.slot6_cultural import Slot6Adapter, DeploymentGuardrailResult
+from ..adapters.slot6_cultural import Slot6Adapter
+from frameworks.enums import DeploymentGuardrailResult
 try:  # optional import for geometric memory
     from frameworks.geometric_memory import GeometricMemory
 except Exception:  # pragma: no cover - module added later
@@ -117,3 +118,5 @@ class NovaOrchestrator:
                 "slot10_deployer": self._slot10_available,
             },
         }
+
+__all__ = ["NovaOrchestrator", "DeploymentGuardrailResult"]
