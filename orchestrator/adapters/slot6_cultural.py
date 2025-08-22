@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict
 
 try:
-    from slot06_cultural_synthesis.multicultural_truth_synthesis import (
+     from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
         AdaptiveSynthesisEngine,
         MulticulturalTruthSynthesisAdapter,
         CulturalProfile,
