@@ -105,8 +105,6 @@ def validate():
 
 
 if __name__ == "__main__":
-        asyncio.run(main())
-    else:
         print("🚀 Starting NOVA Slot 6 Live Testing Server...")
-        print("🌍 Open your browser and navigate to http://127.0.0.1:5000")
-        app.run(debug=True)
+    print("🌍 Open your browser and navigate to http://127.0.0.1:5000")
+    app.run(debug=True)
