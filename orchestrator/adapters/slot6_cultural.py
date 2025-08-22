@@ -2,19 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict
+import logging
 
 try:
-     from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
         AdaptiveSynthesisEngine,
         MulticulturalTruthSynthesisAdapter,
         CulturalProfile,
         GuardrailValidationResult,
         DeploymentGuardrailResult,
     )
-
-    _ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
-    AVAILABLE = True
-except Exception:  # pragma: no cover - Slot 6 always present in tests
+except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
+    logging.getLogger(__name__).exception(
+        "Failed to import Slot 6 cultural synthesis: %s", exc
+    )
     AVAILABLE = False
 
     @dataclass
@@ -42,10 +43,9 @@ except Exception:  # pragma: no cover - Slot 6 always present in tests
         BLOCKED_PRINCIPLE_VIOLATION = "BLOCKED_PRINCIPLE_VIOLATION"
         BLOCKED_CULTURAL_SENSITIVITY = "BLOCKED_CULTURAL_SENSITIVITY"
         ERROR = "ERROR"
-
-
-class Slot6Adapter:
-    """Adapter around the Slot 6 cultural synthesis engine."""
+else:
+    _ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
+    AVAILABLE = True
 
     def __init__(self) -> None:
         self.available = AVAILABLE
