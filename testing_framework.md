@@ -13,15 +13,16 @@ Validates that Slot 6 can be imported and initialized.
 ```python
 # test_slot6_import.py
 try:
-    from slot06_cultural_synthesis.multicultural_truth_synthesis import (
-        MulticulturalTruthSynthesis,
+    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+        MulticulturalTruthSynthesisAdapter,
+        AdaptiveSynthesisEngine,
         CulturalProfile,
-        CulturalContext
+        CulturalContext,
     )
     print("✅ Slot 6 import successful")
 
     # Basic instantiation
-    engine = MulticulturalTruthSynthesis()
+    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
     print("✅ Engine initialization successful")
 except ImportError as e:
     print(f"❌ Import failed: {e}")
@@ -37,10 +38,13 @@ Checks that different cultural contexts yield distinct profiles.
 #### Script
 ```python
 # test_cultural_analysis.py
-from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    MulticulturalTruthSynthesisAdapter,
+    AdaptiveSynthesisEngine,
+)
 
 def test_cultural_analysis():
-    engine = MulticulturalTruthSynthesis()
+    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
 
     # Test cases
     test_cases = [
@@ -78,14 +82,15 @@ Validates guardrails for cultural deployment.
 #### Script
 ```python
 # test_guardrails.py
-from slot06_cultural_synthesis.multicultural_truth_synthesis import (
-    MulticulturalTruthSynthesis,
+from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    MulticulturalTruthSynthesisAdapter,
+    AdaptiveSynthesisEngine,
     CulturalProfile,
-    CulturalContext
+    CulturalContext,
 )
 
 def test_guardrails():
-    engine = MulticulturalTruthSynthesis()
+    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
 
     # Create test profile
     profile = CulturalProfile(
@@ -111,17 +116,7 @@ def test_guardrails():
 
 if __name__ == "__main__":
     test_guardrails()
-```
-
-### Test 4: Integration Smoke Test
-
-#### Description
-Runs a smoke test across mock slots.
-
-#### Script
-```python
-# test_integration_smoke.py
-import asyncio
+@@ -125,131 +130,140 @@ import asyncio
 import types
 
 def create_mock_slots():
@@ -147,8 +142,11 @@ def create_mock_slots():
     )
 
     # Real Slot 6
-    from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
-    slot6 = MulticulturalTruthSynthesis()
+    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+        MulticulturalTruthSynthesisAdapter,
+        AdaptiveSynthesisEngine,
+    )
+    slot6 = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
 
     # Mock Slot 9
     slot9 = types.SimpleNamespace(
@@ -196,10 +194,13 @@ Verifies performance metrics increment and thread safety counts.
 #### Script
 ```python
 # test_performance_metrics.py
-from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    MulticulturalTruthSynthesisAdapter,
+    AdaptiveSynthesisEngine,
+)
 
 def test_performance_metrics():
-    engine = MulticulturalTruthSynthesis()
+    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
 
     # Simulate multiple operations
     for _ in range(5):
@@ -224,10 +225,13 @@ Ensures multiple threads use the engine safely.
 # test_thread_safety.py
 import threading
 import time
-from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis
+from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    MulticulturalTruthSynthesisAdapter,
+    AdaptiveSynthesisEngine,
+)
 
 def test_thread_safety():
-    engine = MulticulturalTruthSynthesis()
+    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
     results = []
 
     def worker(thread_id):
@@ -253,73 +257,7 @@ def test_thread_safety():
     # Check metrics
     metrics = engine.get_performance_metrics()
     print("✅ Thread Safety Test:")
-    print(f"  Total operations: {len(results)}")
-    print(f"  Recorded analyses: {metrics['synthesis_metrics']['total_analyses']}")
-    print(f"  Match: {len(results) == metrics['synthesis_metrics']['total_analyses']}")
-
-if __name__ == "__main__":
-    test_thread_safety()
-```
-
-## Slot 10 Integration Tests
-
-### Test 7: Rate Limiting Test
-
-#### Description
-Placeholder for verifying Slot 10 rate limiting when patched.
-
-#### Script
-```python
-# test_rate_limiting.py (requires patched Slot 10)
-import asyncio
-import time
-
-async def test_rate_limiting():
-    """Test that rate limiting works in patched Slot 10."""
-
-    # This test requires your actual Slot 10 implementation
-    # from your_slot10_module import InstitutionalNodeDeployer
-
-    print("Rate limiting test requires patched Slot 10 code")
-    print("Expected behavior:")
-    print("  - First 10 deployments/hour: succeed")
-    print("  - 11th deployment: rate_limited response")
-    print("  - After 1 hour: rate limit resets")
-
-    # Example test structure:
-    # deployer = InstitutionalNodeDeployer(mock_sim, slot_managers)
-    # for i in range(12):
-    #     result = await deployer.deploy_institutional_node(
-    #         f"Institution_{i}", "academic"
-    #     )
-    #     if result.get('reason') == 'rate_limited':
-    #         print(f"✅ Rate limit triggered at deployment {i+1}")
-    #         break
-
-if __name__ == "__main__":
-    asyncio.run(test_rate_limiting())
-```
-
-### Test 8: Health Monitoring Test
-
-#### Description
-Placeholder for verifying cancellable health monitoring in Slot 10.
-
-#### Script
-```python
-# test_health_monitoring.py (requires patched Slot 10)
-import asyncio
-
-async def test_health_monitoring():
-    """Test cancellable health monitoring."""
-
-    print("Health monitoring test requires patched Slot 10 code")
-    print("Expected behavior:")
-    print("  - Health monitoring starts automatically")
-    print("  - Can be cancelled gracefully with stop_event")
-    print("  - No hanging tasks after shutdown")
-
-    # Example test structure:
+@@ -323,93 +337,93 @@ async def test_health_monitoring():
     # stop_event = asyncio.Event()
     # health_task = asyncio.create_task(
     #     deployer.monitor_node_health(stop_event=stop_event)
@@ -345,7 +283,7 @@ echo "🔍 NOVA Enhancement Validation"
 echo "================================"
 
 echo "Testing Slot 6 import..."
-python -c "from slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesis; print('✅ Import successful')"
+python -c "from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesisAdapter, AdaptiveSynthesisEngine; print('✅ Import successful')"
 
 echo "Testing basic functionality..."
 python test_slot6_import.py
@@ -387,7 +325,7 @@ echo "✅ All tests completed"
 ## Troubleshooting Failed Tests
 
 - **Import Failures:**
-  - Check file location: `slot06_cultural_synthesis/multicultural_truth_synthesis.py`
+  - Check file location: `slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py`
   - Verify Python path includes nova directory
   - Check for syntax errors in Slot 6 file
 - **Cultural Analysis Issues:**
@@ -413,16 +351,3 @@ echo "✅ All tests completed"
 - [ ] Rate limiting works (if Slot 10 patched)
 - [ ] Health monitoring cancellable (if Slot 10 patched)
 - [ ] No memory leaks in extended testing
-- [ ] Performance acceptable under load
-
-## Next Steps
-
-After all tests pass:
-
-1. Deploy to staging environment.
-2. Monitor metrics in real usage.
-3. Tune parameters based on data.
-4. Expand test coverage for edge cases.
-5. Document operational procedures.
-
-Ready for production deployment! 🚀
