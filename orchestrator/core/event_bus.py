@@ -18,6 +18,7 @@ class EventBus:
         handlers = self.handlers.get(event_type, [])
         for handler in handlers:
             self.metrics["total_attempts"] = self.metrics.get("total_attempts", 0) + 1
+            self.metrics["published"] = self.metrics.get("published", 0) + 1
             try:
                 handler(data)
                 self.metrics["events"] += 1
@@ -34,6 +35,6 @@ class EventBus:
                 raise
 
     def get_success_rate(self) -> float:
-        total = self.metrics.get("total_attempts", 0)
+        published = self.metrics.get("published", 0)
         successful = self.metrics.get("successful_attempts", 0)
-        return successful / total if total > 0 else 1.0
+        return successful / published if published > 0 else 1.0
