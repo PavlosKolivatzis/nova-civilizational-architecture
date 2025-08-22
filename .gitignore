@@ -1,0 +1,3 @@
+# Prevent binary artifacts without extensions
+**/civilization_deployment
+**/*_deployment
