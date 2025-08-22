@@ -12,12 +12,13 @@ from slot06_cultural_synthesis.multicultural_truth_synthesis import (
 )
 
 # Initialize the Flask app and the Slot 6 engine adapter
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__, template_folder='interface')
 engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
 
-    return render_template('interface.html')
 
-@app.route('/api/analyze', methods=['POST'])
+@app.route('/')
+def index():
+    return render_template('test_slot6_live.html')
 def analyze():
     """API endpoint to perform cultural analysis."""
     data = request.json
