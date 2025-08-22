@@ -206,7 +206,7 @@ def test_performance_metrics():
     for _ in range(5):
         engine.analyze_cultural_context("Test Org", {"region": "US"})
 
-    metrics = engine.get_performance_metrics()
+    metrics = engine.engine.get_performance_metrics()  # Call on the underlying engine
     print("✅ Performance Metrics Test:")
     print(f"  Total analyses: {metrics['synthesis_metrics']['total_analyses']}")
     print(f"  Thread safety: {metrics['synthesis_metrics']['thread_safe_operations']}")
@@ -255,7 +255,7 @@ def test_thread_safety():
         t.join()
 
     # Check metrics
-    metrics = engine.get_performance_metrics()
+    metrics = engine.engine.get_performance_metrics()  # Call on the underlying engine
     print("✅ Thread Safety Test:")
 @@ -323,93 +337,93 @@ async def test_health_monitoring():
     # stop_event = asyncio.Event()
