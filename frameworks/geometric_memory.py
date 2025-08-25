@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import time
+import hashlib
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
@@ -40,8 +41,10 @@ class GeometricMemory:
             return []
         # simple cosine distance on key hashing for demonstration
         def _vec(s: str) -> Tuple[float, float]:
-            h = float(abs(hash(s)))
-            return math.cos(h), math.sin(h)
+            digest = hashlib.sha256(s.encode()).hexdigest()
+            h1 = int(digest[:16], 16)
+            h2 = int(digest[16:32], 16)
+            return math.cos(h1), math.sin(h2)
 
         qv = _vec(query)
         scores = []
