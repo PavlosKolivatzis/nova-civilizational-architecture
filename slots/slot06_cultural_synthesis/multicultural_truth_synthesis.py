@@ -205,7 +205,13 @@ class AdaptiveSynthesisEngine:
             return base_max_safe
     def get_config(self) -> Dict[str, Any]:
         return asdict(self._cfg)
-    def analyze_and_simulate(self, institution_name: str, payload: Dict[str, Any], context: Dict[str, Any] = None) -> SynthesisResult:
+    def analyze_and_simulate(
+        self,
+        institution_name: str,
+        payload: Dict[str, Any],
+        context: Dict[str, Any] = None,
+        profile: CulturalProfile | None = None,
+    ) -> SynthesisResult:
         if self._shutdown_flag.is_set():
             return SynthesisResult(
                 simulation_status=SimulationResult.BLOCKED_BY_GUARDRAIL,
@@ -229,7 +235,7 @@ class AdaptiveSynthesisEngine:
                 compliance_score=0.0,
                 violations=["Input validation failed"],
             )
-        profile = self._generate_cultural_profile(context)
+        profile = profile or self._generate_cultural_profile(context)
         ideology_push = False
         try:
             ideology_push = bool((payload.get("messaging") or {}).get("ideology"))
@@ -394,7 +400,7 @@ class MulticulturalTruthSynthesisAdapter:
             return CulturalProfile()
     def validate_cultural_deployment(self, profile: CulturalProfile, institution_type: str, payload: Dict[str, Any]) -> GuardrailValidationResult:
         try:
-            res = self.engine.analyze_and_simulate(institution_type, payload, {})
+            res = self.engine.analyze_and_simulate(institution_type, payload, {}, profile)
             status_map = {
                 SimulationResult.APPROVED: DeploymentGuardrailResult.APPROVED,
                 SimulationResult.APPROVED_WITH_TRANSFORMATION: DeploymentGuardrailResult.REQUIRES_TRANSFORMATION,
