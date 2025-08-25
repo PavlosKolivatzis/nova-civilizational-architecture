@@ -62,9 +62,18 @@ class Slot6Adapter:
         if not self.available:
             return GuardrailValidationResult(result=DeploymentGuardrailResult.ERROR)
         try:
-           return ENGINE.validate_cultural_deployment(profile, institution_type, payload)
-        except Exception:
-            return GuardrailValidationResult(result=DeploymentGuardrailResult.ERROR)
+            return ENGINE.validate_cultural_deployment(
+                profile, institution_type, payload
+            )
+        except Exception as exc:
+            logging.getLogger(__name__).exception(
+                "Cultural deployment validation failed: %s", exc
+            )
+            return GuardrailValidationResult(
+                result=DeploymentGuardrailResult.ERROR,
+                compliance_score=0.0,
+                violations=[str(exc)],
+            )
 
     @staticmethod
     def empty_profile() -> CulturalProfile:
