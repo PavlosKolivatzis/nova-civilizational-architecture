@@ -61,7 +61,14 @@ def analyze():
 @app.route("/api/validate", methods=["POST"])
 def validate():
     try:
-        data = request.get_json() or {}
+        # ``get_json`` can raise an error for invalid JSON or return non-mapping
+        # types (e.g. a list).  Using ``silent=True`` avoids exceptions and
+        # allows us to fall back to an empty mapping when the payload is not a
+        # JSON object.  This mirrors the defensive parsing used in other
+        # endpoints.
+        raw = request.get_json(silent=True)
+        data = raw if isinstance(raw, dict) else {}
+
         profile_data = data.get("profile")
         if not profile_data:
             return jsonify({"error": "Profile data is required"}), 400
