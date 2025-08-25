@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Dict, Optional
-from urllib import request
+from urllib import request, error
 
 
 class RestAPIPlugin:
@@ -26,9 +26,14 @@ class RestAPIPlugin:
             body = json.dumps(data).encode()
             headers["Content-Type"] = "application/json"
         req = request.Request(self.url, data=body, headers=headers, method=self.method)
-        with request.urlopen(req, timeout=self.timeout) as resp:
-            content = resp.read()
-            try:
-                return json.loads(content)
-            except Exception:
-                return content.decode()
+        try:
+            with request.urlopen(req, timeout=self.timeout) as resp:
+                content = resp.read()
+                try:
+                    return json.loads(content)
+                except Exception:
+                    return content.decode()
+        except error.HTTPError as exc:
+            return {"error": "http_error", "code": exc.code, "reason": exc.reason}
+        except error.URLError as exc:
+            return {"error": "url_error", "reason": str(exc.reason)}
