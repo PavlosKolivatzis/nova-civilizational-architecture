@@ -1,4 +1,4 @@
 Flask==2.3.3
-pyyaml
-typing-extensions
-pytest-asyncio
+pyyaml==6.0.2
+typing-extensions==4.14.1
+pytest-asyncio==1.1.0
