@@ -94,8 +94,11 @@ def validate():
 
         institution_type = data.get("institutionType")
         payload = data.get("payload")
-        if not institution_type or not payload:
+        if not institution_type or payload is None:
             return jsonify({"error": "institutionType and payload are required"}), 400
+
+        if not isinstance(payload, dict):
+            return jsonify({"error": "payload must be a JSON object"}), 400
 
         if "content" not in payload:
             return jsonify({"error": "payload.content is required"}), 400
