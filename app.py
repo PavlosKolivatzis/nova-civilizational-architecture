@@ -70,7 +70,11 @@ def validate():
         data = raw if isinstance(raw, dict) else {}
 
         profile_data = data.get("profile")
-        if not profile_data:
+        # ``profile`` must be a mapping.  When the client submits a list or any
+        # other non-dictionary type, attempting to access ``.get`` would raise
+        # an exception and trigger a 500 response.  Guard against that scenario
+        # and return a deterministic 400 error instead.
+        if not isinstance(profile_data, dict):
             return jsonify({"error": "Profile data is required"}), 400
 
         context_enum = next(
