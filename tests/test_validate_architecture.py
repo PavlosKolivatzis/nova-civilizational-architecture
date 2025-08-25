@@ -58,3 +58,15 @@ def test_validate_architecture(client):
     response = client.post("/api/validate_architecture", json=payload)
     assert response.status_code == 200
     assert response.get_json() == payload
+
+
+def test_validate_architecture_rejects_non_mapping_payload(client):
+    """The endpoint should gracefully handle JSON types other than objects."""
+
+    response = client.post("/api/validate_architecture", json=[1, 2, 3])
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "client": "test",
+        "validation": "failed",
+        "error": "Missing required fields",
+    }

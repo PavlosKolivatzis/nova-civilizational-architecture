@@ -28,7 +28,11 @@ def analyze():
 
     
 
-    data = request.get_json() or {}
+    # ``get_json`` may return non-mapping types (e.g. a list) or raise when the
+    # request body isn't valid JSON.  Using ``silent=True`` avoids exceptions and
+    # allows us to gracefully handle unexpected payload shapes.
+    raw = request.get_json(silent=True)
+    data = raw if isinstance(raw, dict) else {}
     content = data.get("content")
     context = data.get("cultural_context")
     if not content or not context:
@@ -115,7 +119,8 @@ def validate_architecture():
     provided in the test-suite.
     """
 
-    data = request.get_json() or {}
+    raw = request.get_json(silent=True)
+    data = raw if isinstance(raw, dict) else {}
     required = {
         "analysis",
         "cultural_alignment",
