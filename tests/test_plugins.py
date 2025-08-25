@@ -44,3 +44,41 @@ def test_rest_api_plugin() -> None:
     finally:
         server.shutdown()
         thread.join()
+
+
+def test_rest_api_plugin_http_error() -> None:
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):  # type: ignore[override]
+            self.send_error(500, "boom")
+
+        def log_message(self, format, *args):  # pragma: no cover - silence
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever)
+    thread.daemon = True
+    thread.start()
+    try:
+        url = f"http://127.0.0.1:{server.server_address[1]}"
+        plugin = RestAPIPlugin(url)
+        result = plugin.run()
+        assert result == {"error": "http_error", "code": 500, "reason": "boom"}
+    finally:
+        server.shutdown()
+        thread.join()
+
+
+def test_rest_api_plugin_url_error() -> None:
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):  # type: ignore[override]
+            pass
+
+        def log_message(self, format, *args):  # pragma: no cover - silence
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    port = server.server_address[1]
+    server.server_close()
+    plugin = RestAPIPlugin(f"http://127.0.0.1:{port}", timeout=0.1)
+    result = plugin.run()
+    assert result.get("error") == "url_error"
