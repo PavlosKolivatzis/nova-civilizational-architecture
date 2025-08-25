@@ -15,10 +15,18 @@ Production-grade multicultural truth synthesis engine with 10-slot cognitive arc
 3. Apply patches from `Slot10_patches.md`
 4. Run tests from `testing_framework.md`
 
+## 📦 Dependencies
+
+Key dependencies are pinned for reproducible installs:
+
+- PyYAML 6.0.2
+- typing-extensions 4.14.1
+- pytest-asyncio 1.1.0
+
 ## 🛡️ Architecture
 10-slot cognitive framework:
 - **Slots 1-5:** Core truth processing
-- **Slot 6:** Cultural adaptation (Adaptive Synthesis Engine v7.4.1) 
+- **Slot 6:** Cultural adaptation (Adaptive Synthesis Engine v7.4.1)
 - **Slots 7-10:** Production deployment
 
 ## 🔒 Repository Status
