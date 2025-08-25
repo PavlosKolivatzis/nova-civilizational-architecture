@@ -1,6 +1,3 @@
-## **File 4: testing_framework.md**
-
-```markdown
 # NOVA Enhancement - Testing Framework
 
 ## Quick Tests
@@ -116,7 +113,8 @@ def test_guardrails():
 
 if __name__ == "__main__":
     test_guardrails()
-@@ -125,131 +130,140 @@ import asyncio
+
+import asyncio
 import types
 
 def create_mock_slots():
@@ -257,7 +255,25 @@ def test_thread_safety():
     # Check metrics
     metrics = engine.engine.get_performance_metrics()  # Call on the underlying engine
     print("✅ Thread Safety Test:")
-@@ -323,93 +337,93 @@ async def test_health_monitoring():
+    print(f"  Total analyses: {metrics['synthesis_metrics']['total_analyses']}")
+    print(f"  Thread safety: {metrics['synthesis_metrics']['thread_safe_operations']}")
+
+if __name__ == "__main__":
+    test_thread_safety()
+```
+
+### Test 7: Health Monitoring Test
+
+#### Description
+Demonstrates cancellable health monitoring for Slot 10 deployment.
+
+#### Script
+```python
+# test_health_monitoring.py
+import asyncio
+
+async def test_health_monitoring():
+    # deployer = InstitutionalNodeDeployer(...)
     # stop_event = asyncio.Event()
     # health_task = asyncio.create_task(
     #     deployer.monitor_node_health(stop_event=stop_event)
@@ -266,6 +282,7 @@ def test_thread_safety():
     # stop_event.set()
     # await health_task
     # print("✅ Health monitoring stopped gracefully")
+    pass
 
 if __name__ == "__main__":
     asyncio.run(test_health_monitoring())
