@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 import logging
+import secrets
 
 
 @dataclass
@@ -34,7 +35,7 @@ class TruthAnchorEngine:
 
     VERSION = "1.2.0"
 
-    def __init__(self) -> None:
+    def __init__(self, secret_key: Optional[bytes] = None) -> None:
         self._anchors: Dict[str, AnchorRecord] = {}
         self.metrics = EngineMetrics()
         self.logger = logging.getLogger("truth_anchor_engine")
@@ -45,6 +46,13 @@ class TruthAnchorEngine:
             )
             self.logger.addHandler(handler)
         self.logger.setLevel(logging.INFO)
+
+        # Handle secret key generation or assignment
+        self._secret_key = secret_key or secrets.token_bytes(32)
+
+    def export_secret_key(self) -> bytes:
+        """Return the engine's secret key for external storage."""
+        return self._secret_key
 
     # ------------------------------------------------------------------
     # Anchor management
