@@ -280,22 +280,36 @@ class AdaptiveSynthesisEngine:
         profile = self._generate_cultural_profile(context)
 
         # Step 3: Apply anchor constraints if verification failed
+        penalty = 0.0
         if not anchor_result['anchor_verified']:
+            penalty = self._calculate_epistemic_penalty(anchor_result['anchor_confidence'])
             profile = self._apply_anchor_constraints(profile, anchor_result)
 
         # Step 4: Continue with existing simulation logic
         # (forbidden term scan, consent check, etc.)
 
-        # For demonstration - complete with a simple approval
-        # In production, this would include the full simulation logic
-        simulation_status = SimulationResult.APPROVED
-        compliance_score = 1.0
-        violations = []
-        recommendations = []
+        # Derive simulation status and compliance score from anchor result
+        if not anchor_result['anchor_verified']:
+            if anchor_result['anchor_status'] == 'FAILED':
+                simulation_status = SimulationResult.BLOCKED_BY_GUARDRAIL
+                compliance_score = 0.0
+            else:
+                simulation_status = SimulationResult.APPROVED_WITH_TRANSFORMATION
+                compliance_score = max(0.0, 1.0 - penalty)
+            violations = anchor_result.get('anchor_violations', [])
+            recommendations = []
+        else:
+            simulation_status = SimulationResult.APPROVED
+            compliance_score = 1.0
+            violations = []
+            recommendations = []
 
         # Update metrics
         with self._metrics_lock:
-            self._successful_simulations += 1
+            if simulation_status == SimulationResult.BLOCKED_BY_GUARDRAIL:
+                self._guardrail_blocks += 1
+            else:
+                self._successful_simulations += 1
 
         logger.info(f"Analysis completed in {(time.time() - start_time)*1000:.2f}ms")
 
