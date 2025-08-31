@@ -14,12 +14,20 @@ of truth for these symbolic constants.
 
 from enum import Enum
 
+
 class DeploymentGuardrailResult(Enum):
     APPROVED = "APPROVED"
     REQUIRES_TRANSFORMATION = "REQUIRES_TRANSFORMATION"
     BLOCKED_PRINCIPLE_VIOLATION = "BLOCKED_PRINCIPLE_VIOLATION"
     BLOCKED_CULTURAL_SENSITIVITY = "BLOCKED_CULTURAL_SENSITIVITY"
     ERROR = "ERROR"
+
+
+class AnchorValidationMode(str, Enum):
+    """Runtime policy for handling anchor verification failures."""
+
+    STRICT = "STRICT"
+    ANNOTATE = "ANNOTATE"
 
 
 # --- Slot 10 architecture validation enums ---------------------------------
@@ -67,6 +75,7 @@ class DiversityDimension(str, Enum):
 
 __all__ = [
     "DeploymentGuardrailResult",
+    "AnchorValidationMode",
     "RiskLevel",
     "LangOrientation",
     "PsychologyType",
