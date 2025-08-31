@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from ..bus import EventBus
 from ..adapters.slot4_tri import Slot4TRIAdapter
+from ..adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
 from ..adapters.slot6_cultural import Slot6Adapter
 from frameworks.enums import DeploymentGuardrailResult
 try:  # optional import for geometric memory
@@ -24,10 +25,12 @@ class NovaOrchestrator:
         bus: Optional[EventBus] = None,
         slot6: Optional[Slot6Adapter] = None,
         slot4: Optional[Slot4TRIAdapter] = None,
+        slot1: Optional[Slot1TruthAnchorAdapter] = None,
     ) -> None:
         self.bus = bus or EventBus()
         self.slot6 = slot6 or Slot6Adapter()
         self.slot4 = slot4 or Slot4TRIAdapter()
+        self.slot1 = slot1 or Slot1TruthAnchorAdapter()
         self.start_time = time.time()
         level = os.getenv("NOVA_LOG_LEVEL", "INFO").upper()
         self.logger = logging.getLogger("nova.orchestrator")
@@ -71,6 +74,12 @@ class NovaOrchestrator:
             self.bus.subscribe("deploy.node", self._handle_deploy)
 
     async def _handle_content_validate(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        if self.slot1.available:
+            payload = event.get('payload')
+            content = payload.get('content') if isinstance(payload, dict) else None
+            anchor_id = event.get('anchor_id')
+            if anchor_id and content is not None:
+                self.slot1.verify(anchor_id, content)
         if self.slot4.available:
             try:
                 await asyncio.wait_for(self.slot4.calibrate(event), timeout=5)
@@ -113,6 +122,7 @@ class NovaOrchestrator:
             "uptime": uptime,
             "bus": self.bus.snapshot(),
             "slots": {
+                "slot1_truth_anchor": self.slot1.available,
                 "slot4_tri": self.slot4.available,
                 "slot6_cultural": self.slot6.available,
                 "slot10_deployer": self._slot10_available,
