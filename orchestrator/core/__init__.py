@@ -4,13 +4,13 @@ import asyncio
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from ..bus import EventBus
 from ..adapters.slot4_tri import Slot4TRIAdapter
 from ..adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
 from ..adapters.slot6_cultural import Slot6Adapter
-from frameworks.enums import DeploymentGuardrailResult
+from frameworks.enums import DeploymentGuardrailResult, AnchorValidationMode
 try:  # optional import for geometric memory
     from frameworks.geometric_memory import GeometricMemory
 except Exception:  # pragma: no cover - module added later
@@ -35,6 +35,8 @@ class NovaOrchestrator:
         level = os.getenv("NOVA_LOG_LEVEL", "INFO").upper()
         self.logger = logging.getLogger("nova.orchestrator")
         self.logger.setLevel(level)
+        mode = os.getenv("NOVA_ANCHOR_VALIDATION_MODE", "STRICT").upper()
+        self.anchor_validation_mode = AnchorValidationMode[mode] if mode in AnchorValidationMode.__members__ else AnchorValidationMode.STRICT
         self._slot10_enabled = os.getenv("NOVA_SLOT10_ENABLED", "false").lower() == "true"
         self._slot10_available = False
         self.deployer = None
@@ -73,13 +75,30 @@ class NovaOrchestrator:
         if self._slot10_available:
             self.bus.subscribe("deploy.node", self._handle_deploy)
 
+    async def _handle_anchor_verification(self, event: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+        if not self.slot1.available:
+            return True, event
+        payload = event.get("payload")
+        content = payload.get("content") if isinstance(payload, dict) else None
+        anchor_id = event.get("anchor_id")
+        if not anchor_id or content is None:
+            return True, event
+        try:
+            valid = self.slot1.verify(anchor_id, content)
+        except Exception:
+            valid = False
+        if valid:
+            return True, event
+        await self.bus.publish("anchor_verification_failed", {"anchor_id": anchor_id})
+        if self.anchor_validation_mode == AnchorValidationMode.STRICT:
+            return False, {"result": DeploymentGuardrailResult.BLOCKED_PRINCIPLE_VIOLATION}
+        event["anchor_status"] = "FAILED"
+        return True, event
+
     async def _handle_content_validate(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        if self.slot1.available:
-            payload = event.get('payload')
-            content = payload.get('content') if isinstance(payload, dict) else None
-            anchor_id = event.get('anchor_id')
-            if anchor_id and content is not None:
-                self.slot1.verify(anchor_id, content)
+        should_continue, event = await self._handle_anchor_verification(event)
+        if not should_continue:
+            return event
         if self.slot4.available:
             try:
                 await asyncio.wait_for(self.slot4.calibrate(event), timeout=5)
