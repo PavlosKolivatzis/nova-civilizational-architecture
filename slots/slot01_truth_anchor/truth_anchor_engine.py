@@ -30,6 +30,14 @@ class EngineMetrics:
     failures: int = 0
 
 
+@dataclass
+class AnchorMetrics:
+    """Track anchor counts for regression checks."""
+
+    total_anchors: int = 0
+    active_anchors: int = 0
+
+
 class TruthAnchorEngine:
     """Core engine for truth anchor management (v1.2.0)."""
 
@@ -38,6 +46,7 @@ class TruthAnchorEngine:
     def __init__(self, secret_key: Optional[bytes] = None) -> None:
         self._anchors: Dict[str, AnchorRecord] = {}
         self.metrics = EngineMetrics()
+        self.anchor_metrics = AnchorMetrics()
         self.logger = logging.getLogger("truth_anchor_engine")
         if not self.logger.handlers:
             handler = logging.StreamHandler()
@@ -59,8 +68,22 @@ class TruthAnchorEngine:
     # ------------------------------------------------------------------
     def register(self, anchor_id: str, value: Any, **metadata: Any) -> None:
         """Register ``value`` under ``anchor_id`` with optional metadata."""
+        if anchor_id not in self._anchors:
+            self.anchor_metrics.total_anchors += 1
+            self.anchor_metrics.active_anchors += 1
         self._anchors[anchor_id] = AnchorRecord(value=value, metadata=metadata)
         self.logger.debug("Anchor registered: %s", anchor_id)
+
+    def _establish_core_anchor(self) -> None:
+        """Ensure the core ``nova.core`` anchor exists without skewing metrics."""
+        anchor_id = "nova.core"
+        if anchor_id in self._anchors:
+            # Replace existing entry without touching metrics
+            self._anchors[anchor_id] = AnchorRecord(
+                value=self._secret_key, metadata={"backup": self._secret_key}
+            )
+        else:
+            self.register(anchor_id, self._secret_key, backup=self._secret_key)
 
     def verify(self, anchor_id: str, value: Any) -> bool:
         """Validate ``value`` against a stored anchor.
@@ -109,7 +132,9 @@ class TruthAnchorEngine:
             "lookups": self.metrics.lookups,
             "recoveries": self.metrics.recoveries,
             "failures": self.metrics.failures,
+            "total_anchors": self.anchor_metrics.total_anchors,
+            "active_anchors": self.anchor_metrics.active_anchors,
         }
 
 
-__all__ = ["TruthAnchorEngine", "AnchorRecord", "EngineMetrics"]
+__all__ = ["TruthAnchorEngine", "AnchorRecord", "EngineMetrics", "AnchorMetrics"]
