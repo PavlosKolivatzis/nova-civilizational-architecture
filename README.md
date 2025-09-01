@@ -50,3 +50,25 @@ python app.py --deploy "MIT_AI_Lab" --type academic
 
 The system degrades gracefully if optional modules like TRI or ΔTHRESH
 are absent.
+
+## 🔐 RealityLock Structure
+Anchors are guarded by a cryptographic `RealityLock` that stores an
+SHA-256 integrity hash of the anchor string. Use
+`RealityLock.from_anchor(id)` to construct a lock and
+`verify_integrity()` to validate it. The thread-safe
+`RealityVerifier` performs these checks without holding internal
+locks. The previous `Lock` class remains as a compatibility alias.
+
+## 🗄️ Cache Usage & Configuration
+Slot discovery uses a cached file index. Rebuild the cache with
+`slot_loader.find_file(base_dir, refresh=True)` when filesystem
+changes occur. Optional geometric-memory caching is controlled via the
+`NOVA_GM_ENABLED` environment variable; when disabled, cache lookups
+are bypassed.
+
+## 🚀 Public API & Migration Notes
+`TruthAnchorEngine` v1.2 exposes `export_secret_key()` for key
+rotation and provides additional anchor metrics. Projects using the
+older `Lock` type should migrate to `RealityLock` and, where needed,
+incorporate the `RealityVerifier` for integrity validation.
+
