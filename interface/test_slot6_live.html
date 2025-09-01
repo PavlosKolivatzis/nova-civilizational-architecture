@@ -422,10 +422,10 @@
                 const recommendations = [];
 
                 // Scan for forbidden elements
-                const content = JSON.stringify(payload).toLowerCase();
+                const payloadText = JSON.stringify(payload).toLowerCase();
                 const forbiddenHits = [];
                 for (const forbidden of this.forbiddenElements) {
-                    if (content.includes(forbidden)) {
+                    if (payloadText.includes(forbidden)) {
                         forbiddenHits.push(forbidden);
                     }
                 }
@@ -550,7 +550,7 @@
             const institutionType = document.getElementById('institutionType').value;
 
             const payload = {
-                content: testContent,
+                institution_name: testContent,
                 messaging: {}
             };
 

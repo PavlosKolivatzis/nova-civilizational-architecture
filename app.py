@@ -33,12 +33,12 @@ def analyze():
     # allows us to gracefully handle unexpected payload shapes.
     raw = request.get_json(silent=True)
     data = raw if isinstance(raw, dict) else {}
-    content = data.get("content")
+    institution_name = data.get("institution_name")
     context = data.get("cultural_context")
-    if not content or not context:
-        return jsonify({"error": "Missing required fields: content and cultural_context"}), 400
+    if not institution_name or not context:
+        return jsonify({"error": "Missing required fields: institution_name and cultural_context"}), 400
     try:
-        profile = cultural_synthesis_engine.analyze_cultural_context(content, context)
+        profile = cultural_synthesis_engine.analyze_cultural_context(institution_name, context)
         result = {
             "individualism_index": profile.individualism_index,
             "power_distance": profile.power_distance,
