@@ -19,6 +19,11 @@ Core reality lock with recovery protocols.
 - When omitted, a new 32-byte key is generated automatically.
 - Use `export_secret_key()` to retrieve the key and store it securely for reuse.
 
+## Logging
+- `TruthAnchorEngine` does not configure logging handlers internally.
+- Configure logging via application settings or pass a custom `Logger` instance
+  to the constructor.
+
 ## Cryptographic RealityLock
 Anchors are secured by a `RealityLock` pairing each anchor string with a
 SHA-256 integrity hash. Create one with

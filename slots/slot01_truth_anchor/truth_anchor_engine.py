@@ -43,18 +43,15 @@ class TruthAnchorEngine:
 
     VERSION = "1.2.0"
 
-    def __init__(self, secret_key: Optional[bytes] = None) -> None:
+    def __init__(
+        self,
+        secret_key: Optional[bytes] = None,
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
         self._anchors: Dict[str, AnchorRecord] = {}
         self.metrics = EngineMetrics()
         self.anchor_metrics = AnchorMetrics()
-        self.logger = logging.getLogger("truth_anchor_engine")
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            handler.setFormatter(
-                logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-            )
-            self.logger.addHandler(handler)
-        self.logger.setLevel(logging.INFO)
+        self.logger = logger or logging.getLogger("truth_anchor_engine")
 
         # Handle secret key generation or assignment
         self._secret_key = secret_key or secrets.token_bytes(32)
