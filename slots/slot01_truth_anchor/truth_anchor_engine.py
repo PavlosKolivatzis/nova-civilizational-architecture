@@ -58,6 +58,10 @@ class TruthAnchorEngine:
 
         # Handle secret key generation or assignment
         self._secret_key = secret_key or secrets.token_bytes(32)
+        self._establish_core_anchor()
+        # Verify the core anchor exists in an initial snapshot
+        if "nova.core" not in self._anchors or self.snapshot()["anchors"] < 1:
+            self.logger.error("Core anchor 'nova.core' missing from initialization snapshot")
 
     def export_secret_key(self) -> bytes:
         """Return the engine's secret key for external storage."""
