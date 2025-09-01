@@ -219,7 +219,6 @@ class AdaptiveSynthesisEngine:
                 compliance_score=0.0,
                 violations=["Engine is shutting down"],
             )
-        t0 = self._now()
         with self._metrics_lock:
             self._total_analyses += 1
         try:
