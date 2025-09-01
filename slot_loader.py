@@ -10,8 +10,9 @@ from typing import Dict, List, Tuple
 def normalize(name: str) -> str:
     """Normalize strings for comparison."""
     cleaned = re.sub(r"[^a-z0-9]", "", name.lower())
-    # collapse leading zeros in numeric segments (e.g. slot06 -> slot6)
-    return re.sub(r"0+(\d)", r"\1", cleaned)
+    # collapse only leading zeros in numeric segments (e.g. slot06 -> slot6)
+    # avoid stripping zeros that are preceded by another digit
+    return re.sub(r"(?<!\d)0+(\d)", r"\1", cleaned)
 
 
 # Cache of indexed files per base directory.  Mapping of base directory to a
