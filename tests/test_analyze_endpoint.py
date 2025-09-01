@@ -16,7 +16,7 @@ def test_analyze_endpoint_validation(client):
     assert "Missing required fields" in response.get_json()['error']
 
     response = client.post('/api/analyze', json={
-        'content': 'test content',
+        'institution_name': 'test institution',
         'cultural_context': {'type': 'western'}
     })
     assert response.status_code == 200
