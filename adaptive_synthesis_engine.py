@@ -13,13 +13,12 @@ Enhanced with:
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Iterable
+from typing import Any, Dict, List, Optional
 import time
 import hashlib
 import threading
 import re
 import logging
-from collections import deque
 
 # Configure logging
 logger = logging.getLogger('synthesis_engine')
