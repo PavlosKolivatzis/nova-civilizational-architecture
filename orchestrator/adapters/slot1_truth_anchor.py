@@ -24,7 +24,10 @@ class Slot1TruthAnchorAdapter:
         if not self.available or not anchor_id:
             return
         try:
-            ENGINE.register(anchor_id, value, **metadata)
+            if hasattr(ENGINE, "establish_anchor"):
+                ENGINE.establish_anchor(anchor_id, value, **metadata)
+            else:
+                ENGINE.register(anchor_id, value, **metadata)
         except Exception as exc:  # pragma: no cover - defensive
             logging.getLogger(__name__).exception(
                 "Anchor registration failed: %s", exc
@@ -34,6 +37,8 @@ class Slot1TruthAnchorAdapter:
         if not self.available or not anchor_id:
             return True
         try:
+            if hasattr(ENGINE, "verify_anchor"):
+                return ENGINE.verify_anchor(anchor_id, value)
             return ENGINE.verify(anchor_id, value)
         except Exception as exc:  # pragma: no cover - defensive
             logging.getLogger(__name__).exception(
@@ -45,6 +50,8 @@ class Slot1TruthAnchorAdapter:
         if not self.available:
             return {}
         try:
+            if hasattr(ENGINE, "list_anchors"):
+                return ENGINE.list_anchors()
             return ENGINE.snapshot()
         except Exception:  # pragma: no cover - defensive
             return {}
