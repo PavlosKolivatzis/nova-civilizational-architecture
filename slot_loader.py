@@ -7,12 +7,15 @@ from types import ModuleType
 from typing import Dict, List, Tuple
 
 
+_LEADING_ZERO_RE = re.compile(r"(?<!\d)0+(?=\d)")
+
+
 def normalize(name: str) -> str:
     """Normalize strings for comparison."""
     cleaned = re.sub(r"[^a-z0-9]", "", name.lower())
     # collapse only leading zeros in numeric segments (e.g. slot06 -> slot6)
     # avoid stripping zeros that are preceded by another digit
-    return re.sub(r"(?<!\d)0+(\d)", r"\1", cleaned)
+    return _LEADING_ZERO_RE.sub("", cleaned)
 
 
 # Cache of indexed files per base directory.  Mapping of base directory to a
