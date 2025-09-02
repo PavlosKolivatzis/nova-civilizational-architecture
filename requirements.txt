@@ -5,3 +5,5 @@ pytest-asyncio==1.1.0
 pydantic-settings>=2.0.0
 
 numpy==1.26.4
+
+hypothesis==6.138.13
