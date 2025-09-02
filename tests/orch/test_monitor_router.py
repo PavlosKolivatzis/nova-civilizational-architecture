@@ -25,8 +25,8 @@ async def test_monitor_records_and_router_fallback():
     health = mon.get_slot_health("slot6")
     assert health["avg_latency_ms"] >= 1.0
 
-    routed = router.get_route("slot6")
-    assert routed == "slot6_fallback"
+    slot, _ = router.get_route("slot6")
+    assert slot == "slot6_fallback"
 
 
 @pytest.mark.asyncio

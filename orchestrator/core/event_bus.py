@@ -1,9 +1,12 @@
 import asyncio
 import uuid
 import time
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,6 +39,7 @@ class EventBus:
 
     async def publish(self, topic: str, event: Event) -> List[Any]:
         self.monitor.record_event_start(event)
+        logger.info("trace", extra={"event": "start", "trace_id": event.trace_id, "slot": event.target_slot})
         handlers = self._subs.get(topic, [])
         results: List[Any] = []
         for h in handlers:
@@ -52,13 +56,42 @@ class EventBus:
                 self.metrics["failed_attempts"] = self.metrics.get("failed_attempts", 0) + 1
                 self.metrics["timeout_failures"] = self.metrics.get("timeout_failures", 0) + 1
                 self.monitor.record_event_failure(event, e)
+                logger.info(
+                    "trace",
+                    extra={
+                        "event": "end",
+                        "status": "error",
+                        "trace_id": event.trace_id,
+                        "slot": event.target_slot,
+                        "error": str(e),
+                    },
+                )
                 raise
             except Exception as e:
                 self.metrics["failed_attempts"] = self.metrics.get("failed_attempts", 0) + 1
                 self.metrics["exception_failures"] = self.metrics.get("exception_failures", 0) + 1
                 self.monitor.record_event_failure(event, e)
+                logger.info(
+                    "trace",
+                    extra={
+                        "event": "end",
+                        "status": "error",
+                        "trace_id": event.trace_id,
+                        "slot": event.target_slot,
+                        "error": str(e),
+                    },
+                )
                 raise
         self.monitor.record_event_success(event, results if results else None)
+        logger.info(
+            "trace",
+            extra={
+                "event": "end",
+                "status": "ok",
+                "trace_id": event.trace_id,
+                "slot": event.target_slot,
+            },
+        )
         return results
 
     def get_success_rate(self) -> float:
