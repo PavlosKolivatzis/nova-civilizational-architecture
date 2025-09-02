@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 from collections import defaultdict
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("event_bus")
 
 
 @dataclass
