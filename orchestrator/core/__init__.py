@@ -6,11 +6,15 @@ import os
 import time
 from typing import Any, Dict, Optional, Tuple
 
-from ..bus import EventBus
+from ..bus import EventBus as Bus
 from ..adapters.slot4_tri import Slot4TRIAdapter
 from ..adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
 from ..adapters.slot6_cultural import Slot6Adapter
 from frameworks.enums import DeploymentGuardrailResult, AnchorValidationMode
+from .router import AdaptiveRouter
+from .performance_monitor import PerformanceMonitor
+from .circuit_breaker import CircuitBreaker
+from .event_bus import EventBus
 try:  # optional import for geometric memory
     from frameworks.geometric_memory import GeometricMemory
 except Exception:  # pragma: no cover - module added later
@@ -22,12 +26,12 @@ class NovaOrchestrator:
 
     def __init__(
         self,
-        bus: Optional[EventBus] = None,
+        bus: Optional[Bus] = None,
         slot6: Optional[Slot6Adapter] = None,
         slot4: Optional[Slot4TRIAdapter] = None,
         slot1: Optional[Slot1TruthAnchorAdapter] = None,
     ) -> None:
-        self.bus = bus or EventBus()
+        self.bus = bus or Bus()
         self.slot6 = slot6 or Slot6Adapter()
         self.slot4 = slot4 or Slot4TRIAdapter()
         self.slot1 = slot1 or Slot1TruthAnchorAdapter()
@@ -149,3 +153,21 @@ class NovaOrchestrator:
         }
 
 __all__ = ["NovaOrchestrator", "DeploymentGuardrailResult"]
+
+
+# Default fallback mappings for critical slots
+DEFAULT_FALLBACK_MAP = {
+    "slot06_cultural_synthesis": "slot01_truth_anchor",  # Fallback to truth anchor for cultural synthesis
+    "slot09_distortion_protection": "slot01_truth_anchor",  # Fallback to truth anchor for distortion protection
+    "slot10_civilizational_deployment": "slot07_production_controls",  # Fallback to production controls for deployment
+}
+
+
+def create_router(performance_monitor: PerformanceMonitor) -> AdaptiveRouter:
+    """Create a pre-configured router with default fallbacks."""
+    router = AdaptiveRouter(performance_monitor)
+    router.fallback_map = DEFAULT_FALLBACK_MAP.copy()
+    return router
+
+
+__all__ += ["DEFAULT_FALLBACK_MAP", "create_router", "AdaptiveRouter", "PerformanceMonitor", "CircuitBreaker", "EventBus"]

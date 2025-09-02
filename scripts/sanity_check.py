@@ -8,13 +8,29 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 try:
     from orchestrator.app import monitor, router, SLOT_REGISTRY
-    from orchestrator.health import health_payload
+    from orchestrator.health import health_payload, collect_slot_selfchecks
     from orchestrator.config import config
+    from orchestrator.core import DEFAULT_FALLBACK_MAP
 
     print("✅ Health Payload:")
     payload = health_payload(SLOT_REGISTRY, monitor, router)
     print(f"Slots monitored: {len(payload.get('slots', {}))}")
     print(f"Router thresholds: {payload.get('router_thresholds', {})}")
+
+    print("\n✅ Fallback Configuration:")
+    print(f"Default fallback map: {DEFAULT_FALLBACK_MAP}")
+    print(f"Router fallback map: {getattr(router, 'fallback_map', {})}")
+
+    print("\n✅ Slot Self-Checks:")
+    self_checks = collect_slot_selfchecks(SLOT_REGISTRY)
+    for slot_id, check in self_checks.items():
+        status = check.get('self_check', 'unknown')
+        print(f"  {slot_id}: {status}")
+
+    print("\n✅ Circuit Breaker Status:")
+    cb_metrics = payload.get('circuit_breaker', {})
+    trip_count = cb_metrics.get('trip_count', 0)
+    print(f"Trip count: {trip_count} {'✅' if trip_count == 0 else '⚠️'}")
 
     print("\n✅ Configuration:")
     print(f"TRUTH_THRESHOLD: {config.TRUTH_THRESHOLD}")

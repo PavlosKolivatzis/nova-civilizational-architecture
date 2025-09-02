@@ -16,14 +16,14 @@ except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
 
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.core.event_bus import EventBus, Event
-from orchestrator.core.router import AdaptiveRouter
-from orchestrator.core.circuit_breaker import CircuitBreaker
+from orchestrator.core import create_router, DEFAULT_FALLBACK_MAP
+from logging_config import configure_logging
 
 # Monitor, bus and router are created once and reused across requests
 monitor = PerformanceMonitor()
 bus = EventBus(monitor=monitor)
-cb = CircuitBreaker(monitor)
-router = AdaptiveRouter(performance_monitor=monitor, circuit_breaker=cb)
+router = create_router(monitor)
+configure_logging(level="INFO", json_format=True)
 
 # Optional: configure fallbacks
 # router.fallback_map = {"slot6": "slot6_fallback"}
