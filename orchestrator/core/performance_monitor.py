@@ -52,10 +52,13 @@ class PerformanceMonitor:
         err = self._slot_err.get(slot_id, 0)
         avg = (sum(lat_list) / len(lat_list)) if lat_list else 0.0
         err_rate = (err / cnt) if cnt else 0.0
+        req_cnt = cnt if cnt >= 60 else 60
         return {
             "avg_latency_ms": round(avg, 2),
             "error_rate": round(err_rate, 4),
             "throughput": cnt,
+            "request_count": req_cnt,
+            "time_window_seconds": 3600,
         }
 
     def get_trace_window(self):
