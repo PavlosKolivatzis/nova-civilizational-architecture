@@ -1,38 +1,65 @@
-import logging
+import asyncio
+import uuid
+import time
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
 from collections import defaultdict
-from typing import Any, Callable, Dict, List
+
+
+@dataclass
+class Event:
+    target_slot: str
+    payload: Dict[str, Any]
+    trace_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_ns: int = field(default_factory=time.perf_counter_ns)
+
+
+class _NullMonitor:
+    def record_event_start(self, event):
+        pass
+
+    def record_event_success(self, event, result):
+        pass
+
+    def record_event_failure(self, event, exc):
+        pass
 
 
 class EventBus:
-    """Simple synchronous event bus with detailed metrics."""
-
-    def __init__(self) -> None:
-        self.handlers: Dict[str, List[Callable[[Dict[str, Any]], Any]]] = defaultdict(list)
+    def __init__(self, monitor: Optional[Any] = None) -> None:
+        self._subs: Dict[str, List[Callable[[Event], Any]]] = defaultdict(list)
+        self.monitor = monitor or _NullMonitor()
         self.metrics: Dict[str, int] = {"events": 0}
-        self.logger = logging.getLogger(__name__)
 
-    def subscribe(self, event_type: str, handler: Callable[[Dict[str, Any]], Any]) -> None:
-        self.handlers[event_type].append(handler)
+    def subscribe(self, topic: str, handler: Callable[[Event], Any]) -> None:
+        self._subs[topic].append(handler)
 
-    def publish(self, event_type: str, data: Dict[str, Any]) -> None:
-        handlers = self.handlers.get(event_type, [])
-        for handler in handlers:
+    async def publish(self, topic: str, event: Event) -> List[Any]:
+        self.monitor.record_event_start(event)
+        handlers = self._subs.get(topic, [])
+        results: List[Any] = []
+        for h in handlers:
             self.metrics["total_attempts"] = self.metrics.get("total_attempts", 0) + 1
             self.metrics["published"] = self.metrics.get("published", 0) + 1
             try:
-                handler(data)
+                res = h(event)
+                if asyncio.iscoroutine(res):
+                    res = await res
+                results.append(res)
                 self.metrics["events"] += 1
                 self.metrics["successful_attempts"] = self.metrics.get("successful_attempts", 0) + 1
-            except TimeoutError as e:  # pragma: no cover - not triggered in tests
+            except TimeoutError as e:  # pragma: no cover - rare
                 self.metrics["failed_attempts"] = self.metrics.get("failed_attempts", 0) + 1
                 self.metrics["timeout_failures"] = self.metrics.get("timeout_failures", 0) + 1
-                self.logger.error(f"Handler timeout: {e}")
+                self.monitor.record_event_failure(event, e)
                 raise
             except Exception as e:
                 self.metrics["failed_attempts"] = self.metrics.get("failed_attempts", 0) + 1
                 self.metrics["exception_failures"] = self.metrics.get("exception_failures", 0) + 1
-                self.logger.error(f"Handler failed: {e}")
+                self.monitor.record_event_failure(event, e)
                 raise
+        self.monitor.record_event_success(event, results if results else None)
+        return results
 
     def get_success_rate(self) -> float:
         published = self.metrics.get("published", 0)
