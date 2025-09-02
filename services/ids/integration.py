@@ -1,14 +1,18 @@
-import logging
-from typing import Dict, List, Optional
-from threading import RLock
-import os
 import json
-import time
-from .core import InterpretiveDriftSynthesizer, IDSConfig, IDSState
+import logging
+import time  # needed for perf_counter
+from threading import RLock
+from typing import Dict, List, Optional
 
+from config.feature_flags import (
+    IDS_ALLOWED_SCOPES,
+    IDS_SCHEMA_VALIDATE,
+    IDS_STRICT_SCOPE_VALIDATE,
+)
+
+from .core import IDSConfig, IDSState, InterpretiveDriftSynthesizer
 
 logger = logging.getLogger("ids")
-IDS_SCHEMA_VALIDATE = os.getenv("IDS_SCHEMA_VALIDATE", "false").lower() == "true"
 
 
 class IDSIntegrationService:
@@ -114,8 +118,12 @@ class IDSIntegrationService:
             raise ValueError("Vector must contain numbers")
         if not trace_id:
             raise ValueError("Missing trace_id")
-        if scope not in ["traits", "content", "signals"]:
-            raise ValueError(f"Invalid scope: {scope}")
+        allowed = set(IDS_ALLOWED_SCOPES or ["traits", "content", "signals", "memory"])
+        if scope not in allowed:
+            msg = f"Unknown scope '{scope}' (allowed: {sorted(allowed)})"
+            if IDS_STRICT_SCOPE_VALIDATE:
+                raise ValueError(msg)
+            logger.warning(json.dumps({"event": "ids_scope_warning", "detail": msg}))
 
     def _validate_output(self, result: Dict) -> None:
         if "stability" not in result or not 0 <= result["stability"] <= 1:

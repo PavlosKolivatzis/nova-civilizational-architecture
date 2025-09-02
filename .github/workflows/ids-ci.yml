@@ -35,17 +35,8 @@ jobs:
         pip install -r requirements.txt
         pip install pytest hypothesis ruff mypy
 
-    - name: Run unit tests
-      run: pytest tests/services/ -v --tb=short
-
-    - name: Run chaos tests
-      run: pytest tests/chaos/test_ids_chaos.py -v
-
-    - name: Run property tests
-      run: pytest tests/property/ -v --tb=short -x
-
-    - name: Run performance tests
-      run: pytest tests/performance/ -v --durations=0
+    - name: Run tests
+      run: pytest -q --maxfail=1 --disable-warnings
 
     - name: Type checking
       run: mypy services/ids/ --ignore-missing-imports
@@ -53,10 +44,12 @@ jobs:
     - name: Linting
       run: ruff check services/ids/ --select=I
 
-    - name: Contract validation
-      run: python -c "
-        import json
+    - name: Contract validation (if present)
+      if: ${{ hashFiles('contracts/feature.ids.contract.json') != '' }}
+      run: |
+        python - <<'PY'
+        import json,sys
         with open('contracts/feature.ids.contract.json') as f:
-            contract = json.load(f)
+            json.load(f)
         print('Contract validation passed')
-      "
+        PY

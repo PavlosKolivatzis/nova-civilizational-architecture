@@ -1,4 +1,4 @@
-from .core import InterpretiveDriftSynthesizer, IDSConfig, IDSState
+from .core import IDSConfig, IDSState, InterpretiveDriftSynthesizer
 from .integration import IDSIntegrationService, ids_service
 
 __all__ = [
