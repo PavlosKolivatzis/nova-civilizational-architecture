@@ -1,10 +1,11 @@
+import json
+import threading
 import time
-import numpy as np
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
-import threading
-import json
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 
 
 class IDSState(str, Enum):
@@ -19,7 +20,7 @@ class IDSConfig:
     alpha: float = 0.9  # Stability smoothing
     beta: float = 0.8   # Drift sensitivity
     ema_lambda: float = 0.7  # EMA smoothing factor
-    stability_thresholds: Dict[IDSState, float] = None
+    stability_thresholds: Dict[IDSState, float] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.stability_thresholds is None:
