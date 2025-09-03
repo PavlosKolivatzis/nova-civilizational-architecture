@@ -25,6 +25,13 @@ def test_memory_lock_tampering():
         lock.read()
 
 
+def test_serialize_failure_treated_as_tampering():
+    lock = MemoryLock.create({"safe": 1})
+    lock.data = {"bad": set()}
+    with pytest.raises(MemoryTamperError):
+        lock.verify()
+
+
 def test_memory_lock_read_only():
     lock = MemoryLock.create({"v": 1}, read_only=True)
     with pytest.raises(MemoryTamperError):
