@@ -285,9 +285,7 @@ class SecureContentCache:
         return self.hits / max(1, total)
 
     def clear_expired(self) -> int:
-        """Remove expired items from the cache.
-
-        Returns the number of entries evicted."""
+        """Remove expired items from the cache."""
         with self._lock:
             now = time.time()
             expired_keys = [key for key, (ts, _) in self._cache.items() if now - ts >= self.ttl]
