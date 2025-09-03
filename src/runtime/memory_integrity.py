@@ -38,13 +38,21 @@ class PerformanceMonitor:
         timings = cls._timings.get(operation, [])
         if not timings:
             return {}
+
+        sorted_timings = sorted(timings)
+        count = len(sorted_timings)
+        p95_index = max(int(count * 0.95) - 1, 0)
         return {
             "count": cls._counts.get(operation, 0),
-            "avg_ms": sum(timings) / len(timings) * 1000,
-            "p95_ms": sorted(timings)[int(len(timings) * 0.95)] * 1000,
-            "max_ms": max(timings) * 1000,
-            "recent_samples": len(timings),
+            "avg_ms": sum(sorted_timings) / count * 1000,
+            "p95_ms": sorted_timings[p95_index] * 1000,
+            "max_ms": sorted_timings[-1] * 1000,
         }
+
+    @classmethod
+    def get_all_stats(cls) -> Dict[str, Dict[str, float]]:
+        """Return stats for all tracked operations."""
+        return {op: cls.get_stats(op) for op in cls._counts}
 
     @classmethod
     def clear(cls) -> None:
