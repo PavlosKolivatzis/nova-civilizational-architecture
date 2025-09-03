@@ -1,10 +1,10 @@
 """Memory integrity utilities with ethical access enforcement.
 
-This module provides tools to guard in-memory objects against tampering while
-maintaining an auditable trail of all read/write operations. It exposes a
-:class:`MemoryLock` wrapper that verifies a checksum every time data is read or
-written and an :class:`EthicsGuard` registry that applies access policies before
-allowing interaction with protected objects.
+This module provides simple primitives to guard in-memory objects against
+tampering while keeping a lightweight audit trail.  It exposes a
+``MemoryLock`` wrapper that maintains a checksum of the protected object and an
+``EthicsGuard`` registry that can validate multiple locks and report their
+status.
 """
 
 from __future__ import annotations
@@ -13,8 +13,7 @@ import hashlib
 import json
 import secrets
 import time
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from .. import memory_logger
 
@@ -37,6 +36,7 @@ def audit_log(event: str, memory_id: str, actor: Optional[str], extra: Optional[
     extra:
         Additional metadata to include in the log for traceability.
     """
+
     entry: Dict[str, Any] = {
         "event": f"memory_{event}",
         "memory_id": memory_id,
@@ -52,23 +52,44 @@ def audit_log(event: str, memory_id: str, actor: Optional[str], extra: Optional[
 # MemoryLock
 # ---------------------------------------------------------------------------
 
-@dataclass
 class MemoryLock:
-    """Wrap an object with checksum verification and tamper detection."""
+    """Wrap an object with checksum verification and tamper detection.
 
-    data: Any
-    checksum: str
+    The implementation is intentionally lightweight.  Each instance keeps the
+    original data and a SHA256 hash of its serialised representation.  The hash
+    is recomputed on demand to detect external mutations.
+    """
 
+    def __init__(self, name: str, data: Any) -> None:
+        self.name = name
+        self._data = data
+        self._hash = self._compute_hash(data)
+        # ``checksum`` mirrors ``_hash`` for backward compatibility with
+        # existing integrations within the code base.
+        self.checksum = self._hash
+
+    # ------------------------------------------------------------------
+    # Construction helpers
+    # ------------------------------------------------------------------
     @classmethod
-    def create(cls, data: Any) -> "MemoryLock":
-        """Create a new ``MemoryLock`` computing the checksum for ``data``."""
-        return cls(data=data, checksum=cls._checksum(data))
+    def create(cls, data: Any, name: Optional[str] = None) -> "MemoryLock":
+        """Create a new ``MemoryLock`` computing the checksum for ``data``.
+
+        Parameters
+        ----------
+        data:
+            The object to protect.
+        name:
+            Optional identifier.  If omitted, a generic name is used.
+        """
+
+        return cls(name or "memory", data)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
     @staticmethod
-    def _checksum(data: Any) -> str:
+    def _compute_hash(data: Any) -> str:
         try:
             serialized = json.dumps(data, sort_keys=True).encode()
         except TypeError:
@@ -78,23 +99,41 @@ class MemoryLock:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
-    def verify(self) -> bool:
-        """Verify the current data matches the stored checksum."""
-        expected = self._checksum(self.data)
-        return secrets.compare_digest(expected, self.checksum)
+    def verify_integrity(self) -> bool:
+        """Return ``True`` if the current data matches the stored checksum."""
 
-    def read(self) -> Any:
-        """Return the underlying data after verifying its integrity."""
-        if not self.verify():
+        return secrets.compare_digest(self._compute_hash(self._data), self._hash)
+
+    # Alias used elsewhere in the repository
+    def verify(self) -> bool:  # pragma: no cover - thin wrapper
+        return self.verify_integrity()
+
+    def get(self) -> Any:
+        """Return the protected data after integrity validation."""
+
+        if not self.verify_integrity():
             raise ValueError("memory tamper detected")
-        return self.data
+        return self._data
 
-    def write(self, new_data: Any) -> None:
-        """Update the data after verifying existing integrity."""
-        if not self.verify():
+    def set(self, new_data: Any) -> None:
+        """Replace the protected data, updating the checksum."""
+
+        if not self.verify_integrity():
             raise ValueError("memory tamper detected before write")
-        self.data = new_data
-        self.checksum = self._checksum(new_data)
+        self._data = new_data
+        self._hash = self._compute_hash(new_data)
+        self.checksum = self._hash
+
+    # Backwards compatible helpers -------------------------------------------------
+    def read(self) -> Any:  # pragma: no cover - delegates to ``get``
+        return self.get()
+
+    def write(self, new_data: Any) -> None:  # pragma: no cover - delegates to ``set``
+        self.set(new_data)
+
+    @property
+    def data(self) -> Any:  # pragma: no cover - convenience accessor
+        return self.get()
 
 
 # ---------------------------------------------------------------------------
@@ -102,49 +141,59 @@ class MemoryLock:
 # ---------------------------------------------------------------------------
 
 class EthicsGuard:
-    """Registry tracking memory locks and enforcing ethical access rules."""
+    """Registry tracking memory locks and providing integrity audits."""
 
-    _registry: Dict[str, Dict[str, Any]] = {}
-
-    @classmethod
-    def register(
-        cls,
-        name: str,
-        lock: MemoryLock,
-        *,
-        readers: Optional[set[str]] = None,
-        writers: Optional[set[str]] = None,
-    ) -> None:
-        """Register a memory lock with optional reader/writer policies."""
-        cls._registry[name] = {
-            "lock": lock,
-            "readers": set(readers or []),
-            "writers": set(writers or []),
-        }
+    _locks: Dict[str, MemoryLock] = {}
+    _audit: List[Dict[str, Any]] = []
 
     @classmethod
-    def _check_access(cls, name: str, actor: str, action: str) -> MemoryLock:
-        if name not in cls._registry:
-            raise KeyError(f"memory object '{name}' is not registered")
-        record = cls._registry[name]
-        allowed = record[f"{action}s"]  # readers or writers
-        if allowed and actor not in allowed:
-            audit_log("access_denied", name, actor, {"action": action})
-            raise PermissionError(f"actor '{actor}' not allowed to {action} '{name}'")
-        return record["lock"]
+    def reset(cls) -> None:
+        cls._locks = {}
+        cls._audit = []
 
     @classmethod
-    def read(cls, name: str, actor: str, metadata: Optional[Dict[str, Any]] = None) -> Any:
-        """Read a protected memory object after policy validation."""
-        lock = cls._check_access(name, actor, "read")
-        data = lock.read()
-        audit_log("read", name, actor, {"checksum": lock.checksum, **(metadata or {})})
-        return data
+    def register(cls, lock: MemoryLock) -> None:
+        """Register a new lock for auditing."""
+
+        cls._locks[lock.name] = lock
+        cls._audit.append(
+            {
+                "name": lock.name,
+                "hash": lock._hash,
+                "valid": lock.verify_integrity(),
+                "slot": "slot08",
+            }
+        )
 
     @classmethod
-    def write(cls, name: str, actor: str, data: Any, metadata: Optional[Dict[str, Any]] = None) -> None:
-        """Write to a protected memory object after policy validation."""
-        lock = cls._check_access(name, actor, "write")
-        lock.write(data)
-        audit_log("write", name, actor, {"checksum": lock.checksum, **(metadata or {})})
+    def validate_all(cls) -> bool:
+        """Recompute integrity for all registered locks.
+
+        Returns ``True`` if every lock is valid, otherwise ``False``.  The audit
+        report is refreshed on each invocation.
+        """
+
+        cls._audit = []
+        all_valid = True
+        for lock in cls._locks.values():
+            valid = lock.verify_integrity()
+            cls._audit.append(
+                {
+                    "name": lock.name,
+                    "hash": lock._hash,
+                    "valid": valid,
+                    "slot": "slot08",
+                }
+            )
+            all_valid = all_valid and valid
+        return all_valid
+
+    @classmethod
+    def get_audit_report(cls) -> List[Dict[str, Any]]:
+        """Return the most recent audit results."""
+
+        return list(cls._audit)
+
+
+__all__ = ["MemoryLock", "EthicsGuard", "audit_log"]
 
