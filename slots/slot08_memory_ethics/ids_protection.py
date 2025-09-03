@@ -1,8 +1,11 @@
 import json
+from typing import Dict
+
 from services.ids.integration import ids_service
 from services.ids.core import IDSState
 from config.feature_flags import IDS_ENABLED
 from .. import memory_logger
+from .lock_guard import MemoryLock, audit_log
 
 
 def check_memory_write_eligibility(embedding_vector: list, trace_id: str) -> dict:
@@ -43,9 +46,18 @@ def check_memory_write_eligibility(embedding_vector: list, trace_id: str) -> dic
     }
 
 
+memory_store: Dict[str, MemoryLock] = {}
+
+
 def perform_memory_write(embedding_vector: list, metadata: dict, trace_id: str) -> dict:
-    """Placeholder memory write implementation."""
-    raise NotImplementedError("Memory write functionality not implemented.")
+    """Persist embedding vector and metadata with integrity verification."""
+    payload = {"embedding": embedding_vector, "metadata": metadata, "trace_id": trace_id}
+    lock = MemoryLock.create(payload)
+    if not lock.verify():
+        raise ValueError("checksum_mismatch")
+    memory_store[trace_id] = lock
+    audit_log("write", trace_id, metadata.get("actor"), {"checksum": lock.checksum})
+    return {"success": True, "trace_id": trace_id, "checksum": lock.checksum}
 
 
 def protected_memory_write(embedding_vector: list, metadata: dict, trace_id: str) -> dict:
