@@ -284,13 +284,16 @@ class SecureContentCache:
         total = self.hits + self.misses
         return self.hits / max(1, total)
 
-    def clear_expired(self):
-        """Remove expired items from the cache."""
+    def clear_expired(self) -> int:
+        """Remove expired items from the cache.
+
+        Returns the number of entries evicted."""
         with self._lock:
             now = time.time()
             expired_keys = [key for key, (ts, _) in self._cache.items() if now - ts >= self.ttl]
             for key in expired_keys:
                 self._evict_key(key)
+            return len(expired_keys)
 
 # ============================================================================
 # 4. HYBRID API CLASS - COMBINING BOTH STRENGTHS
@@ -1200,8 +1203,9 @@ class HybridDistortionDetectionAPI:
         """Enhanced cleanup with comprehensive resource management."""
         self.logger.info("Starting comprehensive API cleanup")
         
-        # Clear expired cache entries
-        self.content_cache.clear_expired()
+        # Clear expired cache entries and log count
+        expired = self.content_cache.clear_expired()
+        self.logger.info(f"Cleared {expired} expired cache entries")
         
         # Reset circuit breaker if appropriate
         if self.circuit_breaker.state == "half-open":
