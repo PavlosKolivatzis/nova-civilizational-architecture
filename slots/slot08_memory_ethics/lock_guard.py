@@ -114,7 +114,7 @@ class MemoryLock(Generic[T]):
         try:
             serialized = serialize_fn(data).encode()
         except (TypeError, ValueError) as e:
-            raise ValueError(f"Serialization failed: {e}") from e
+            raise MemoryTamperError(f"Serialization failed: {e}") from e
         return hashlib.sha3_256(serialized).hexdigest()
 
     def verify(self) -> bool:
