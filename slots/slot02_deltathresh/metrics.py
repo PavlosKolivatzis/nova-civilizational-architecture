@@ -10,6 +10,7 @@ class PerformanceTracker:
         self.allowed = 0
         self.quarantined = 0
         self.neutralized = 0
+        self.pass_through_breaches = 0
         self.reason_code_counts: Dict[str, int] = defaultdict(int)
         self.layer_detections: Dict[str, int] = defaultdict(int)
         self.avg_processing_time = 0.0
@@ -25,6 +26,9 @@ class PerformanceTracker:
 
     def record_neutralization(self) -> None:
         self.neutralized += 1
+
+    def record_pass_through_breach(self) -> None:
+        self.pass_through_breaches += 1
 
     # -- metrics -----------------------------------------------------------
     def update_metrics(
@@ -52,6 +56,7 @@ class PerformanceTracker:
             "total_processed": self.total_processed,
             "quarantine_rate": self.quarantined / total,
             "neutralization_rate": self.neutralized / total,
+            "pass_through_breaches": self.pass_through_breaches,
             "avg_tri_score": self.avg_tri_score,
             "reason_code_counts": dict(self.reason_code_counts),
             "layer_detections": dict(self.layer_detections),

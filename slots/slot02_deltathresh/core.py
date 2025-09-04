@@ -89,6 +89,8 @@ class DeltaThreshProcessor:
                 neutralized_content = self.pattern_detector.neutralize_patterns(content)
                 processed_content = neutralized_content
                 self.performance_tracker.record_neutralization()
+            elif action == "allow" and reason_codes:
+                self.performance_tracker.record_pass_through_breach()
             else:
                 self.performance_tracker.record_allow()
 
@@ -162,12 +164,21 @@ class DeltaThreshProcessor:
                 reasons.append(code.value)
 
         if not reasons:
+            # No breaches → allow as usual
             return "allow", []
 
-        # Respect quarantine toggle
-        if not self.config.quarantine_enabled:
-            if self.config.pattern_neutralization_enabled:
-                return "neutralize", reasons
+        # --- PASS-THROUGH GUARD ---
+        # Honor reconfigure_operational_mode() when quarantine is disabled.
+        # We check both runtime and config for maximum compatibility.
+        quarantine_enabled = getattr(
+            getattr(self, "runtime", self.config), "quarantine_enabled", True
+        )
+        if (
+            self.config.operational_mode == OperationalMode.PASS_THROUGH
+            or not quarantine_enabled
+        ):
+            # In pass-through we still return reasons for logging/metrics
+            # but we never quarantine or neutralize.
             return "allow", reasons
 
         if self.config.processing_mode == ProcessingMode.QUARANTINE_ONLY:
