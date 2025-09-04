@@ -1,7 +1,7 @@
-# Slot 9: Enhanced Diagnostic Output Format Specification v2.5.0
+# Slot 9: Enhanced Diagnostic Output Format Specification v2.5.0-rc1
 ## For Civilizational-Scale Deployment with Feedback Intelligence
 
-**Version:** 2.5.0  
+**Version:** 2.5.0-rc1
 **API Compatibility:** 3.1.0-hybrid  
 **Slot 10 Compatibility:** v1.0+  
 **Last Updated:** 2025  
@@ -14,7 +14,7 @@
 
 ```json
 {
-  "format_version": "2.5.0",
+  "format_version": "2.5.0-rc1",
   "api_version": "3.1.0-hybrid",
   "compatibility_level": "slot10_v1.0",
   "status": "success|warning|blocked|error",
@@ -302,14 +302,14 @@
 
 ---
 
-## JSON Schema Validation (v2.5.0)
+## JSON Schema Validation (v2.5.0-rc1)
 
 ### Core Schema Definition
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Slot 9 Distortion Detection Response v2.5.0",
+  "title": "Slot 9 Distortion Detection Response v2.5.0-rc1",
   "type": "object",
   "required": [
     "format_version", "api_version", "compatibility_level",
@@ -494,7 +494,7 @@ async def report_deployment_feedback(deployment_id: str, outcome_data: dict):
 
 | Slot 9 Version | Format Version | Compatible Slot 10 | Breaking Changes |
 |----------------|----------------|---------------------|------------------|
-| 3.1.0-hybrid | 2.5.0 | v1.0+ | New policy actions, deployment context |
+| 3.1.0-hybrid | 2.5.0-rc1 | v1.0+ | New policy actions, deployment context |
 | 3.0.0 | 2.4.0 | v0.9+ | Enhanced error handling |
 | 2.4.0 | 2.3.0 | v0.8+ | Added intervention strategies |
 | 2.3.x | 2.2.0 | v0.7+ | IDS analysis format changes |
@@ -503,7 +503,7 @@ async def report_deployment_feedback(deployment_id: str, outcome_data: dict):
 
 ## Migration Guide
 
-### Upgrading from v2.4.0 to v2.5.0
+### Upgrading from v2.4.0 to v2.5.0-rc1
 
 **Required Changes:**
 1. Add version control fields to all responses

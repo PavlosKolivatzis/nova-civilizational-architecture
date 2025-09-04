@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DistortionDetectionResponse",
+  "type": "object",
+  "properties": {
+    "format_version": {"type": "string"},
+    "api_version": {"type": "string"},
+    "compatibility_level": {"type": "string"},
+    "status": {"type": "string", "enum": ["success", "warning", "blocked", "error"]},
+    "threat_level": {"type": "number", "minimum": 0, "maximum": 1, "multipleOf": 0.001},
+    "policy_action": {
+      "type": "string",
+      "enum": [
+        "ALLOW_FASTPATH",
+        "ALLOW_WITH_MONITORING",
+        "STANDARD_PROCESSING",
+        "STAGED_DEPLOYMENT",
+        "DEGRADE_AND_REVIEW",
+        "RESTRICTED_SCOPE_DEPLOYMENT",
+        "BLOCK_OR_SANDBOX"
+      ]
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1, "multipleOf": 0.001},
+    "processing_time_ms": {"type": "number", "minimum": 0, "multipleOf": 0.001},
+    "trace_id": {"type": "string"},
+    "distortion_type": {"type": "string"},
+    "infrastructure_level": {"type": "string"},
+    "severity": {"type": "string"},
+    "ids_analysis": {"type": "object"},
+    "audit_trail": {
+      "type": "object",
+      "properties": {
+        "trace_id": {"type": "string"},
+        "timestamp": {"type": "string"},
+        "policy_decision": {"type": "string"},
+        "decision_reason": {"type": "string"},
+        "processing_time_ms": {"type": "number", "multipleOf": 0.001},
+        "hash_signature": {"type": "string"},
+        "previous_event_hash": {"type": ["string", "null"]},
+        "retention_policy": {"type": "string"}
+      },
+      "required": ["trace_id", "timestamp", "hash_signature"]
+    },
+    "deployment_context": {"type": "object"},
+    "threat_landscape": {"type": "object"},
+    "intervention_strategy": {"type": "object"},
+    "deployment_feedback": {"type": "object"},
+    "error_details": {"type": "object"}
+  },
+  "required": [
+    "format_version",
+    "api_version",
+    "compatibility_level",
+    "status",
+    "threat_level",
+    "policy_action",
+    "confidence",
+    "processing_time_ms",
+    "trace_id",
+    "distortion_type",
+    "infrastructure_level",
+    "severity",
+    "ids_analysis",
+    "audit_trail"
+  ]
+}
+
