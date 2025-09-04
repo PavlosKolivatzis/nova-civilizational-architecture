@@ -1,0 +1,48 @@
+name: Maturity Check (baseline diff)
+
+on:
+  pull_request:
+    paths:
+      - 'docs/maturity.yaml'
+      - 'tools/maturity_check.py'
+      - '.github/workflows/maturity-check.yml'
+
+jobs:
+  maturity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for git show)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install PyYAML
+
+      - name: Run maturity check against PR base
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python tools/maturity_check.py docs/maturity.yaml \
+            --diff-against "$BASE_SHA" \
+            --fail-on-worsen \
+            --format text
+
+      # Optional: generate a badge JSON artifact for dashboards
+      - name: Emit maturity badge JSON
+        if: success() || failure()
+        run: |
+          mkdir -p build
+          python tools/maturity_check.py docs/maturity.yaml --badge-json build/maturity_badge.json
+      - name: Upload badge artifact
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maturity-badge
+          path: build/maturity_badge.json
+
