@@ -5,7 +5,7 @@ maturity_check.py — Slot Maturity Model (SMM) validator & dashboard
 Examples:
   python tools/maturity_check.py docs/maturity.yaml --min-slot 2 --min-core 2.0
   python tools/maturity_check.py docs/maturity.yaml --diff docs/prev.yaml
-  python tools/maturity_check.py docs/maturity.yaml --diff-against origin/main --fail-on-worsen
+  python tools/maturity_check.py docs/maturity.yaml --diff-against origin/main --fail-on-worsen --skip-thresholds
   python tools/maturity_check.py docs/maturity.yaml --badge-json build/maturity_badge.json
 
 Exit codes:
@@ -227,6 +227,11 @@ def main():
         help="Exit 6 if any slot score decreased vs diff target",
     )
     ap.add_argument("--badge-json", help="Write Shields-style JSON badge to this file")
+    ap.add_argument(
+        "--skip-thresholds",
+        action="store_true",
+        help="Do not enforce --min-slot/--min-core (useful with diff-only checks)",
+    )
     args = ap.parse_args()
 
     curr = load_yaml(Path(args.path))
@@ -268,7 +273,9 @@ def main():
             )
         )
 
-    rc = evaluate_thresholds(slots, avgs, args.min_slot, args.min_core)
+    rc = 0
+    if not args.skip_thresholds:
+        rc = evaluate_thresholds(slots, avgs, args.min_slot, args.min_core)
 
     if prev is not None:
         ok2, errs2 = validate_schema(prev)
