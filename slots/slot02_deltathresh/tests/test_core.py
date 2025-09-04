@@ -14,3 +14,6 @@ def test_pass_through_mode_allows_all():
     p.reconfigure_operational_mode(OperationalMode.PASS_THROUGH)
     r = p.process_content("Everyone knows this is the truth.")
     assert r.action == "allow"
+    # No quarantine metrics should be incremented when pass-through is active
+    assert p.performance_tracker.quarantined == 0
+    assert p.performance_tracker.allowed == 1
