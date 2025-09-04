@@ -164,6 +164,12 @@ class DeltaThreshProcessor:
         if not reasons:
             return "allow", []
 
+        # Respect quarantine toggle
+        if not self.config.quarantine_enabled:
+            if self.config.pattern_neutralization_enabled:
+                return "neutralize", reasons
+            return "allow", reasons
+
         if self.config.processing_mode == ProcessingMode.QUARANTINE_ONLY:
             return "quarantine", reasons
         elif self.config.processing_mode == ProcessingMode.NEUTRALIZE_PATTERNS:
