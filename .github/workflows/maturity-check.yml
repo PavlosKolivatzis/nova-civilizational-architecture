@@ -1,0 +1,15 @@
+name: Maturity Check
+on: [pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install PyYAML
+      - run: |
+          python tools/maturity_check.py docs/maturity.yaml \
+            --min-slot 2 --min-core 2.0 \
+            --diff-against origin/main --fail-on-worsen --format text
