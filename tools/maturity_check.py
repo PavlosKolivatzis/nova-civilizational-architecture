@@ -5,19 +5,23 @@ maturity_check.py — Slot Maturity Model (SMM) validator & dashboard
 Examples:
   python tools/maturity_check.py docs/maturity.yaml --min-slot 2 --min-core 2.0
   python tools/maturity_check.py docs/maturity.yaml --diff docs/prev.yaml
-  python tools/maturity_check.py docs/maturity.yaml --diff-against origin/main --fail-on-worsen --skip-thresholds
+  python tools/maturity_check.py docs/maturity.yaml --diff-against origin/main --fail-on-worsen
   python tools/maturity_check.py docs/maturity.yaml --badge-json build/maturity_badge.json
+  python tools/maturity_check.py docs/maturity.yaml --diff-against $BASE_SHA --fail-on-worsen --skip-thresholds
 
 Exit codes:
   0 OK
-  2 Any slot score < --min-slot
-  3 Core anchors avg < --min-core
+  2 Any slot score < --min-slot            (threshold mode)
+  3 Core anchors avg < --min-core          (threshold mode)
   4 YAML schema/format error
   5 File not found / unreadable / git show failed
-  6 Diff detected worsening (when --fail-on-worsen)
+  6 Diff detected worsening (with --fail-on-worsen)
 """
 
-import argparse, json, subprocess, sys
+import argparse
+import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Dict, Any, Tuple, List
 
@@ -30,6 +34,8 @@ except Exception:
 LEVEL_ORDER = ["Missing", "Anchor", "Relational", "Structural", "Processual"]
 
 
+# ---------- IO & parsing ----------
+
 def load_yaml(path: Path) -> Dict[str, Any]:
     if not path.exists():
         print(f"ERROR: file not found: {path}", file=sys.stderr)
@@ -37,33 +43,34 @@ def load_yaml(path: Path) -> Dict[str, Any]:
     try:
         with path.open("r", encoding="utf-8") as fh:
             return yaml.safe_load(fh)
-    except Exception as e:
-        print(f"ERROR: failed to read/parse YAML: {e}", file=sys.stderr)
+    except yaml.YAMLError as e:
+        print(f"ERROR: failed to parse YAML {path}: {e}", file=sys.stderr)
         sys.exit(4)
+    except Exception as e:
+        print(f"ERROR: failed to read YAML {path}: {e}", file=sys.stderr)
+        sys.exit(5)
 
 
 def load_yaml_from_git(ref: str, repo_path: Path, file_path: str) -> Dict[str, Any]:
-    """Load a file at git ref without checking out."""
+    """Load file content at a git ref without checking out."""
     try:
         out = subprocess.check_output(
             ["git", "-C", str(repo_path), "show", f"{ref}:{file_path}"],
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.STDOUT
         ).decode("utf-8", errors="replace")
+        return yaml.safe_load(out)
     except subprocess.CalledProcessError as e:
-        output = e.output.decode()
-        if "invalid object" in output:
-            output += "\nHint: ref not found; ensure the ref is fetched or use a commit SHA."
+        output = e.output.decode(errors="replace")
+        if "invalid object" in output or "fatal: bad object" in output:
+            output += "\nHint: ref not found; fetch it, or use a commit SHA (e.g., ${{ github.event.pull_request.base.sha }})."
         print(f"ERROR: git show {ref}:{file_path} failed:\n{output}", file=sys.stderr)
         sys.exit(5)
-    try:
-        return yaml.safe_load(out)
     except yaml.YAMLError as e:
-        print(
-            f"ERROR: failed to read/parse YAML from {ref}:{file_path}: {e}",
-            file=sys.stderr,
-        )
+        print(f"ERROR: failed to parse YAML from {ref}:{file_path}: {e}", file=sys.stderr)
         sys.exit(4)
 
+
+# ---------- validation & scoring ----------
 
 def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[str]]:
     errs: List[str] = []
@@ -76,6 +83,7 @@ def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[str]]:
     if not isinstance(slots, dict) or not slots:
         errs.append("'slots' must be a non-empty mapping")
         return False, errs
+
     for k, v in slots.items():
         if not isinstance(v, dict):
             errs.append(f"{k}: slot entry must be a mapping")
@@ -93,20 +101,15 @@ def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[str]]:
 
 
 def compute_averages(slots: Dict[str, Any]) -> Dict[str, float]:
-    def g(n: int) -> Dict[str, Any]:
-        return slots.get(f"slot{n}", {})
-
+    def g(n: int) -> Dict[str, Any]: return slots.get(f"slot{n}", {})
     def avg(ns: List[int]) -> float:
         vals = [g(n).get("score", 0) for n in ns]
         return round(sum(vals) / len(vals), 2)
-
     return {
         "core_anchors": avg([1, 2, 3, 4, 5]),
-        "safeguards": avg([6, 7, 8, 9]),
-        "deployment": avg([10]),
-        "overall": round(
-            sum([g(i).get("score", 0) for i in range(1, 11)]) / 10.0, 2
-        ),
+        "safeguards":   avg([6, 7, 8, 9]),
+        "deployment":   avg([10]),
+        "overall":      round(sum([g(i).get("score", 0) for i in range(1, 11)]) / 10.0, 2),
     }
 
 
@@ -114,13 +117,13 @@ def grade(score: int) -> str:
     return LEVEL_ORDER[score] if 0 <= score < len(LEVEL_ORDER) else "Unknown"
 
 
-def text_dashboard(
-    path: Path, meta: Dict[str, Any], slots: Dict[str, Any], avgs: Dict[str, float]
-) -> str:
+# ---------- presentation & checks ----------
+
+def text_dashboard(path: Path, meta: Dict[str, Any], slots: Dict[str, Any], avgs: Dict[str, float]) -> str:
     lines = [
         f"# Slot Maturity Model — {path.name}",
         f"Version: {meta.get('version','?')} | Updated: {meta.get('updated','?')} | Maintainer: {meta.get('maintainer','?')}",
-        "",
+        ""
     ]
     for i in range(1, 11):
         s = slots.get(f"slot{i}", {})
@@ -136,41 +139,19 @@ def text_dashboard(
         f"- Core anchors (1–5): **{avgs['core_anchors']}**",
         f"- Safeguards (6–9): **{avgs['safeguards']}**",
         f"- Deployment (10): **{avgs['deployment']}**",
-        f"- Overall (1–10): **{avgs['overall']}**",
+        f"- Overall (1–10): **{avgs['overall']}**"
     ]
     return "\n".join(lines)
 
 
-def evaluate_thresholds(
-    slots: Dict[str, Any], avgs: Dict[str, float], min_slot: int, min_core: float
-) -> int:
+def evaluate_thresholds(slots: Dict[str, Any], avgs: Dict[str, float], min_slot: int, min_core: float) -> int:
     rc = 0
-    low = [
-        f"slot{i}"
-        for i in range(1, 11)
-        if slots.get(f"slot{i}", {}).get("score", 0) < min_slot
-    ]
+    low = [f"slot{i}" for i in range(1, 11) if slots.get(f"slot{i}", {}).get("score", 0) < min_slot]
     if low:
-        print(
-            json.dumps(
-                {
-                    "reason_code": "LOW_SLOT_SCORE",
-                    "min_slot": min_slot,
-                    "failing_slots": low,
-                }
-            )
-        )
+        print(json.dumps({"reason_code": "LOW_SLOT_SCORE", "min_slot": min_slot, "failing_slots": low}))
         rc = 2
     if avgs["core_anchors"] < min_core:
-        print(
-            json.dumps(
-                {
-                    "reason_code": "LOW_CORE_ANCHOR_AVG",
-                    "min_core": min_core,
-                    "core_avg": avgs["core_anchors"],
-                }
-            )
-        )
+        print(json.dumps({"reason_code": "LOW_CORE_ANCHOR_AVG", "min_core": min_core, "core_avg": avgs["core_anchors"]}))
         rc = max(rc, 3)
     return rc
 
@@ -191,54 +172,32 @@ def diff_slots(curr: Dict[str, Any], prev: Dict[str, Any]) -> Dict[str, Any]:
 
 def write_badge_json(path: Path, overall: float) -> None:
     color = "red"
-    if overall >= 3.5:
-        color = "brightgreen"
-    elif overall >= 3.0:
-        color = "green"
-    elif overall >= 2.5:
-        color = "yellowgreen"
-    elif overall >= 2.0:
-        color = "yellow"
-    elif overall >= 1.5:
-        color = "orange"
-    payload = {
-        "schemaVersion": 1,
-        "label": "maturity",
-        "message": f"{overall:.2f}/4",
-        "color": color,
-    }
+    if overall >= 3.5: color = "brightgreen"
+    elif overall >= 3.0: color = "green"
+    elif overall >= 2.5: color = "yellowgreen"
+    elif overall >= 2.0: color = "yellow"
+    elif overall >= 1.5: color = "orange"
+    payload = {"schemaVersion": 1, "label": "maturity", "message": f"{overall:.2f}/4", "color": color}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
     print(f"Wrote badge JSON → {path}")
 
 
+# ---------- CLI ----------
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("path", help="Path to current maturity.yaml")
-    ap.add_argument("--min-slot", type=int, default=2)
-    ap.add_argument("--min-core", type=float, default=2.0)
+    ap.add_argument("--min-slot", type=int, default=2, help="Threshold: minimum per-slot score")
+    ap.add_argument("--min-core", type=float, default=2.0, help="Threshold: minimum average for core anchors (1–5)")
     ap.add_argument("--format", choices=["text", "json"], default="text")
-    ap.add_argument("--diff", help="Compare against another maturity.yaml")
-    ap.add_argument(
-        "--diff-against",
-        help="Git ref to compare (uses git show <ref>:<path>)",
-    )
-    ap.add_argument(
-        "--repo-root",
-        default=".",
-        help="Repo root for --diff-against (default: .)",
-    )
-    ap.add_argument(
-        "--fail-on-worsen",
-        action="store_true",
-        help="Exit 6 if any slot score decreased vs diff target",
-    )
+    ap.add_argument("--diff", help="Compare against another maturity.yaml (path)")
+    ap.add_argument("--diff-against", help="Git ref to compare (uses git show <ref>:<path>)")
+    ap.add_argument("--repo-root", default=".", help="Repo root for --diff-against (default: .)")
+    ap.add_argument("--fail-on-worsen", action="store_true", help="Exit 6 if any slot score decreased vs diff target")
     ap.add_argument("--badge-json", help="Write Shields-style JSON badge to this file")
-    ap.add_argument(
-        "--skip-thresholds",
-        action="store_true",
-        help="Do not enforce --min-slot/--min-core (useful with diff-only checks)",
-    )
+    ap.add_argument("--skip-thresholds", action="store_true",
+                    help="Do not enforce --min-slot/--min-core (useful with diff-only checks)")
     args = ap.parse_args()
 
     curr = load_yaml(Path(args.path))
@@ -262,28 +221,18 @@ def main():
     if args.format == "text":
         print(text_dashboard(Path(args.path), meta, slots, avgs))
     else:
-        print(
-            json.dumps(
-                {
-                    "meta": meta,
-                    "averages": avgs,
-                    "slots": {
-                        k: {
-                            "name": v.get("name"),
-                            "score": v.get("score"),
-                            "level": v.get("level"),
-                        }
-                        for k, v in slots.items()
-                    },
-                },
-                indent=2,
-            )
-        )
+        print(json.dumps({
+            "meta": meta,
+            "averages": avgs,
+            "slots": {k: {"name": v.get("name"), "score": v.get("score"), "level": v.get("level")}
+                      for k, v in slots.items()}
+        }, indent=2))
 
     rc = 0
     if not args.skip_thresholds:
         rc = evaluate_thresholds(slots, avgs, args.min_slot, args.min_core)
 
+    # Diff reporting
     if prev is not None:
         ok2, errs2 = validate_schema(prev)
         if not ok2:
@@ -299,9 +248,7 @@ def main():
             row = d[k]
             delta = row["delta"]
             sign = "+" if delta > 0 else ("" if delta == 0 else "")
-            print(
-                f"- Slot {i} ({row['name']}): {row['prev']} → {row['curr']} ({sign}{delta})"
-            )
+            print(f"- Slot {i} ({row['name']}): {row['prev']} → {row['curr']} ({sign}{delta})")
             if delta < 0:
                 worsened.append(k)
         if args.fail_on_worsen and worsened:
@@ -312,6 +259,7 @@ def main():
         write_badge_json(Path(args.badge_json), avgs["overall"])
 
     sys.exit(rc)
+
 
 if __name__ == "__main__":
     main()
