@@ -1200,9 +1200,10 @@ class HybridDistortionDetectionAPI:
     def cleanup(self):
         """Enhanced cleanup with comprehensive resource management."""
         self.logger.info("Starting comprehensive API cleanup")
-        
+
         # Clear expired cache entries
-        self.content_cache.clear_expired()
+        expired = self.content_cache.clear_expired()
+        self.logger.info(f"Cleared {expired} expired cache entries")
         
         # Reset circuit breaker if appropriate
         if self.circuit_breaker.state == "half-open":
