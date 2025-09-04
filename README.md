@@ -72,3 +72,7 @@ rotation and provides additional anchor metrics. Projects using the
 older `Lock` type should migrate to `RealityLock` and, where needed,
 incorporate the `RealityVerifier` for integrity validation.
 
+
+## Slot 2: ΔTHRESH Integration Manager
+
+📑 Pipeline Diagram: [docs/slot2_pipeline.html](docs/slot2_pipeline.html)
