@@ -616,7 +616,10 @@ class HybridDistortionDetectionAPI:
         # Base threat levels by policy
         base_threat_mapping = {
             'ALLOW_FASTPATH': 0.1,
+            'ALLOW_WITH_MONITORING': 0.2,
             'STANDARD_PROCESSING': 0.3,
+            'STAGED_DEPLOYMENT': 0.5,
+            'RESTRICTED_SCOPE_DEPLOYMENT': 0.6,
             'DEGRADE_AND_REVIEW': 0.7,
             'BLOCK_OR_SANDBOX': 0.9
         }
