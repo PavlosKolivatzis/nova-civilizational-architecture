@@ -462,19 +462,30 @@ async def make_enhanced_deployment_decision(slot9_response):
 # Feedback integration
 async def report_deployment_feedback(deployment_id: str, outcome_data: dict):
     """Report deployment results back to Slot 9"""
+
     feedback = {
-        "deployment_id": deployment_id,
-        "outcome": outcome_data["status"],
-        "actual_impact": outcome_data["measured_threat_level"],
-        "prediction_accuracy": calculate_accuracy(
-            outcome_data["predicted_threat"],
-            outcome_data["actual_threat"]
-        ),
-        "lessons_learned": outcome_data["insights"]
+        "deployment_feedback": {
+            "deployment_id": deployment_id,
+            "outcome": outcome_data["status"],
+            "actual_impact": {
+                "measured_threat_level": outcome_data["measured_threat_level"],
+                "prediction_accuracy": calculate_accuracy(
+                    outcome_data["predicted_threat"],
+                    outcome_data["actual_threat"]
+                ),
+                "false_positive_rate": outcome_data.get("false_positives", 0.0),
+                "false_negative_rate": outcome_data.get("false_negatives", 0.0)
+            },
+            "lessons_learned": {
+                "summary": outcome_data["insights"],
+                "recommendations": outcome_data.get("recommendations", []),
+                "escalation_needed": outcome_data.get("escalation", False)
+            }
+        }
     }
-    
-    # Send feedback to Slot 9 for learning
-    await slot9_api.receive_deployment_feedback(feedback)
+
+    # Example send to Slot 9
+    await slot9_api.send_feedback(feedback)
 ```
 
 ---
