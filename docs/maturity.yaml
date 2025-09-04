@@ -1,0 +1,87 @@
+# ΔTHRESH Slot Maturity Model (SMM)
+# Tracks dimensional maturity across Slots 1–10
+# Levels: 0 = Missing, 1 = Anchor, 2 = Relational, 3 = Structural, 4 = Processual
+
+meta:
+  version: 1.0
+  updated: "2025-09-04"
+  maintainer: "Pavlos Kolivatzis"
+
+slots:
+  slot1:
+    name: "Truth Anchor"
+    score: 3
+    level: "Structural"
+    rationale: >
+      Anchors fully implemented with health + fallback. Stable but not adaptive across time.
+  slot2:
+    name: "ΔTHRESH Integration Manager"
+    score: 0
+    level: "Missing"
+    rationale: >
+      Folder only. Needs contracts, routing, and test coverage.
+  slot3:
+    name: "Emotional Matrix Safety"
+    score: 0
+    level: "Missing"
+    rationale: >
+      No modules yet. Needs state estimation, escalation logic, and safety policies.
+  slot4:
+    name: "TRI Engine"
+    score: 1
+    level: "Anchor"
+    rationale: >
+      Only IDS helper present. Needs calibration core, normalization, and policies.
+  slot5:
+    name: "Constellation Navigation"
+    score: 0
+    level: "Missing"
+    rationale: >
+      No code beyond README. Requires anchor routing logic and constellation metadata.
+  slot6:
+    name: "Adaptive Synthesis Engine"
+    score: 3
+    level: "Structural"
+    rationale: >
+      Implemented with meta config and tests. Not yet adaptive in deployment.
+  slot7:
+    name: "Production Controls"
+    score: 0
+    level: "Missing"
+    rationale: >
+      Empty. Needs feature flags, circuit breakers, and safety toggles.
+  slot8:
+    name: "Memory Lock & IDS Protection"
+    score: 3
+    level: "Structural"
+    rationale: >
+      Guards memory and detects tampering. Missing adaptive recovery loop.
+  slot9:
+    name: "Distortion Protection"
+    score: 3
+    level: "Structural"
+    rationale: >
+      Hybrid API and policies implemented. Static policies, not self-evolving.
+  slot10:
+    name: "Deployment & Modeling"
+    score: 3
+    level: "Structural"
+    rationale: >
+      Deployment pipeline and modeling utilities implemented. Not yet process-adaptive.
+
+summary:
+  averages:
+    core_anchors: 0.8
+    safeguards: 3.0
+    deployment: 3.0
+  highlights:
+    - "Strong at outer layers (6–10)."
+    - "Hollow core (2, 3, 5, 7 missing; 4 partial)."
+    - "Keystone priority: Slot 2 + Slot 4."
+  next_actions:
+    - "Implement Slot 2 contracts + integration manager."
+    - "Finish Slot 4 TRI Engine (calibration, normalization)."
+    - "Add Slot 3 Emotional Matrix Safety for stress handling."
+    - "Introduce Slot 7 Production Controls (flags, circuit breakers)."
+    - "Develop Slot 5 Constellation Navigation last."
+
