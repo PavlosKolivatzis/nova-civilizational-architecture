@@ -23,10 +23,19 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import json
+import logging
 import os
 import yaml
 
-from dotenv import load_dotenv
+# Optional .env loading (keeps runtime resilient if python-dotenv is absent)
+try:  # pragma: no cover - optional dependency
+    from dotenv import load_dotenv  # type: ignore
+except Exception:  # pragma: no cover
+    load_dotenv = None  # type: ignore
+    logging.warning("python-dotenv not installed — skipping .env loading.")
+else:  # pragma: no cover
+    # Load .env on import so env-derived config works out of the box
+    load_dotenv()
 
 from ..config import ProcessingConfig, OperationalMode, ProcessingMode
 
@@ -130,8 +139,8 @@ class EnhancedProcessingConfig(ProcessingConfig):
     @classmethod
     def from_environment(cls) -> "EnhancedProcessingConfig":
         """Create configuration using environment variables as overrides."""
+        # If dotenv was imported, it has already run load_dotenv() at import time.
 
-        load_dotenv()
         cfg = cls()
 
         env = os.getenv("SLOT2_ENV")
@@ -159,7 +168,6 @@ class EnhancedProcessingConfig(ProcessingConfig):
     @classmethod
     def from_dict(cls, data: Dict) -> "EnhancedProcessingConfig":
         """Create a config from a nested dictionary."""
-
         cfg = cls()
         for key, value in data.items():
             if not hasattr(cfg, key):
@@ -184,7 +192,6 @@ class EnhancedProcessingConfig(ProcessingConfig):
 
     def to_dict(self) -> Dict:
         """Serialise configuration to a dictionary."""
-
         return asdict(self)
 
     # ------------------------------------------------------------------
@@ -193,9 +200,9 @@ class EnhancedProcessingConfig(ProcessingConfig):
 
     def validate_runtime(self) -> Tuple[bool, list]:
         """Perform lightweight runtime validation."""
-
         violations = []
         if self.environment is Environment.PRODUCTION and self.security.enable_authentication:
             if not self.security.jwt_secret:
                 violations.append("JWT secret must be set in production")
         return (len(violations) == 0, violations)
+

@@ -22,12 +22,24 @@ class ConfigManager:
     the file on disk is modified.
     """
 
-    def __init__(self, initial_config: Optional[EnhancedProcessingConfig] = None) -> None:
-        self._lock = threading.RLock()
-        self._listeners: List[Callable[[EnhancedProcessingConfig], None]] = []
-        self._config_file: Optional[Path] = None
-        self._last_mtime: float = 0.0
-        self.config: EnhancedProcessingConfig = initial_config or EnhancedProcessingConfig.from_environment()
+   
+def __init__(self, initial_config: Optional[EnhancedProcessingConfig] = None) -> None:
+    # Build config (env-backed if none provided)
+    self.config: EnhancedProcessingConfig = (
+        initial_config or EnhancedProcessingConfig.from_environment()
+    )
+
+    # Lightweight runtime validation
+    is_valid, violations = self.config.validate_runtime()
+    if not is_valid:
+        raise ValueError(f"Initial config validation failed: {violations}")
+
+    # State for hot-reload & observers
+    self._lock = threading.RLock()
+    self._listeners: List[Callable[[EnhancedProcessingConfig], None]] = []
+    self._config_file: Optional[Path] = None
+    self._last_mtime: float = 0.0
+
 
     # ------------------------------------------------------------------
     # listener management

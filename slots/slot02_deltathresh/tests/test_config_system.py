@@ -1,6 +1,6 @@
-import os
 from pathlib import Path
 
+import pytest
 import yaml
 
 from slots.slot02_deltathresh.enhanced.config import (
@@ -19,7 +19,7 @@ def test_from_environment(monkeypatch):
     assert cfg.logging.level is LogLevel.DEBUG
 
 
-def test_config_manager_load(tmp_path: Path):
+def test_config_manager_load(tmp_path: Path, monkeypatch):
     data = {
         "operational_mode": "pass_through",
         "logging": {"level": "ERROR"},
@@ -28,8 +28,20 @@ def test_config_manager_load(tmp_path: Path):
     path = tmp_path / "cfg.yaml"
     path.write_text(yaml.dump(data))
 
+    # Ensure initial ConfigManager() passes runtime validation
+    monkeypatch.setenv("JWT_SECRET", "secret")
+
     mgr = ConfigManager()
     assert mgr.config.operational_mode is OperationalMode.STABLE_LOCK
     mgr.load_from_file(path)
     assert mgr.config.operational_mode is OperationalMode.PASS_THROUGH
     assert mgr.config.logging.level is LogLevel.ERROR
+
+
+def test_config_manager_requires_valid_initial_config(monkeypatch):
+    # No JWT in production with authentication enabled → invalid
+    monkeypatch.delenv("JWT_SECRET", raising=False)
+    cfg = EnhancedProcessingConfig()
+    with pytest.raises(ValueError):
+        ConfigManager(cfg)
+
