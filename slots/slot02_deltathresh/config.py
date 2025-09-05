@@ -12,12 +12,25 @@ class ProcessingMode(Enum):
     NEUTRALIZE_PATTERNS = "neutralize_patterns"
     HYBRID_PROCESSING = "hybrid_processing"
 
+
+class QuarantineReasonCode(Enum):
+    """Standardized reason codes for quarantine decisions."""
+
+    TRI_BELOW_MIN = "TRI_BELOW_MIN"
+    DELTA_SELF_LEGITIMATION = "DELTA_SELF_LEGITIMATION"
+    SIGMA_ENTROPY_DRIFT = "SIGMA_ENTROPY_DRIFT"
+    THETA_CIRCULAR_VALIDATION = "THETA_CIRCULAR_VALIDATION"
+    OMEGA_SOCIAL_PROOF = "OMEGA_SOCIAL_PROOF"
+
 @dataclass
 class ProcessingConfig:
     version: str = "6.5"
     operational_mode: OperationalMode = OperationalMode.STABLE_LOCK
     processing_mode: ProcessingMode = ProcessingMode.HYBRID_PROCESSING
+    tri_enabled: bool = True
+    tri_strict_mode: bool = False
     tri_min_score: float = 0.90
+    quarantine_enabled: bool = True
     neutralization_threshold: float = 0.75
     pattern_neutralization_enabled: bool = False  # enabled in Phase 2
     per_layer_budget_ms: Dict[str, float] = field(default_factory=lambda: {
