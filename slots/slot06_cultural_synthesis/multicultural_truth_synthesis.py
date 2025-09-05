@@ -13,7 +13,7 @@ serialization helper for drop-in deployment. In large repos consider
 splitting into: engine.py, adapter.py, serializers.py.
 """
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, is_dataclass
 from enum import Enum
 from frameworks.enums import DeploymentGuardrailResult
 from typing import Any, Dict, List, Optional, Iterable, Mapping
@@ -31,6 +31,34 @@ if not logger.handlers:
     logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 VERSION = "7.4.1"
+
+
+def slot2_threat_bridge(result: Any, tri_min_score: float = 0.8) -> float:
+    """Compute threat level from a Slot 2 ProcessingResult with version check.
+
+    Accepts legacy dictionaries or objects lacking a ``version`` field by using
+    the Slot 2 adapter to normalize them to the current structure.
+    """
+    from slots.slot02_deltathresh.adapters import adapt_processing_result
+
+    if isinstance(result, dict) or not hasattr(result, "version"):
+        if not isinstance(result, dict) and is_dataclass(result):
+            result = adapt_processing_result(asdict(result))
+        else:
+            result = adapt_processing_result(result)
+
+    version = getattr(result, "version", "v1")
+    if version != "v1":
+        raise ValueError(f"Unsupported ProcessingResult version: {version}")
+
+    layer_scores = getattr(result, "layer_scores", {}) or {}
+    tri_score = float(getattr(result, "tri_score", 1.0))
+    risk = max(layer_scores.values()) if layer_scores else 0.0
+    tri_gap = max(0.0, tri_min_score - tri_score)
+    threat_level = getattr(result, "threat_level", None)
+    if threat_level is None:
+        threat_level = min(1.0, 0.5 * risk + 0.5 * tri_gap)
+    return float(threat_level)
 @dataclass(frozen=True)
 class EngineConfig:
     regex_text_cap: int = 2_000_000

@@ -17,3 +17,4 @@ class ProcessingResult:
     operational_mode: Optional[str] = None
     session_id: str = "default"
     anchor_integrity: float = 1.0
+    version: str = "v1"
