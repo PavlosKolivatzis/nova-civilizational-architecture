@@ -26,7 +26,7 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
         slot1_anchor_system=None,
     ) -> None:
         config = config or EnhancedProcessingConfig()
-        super().__init__(config=config, anchor=slot1_anchor_system)
+        super().__init__(config=config, slot1_anchor_system=slot1_anchor_system)
         self.config: EnhancedProcessingConfig = config
         self.anchor_system = slot1_anchor_system
         self.pattern_detector = EnhancedPatternDetector(self.config)
