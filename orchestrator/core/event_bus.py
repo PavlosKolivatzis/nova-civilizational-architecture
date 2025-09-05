@@ -112,4 +112,5 @@ class EventBus:
         return enhanced
 
     def supports_enhanced_metrics(self) -> bool:
+        """Indicate whether enhanced metrics are supported."""
         return True

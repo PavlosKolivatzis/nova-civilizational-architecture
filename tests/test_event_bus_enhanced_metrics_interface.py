@@ -22,7 +22,13 @@ async def test_enhanced_metrics_consistency():
         assert enhanced[f"enhanced_{key}"] == value
 
 
+def test_supports_enhanced_metrics_flag():
+    bus = EventBus()
+    assert bus.supports_enhanced_metrics() is True
+
+
 @pytest.mark.asyncio
+@pytest.mark.performance
 async def test_enhanced_metrics_performance_and_memory():
     bus = EventBus()
 
