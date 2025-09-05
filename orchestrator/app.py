@@ -43,6 +43,21 @@ if FastAPI is not None:
     if health_router is not None:
         app.include_router(health_router)
 
+    @app.get("/health")
+    async def health():
+        slots = {sid: monitor.get_slot_health(sid) for sid in SLOT_REGISTRY.keys()}
+        router_thresholds = {
+            "latency_ms": getattr(router, "latency_threshold_ms", None),
+            "error_rate": getattr(router, "error_threshold", None),
+        }
+        cb_metrics = router.cb.get_metrics() if getattr(router, "cb", None) else {}
+        return {
+            "status": "ok",
+            "slots": slots,
+            "router_thresholds": router_thresholds,
+            "circuit_breaker": cb_metrics,
+        }
+
     @app.on_event("startup")
     async def _startup():
         from slots.config import get_config_manager

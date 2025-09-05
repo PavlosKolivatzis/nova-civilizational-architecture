@@ -4,10 +4,6 @@ from slots.config import get_config_manager  # EnhancedConfigManager global
 
 router = APIRouter()
 
-@router.get("/health", tags=["health"])
-async def health() -> Dict[str, str]:
-    return {"status": "ok"}
-
 @router.get("/health/config", tags=["health"])
 async def health_config() -> Dict[str, Any]:
     mgr = await get_config_manager()

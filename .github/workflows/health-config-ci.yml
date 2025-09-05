@@ -50,17 +50,9 @@ jobs:
       - name: Smoke: /health/config endpoint
         run: |
           python - <<'PY'
-          import os, json
+          import json
           from fastapi.testclient import TestClient
-          # Try importing your real app
-          try:
-              from app import app
-          except Exception:
-              # Fallback: minimal app with router
-              from fastapi import FastAPI
-              from api.health_config import router as health_router
-              app = FastAPI()
-              app.include_router(health_router)
+          from orchestrator.app import app
           c = TestClient(app)
           r = c.get("/health/config")
           assert r.status_code == 200, r.text
@@ -69,4 +61,21 @@ jobs:
           assert "hot_reload_enabled" in data
           assert "slots_loaded" in data
           assert isinstance(data.get("slots", []), list)
+          PY
+
+      - name: Smoke: /health (legacy fields preserved)
+        run: |
+          python - <<'PY'
+          import json
+          from fastapi.testclient import TestClient
+          from orchestrator.app import app
+          c = TestClient(app)
+          r = c.get("/health")
+          assert r.status_code == 200, r.text
+          data = r.json()
+          print(json.dumps(data, ensure_ascii=False))
+          assert "status" in data
+          assert "slots" in data
+          assert "router_thresholds" in data
+          assert "circuit_breaker" in data
           PY
