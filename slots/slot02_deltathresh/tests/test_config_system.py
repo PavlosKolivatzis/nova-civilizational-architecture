@@ -28,7 +28,9 @@ def test_config_manager_load(tmp_path: Path, monkeypatch):
     path = tmp_path / "cfg.yaml"
     path.write_text(yaml.dump(data))
 
+    # Ensure initial ConfigManager() passes runtime validation
     monkeypatch.setenv("JWT_SECRET", "secret")
+
     mgr = ConfigManager()
     assert mgr.config.operational_mode is OperationalMode.STABLE_LOCK
     mgr.load_from_file(path)
@@ -37,7 +39,9 @@ def test_config_manager_load(tmp_path: Path, monkeypatch):
 
 
 def test_config_manager_requires_valid_initial_config(monkeypatch):
+    # No JWT in production with authentication enabled → invalid
     monkeypatch.delenv("JWT_SECRET", raising=False)
     cfg = EnhancedProcessingConfig()
     with pytest.raises(ValueError):
         ConfigManager(cfg)
+
