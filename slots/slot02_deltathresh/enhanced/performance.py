@@ -27,12 +27,14 @@ class AnomalyDetector:
             mean = arr.mean()
             std = arr.std()
             if std > 0 and abs(value - mean) > 3 * std:
-                self.anomalies.append({
-                    "timestamp": time.time(),
-                    "value": value,
-                    "mean": mean,
-                    "std": std,
-                })
+                self.anomalies.append(
+                    {
+                        "timestamp": time.time(),
+                        "value": value,
+                        "mean": mean,
+                        "std": std,
+                    }
+                )
 
     def get_anomalies(self) -> List[Dict[str, float]]:
         with self._lock:
@@ -73,14 +75,18 @@ class EnhancedPerformanceTracker:
         with self._lock:
             self.metrics["total_processed"] += 1
             self.metrics["processing_times"].append(processing_time_ms)
+
             for code in reason_codes or []:
                 self.metrics["reason_code_counts"][code] += 1
+
             for layer, score in layer_scores.items():
                 if score > 0.3:
                     self.metrics["layer_detections"][layer] += 1
+
             if tri_score is not None:
                 self.metrics["tri_score_sum"] += tri_score
                 self.metrics["tri_score_count"] += 1
+
             self.anomaly_detector.analyze(processing_time_ms)
 
     # -- compatibility helpers --------------------------------------------
@@ -103,12 +109,13 @@ class EnhancedPerformanceTracker:
     def get_enhanced_metrics(self) -> Dict[str, Any]:
         with self._lock:
             times = list(self.metrics["processing_times"])
+            total = max(1, self.metrics["total_processed"])
             return {
                 "basic": {
                     "total_processed": self.metrics["total_processed"],
-                    "quarantine_rate": self.metrics["quarantine_count"] / max(1, self.metrics["total_processed"]),
-                    "allow_rate": self.metrics["allow_count"] / max(1, self.metrics["total_processed"]),
-                    "neutralization_rate": self.metrics["neutralization_count"] / max(1, self.metrics["total_processed"]),
+                    "quarantine_rate": self.metrics["quarantine_count"] / total,
+                    "allow_rate": self.metrics["allow_count"] / total,
+                    "neutralization_rate": self.metrics["neutralization_count"] / total,
                     "pass_through_breaches": self.metrics["pass_through_breach_count"],
                 },
                 "performance": {
@@ -144,3 +151,4 @@ class EnhancedPerformanceTracker:
                 "avg_processing_time": avg_time,
                 "layer_latency_violations": self.metrics["layer_latency_violations"],
             }
+
