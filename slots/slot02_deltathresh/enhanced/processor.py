@@ -13,6 +13,7 @@ from ..models import ProcessingResult
 from .config import EnhancedProcessingConfig
 from .detector import EnhancedPatternDetector
 from .performance import EnhancedPerformanceTracker
+from .tri_calculator import calculate_enhanced_tri_score
 
 
 class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
@@ -59,7 +60,7 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
             )
 
         t0 = time.time()
-        tri = self._calculate_enhanced_tri_score(content) if self.config.tri_enabled else 1.0
+        tri = self._calculate_tri_score(content) if self.config.tri_enabled else 1.0
         layer_scores = self.pattern_detector.detect_patterns_advanced(content)
         action, reasons = self._determine_action(tri, layer_scores)
         processing_time_ms = (time.time() - t0) * 1000
@@ -78,10 +79,9 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
     # ------------------------------------------------------------------
     # internals
     # ------------------------------------------------------------------
-    def _calculate_enhanced_tri_score(self, content: str) -> float:
-        base = super()._tri_score(content)
-        coherence = self.pattern_detector._contextual_consistency(content)
-        return max(0.0, min(1.0, base + coherence * 0.05))
+    def _calculate_tri_score(self, content: str) -> float:
+        base = super()._calculate_tri_score(content)
+        return calculate_enhanced_tri_score(content, base, self.pattern_detector)
 
     def _determine_action(self, tri: float, layer_scores: Dict[str, float]) -> Tuple[str, List[str]]:
         reasons: List[str] = []

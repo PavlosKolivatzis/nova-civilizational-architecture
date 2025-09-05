@@ -8,12 +8,14 @@ import threading
 from typing import Dict
 
 from .config import EnhancedProcessingConfig
+from ..patterns import PatternDetector
 
 
-class EnhancedPatternDetector:
+class EnhancedPatternDetector(PatternDetector):
     """Advanced pattern detection with simple caching."""
 
     def __init__(self, config: EnhancedProcessingConfig):
+        super().__init__(config)
         self.config = config
         self.pattern_cache: Dict[str, Dict[str, float]] = {}
         self._cache_lock = threading.RLock()
