@@ -29,6 +29,9 @@ except Exception:  # ImportError or any env-specific failure
     #   pip install watchdog
     # or enable the 'hotreload' extra if using pyproject (see patch below).
 
+# Back-compat alias for tests that patch `_WATCHDOG`
+_WATCHDOG = _WATCHDOG_AVAILABLE
+
 
 # --- Data ---------------------------------------------------------------------
 
@@ -100,6 +103,16 @@ class EnhancedConfigManager:
         self._debounce_ms: int = 250
         self._poll_task: Optional[asyncio.Task] = None
 
+        # --- Back-compat shim so old tests that expect a thread-based poller still pass ---
+        class _AsyncTaskThreadShim:
+            def __init__(self, task_getter: Callable[[], Optional[asyncio.Task]]):
+                self._task_getter = task_getter
+            def is_alive(self) -> bool:
+                t = self._task_getter()
+                return bool(t and not t.done())
+        self._poll_thread = _AsyncTaskThreadShim(lambda: self._poll_task)
+        # -----------------------------------------------------------------------------------
+
         # Preserve optional SystemConfig
         try:
             from orchestrator.config import config as system_config  # type: ignore
@@ -117,7 +130,7 @@ class EnhancedConfigManager:
         await self._load_all_metadata()
 
         if self.enable_hot_reload:
-            if _WATCHDOG_AVAILABLE:
+            if _WATCHDOG_AVAILABLE and _WATCHDOG:
                 self._setup_config_watcher()
             else:
                 self._setup_polling_watcher()
@@ -208,7 +221,7 @@ class EnhancedConfigManager:
 
     def _setup_config_watcher(self) -> None:
         """Setup file system watcher for hot-reload"""
-        if not _WATCHDOG_AVAILABLE:
+        if not _WATCHDOG_AVAILABLE or not _WATCHDOG:
             logger.info("Watchdog not available; skipping file-system watcher.")
             return
 
@@ -272,28 +285,36 @@ class EnhancedConfigManager:
             mtimes[yaml_path] = mtime
             return
         if mtime > last:
+            # Debounce per path
+            now = datetime.now().timestamp() * 1000
+            last_evt = self._last_event.get(str(yaml_path), 0)
+            if (now - last_evt) < self._debounce_ms:
+                return
+            self._last_event[str(yaml_path)] = now
             mtimes[yaml_path] = mtime
             await self._handle_config_change(str(yaml_path))
 
     async def _handle_config_change(self, config_path: str) -> None:
         try:
-            path = Path(config_path)
-            slot_id = self._extract_slot_id(path.parent.name)
-            if slot_id not in self.slot_metadata:
-                return
+            with self._lock:
+                path = Path(config_path)
+                slot_id = self._extract_slot_id(path.parent.name)
 
-            # Stage new values; only swap on success
-            staged_metadata = SlotMetadata.from_yaml(config_path)
-            staged_config = self._build_runtime_config(slot_id, staged_metadata)
-            if not staged_metadata.validate_schema(staged_config):
-                logger.error(f"Schema validation failed for Slot {slot_id}; keeping previous config")
-                return
+                if slot_id in self.slot_metadata:
+                    # Stage new values; only swap on success
+                    staged_metadata = SlotMetadata.from_yaml(config_path)
+                    staged_config = self._build_runtime_config(slot_id, staged_metadata)
+                    if not staged_metadata.validate_schema(staged_config):
+                        logger.error(f"Schema validation failed for Slot {slot_id}; keeping previous config")
+                        return
 
-            old_config = self.runtime_configs.get(slot_id, {}).copy()
-            self.slot_metadata[slot_id] = staged_metadata
-            self.runtime_configs[slot_id] = staged_config
+                    old_config = self.runtime_configs.get(slot_id, {}).copy()
+                    self.slot_metadata[slot_id] = staged_metadata
+                    self.runtime_configs[slot_id] = staged_config
+                else:
+                    return
 
-            # Notify listeners outside the lock
+            # Notify outside the lock
             await self._notify_config_change(slot_id, old_config, self.runtime_configs[slot_id])
             logger.info(f"Hot-reloaded configuration for Slot {slot_id}")
 
