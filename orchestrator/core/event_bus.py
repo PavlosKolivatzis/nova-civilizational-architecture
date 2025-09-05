@@ -98,3 +98,18 @@ class EventBus:
         published = self.metrics.get("published", 0)
         successful = self.metrics.get("successful_attempts", 0)
         return successful / published if published > 0 else 1.0
+
+    # Interface segregation for metrics exposure
+    def get_base_compatible_metrics(self) -> Dict[str, Any]:
+        """Return metrics formatted for legacy/base processor expectations."""
+        return dict(self.metrics)
+
+    def get_enhanced_metrics(self) -> Dict[str, Any]:
+        """Return enhanced-only metrics with the prefixed namespace."""
+        base = self.get_base_compatible_metrics()
+        enhanced = {f"enhanced_{k}": v for k, v in base.items()}
+        enhanced["enhanced_success_rate"] = self.get_success_rate()
+        return enhanced
+
+    def supports_enhanced_metrics(self) -> bool:
+        return True
