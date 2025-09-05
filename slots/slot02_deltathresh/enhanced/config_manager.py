@@ -26,14 +26,15 @@ class ConfigManager:
         self.config: EnhancedProcessingConfig = (
             initial_config or EnhancedProcessingConfig.from_environment()
         )
-        self._lock = threading.RLock()
-        self._listeners: List[Callable[[EnhancedProcessingConfig], None]] = []
-        self._config_file: Optional[Path] = None
-        self._last_mtime: float = 0.0
 
         is_valid, violations = self.config.validate_runtime()
         if not is_valid:
             raise ValueError(f"Initial config validation failed: {violations}")
+
+        self._lock = threading.RLock()
+        self._listeners: List[Callable[[EnhancedProcessingConfig], None]] = []
+        self._config_file: Optional[Path] = None
+        self._last_mtime: float = 0.0
 
     # ------------------------------------------------------------------
     # listener management

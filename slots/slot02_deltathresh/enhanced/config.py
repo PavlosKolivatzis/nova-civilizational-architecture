@@ -23,10 +23,17 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import json
+import logging
 import os
 import yaml
 
-from dotenv import load_dotenv
+try:  # pragma: no cover - optional dependency
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover
+    load_dotenv = None  # type: ignore
+    logging.warning("python-dotenv not installed — skipping .env loading.")
+else:  # pragma: no cover - executed during import
+    load_dotenv()
 
 from ..config import ProcessingConfig, OperationalMode, ProcessingMode
 
@@ -130,8 +137,6 @@ class EnhancedProcessingConfig(ProcessingConfig):
     @classmethod
     def from_environment(cls) -> "EnhancedProcessingConfig":
         """Create configuration using environment variables as overrides."""
-
-        load_dotenv()
         cfg = cls()
 
         env = os.getenv("SLOT2_ENV")
