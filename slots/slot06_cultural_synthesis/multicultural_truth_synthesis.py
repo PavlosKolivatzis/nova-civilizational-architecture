@@ -17,6 +17,7 @@ from dataclasses import dataclass, field, asdict, is_dataclass
 from enum import Enum
 from frameworks.enums import DeploymentGuardrailResult
 from typing import Any, Dict, List, Optional, Iterable, Mapping
+from slots.slot02_deltathresh.models import ProcessingResult
 import time
 import hashlib
 import threading
@@ -100,6 +101,8 @@ class CulturalProfile:
     forbidden_elements_detected: List[str] = field(default_factory=list)
     guardrail_compliance: bool = True
     principle_preservation_score: float = 1.0
+    slot2_patterns: List[str] = field(default_factory=list)
+    tri_gap: float = 0.0
 @dataclass
 class SynthesisResult:
     simulation_status: SimulationResult
@@ -115,6 +118,8 @@ class GuardrailValidationResult:
     recommendations: List[str] = field(default_factory=list)
     transformation_required: bool = False
     max_safe_adaptation: float = 0.0
+    tri_gap: float = 0.0
+    slot2_patterns: List[str] = field(default_factory=list)
 class AdaptiveSynthesisEngine:
     _DEFAULT_METHODS = {
         "greek_logic": 0.8, "buddhist_impermanence": 0.7, "confucian_precision": 0.7,
@@ -239,6 +244,7 @@ class AdaptiveSynthesisEngine:
         payload: Dict[str, Any],
         context: Dict[str, Any] = None,
         profile: CulturalProfile | None = None,
+        slot2_result: ProcessingResult | Dict[str, Any] | None = None,
     ) -> SynthesisResult:
         if self._shutdown_flag.is_set():
             return SynthesisResult(
@@ -262,7 +268,36 @@ class AdaptiveSynthesisEngine:
                 compliance_score=0.0,
                 violations=["Input validation failed"],
             )
+        slot2_patterns: List[str] = []
+        tri_gap = 0.0
+        if slot2_result is not None:
+            try:
+                slot2_patterns = list(
+                    getattr(slot2_result, "reason_codes", []) or []
+                )
+                from slots.slot02_deltathresh.adapters import adapt_processing_result
+
+                if isinstance(slot2_result, dict) or not hasattr(
+                    slot2_result, "version"
+                ):
+                    if not isinstance(slot2_result, dict) and is_dataclass(
+                        slot2_result
+                    ):
+                        slot2_result = adapt_processing_result(asdict(slot2_result))
+                    else:
+                        slot2_result = adapt_processing_result(slot2_result)
+                tri_score = float(getattr(slot2_result, "tri_score", 1.0))
+                tri_gap = max(0.0, 0.8 - tri_score)
+            except Exception:
+                pass
         profile = profile or self._generate_cultural_profile(context)
+        profile.slot2_patterns = slot2_patterns
+        profile.tri_gap = tri_gap
+        if tri_gap > 0:
+            profile.guardrail_compliance = False
+        slot2_violations = [f"SLOT2_PATTERN:{p}" for p in slot2_patterns]
+        if tri_gap > 0:
+            slot2_violations.append(f"TRI_GAP:{tri_gap:.2f}")
         ideology_push = False
         try:
             ideology_push = bool((payload.get("messaging") or {}).get("ideology"))
@@ -281,7 +316,8 @@ class AdaptiveSynthesisEngine:
                 simulation_status=SimulationResult.BLOCKED_BY_GUARDRAIL,
                 cultural_profile=profile,
                 compliance_score=0.0,
-                violations=[f"FORBIDDEN_ELEMENTS:{','.join(forbidden_hits)}"],
+                violations=slot2_violations
+                + [f"FORBIDDEN_ELEMENTS:{','.join(forbidden_hits)}"],
             )
         simulation_requested = False
         has_consent = False
@@ -295,7 +331,8 @@ class AdaptiveSynthesisEngine:
             return SynthesisResult(
                 simulation_status=SimulationResult.DEFERRED_NO_CONSENT,
                 cultural_profile=profile,
-                violations=["Simulation requested without sufficient consent"],
+                violations=slot2_violations
+                + ["Simulation requested without sufficient consent"],
             )
         base_max = self._max_safe_adaptation(profile)
         max_safe_adapt = self._apply_creativity_budget(base_max, context)
@@ -310,6 +347,7 @@ class AdaptiveSynthesisEngine:
                 cultural_profile=profile,
                 compliance_score=max(0.0, 0.9 - compliance_penalty),
                 recommendations=[rec],
+                violations=slot2_violations,
             )
         with self._metrics_lock:
             self._successful_simulations += 1
@@ -318,6 +356,7 @@ class AdaptiveSynthesisEngine:
             simulation_status=SimulationResult.APPROVED,
             cultural_profile=profile,
             compliance_score=max(0.0, 1.0 - compliance_penalty),
+            violations=slot2_violations,
         )
     def _generate_cultural_profile(self, context: Dict[str, Any]) -> CulturalProfile:
         try:
@@ -419,15 +458,30 @@ def synthesis_result_to_dict(res: SynthesisResult) -> Dict[str, Any]:
 class MulticulturalTruthSynthesisAdapter:
     def __init__(self, engine: AdaptiveSynthesisEngine):
         self.engine = engine
-    def analyze_cultural_context(self, institution_name: str, ctx: Optional[Dict[str, Any]] = None) -> CulturalProfile:
+    def analyze_cultural_context(
+        self,
+        institution_name: str,
+        ctx: Optional[Dict[str, Any]] = None,
+        slot2_result: ProcessingResult | Dict[str, Any] | None = None,
+    ) -> CulturalProfile:
         try:
-            res = self.engine.analyze_and_simulate(institution_name, {"content": ""}, ctx or {})
+            res = self.engine.analyze_and_simulate(
+                institution_name, {"content": ""}, ctx or {}, slot2_result=slot2_result
+            )
             return res.cultural_profile
         except Exception:
             return CulturalProfile()
-    def validate_cultural_deployment(self, profile: CulturalProfile, institution_type: str, payload: Dict[str, Any]) -> GuardrailValidationResult:
+    def validate_cultural_deployment(
+        self,
+        profile: CulturalProfile,
+        institution_type: str,
+        payload: Dict[str, Any],
+        slot2_result: ProcessingResult | Dict[str, Any] | None = None,
+    ) -> GuardrailValidationResult:
         try:
-            res = self.engine.analyze_and_simulate(institution_type, payload, {}, profile)
+            res = self.engine.analyze_and_simulate(
+                institution_type, payload, {}, profile, slot2_result=slot2_result
+            )
             status_map = {
                 SimulationResult.APPROVED: DeploymentGuardrailResult.APPROVED,
                 SimulationResult.APPROVED_WITH_TRANSFORMATION: DeploymentGuardrailResult.REQUIRES_TRANSFORMATION,
@@ -441,6 +495,8 @@ class MulticulturalTruthSynthesisAdapter:
                 recommendations=res.recommendations,
                 transformation_required=(res.simulation_status == SimulationResult.APPROVED_WITH_TRANSFORMATION),
                 max_safe_adaptation=AdaptiveSynthesisEngine._max_safe_adaptation(profile),
+                tri_gap=res.cultural_profile.tri_gap,
+                slot2_patterns=res.cultural_profile.slot2_patterns,
             )
         except Exception:
             return GuardrailValidationResult(
@@ -450,6 +506,8 @@ class MulticulturalTruthSynthesisAdapter:
                 recommendations=["Check system logs"],
                 transformation_required=False,
                 max_safe_adaptation=AdaptiveSynthesisEngine._max_safe_adaptation(profile),
+                tri_gap=0.0,
+                slot2_patterns=[],
             )
 if __name__ == "__main__":
     eng = AdaptiveSynthesisEngine()
