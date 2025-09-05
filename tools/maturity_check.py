@@ -83,7 +83,6 @@ def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[str]]:
     if not isinstance(slots, dict) or not slots:
         errs.append("'slots' must be a non-empty mapping")
         return False, errs
-
     for k, v in slots.items():
         if not isinstance(v, dict):
             errs.append(f"{k}: slot entry must be a mapping")
@@ -101,15 +100,20 @@ def validate_schema(data: Dict[str, Any]) -> Tuple[bool, List[str]]:
 
 
 def compute_averages(slots: Dict[str, Any]) -> Dict[str, float]:
-    def g(n: int) -> Dict[str, Any]: return slots.get(f"slot{n}", {})
+    def g(n: int) -> Dict[str, Any]:
+        return slots.get(f"slot{n}", {})
+
     def avg(ns: List[int]) -> float:
         vals = [g(n).get("score", 0) for n in ns]
         return round(sum(vals) / len(vals), 2)
+
     return {
         "core_anchors": avg([1, 2, 3, 4, 5]),
-        "safeguards":   avg([6, 7, 8, 9]),
-        "deployment":   avg([10]),
-        "overall":      round(sum([g(i).get("score", 0) for i in range(1, 11)]) / 10.0, 2),
+        "safeguards": avg([6, 7, 8, 9]),
+        "deployment": avg([10]),
+        "overall": round(
+            sum([g(i).get("score", 0) for i in range(1, 11)]) / 10.0, 2
+        ),
     }
 
 
@@ -119,11 +123,13 @@ def grade(score: int) -> str:
 
 # ---------- presentation & checks ----------
 
-def text_dashboard(path: Path, meta: Dict[str, Any], slots: Dict[str, Any], avgs: Dict[str, float]) -> str:
+def text_dashboard(
+    path: Path, meta: Dict[str, Any], slots: Dict[str, Any], avgs: Dict[str, float]
+) -> str:
     lines = [
         f"# Slot Maturity Model — {path.name}",
         f"Version: {meta.get('version','?')} | Updated: {meta.get('updated','?')} | Maintainer: {meta.get('maintainer','?')}",
-        ""
+        "",
     ]
     for i in range(1, 11):
         s = slots.get(f"slot{i}", {})
@@ -139,19 +145,41 @@ def text_dashboard(path: Path, meta: Dict[str, Any], slots: Dict[str, Any], avgs
         f"- Core anchors (1–5): **{avgs['core_anchors']}**",
         f"- Safeguards (6–9): **{avgs['safeguards']}**",
         f"- Deployment (10): **{avgs['deployment']}**",
-        f"- Overall (1–10): **{avgs['overall']}**"
+        f"- Overall (1–10): **{avgs['overall']}**",
     ]
     return "\n".join(lines)
 
 
-def evaluate_thresholds(slots: Dict[str, Any], avgs: Dict[str, float], min_slot: int, min_core: float) -> int:
+def evaluate_thresholds(
+    slots: Dict[str, Any], avgs: Dict[str, float], min_slot: int, min_core: float
+) -> int:
     rc = 0
-    low = [f"slot{i}" for i in range(1, 11) if slots.get(f"slot{i}", {}).get("score", 0) < min_slot]
+    low = [
+        f"slot{i}"
+        for i in range(1, 11)
+        if slots.get(f"slot{i}", {}).get("score", 0) < min_slot
+    ]
     if low:
-        print(json.dumps({"reason_code": "LOW_SLOT_SCORE", "min_slot": min_slot, "failing_slots": low}))
+        print(
+            json.dumps(
+                {
+                    "reason_code": "LOW_SLOT_SCORE",
+                    "min_slot": min_slot,
+                    "failing_slots": low,
+                }
+            )
+        )
         rc = 2
     if avgs["core_anchors"] < min_core:
-        print(json.dumps({"reason_code": "LOW_CORE_ANCHOR_AVG", "min_core": min_core, "core_avg": avgs["core_anchors"]}))
+        print(
+            json.dumps(
+                {
+                    "reason_code": "LOW_CORE_ANCHOR_AVG",
+                    "min_core": min_core,
+                    "core_avg": avgs["core_anchors"],
+                }
+            )
+        )
         rc = max(rc, 3)
     return rc
 
@@ -172,12 +200,22 @@ def diff_slots(curr: Dict[str, Any], prev: Dict[str, Any]) -> Dict[str, Any]:
 
 def write_badge_json(path: Path, overall: float) -> None:
     color = "red"
-    if overall >= 3.5: color = "brightgreen"
-    elif overall >= 3.0: color = "green"
-    elif overall >= 2.5: color = "yellowgreen"
-    elif overall >= 2.0: color = "yellow"
-    elif overall >= 1.5: color = "orange"
-    payload = {"schemaVersion": 1, "label": "maturity", "message": f"{overall:.2f}/4", "color": color}
+    if overall >= 3.5:
+        color = "brightgreen"
+    elif overall >= 3.0:
+        color = "green"
+    elif overall >= 2.5:
+        color = "yellowgreen"
+    elif overall >= 2.0:
+        color = "yellow"
+    elif overall >= 1.5:
+        color = "orange"
+    payload = {
+        "schemaVersion": 1,
+        "label": "maturity",
+        "message": f"{overall:.2f}/4",
+        "color": color,
+    }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
     print(f"Wrote badge JSON → {path}")
@@ -221,18 +259,28 @@ def main():
     if args.format == "text":
         print(text_dashboard(Path(args.path), meta, slots, avgs))
     else:
-        print(json.dumps({
-            "meta": meta,
-            "averages": avgs,
-            "slots": {k: {"name": v.get("name"), "score": v.get("score"), "level": v.get("level")}
-                      for k, v in slots.items()}
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "meta": meta,
+                    "averages": avgs,
+                    "slots": {
+                        k: {
+                            "name": v.get("name"),
+                            "score": v.get("score"),
+                            "level": v.get("level"),
+                        }
+                        for k, v in slots.items()
+                    },
+                },
+                indent=2,
+            )
+        )
 
     rc = 0
     if not args.skip_thresholds:
         rc = evaluate_thresholds(slots, avgs, args.min_slot, args.min_core)
 
-    # Diff reporting
     if prev is not None:
         ok2, errs2 = validate_schema(prev)
         if not ok2:
