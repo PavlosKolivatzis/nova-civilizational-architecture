@@ -1,8 +1,13 @@
 from __future__ import annotations             
 from dataclasses import dataclass, field
 from frameworks.enums import DeploymentGuardrailResult
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import logging
+
+try:
+    from slots.slot02_deltathresh.models import ProcessingResult
+except Exception:  # pragma: no cover - Slot 2 always available in tests
+    ProcessingResult = Any  # type: ignore
 
 try:
     from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
@@ -29,6 +34,8 @@ except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
         adaptation_effectiveness: float = 0.0
         cultural_context: Any = "unknown"
         method_profile: Dict[str, float] = field(default_factory=dict)
+        slot2_patterns: list[str] = field(default_factory=list)
+        tri_gap: float = 0.0
 
     @dataclass
     class GuardrailValidationResult:  # type: ignore
@@ -38,6 +45,8 @@ except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
         recommendations: list[str] = field(default_factory=list)
         transformation_required: bool = False
         max_safe_adaptation: float = 0.0
+        tri_gap: float = 0.0
+        slot2_patterns: list[str] = field(default_factory=list)
 
     
     ENGINE = None
@@ -48,23 +57,90 @@ class Slot6Adapter:
     def __init__(self) -> None:
         self.available = AVAILABLE
 
-    def analyze(self, institution_name: str, context: Dict[str, Any]) -> CulturalProfile:
+    def analyze(
+        self,
+        institution_name: str,
+        context: Dict[str, Any],
+        slot2_result: Optional[ProcessingResult | Dict[str, Any]] = None,
+    ) -> CulturalProfile:
+        """Analyze an institution's cultural context.
+
+        Parameters
+        ----------
+        institution_name:
+            Name of the institution being analyzed.
+        context:
+            Supplemental context for the institution.
+        slot2_result:
+            Optional Slot 2 ``ProcessingResult`` (or mapping) whose TRI gap and
+            pattern codes will be attached to the resulting ``CulturalProfile``.
+
+        Returns
+        -------
+        CulturalProfile
+            Profile describing cultural dimensions plus any Slot 2 artifacts.
+        """
         if not self.available:
             return CulturalProfile()
         try:
-            return ENGINE.analyze_cultural_context(institution_name, context)
+            return ENGINE.analyze_cultural_context(
+                institution_name, context, slot2_result
+            )
+        except TypeError:
+            try:
+                return ENGINE.analyze_cultural_context(institution_name, context)
+            except Exception:
+                return CulturalProfile()
         except Exception:
             return CulturalProfile()
 
     def validate(
-        self, profile: CulturalProfile, institution_type: str, payload: Dict[str, Any]
+        self,
+        profile: CulturalProfile,
+        institution_type: str,
+        payload: Dict[str, Any],
+        slot2_result: Optional[ProcessingResult | Dict[str, Any]] = None,
     ) -> GuardrailValidationResult:
+        """Validate a payload against cultural guardrails.
+
+        Parameters
+        ----------
+        profile:
+            Cultural profile generated from ``analyze``.
+        institution_type:
+            The type or category of the institution.
+        payload:
+            Content slated for deployment.
+        slot2_result:
+            Optional Slot 2 ``ProcessingResult`` (or mapping). When provided,
+            its pattern violations and TRI gap are reflected in the returned
+            ``GuardrailValidationResult``.
+
+        Returns
+        -------
+        GuardrailValidationResult
+            Outcome of the validation, including any Slot 2 violations.
+        """
         if not self.available:
             return GuardrailValidationResult(result=DeploymentGuardrailResult.ERROR)
         try:
             return ENGINE.validate_cultural_deployment(
-                profile, institution_type, payload
+                profile, institution_type, payload, slot2_result
             )
+        except TypeError:
+            try:
+                return ENGINE.validate_cultural_deployment(
+                    profile, institution_type, payload
+                )
+            except Exception as exc:
+                logging.getLogger(__name__).exception(
+                    "Cultural deployment validation failed: %s", exc
+                )
+                return GuardrailValidationResult(
+                    result=DeploymentGuardrailResult.ERROR,
+                    compliance_score=0.0,
+                    violations=[str(exc)],
+                )
         except Exception as exc:
             logging.getLogger(__name__).exception(
                 "Cultural deployment validation failed: %s", exc
