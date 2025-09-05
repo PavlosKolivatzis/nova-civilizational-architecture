@@ -27,12 +27,14 @@ class AnomalyDetector:
             mean = arr.mean()
             std = arr.std()
             if std > 0 and abs(value - mean) > 3 * std:
-                self.anomalies.append({
-                    "timestamp": time.time(),
-                    "value": value,
-                    "mean": mean,
-                    "std": std,
-                })
+                self.anomalies.append(
+                    {
+                        "timestamp": time.time(),
+                        "value": value,
+                        "mean": mean,
+                        "std": std,
+                    }
+                )
 
     def get_anomalies(self) -> List[Dict[str, float]]:
         with self._lock:
@@ -49,9 +51,15 @@ class EnhancedPerformanceTracker:
             "neutralization_count": 0,
             "allow_count": 0,
             "pass_through_breach_count": 0,
+            # track TRI scores for compatibility with the core tracker
+            "tri_score_sum": 0.0,
+            "tri_score_count": 0,
             "processing_times": deque(maxlen=1000),
             "layer_detections": defaultdict(int),
             "reason_code_counts": defaultdict(int),
+            # latency violations are not currently tracked but the field is
+            # kept for structural compatibility with the core metrics API
+            "layer_latency_violations": 0,
             "start_time": time.time(),
         }
         self._lock = threading.RLock()
@@ -67,13 +75,18 @@ class EnhancedPerformanceTracker:
         with self._lock:
             self.metrics["total_processed"] += 1
             self.metrics["processing_times"].append(processing_time_ms)
+
             for code in reason_codes or []:
                 self.metrics["reason_code_counts"][code] += 1
+
             for layer, score in layer_scores.items():
                 if score > 0.3:
                     self.metrics["layer_detections"][layer] += 1
-            # For simplicity we ignore tri_score in these enhanced metrics but
-            # keep the parameter for API compatibility.
+
+            if tri_score is not None:
+                self.metrics["tri_score_sum"] += tri_score
+                self.metrics["tri_score_count"] += 1
+
             self.anomaly_detector.analyze(processing_time_ms)
 
     # -- compatibility helpers --------------------------------------------
@@ -96,11 +109,13 @@ class EnhancedPerformanceTracker:
     def get_enhanced_metrics(self) -> Dict[str, Any]:
         with self._lock:
             times = list(self.metrics["processing_times"])
+            total = max(1, self.metrics["total_processed"])
             return {
                 "basic": {
                     "total_processed": self.metrics["total_processed"],
-                    "quarantine_rate": self.metrics["quarantine_count"] / max(1, self.metrics["total_processed"]),
-                    "allow_rate": self.metrics["allow_count"] / max(1, self.metrics["total_processed"]),
+                    "quarantine_rate": self.metrics["quarantine_count"] / total,
+                    "allow_rate": self.metrics["allow_count"] / total,
+                    "neutralization_rate": self.metrics["neutralization_count"] / total,
                     "pass_through_breaches": self.metrics["pass_through_breach_count"],
                 },
                 "performance": {
@@ -113,3 +128,27 @@ class EnhancedPerformanceTracker:
                 "anomalies": self.anomaly_detector.get_anomalies(),
                 "uptime_seconds": time.time() - self.metrics["start_time"],
             }
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Return a flat metrics structure compatible with the core tracker."""
+        with self._lock:
+            total = self.metrics["total_processed"] or 1
+            times = list(self.metrics["processing_times"])
+            avg_time = float(np.mean(times)) if times else 0.0
+            avg_tri = (
+                self.metrics["tri_score_sum"] / self.metrics["tri_score_count"]
+                if self.metrics["tri_score_count"]
+                else 0.0
+            )
+            return {
+                "total_processed": self.metrics["total_processed"],
+                "quarantine_rate": self.metrics["quarantine_count"] / total,
+                "neutralization_rate": self.metrics["neutralization_count"] / total,
+                "pass_through_breaches": self.metrics["pass_through_breach_count"],
+                "avg_tri_score": avg_tri,
+                "reason_code_counts": dict(self.metrics["reason_code_counts"]),
+                "layer_detections": dict(self.metrics["layer_detections"]),
+                "avg_processing_time": avg_time,
+                "layer_latency_violations": self.metrics["layer_latency_violations"],
+            }
+
