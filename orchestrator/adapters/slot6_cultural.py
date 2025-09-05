@@ -63,6 +63,23 @@ class Slot6Adapter:
         context: Dict[str, Any],
         slot2_result: Optional[ProcessingResult | Dict[str, Any]] = None,
     ) -> CulturalProfile:
+        """Analyze an institution's cultural context.
+
+        Parameters
+        ----------
+        institution_name:
+            Name of the institution being analyzed.
+        context:
+            Supplemental context for the institution.
+        slot2_result:
+            Optional Slot 2 ``ProcessingResult`` (or mapping) whose TRI gap and
+            pattern codes will be attached to the resulting ``CulturalProfile``.
+
+        Returns
+        -------
+        CulturalProfile
+            Profile describing cultural dimensions plus any Slot 2 artifacts.
+        """
         if not self.available:
             return CulturalProfile()
         try:
@@ -84,6 +101,26 @@ class Slot6Adapter:
         payload: Dict[str, Any],
         slot2_result: Optional[ProcessingResult | Dict[str, Any]] = None,
     ) -> GuardrailValidationResult:
+        """Validate a payload against cultural guardrails.
+
+        Parameters
+        ----------
+        profile:
+            Cultural profile generated from ``analyze``.
+        institution_type:
+            The type or category of the institution.
+        payload:
+            Content slated for deployment.
+        slot2_result:
+            Optional Slot 2 ``ProcessingResult`` (or mapping). When provided,
+            its pattern violations and TRI gap are reflected in the returned
+            ``GuardrailValidationResult``.
+
+        Returns
+        -------
+        GuardrailValidationResult
+            Outcome of the validation, including any Slot 2 violations.
+        """
         if not self.available:
             return GuardrailValidationResult(result=DeploymentGuardrailResult.ERROR)
         try:
