@@ -1,0 +1,72 @@
+name: health-config-matrix
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  health-config:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12" ]
+        watchdog: [ "false", "true" ]
+        serverless: [ "false", "true" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install base deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install fastapi "uvicorn[standard]" httpx pytest
+
+      - name: Optional watchdog
+        if: ${{ matrix.watchdog == 'true' }}
+        run: pip install watchdog>=3.0.0
+
+      - name: Env flags
+        run: |
+          echo "NOVA_LOG_LEVEL=INFO" >> $GITHUB_ENV
+          # Force-disable hot reload in the smoke call to avoid background tasks in CI
+          echo "NOVA_HOT_RELOAD=false" >> $GITHUB_ENV
+          if [ "${{ matrix.serverless }}" = "true" ]; then
+            echo "VERCEL=1" >> $GITHUB_ENV
+          fi
+
+      - name: Unit tests
+        run: pytest -q
+
+      - name: Smoke: /health/config endpoint
+        run: |
+          python - <<'PY'
+          import os, json
+          from fastapi.testclient import TestClient
+          # Try importing your real app
+          try:
+              from app import app
+          except Exception:
+              # Fallback: minimal app with router
+              from fastapi import FastAPI
+              from api.health_config import router as health_router
+              app = FastAPI()
+              app.include_router(health_router)
+          c = TestClient(app)
+          r = c.get("/health/config")
+          assert r.status_code == 200, r.text
+          data = r.json()
+          print(json.dumps(data, ensure_ascii=False))
+          assert "hot_reload_enabled" in data
+          assert "slots_loaded" in data
+          assert isinstance(data.get("slots", []), list)
+          PY
