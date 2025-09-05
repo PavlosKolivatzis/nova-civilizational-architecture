@@ -4,15 +4,17 @@ FastAPI is an optional dependency for this project.  The tests exercise the
 core request handling without requiring the web framework.  Importing FastAPI
 unconditionally would raise ``ModuleNotFoundError`` when the package is not
 installed, causing pytest collection to fail.  To keep the module importable in
-minimal environments, the import is guarded and the ``app`` object as well as
-the ``/health`` endpoint are only created when FastAPI is available.
+minimal environments, the import is guarded and the web routes are only created
+when FastAPI is available.
 """
 
 # Optional web framework (avoid import errors in environments without FastAPI)
 try:  # pragma: no cover - absence of FastAPI is acceptable
     from fastapi import FastAPI
+    from api.health_config import router as health_router
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
     FastAPI = None  # type: ignore
+    health_router = None  # type: ignore
 
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.core.event_bus import EventBus, Event
@@ -38,17 +40,34 @@ except Exception:  # pragma: no cover - orchestrator runner not available
 
 if FastAPI is not None:
     app = FastAPI()
+    if health_router is not None:
+        app.include_router(health_router)
 
     @app.get("/health")
     async def health():
-        return {
-            "slots": {sid: monitor.get_slot_health(sid) for sid in SLOT_REGISTRY.keys()},
-            "router_thresholds": {
-                "latency_ms": router.latency_threshold_ms,
-                "error_rate": router.error_threshold,
-            },
-            "circuit_breaker": router.cb.get_metrics() if getattr(router, "cb", None) else {},
+        slots = {sid: monitor.get_slot_health(sid) for sid in SLOT_REGISTRY.keys()}
+        router_thresholds = {
+            "latency_ms": getattr(router, "latency_threshold_ms", None),
+            "error_rate": getattr(router, "error_threshold", None),
         }
+        cb_metrics = router.cb.get_metrics() if getattr(router, "cb", None) else {}
+        return {
+            "status": "ok",
+            "slots": slots,
+            "router_thresholds": router_thresholds,
+            "circuit_breaker": cb_metrics,
+        }
+
+    @app.on_event("startup")
+    async def _startup():
+        from slots.config import get_config_manager
+        await get_config_manager()
+
+    @app.on_event("shutdown")
+    async def _shutdown():
+        from slots.config import get_config_manager
+        mgr = await get_config_manager()
+        await mgr.shutdown()
 else:  # pragma: no cover - FastAPI not installed
     app = None
 
