@@ -16,13 +16,18 @@ logger = logging.getLogger("nova.config")
 
 # --- Optional watchdog (fallback to polling if unavailable) -------------------
 try:
-    from watchdog.observers import Observer  # type: ignore
-    from watchdog.events import FileSystemEventHandler  # type: ignore
-    _WATCHDOG = True
-except Exception:  # pragma: no cover
-    _WATCHDOG = False
+    # Optional dependency: watchdog (preferred hot-reload backend)
+    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler
+    _WATCHDOG_AVAILABLE = True
+except Exception:  # ImportError or any env-specific failure
     Observer = None  # type: ignore
     FileSystemEventHandler = object  # type: ignore
+    _WATCHDOG_AVAILABLE = False
+    # We intentionally do NOT hard-fail here. Hot-reload will fall back to polling.
+    # To enable watchdog-based reloads:
+    #   pip install watchdog
+    # or enable the 'hotreload' extra if using pyproject (see patch below).
 
 
 # --- Data ---------------------------------------------------------------------
@@ -91,8 +96,9 @@ class EnhancedConfigManager:
         self._observer: Optional[Observer] = None  # type: ignore
         self._lock = threading.RLock()
         self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._poll_thread: Optional[threading.Thread] = None
-        self._mtimes: Dict[Path, float] = {}
+        self._last_event: Dict[str, float] = {}
+        self._debounce_ms: int = 250
+        self._poll_task: Optional[asyncio.Task] = None
 
         # Preserve optional SystemConfig
         try:
@@ -106,13 +112,16 @@ class EnhancedConfigManager:
     async def initialize(self) -> None:
         """Initialize manager (discover slots, load configs, start watching)."""
         logger.info("Initializing Enhanced Configuration Manager")
+        # Capture the owning event loop so background threads can marshal work back safely
         self._loop = asyncio.get_running_loop()
         await self._load_all_metadata()
+
         if self.enable_hot_reload:
-            if _WATCHDOG:
-                self._setup_watchdog(self._loop)
+            if _WATCHDOG_AVAILABLE:
+                self._setup_config_watcher()
             else:
-                self._start_polling_watcher()  # fallback
+                self._setup_polling_watcher()
+
         logger.info("Configuration manager ready: %d slots", len(self.slot_metadata))
 
     async def _load_all_metadata(self) -> None:
@@ -131,7 +140,6 @@ class EnhancedConfigManager:
                         with self._lock:
                             self.slot_metadata[slot_id] = metadata
                             self.runtime_configs[slot_id] = self._build_runtime_config(slot_id, metadata)
-                            self._mtimes[meta_path] = meta_path.stat().st_mtime
                         logger.debug("Loaded configuration for Slot %d from %s", slot_id, meta_path)
                     except Exception as e:
                         logger.error("Failed to load %s: %s", meta_path, e)
@@ -198,72 +206,74 @@ class EnhancedConfigManager:
 
     # --- Watching -------------------------------------------------------------
 
-    def _setup_watchdog(self, loop: asyncio.AbstractEventLoop) -> None:
-        assert _WATCHDOG and Observer is not None and FileSystemEventHandler is not object
+    def _setup_config_watcher(self) -> None:
+        """Setup file system watcher for hot-reload"""
+        if not _WATCHDOG_AVAILABLE:
+            logger.info("Watchdog not available; skipping file-system watcher.")
+            return
 
-        class ConfigChangeHandler(FileSystemEventHandler):  # type: ignore
-            def __init__(self, manager: "EnhancedConfigManager", loop_: asyncio.AbstractEventLoop):
+        class ConfigChangeHandler(FileSystemEventHandler):  # type: ignore[misc]
+            def __init__(self, manager):
                 self.manager = manager
-                self.loop = loop_
 
-            def on_modified(self, event):  # runs in watchdog thread
-                if getattr(event, "is_directory", False):
-                    return
-                path = str(getattr(event, "src_path", ""))
-                if path.endswith((".yaml", ".yml")):
-                    fut = asyncio.run_coroutine_threadsafe(
-                        self.manager._handle_config_change(path), self.loop
-                    )
-                    # best-effort: log exceptions from the scheduled task
-                    try:
-                        fut.result(timeout=0)  # non-blocking check
-                    except Exception:  # pragma: no cover
-                        pass
+            def on_modified(self, event):
+                if not event.is_directory and event.src_path.endswith((".yaml", ".yml")):
+                    # Debounce frequent editor events
+                    now = datetime.now().timestamp() * 1000
+                    last = self.manager._last_event.get(event.src_path, 0)
+                    if (now - last) < self.manager._debounce_ms:
+                        return
+                    self.manager._last_event[event.src_path] = now
 
-        self._observer = Observer()  # type: ignore
-        self._observer.schedule(ConfigChangeHandler(self, loop), str(self.config_dir), recursive=True)
+                    # We are in a watchdog thread; marshal onto the manager's loop safely
+                    if self.manager._loop is not None:
+                        asyncio.run_coroutine_threadsafe(
+                            self.manager._handle_config_change(event.src_path),
+                            self.manager._loop,
+                        )
+
+        self._observer = Observer()
+        self._observer.schedule(
+            ConfigChangeHandler(self),
+            str(self.config_dir),
+            recursive=True,
+        )
         self._observer.start()
-        logger.info("Configuration hot-reload enabled (watchdog)")
+        logger.info("Configuration hot-reload enabled")
 
-    def _start_polling_watcher(self, interval: float = 1.0) -> None:
-        """Fallback watcher using mtimes (no external deps)."""
-        def _poll():
+    def _setup_polling_watcher(self) -> None:
+        """Lightweight polling fallback if watchdog isn't installed."""
+        async def poll_loop():
+            logger.info("Configuration hot-reload (polling) enabled")
+            # naive mtime cache
+            mtimes: Dict[Path, float] = {}
             while True:
                 try:
-                    with self._lock:
-                        meta_files = []
-                        for slot_dir in self.config_dir.glob("slot*"):
-                            for meta in (
-                                slot_dir / f"{slot_dir.name}.meta.yaml",
-                                slot_dir / "meta.yaml",
-                                slot_dir / "slot.yaml",
-                            ):
-                                if meta.exists():
-                                    meta_files.append(meta)
-                    for meta in meta_files:
-                        try:
-                            m = meta.stat().st_mtime
-                        except FileNotFoundError:
-                            continue
-                        last = self._mtimes.get(meta, 0.0)
-                        if m > last:
-                            self._mtimes[meta] = m
-                            # schedule async handler on loop
-                            if self._loop:
-                                asyncio.run_coroutine_threadsafe(
-                                    self._handle_config_change(str(meta)), self._loop
-                                )
-                    # sleep
-                    if interval <= 0:
-                        break
-                    threading.Event().wait(interval)
-                except Exception as e:  # pragma: no cover
-                    logger.error("Polling watcher error: %s", e)
-                    threading.Event().wait(interval)
+                    for yaml_path in self.config_dir.rglob("*.yml"):
+                        await self._maybe_reload_path(yaml_path, mtimes)
+                    for yaml_path in self.config_dir.rglob("*.yaml"):
+                        await self._maybe_reload_path(yaml_path, mtimes)
+                    await asyncio.sleep(1.0)  # 1s poll interval
+                except asyncio.CancelledError:
+                    break
+                except Exception as e:
+                    logger.error(f"Polling watcher error: {e}")
 
-        self._poll_thread = threading.Thread(target=_poll, name="nova-config-poller", daemon=True)
-        self._poll_thread.start()
-        logger.info("Configuration hot-reload enabled (polling)")
+        if self._loop:
+            self._poll_task = self._loop.create_task(poll_loop())
+
+    async def _maybe_reload_path(self, yaml_path: Path, mtimes: Dict[Path, float]) -> None:
+        try:
+            mtime = yaml_path.stat().st_mtime
+        except FileNotFoundError:
+            return
+        last = mtimes.get(yaml_path)
+        if last is None:
+            mtimes[yaml_path] = mtime
+            return
+        if mtime > last:
+            mtimes[yaml_path] = mtime
+            await self._handle_config_change(str(yaml_path))
 
     async def _handle_config_change(self, config_path: str) -> None:
         try:
@@ -271,17 +281,24 @@ class EnhancedConfigManager:
             slot_id = self._extract_slot_id(path.parent.name)
             if slot_id not in self.slot_metadata:
                 return
-            new_meta = SlotMetadata.from_yaml(str(path))
-            new_cfg = self._build_runtime_config(slot_id, new_meta)
-            with self._lock:
-                old_cfg = dict(self.runtime_configs.get(slot_id, {}))
-                self.slot_metadata[slot_id] = new_meta
-                self.runtime_configs[slot_id] = new_cfg
-                self._mtimes[path] = path.stat().st_mtime
-            await self._notify_config_change(slot_id, old_cfg, new_cfg)
-            logger.info("Hot-reloaded configuration for Slot %d", slot_id)
+
+            # Stage new values; only swap on success
+            staged_metadata = SlotMetadata.from_yaml(config_path)
+            staged_config = self._build_runtime_config(slot_id, staged_metadata)
+            if not staged_metadata.validate_schema(staged_config):
+                logger.error(f"Schema validation failed for Slot {slot_id}; keeping previous config")
+                return
+
+            old_config = self.runtime_configs.get(slot_id, {}).copy()
+            self.slot_metadata[slot_id] = staged_metadata
+            self.runtime_configs[slot_id] = staged_config
+
+            # Notify listeners outside the lock
+            await self._notify_config_change(slot_id, old_config, self.runtime_configs[slot_id])
+            logger.info(f"Hot-reloaded configuration for Slot {slot_id}")
+
         except Exception as e:
-            logger.error("Failed to handle config change for %s: %s", config_path, e)
+            logger.error(f"Failed to handle config change for {config_path}: {e}")
 
     async def _notify_config_change(self, slot_id: int, old_config: Dict[str, Any], new_config: Dict[str, Any]) -> None:
         # Copy listeners to avoid mutation during iteration
@@ -329,12 +346,16 @@ class EnhancedConfigManager:
         }
 
     async def shutdown(self) -> None:
+        """Shutdown configuration manager"""
+        if self._poll_task:
+            self._poll_task.cancel()
+            try:
+                await self._poll_task
+            except asyncio.CancelledError:
+                pass
         if self._observer:
             self._observer.stop()
             self._observer.join()
-        if self._poll_thread and self._poll_thread.is_alive():
-            # let it die naturally; it's daemonized
-            pass
         logger.info("Configuration manager shutdown complete")
 
 

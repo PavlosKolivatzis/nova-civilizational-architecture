@@ -9,3 +9,5 @@ numpy==1.26.4
 
 hypothesis==6.138.13
 python-dotenv==1.1.1
+# Optional: enable file-system based hot reload
+# watchdog>=3.0.0
