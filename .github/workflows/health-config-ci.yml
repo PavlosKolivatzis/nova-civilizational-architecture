@@ -11,9 +11,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.10", "3.11", "3.12" ]
-        watchdog: [ "false", "true" ]
-        serverless: [ "false", "true" ]
+        python-version: ['3.10','3.11','3.12']
+        watchdog: [false, true]
+        serverless: [false, true]
 
     steps:
       - name: Checkout
@@ -32,23 +32,19 @@ jobs:
           pip install fastapi "uvicorn[standard]" httpx pytest
 
       - name: Optional watchdog
-        if: ${{ matrix.watchdog == 'true' }}
-        run: pip install watchdog>=3.0.0
+        if: ${{ matrix.watchdog }}
+        run: pip install 'watchdog>=3.0.0'
 
       - name: Env flags
-        run: |
-          echo "NOVA_LOG_LEVEL=INFO" >> $GITHUB_ENV
-          # Force-disable hot reload in the smoke call to avoid background tasks in CI
-          echo "NOVA_HOT_RELOAD=false" >> $GITHUB_ENV
-          if [ "${{ matrix.serverless }}" = "true" ]; then
-            echo "VERCEL=1" >> $GITHUB_ENV
-          fi
+        run: echo "NOVA_LOG_LEVEL=INFO" >> $GITHUB_ENV
 
       - name: Unit tests
         run: pytest -q
 
       - name: Smoke:/health/config endpoint
         run: |
+          if ${{ matrix.serverless }}; then export VERCEL=1; fi
+          export NOVA_HOT_RELOAD=false
           python - <<'PY'
           import json
           from fastapi.testclient import TestClient
@@ -65,6 +61,8 @@ jobs:
 
       - name: Smoke:/health (legacy fields preserved)
         run: |
+          if ${{ matrix.serverless }}; then export VERCEL=1; fi
+          export NOVA_HOT_RELOAD=false
           python - <<'PY'
           import json
           from fastapi.testclient import TestClient
