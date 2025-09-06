@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Optional, Union
 
 
 class PerformanceTracker:
@@ -36,7 +38,7 @@ class PerformanceTracker:
         processing_time_ms: float,
         reason_codes: List[str],
         layer_scores: Dict[str, float],
-        tri_score: float | None = None,
+        tri_score: Optional[float] = None
     ) -> None:
         self.total_processed += 1
         for code in reason_codes or []:
@@ -50,7 +52,7 @@ class PerformanceTracker:
             self.avg_tri_score = ((self.avg_tri_score * (n - 1)) + tri_score) / n
 
     # -- reporting ---------------------------------------------------------
-    def get_metrics(self) -> Dict[str, float | int | Dict[str, int]]:
+    def get_metrics(self) -> Dict[str, Union[float, int, Dict[str, int]]]:
         total = self.total_processed or 1
         return {
             "total_processed": self.total_processed,

@@ -1,5 +1,7 @@
 """Slot 2 ΔTHRESH Integration Manager - core processing pipeline."""
 
+from __future__ import annotations
+
 import hashlib
 import logging
 import threading
@@ -14,7 +16,7 @@ from .config import (
 )
 from .metrics import PerformanceTracker
 from .models import ProcessingResult
-from .patterns import PatternDetector
+from .patterns import PatternDetector, _word_count_fast
 
 
 class DeltaThreshProcessor:
@@ -25,7 +27,7 @@ class DeltaThreshProcessor:
     def __init__(
         self,
         config: Optional[ProcessingConfig] = None,
-        slot1_anchor_system: Any | None = None,
+        slot1_anchor_system: Optional[Any] = None,
     ) -> None:
         self.config = config or ProcessingConfig()
         self.anchor_system = slot1_anchor_system
@@ -125,9 +127,7 @@ class DeltaThreshProcessor:
         if not self.config.tri_enabled:
             return 1.0
         tri = self.pattern_detector.analyze_tri_patterns(content)
-        words = len(content.split())
-        if words == 0:
-            return 0.5
+        words = max(1, _word_count_fast(content))
         absolute_penalty = min(0.4, (tri["absolute_claims"] / words) * 2.0)
         humility_bonus = min(0.3, (tri["humility_indicators"] / words) * 1.5)
         uncertainty_bonus = min(0.2, (tri["uncertainty_acknowledgments"] / words) * 1.0)
