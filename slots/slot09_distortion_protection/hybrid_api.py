@@ -9,6 +9,7 @@ import logging
 import asyncio
 import hashlib
 import uuid
+import json
 from typing import Dict, Any, Optional, List, Tuple, Union
 from enum import Enum
 from dataclasses import dataclass, asdict
@@ -17,9 +18,17 @@ from functools import wraps
 import threading
 from datetime import datetime, timezone
 
+# ---------------------------------------------------------------------------
+# Utility functions
+# ---------------------------------------------------------------------------
+
+def _round3(value: float) -> float:
+    """Round float values to three decimal places."""
+    return round(value, 3)
+
 # Optional dependencies with graceful fallback
 try:
-    from pydantic import BaseModel, Field, validator
+    from pydantic import BaseModel, Field, field_validator
     from pydantic_settings import BaseSettings
     PYDANTIC_AVAILABLE = True
 except ImportError:
@@ -61,8 +70,11 @@ class ResponseStatus(str, Enum):
 
 class PolicyAction(str, Enum):
     ALLOW_FASTPATH = "ALLOW_FASTPATH"
+    ALLOW_WITH_MONITORING = "ALLOW_WITH_MONITORING"
     STANDARD_PROCESSING = "STANDARD_PROCESSING"
+    STAGED_DEPLOYMENT = "STAGED_DEPLOYMENT"
     DEGRADE_AND_REVIEW = "DEGRADE_AND_REVIEW"
+    RESTRICTED_SCOPE_DEPLOYMENT = "RESTRICTED_SCOPE_DEPLOYMENT"
     BLOCK_OR_SANDBOX = "BLOCK_OR_SANDBOX"
     
 class DistortionType(str, Enum):
@@ -132,13 +144,19 @@ if PYDANTIC_AVAILABLE:
         include_detailed_analysis: bool = False
         priority: RequestPriority = RequestPriority.NORMAL
 
-        @validator('content')
+        @field_validator('content')
+        @classmethod
         def validate_content_not_empty(cls, v):
             if not v or not v.strip():
                 raise ValueError('Content cannot be empty or whitespace only')
             return v
 
     class DistortionDetectionResponse(BaseModel):
+        # Version control fields
+        format_version: str
+        api_version: str
+        compatibility_level: str
+
         # Core fields (enhanced version)
         status: ResponseStatus
         threat_level: float = Field(..., ge=0.0, le=1.0)
@@ -146,17 +164,20 @@ if PYDANTIC_AVAILABLE:
         confidence: float = Field(..., ge=0.0, le=1.0)
         processing_time_ms: float = Field(..., ge=0.0)
         trace_id: str
-        
+
         # NOVA-specific fields (my version)
         distortion_type: DistortionType
         infrastructure_level: InfrastructureLevel
         severity: ThreatSeverity
         ids_analysis: Dict[str, Any]
         audit_trail: Dict[str, Any]
-        
+        deployment_context: Dict[str, Any] = Field(default_factory=dict)
+        deployment_feedback: Dict[str, Any] = Field(default_factory=dict)
+
         # Optional detailed analysis
         threat_landscape: Optional[Dict[str, Any]] = None
         intervention_strategy: Optional[Dict[str, Any]] = None
+        error_details: Optional[Dict[str, Any]] = None
 
 else:
     # Fallback dataclass implementations
@@ -178,6 +199,9 @@ else:
 
     @dataclass
     class DistortionDetectionResponse:
+        format_version: str
+        api_version: str
+        compatibility_level: str
         status: ResponseStatus
         threat_level: float
         policy_action: PolicyAction
@@ -189,8 +213,11 @@ else:
         severity: ThreatSeverity
         ids_analysis: Dict[str, Any]
         audit_trail: Dict[str, Any]
+        deployment_context: Dict[str, Any]
+        deployment_feedback: Dict[str, Any]
         threat_landscape: Optional[Dict[str, Any]] = None
         intervention_strategy: Optional[Dict[str, Any]] = None
+        error_details: Optional[Dict[str, Any]] = None
 
 # ============================================================================
 # 3. ENHANCED RESILIENCE UTILITIES
@@ -303,6 +330,8 @@ class HybridDistortionDetectionAPI:
     Best of both worlds: production-ready infrastructure + complete IDS integration.
     """
     VERSION = "3.1.0-hybrid"
+    FORMAT_VERSION = "2.5.0-rc1"
+    COMPATIBILITY_LEVEL = "slot10_v1.0"
 
     def __init__(self, core_detector: Any = None, config: Optional[HybridApiConfig] = None):
         self.core_detector = core_detector
@@ -331,6 +360,10 @@ class HybridDistortionDetectionAPI:
             max_size=1000
         )
         self._metrics_lock = threading.RLock()
+
+        # Hash chain state and feedback storage
+        self.last_audit_hash: Optional[str] = None
+        self.last_deployment_feedback: Optional[Dict[str, Any]] = None
         
         self.logger.info(f"HybridDistortionDetectionAPI v{self.VERSION} initialized")
         self.logger.info(f"NOVA integration: {'enabled' if NOVA_INTEGRATION_AVAILABLE else 'fallback mode'}")
@@ -551,17 +584,22 @@ class HybridDistortionDetectionAPI:
         
         # Build response
         response = DistortionDetectionResponse(
+            format_version=self.FORMAT_VERSION,
+            api_version=self.VERSION,
+            compatibility_level=self.COMPATIBILITY_LEVEL,
             status=status,
-            threat_level=threat_level,
+            threat_level=_round3(threat_level),
             policy_action=PolicyAction(policy_result.get('final_policy', 'STANDARD_PROCESSING')),
-            confidence=confidence,
-            processing_time_ms=processing_time,
+            confidence=_round3(confidence),
+            processing_time_ms=_round3(processing_time),
             trace_id=trace_id,
             distortion_type=distortion_type,
             infrastructure_level=infrastructure_level,
             severity=severity,
             ids_analysis=ids_analysis,
-            audit_trail=audit_trail
+            audit_trail=audit_trail,
+            deployment_context=self._default_deployment_context(request),
+            deployment_feedback={}
         )
         
         # Add detailed analysis if requested (my version)
@@ -579,7 +617,10 @@ class HybridDistortionDetectionAPI:
         # Base threat levels by policy
         base_threat_mapping = {
             'ALLOW_FASTPATH': 0.1,
+            'ALLOW_WITH_MONITORING': 0.2,
             'STANDARD_PROCESSING': 0.3,
+            'STAGED_DEPLOYMENT': 0.5,
+            'RESTRICTED_SCOPE_DEPLOYMENT': 0.6,
             'DEGRADE_AND_REVIEW': 0.7,
             'BLOCK_OR_SANDBOX': 0.9
         }
@@ -714,10 +755,10 @@ class HybridDistortionDetectionAPI:
             "processing_confidence": self._calculate_ids_based_confidence(policy_result)
         }
 
-    def _create_detailed_audit_trail(self, policy_result: Dict, trace_id: str, 
+    def _create_detailed_audit_trail(self, policy_result: Dict, trace_id: str,
                                    processing_time: float) -> Dict[str, Any]:
         """Create detailed audit trail for compliance (my version approach)."""
-        return {
+        audit_trail = {
             "trace_id": trace_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "policy_decision": policy_result.get('final_policy', 'STANDARD_PROCESSING'),
@@ -730,6 +771,32 @@ class HybridDistortionDetectionAPI:
             "api_version": self.VERSION,
             "circuit_breaker_state": self.circuit_breaker.state
         }
+        return self._add_hash_chain(audit_trail)
+
+    def _add_hash_chain(self, audit_trail: Dict[str, Any]) -> Dict[str, Any]:
+        """Add hash chaining fields to the audit trail."""
+        previous = self.last_audit_hash or ""
+        parts = (
+            audit_trail.get("trace_id", ""),
+            audit_trail.get("timestamp", ""),
+            audit_trail.get("policy_decision", ""),
+            audit_trail.get("decision_reason", ""),
+            json.dumps(audit_trail.get("compliance_markers", []), separators=(",", ":"), ensure_ascii=False),
+            json.dumps(audit_trail.get("processing_path", ""), separators=(",", ":"), ensure_ascii=False),
+            str(audit_trail.get("processing_time_ms", "")),
+        )
+        data = "|".join(parts).encode("utf-8")
+        current_hash = hashlib.sha256(previous.encode("utf-8") + data).hexdigest()
+        audit_trail["hash_signature"] = f"sha256:{current_hash}"
+        audit_trail["previous_event_hash"] = self.last_audit_hash
+        audit_trail["retention_policy"] = "7_years"
+        self.last_audit_hash = f"sha256:{current_hash}"
+        return audit_trail
+
+    def _default_deployment_context(self, request: DistortionDetectionRequest) -> Dict[str, Any]:
+        """Extract deployment context from request if provided."""
+        ctx = request.context.get("deployment_context") if hasattr(request, "context") else None
+        return ctx if isinstance(ctx, dict) else {}
 
     def _generate_compliance_markers(self, policy_result: Dict) -> List[str]:
         """Generate compliance markers for audit trail."""
@@ -1030,13 +1097,25 @@ class HybridDistortionDetectionAPI:
     def _create_circuit_breaker_response(self, trace_id: str, start_time: float) -> DistortionDetectionResponse:
         """Create response for circuit breaker open state."""
         processing_time = (time.perf_counter() - start_time) * 1000
-        
+
+        audit_trail = {
+            "trace_id": trace_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "error": "circuit_breaker_open",
+            "processing_path": "error_handler",
+            "failure_count": self.circuit_breaker.failure_count
+        }
+        audit_trail = self._add_hash_chain(audit_trail)
+
         return DistortionDetectionResponse(
+            format_version=self.FORMAT_VERSION,
+            api_version=self.VERSION,
+            compatibility_level=self.COMPATIBILITY_LEVEL,
             status=ResponseStatus.ERROR,
-            threat_level=0.5,
+            threat_level=_round3(0.5),
             policy_action=PolicyAction.STANDARD_PROCESSING,
-            confidence=0.0,
-            processing_time_ms=processing_time,
+            confidence=_round3(0.0),
+            processing_time_ms=_round3(processing_time),
             trace_id=trace_id,
             distortion_type=DistortionType.UNKNOWN,
             infrastructure_level=InfrastructureLevel.UNKNOWN,
@@ -1047,24 +1126,38 @@ class HybridDistortionDetectionAPI:
                 "circuit_breaker_state": "open",
                 "integration_mode": "unavailable"
             },
-            audit_trail={
-                "trace_id": trace_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "error": "circuit_breaker_open",
-                "processing_path": "error_handler",
-                "failure_count": self.circuit_breaker.failure_count
+            audit_trail=audit_trail,
+            deployment_context={},
+            deployment_feedback={},
+            error_details={
+                "error_type": "circuit_breaker",
+                "error_code": "CB502",
+                "error_message": "circuit breaker open"
             }
         )
 
-    def _create_comprehensive_error_response(self, trace_id: str, error_message: str, 
+    def _create_comprehensive_error_response(self, trace_id: str, error_message: str,
                                            processing_time: float) -> DistortionDetectionResponse:
         """Create comprehensive error response."""
+        audit_trail = {
+            "trace_id": trace_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "error": error_message,
+            "processing_path": "error_handler",
+            "api_version": self.VERSION,
+            "circuit_breaker_failures": self.circuit_breaker.failure_count
+        }
+        audit_trail = self._add_hash_chain(audit_trail)
+
         return DistortionDetectionResponse(
+            format_version=self.FORMAT_VERSION,
+            api_version=self.VERSION,
+            compatibility_level=self.COMPATIBILITY_LEVEL,
             status=ResponseStatus.ERROR,
-            threat_level=self.config.default_confidence_fallback,
+            threat_level=_round3(self.config.default_confidence_fallback),
             policy_action=PolicyAction.STANDARD_PROCESSING,
-            confidence=0.0,
-            processing_time_ms=processing_time,
+            confidence=_round3(0.0),
+            processing_time_ms=_round3(processing_time),
             trace_id=trace_id,
             distortion_type=DistortionType.UNKNOWN,
             infrastructure_level=InfrastructureLevel.UNKNOWN,
@@ -1075,13 +1168,13 @@ class HybridDistortionDetectionAPI:
                 "integration_mode": "nova" if NOVA_INTEGRATION_AVAILABLE else "fallback",
                 "fallback_reason": "error_occurred"
             },
-            audit_trail={
-                "trace_id": trace_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "error": error_message,
-                "processing_path": "error_handler",
-                "api_version": self.VERSION,
-                "circuit_breaker_failures": self.circuit_breaker.failure_count
+            audit_trail=audit_trail,
+            deployment_context={},
+            deployment_feedback={},
+            error_details={
+                "error_type": "processing",
+                "error_code": "PROC503",
+                "error_message": error_message
             }
         )
 
@@ -1196,6 +1289,25 @@ class HybridDistortionDetectionAPI:
                 )
                 for i, req in enumerate(requests)
             ]
+
+    async def report_deployment_feedback(self, deployment_id: str, outcome_data: Dict[str, Any]) -> None:
+        """Record deployment feedback from Slot 10."""
+        feedback = {
+            "deployment_id": deployment_id,
+            "outcome": outcome_data.get("status", "unknown"),
+            "actual_impact": {
+                "measured_threat_level": _round3(outcome_data.get("measured_threat_level", 0.0)),
+                "prediction_accuracy": _round3(outcome_data.get("prediction_accuracy", 0.0)),
+                "false_positive_rate": _round3(outcome_data.get("false_positives", 0.0)),
+                "false_negative_rate": _round3(outcome_data.get("false_negatives", 0.0)),
+            },
+            "lessons_learned": {
+                "summary": outcome_data.get("insights", ""),
+                "recommendations": outcome_data.get("recommendations", []),
+                "escalation_needed": outcome_data.get("escalation", False),
+            },
+        }
+        self.last_deployment_feedback = feedback
 
     def cleanup(self):
         """Enhanced cleanup with comprehensive resource management."""
