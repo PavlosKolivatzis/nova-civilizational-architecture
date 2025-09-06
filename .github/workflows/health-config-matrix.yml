@@ -33,12 +33,12 @@ jobs:
 
       - name: Optional watchdog
         if: ${{ matrix.watchdog == 'true' }}
-        run: pip install watchdog>=3.0.0
+        run: pip install "watchdog>=3.0.0"
 
       - name: Env flags
         run: |
           echo "NOVA_LOG_LEVEL=INFO" >> $GITHUB_ENV
-          # Force-disable hot reload in the smoke call to avoid background tasks in CI
+          # Force-disable hot reload in CI to avoid background tasks
           echo "NOVA_HOT_RELOAD=false" >> $GITHUB_ENV
           if [ "${{ matrix.serverless }}" = "true" ]; then
             echo "VERCEL=1" >> $GITHUB_ENV
@@ -47,15 +47,12 @@ jobs:
       - name: Unit tests
         run: pytest -q
 
-      - name: Smoke: /health/config endpoint
+      - name: "Smoke: /health/config endpoint"
         run: |
           python - <<'PY'
           import json
           from fastapi.testclient import TestClient
-          try:
-              from orchestrator.app import app
-          except Exception:
-              raise SystemExit("App import failed; /health/config smoke test requires orchestrator/app.py")
+          from orchestrator.app import app  # must import your real app
           c = TestClient(app)
           r = c.get("/health/config")
           assert r.status_code == 200, r.text
@@ -66,15 +63,12 @@ jobs:
           assert isinstance(data.get("slots", []), list)
           PY
 
-      - name: Smoke: /health (legacy fields preserved)
+      - name: "Smoke: /health (legacy fields preserved)"
         run: |
           python - <<'PY'
           import json
           from fastapi.testclient import TestClient
-          try:
-              from orchestrator.app import app
-          except Exception:
-              raise SystemExit("App import failed; /health smoke test requires orchestrator/app.py")
+          from orchestrator.app import app  # must import your real app
           c = TestClient(app)
           r = c.get("/health")
           assert r.status_code == 200, r.text
