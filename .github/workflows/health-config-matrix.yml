@@ -44,14 +44,22 @@ jobs:
 
       - name: Unit tests
         env:
-          # ENABLE for unit tests so poller-based tests pass
+          # ENABLE hot reload for tests (exercise poller)
           NOVA_HOT_RELOAD: "true"
+          # CLEAR any serverless flags so the poller isn't disabled
+          VERCEL: ""
+          VERCEL_ENV: ""
+          AWS_LAMBDA_FUNCTION_NAME: ""
+          FUNCTION_TARGET: ""
+          K_SERVICE: ""
         run: pytest -q
 
-      - name: "Smoke: /health/config endpoint"
+      - name: "Smoke: /health/config endpoint (serverless matrix respected)"
         env:
-          # DISABLE for smoke steps to avoid background tasks
+          # DISABLE hot reload to avoid background tasks in smoke
           NOVA_HOT_RELOAD: "false"
+          # Re-apply serverless flag only for smoke
+          VERCEL: ${{ matrix.serverless }}
         run: |
           python - <<'PY'
           import json
@@ -69,8 +77,8 @@ jobs:
 
       - name: "Smoke: /health (legacy fields preserved)"
         env:
-          # DISABLE for smoke steps to avoid background tasks
           NOVA_HOT_RELOAD: "false"
+          VERCEL: ${{ matrix.serverless }}
         run: |
           python - <<'PY'
           import json
