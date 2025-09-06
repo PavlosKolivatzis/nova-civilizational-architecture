@@ -12,6 +12,7 @@ when FastAPI is available.
 try:  # pragma: no cover - absence of FastAPI is acceptable
     from fastapi import FastAPI
     from api.health_config import router as health_router
+    from contextlib import asynccontextmanager
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
     FastAPI = None  # type: ignore
     health_router = None  # type: ignore
@@ -50,7 +51,24 @@ except Exception:  # pragma: no cover - orchestrator runner not available
     orch = None
 
 if FastAPI is not None:
-    app = FastAPI()
+    async def _startup() -> None:
+        from slots.config import get_config_manager
+        await get_config_manager()
+
+    async def _shutdown() -> None:
+        from slots.config import get_config_manager
+        mgr = await get_config_manager()
+        await mgr.shutdown()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        await _startup()
+        try:
+            yield
+        finally:
+            await _shutdown()
+
+    app = FastAPI(lifespan=lifespan)
     if health_router is not None:
         app.include_router(health_router)
 
@@ -68,17 +86,6 @@ if FastAPI is not None:
             "router_thresholds": router_thresholds,
             "circuit_breaker": cb_metrics,
         }
-
-    @app.on_event("startup")
-    async def _startup():
-        from slots.config import get_config_manager
-        await get_config_manager()
-
-    @app.on_event("shutdown")
-    async def _shutdown():
-        from slots.config import get_config_manager
-        mgr = await get_config_manager()
-        await mgr.shutdown()
 else:  # pragma: no cover - FastAPI not installed
     app = None
 

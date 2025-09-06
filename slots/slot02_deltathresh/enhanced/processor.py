@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import threading
+from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..core import DeltaThreshProcessor
@@ -23,6 +24,14 @@ from ..config import OperationalMode, QuarantineReasonCode
 from .config import EnhancedProcessingConfig
 from .detector import EnhancedPatternDetector
 from .performance import EnhancedPerformanceTracker
+
+
+_base_proc = DeltaThreshProcessor()
+
+
+@lru_cache(maxsize=4096)
+def _tri_score_cached(content: str) -> float:
+    return _base_proc._calculate_tri_score(content)
 
 
 class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
@@ -92,8 +101,14 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
     # ------------------------------------------------------------------
     def _calculate_tri_score(self, content: str) -> float:
         """Calculate TRI score with enhanced heuristics."""
-        base_score = super()._calculate_tri_score(content)
+        base_score = _tri_score_cached(content)
         return self._calculate_enhanced_tri_score(content, base_score)
+
+    def reload_config(self, new_cfg: EnhancedProcessingConfig) -> None:  # type: ignore[override]
+        """Reload configuration and clear caches."""
+        _tri_score_cached.cache_clear()
+        self.config = new_cfg
+        self.pattern_detector = EnhancedPatternDetector(self.config)
 
     # ---- enhanced TRI helpers -------------------------------------------------
     def _calculate_enhanced_tri_score(
