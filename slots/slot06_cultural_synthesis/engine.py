@@ -110,6 +110,7 @@ class SynthesisResult:
     compliance_score: float = 1.0
     violations: List[str] = field(default_factory=list)
     recommendations: List[str] = field(default_factory=list)
+    anchor_verification: Optional[Dict[str, Any]] = None
 @dataclass
 class GuardrailValidationResult:
     result: DeploymentGuardrailResult
@@ -159,6 +160,20 @@ class AdaptiveSynthesisEngine:
             f"SLOT6_{VERSION}::{time.time()}".encode()
         ).hexdigest()[:16]
         self._shutdown_flag = threading.Event()
+        self._truth_anchor_adapter = None
+        self._tri_engine_adapter = None
+        logger.info("Synthesis engine initialized")
+
+    def set_truth_anchor_adapter(self, adapter) -> None:
+        """Set truth anchor adapter for epistemic verification."""
+        self._truth_anchor_adapter = adapter
+        logger.info("Truth anchor adapter integrated")
+
+    def set_tri_engine_adapter(self, adapter) -> None:
+        """Set TRI engine adapter for dynamic penalty calculation."""
+        self._tri_engine_adapter = adapter
+        logger.info("TRI engine adapter integrated")
+
     def _now(self) -> float:
         return time.perf_counter()
     def shutdown(self):
@@ -236,6 +251,109 @@ class AdaptiveSynthesisEngine:
             return min(self._cfg.max_safe_adaptation, max(self._cfg.min_safe_adaptation, relaxed))
         except Exception:
             return base_max_safe
+
+    def _verify_anchor_integrity(self, content: str) -> Dict[str, Any]:
+        """Verify content against truth anchors with full content analysis."""
+        if not self._truth_anchor_adapter:
+            return {
+                "anchor_status": "NOT_AVAILABLE",
+                "anchor_confidence": 1.0,
+                "anchor_verified": True,
+                "anchor_violations": [],
+            }
+
+        violations = []
+        anchor_confidence = 1.0
+
+        try:
+            core_facts = self._truth_anchor_adapter.get_anchor_facts("nova.core")
+            if not core_facts:
+                return {
+                    "anchor_status": "NO_CORE_ANCHORS",
+                    "anchor_confidence": 0.8,
+                    "anchor_verified": True,
+                    "anchor_violations": [],
+                }
+
+            content_lower = content.lower()
+            for fact in core_facts:
+                fact_lower = fact.lower()
+                if ("not " in content_lower or "no " in content_lower) and any(
+                    word in content_lower for word in fact_lower.split()[:3]
+                ):
+                    violations.append(f"Potential contradiction of: {fact[:50]}...")
+                    anchor_confidence *= 0.7
+
+            anchor_status = "VERIFIED" if not violations else "VIOLATED"
+            if anchor_confidence < 0.5:
+                anchor_status = "FAILED"
+
+        except Exception as e:
+            logger.warning(f"Anchor verification failed: {e}")
+            anchor_status = "ERROR"
+            anchor_confidence = 0.5
+            violations = [f"Verification error: {str(e)}"]
+
+        return {
+            "anchor_status": anchor_status,
+            "anchor_confidence": anchor_confidence,
+            "anchor_verified": anchor_status in [
+                "VERIFIED",
+                "NOT_AVAILABLE",
+                "NO_CORE_ANCHORS",
+            ],
+            "anchor_violations": violations,
+        }
+
+    def _calculate_epistemic_penalty(self, anchor_confidence: float) -> float:
+        """Calculate dynamic penalty based on anchor confidence and system TRI."""
+        system_tri = 1.0
+        if self._tri_engine_adapter:
+            try:
+                system_tri = self._tri_engine_adapter.get_current_tri_score()
+            except Exception as e:
+                logger.warning(f"Failed to fetch TRI score: {e}")
+        base_penalty = 1.0 - anchor_confidence
+        adjusted_penalty = base_penalty / (system_tri + 0.1)
+        return min(1.0, max(0.0, adjusted_penalty))
+
+    def _apply_anchor_constraints(
+        self, profile: CulturalProfile, anchor_result: Dict[str, Any]
+    ) -> CulturalProfile:
+        """Apply truth anchor constraints to cultural profile."""
+        if anchor_result["anchor_verified"]:
+            return profile
+
+        penalty = self._calculate_epistemic_penalty(
+            anchor_result["anchor_confidence"]
+        )
+        anchor_status = anchor_result["anchor_status"]
+
+        baseline = min(
+            profile.adaptation_effectiveness,
+            self._max_safe_adaptation(profile),
+        )
+        modified_profile = CulturalProfile(
+            individualism_index=profile.individualism_index,
+            power_distance=profile.power_distance,
+            uncertainty_avoidance=profile.uncertainty_avoidance,
+            long_term_orientation=getattr(profile, "long_term_orientation", 0.5),
+            adaptation_effectiveness=baseline,
+            cultural_context=profile.cultural_context,
+        )
+
+        if anchor_status == "FAILED":
+            modified_profile.adaptation_effectiveness *= (1.0 - penalty) * 0.5
+        elif anchor_status in ["VIOLATED", "ERROR"]:
+            modified_profile.adaptation_effectiveness *= (1.0 - penalty)
+
+        modified_profile.adaptation_effectiveness = max(
+            self._cfg.min_safe_adaptation,
+            min(self._cfg.max_safe_adaptation, modified_profile.adaptation_effectiveness),
+        )
+
+        return modified_profile
+
     def get_config(self) -> Dict[str, Any]:
         return asdict(self._cfg)
     def analyze_and_simulate(
@@ -268,6 +386,7 @@ class AdaptiveSynthesisEngine:
                 compliance_score=0.0,
                 violations=["Input validation failed"],
             )
+        anchor_result = self._verify_anchor_integrity(str(payload.get("content", "")))
         slot2_patterns: List[str] = []
         tri_gap = 0.0
         if slot2_result is not None:
@@ -295,15 +414,34 @@ class AdaptiveSynthesisEngine:
         profile.tri_gap = tri_gap
         if tri_gap > 0:
             profile.guardrail_compliance = False
+        if not anchor_result["anchor_verified"]:
+            profile = self._apply_anchor_constraints(profile, anchor_result)
         slot2_violations = [f"SLOT2_PATTERN:{p}" for p in slot2_patterns]
         if tri_gap > 0:
             slot2_violations.append(f"TRI_GAP:{tri_gap:.2f}")
+        if not anchor_result["anchor_verified"]:
+            slot2_violations += anchor_result.get("anchor_violations", [])
         ideology_push = False
         try:
             ideology_push = bool((payload.get("messaging") or {}).get("ideology"))
         except Exception:
             pass
         compliance_penalty = 0.05 if ideology_push else 0.0
+        anchor_penalty = 0.0
+        if not anchor_result["anchor_verified"]:
+            anchor_penalty = self._calculate_epistemic_penalty(anchor_result["anchor_confidence"])
+            compliance_penalty += anchor_penalty
+            if anchor_result["anchor_status"] == "FAILED":
+                with self._metrics_lock:
+                    self._guardrail_blocks += 1
+                self._update_principle_rate(1.0)
+                return SynthesisResult(
+                    simulation_status=SimulationResult.BLOCKED_BY_GUARDRAIL,
+                    cultural_profile=profile,
+                    compliance_score=0.0,
+                    violations=slot2_violations,
+                    anchor_verification=anchor_result,
+                )
         try:
             forbidden_hits = self._scan_forbidden_any({"institution": institution_name, "payload": payload})
         except Exception:
@@ -318,6 +456,7 @@ class AdaptiveSynthesisEngine:
                 compliance_score=0.0,
                 violations=slot2_violations
                 + [f"FORBIDDEN_ELEMENTS:{','.join(forbidden_hits)}"],
+                anchor_verification=anchor_result,
             )
         simulation_requested = False
         has_consent = False
@@ -333,6 +472,7 @@ class AdaptiveSynthesisEngine:
                 cultural_profile=profile,
                 violations=slot2_violations
                 + ["Simulation requested without sufficient consent"],
+                anchor_verification=anchor_result,
             )
         base_max = self._max_safe_adaptation(profile)
         max_safe_adapt = self._apply_creativity_budget(base_max, context)
@@ -348,15 +488,20 @@ class AdaptiveSynthesisEngine:
                 compliance_score=max(0.0, 0.9 - compliance_penalty),
                 recommendations=[rec],
                 violations=slot2_violations,
+                anchor_verification=anchor_result,
             )
         with self._metrics_lock:
             self._successful_simulations += 1
         self._update_principle_rate(compliance_penalty)
+        simulation_status = SimulationResult.APPROVED
+        if not anchor_result["anchor_verified"]:
+            simulation_status = SimulationResult.APPROVED_WITH_TRANSFORMATION
         return SynthesisResult(
-            simulation_status=SimulationResult.APPROVED,
+            simulation_status=simulation_status,
             cultural_profile=profile,
             compliance_score=max(0.0, 1.0 - compliance_penalty),
             violations=slot2_violations,
+            anchor_verification=anchor_result,
         )
     def _generate_cultural_profile(self, context: Dict[str, Any]) -> CulturalProfile:
         try:

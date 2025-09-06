@@ -1,8 +1,8 @@
 slot: 6
 name: Adaptive Synthesis Engine
 version: "7.4.1"
-entry_point: slot06_cultural_synthesis/multicultural_truth_synthesis.py:AdaptiveSynthesisEngine
-adapter: slot06_cultural_synthesis/multicultural_truth_synthesis.py:MulticulturalTruthSynthesisAdapter
+entry_point: slot06_cultural_synthesis/engine.py:AdaptiveSynthesisEngine
+adapter: slot06_cultural_synthesis/engine.py:MulticulturalTruthSynthesisAdapter
 description: |
   Production-hardened multicultural truth synthesis and bounded ethical simulation.
   Integrates Slot 5 constellation budgets, provides Slot 10 compatibility interface.

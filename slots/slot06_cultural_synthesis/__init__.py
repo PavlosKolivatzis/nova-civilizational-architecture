@@ -1,4 +1,4 @@
-from .multicultural_truth_synthesis import (
+from .engine import (
     AdaptiveSynthesisEngine,
     MulticulturalTruthSynthesisAdapter,
     CulturalProfile,
