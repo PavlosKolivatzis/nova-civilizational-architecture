@@ -1,0 +1,8 @@
+{
+  "name": "nova-civilizational-architecture",
+  "version": "1.0.0",
+  "scripts": {
+    "maturity": "python tools/maturity_check.py docs/maturity.yaml --format json",
+    "maturity:diff": "python tools/maturity_check.py docs/maturity.yaml --format json --diff-against origin/main"
+  }
+}
