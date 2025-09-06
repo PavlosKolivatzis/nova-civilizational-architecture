@@ -20,6 +20,12 @@ from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.core.event_bus import EventBus, Event
 from orchestrator.core import create_router, DEFAULT_FALLBACK_MAP
 from logging_config import configure_logging
+from orchestrator.adapters import (
+    Slot2DeltaThreshAdapter,
+    Slot8MemoryEthicsAdapter,
+    Slot9DistortionProtectionAdapter,
+    Slot10DeploymentAdapter,
+)
 
 # Monitor, bus and router are created once and reused across requests
 monitor = PerformanceMonitor()
@@ -30,7 +36,12 @@ configure_logging(level="INFO", json_format=True)
 # Optional: configure fallbacks
 # router.fallback_map = {"slot6": "slot6_fallback"}
 
-SLOT_REGISTRY = {}
+SLOT_REGISTRY = {
+    "slot02_deltathresh": Slot2DeltaThreshAdapter().process,
+    "slot08_memory_ethics": Slot8MemoryEthicsAdapter().register,
+    "slot09_distortion_protection": Slot9DistortionProtectionAdapter().detect,
+    "slot10_civilizational_deployment": Slot10DeploymentAdapter().deploy,
+}
 try:  # pragma: no cover - illustrative orchestrator wiring
     from orchestrator.run import Orchestrator  # type: ignore
 
