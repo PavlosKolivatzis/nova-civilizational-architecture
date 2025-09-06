@@ -3,6 +3,7 @@ import pytest
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.core.router import AdaptiveRouter
 from orchestrator.core.circuit_breaker import CircuitBreaker, CircuitBreakerError
+from orchestrator.core import DEFAULT_FALLBACK_MAP
 
 def _seed_latency(mon, slot, ms):
     mon._slot_lat[slot] = [ms]
@@ -30,3 +31,8 @@ def test_circuit_breaker_blocks_and_metrics():
     m = cb.get_metrics()
     assert m["trip_count"] >= 1
     assert "slot9" in m["tripped_slots"]
+
+
+def test_default_fallback_map_contains_new_slots():
+    assert DEFAULT_FALLBACK_MAP["slot02_deltathresh"] == "slot01_truth_anchor"
+    assert DEFAULT_FALLBACK_MAP["slot08_memory_ethics"] == "slot01_truth_anchor"

@@ -157,10 +157,12 @@ __all__ = ["NovaOrchestrator", "DeploymentGuardrailResult"]
 
 # Default fallback mappings for critical slots
 DEFAULT_FALLBACK_MAP = {
+    "slot02_deltathresh": "slot01_truth_anchor",  # Fallback to truth anchor for ΔTHRESH
     "slot03_emotional_matrix": "slot01_truth_anchor",  # Fallback to truth anchor for emotional analysis
     "slot05_constellation": "slot01_truth_anchor",  # Fallback to truth anchor for constellation mapping
     "slot06_cultural_synthesis": "slot01_truth_anchor",  # Fallback to truth anchor for cultural synthesis
     "slot07_production_controls": "slot01_truth_anchor",  # Fallback to truth anchor for production controls
+    "slot08_memory_ethics": "slot01_truth_anchor",  # Fallback to truth anchor for memory ethics
     "slot09_distortion_protection": "slot01_truth_anchor",  # Fallback to truth anchor for distortion protection
     "slot10_civilizational_deployment": "slot07_production_controls",  # Fallback to production controls for deployment
 }

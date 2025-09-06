@@ -45,3 +45,28 @@ async def test_monitor_error_rate():
     h = mon.get_slot_health("slot9")
     assert h["error_rate"] == 1.0
     assert h["throughput"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_monitor_tracks_new_slots():
+    mon = PerformanceMonitor()
+    bus = EventBus(monitor=mon)
+
+    async def handler(_):
+        return "ok"
+
+    bus.subscribe("invoke", handler)
+
+    slots = [
+        "slot02_deltathresh",
+        "slot08_memory_ethics",
+        "slot09_distortion_protection",
+        "slot10_civilizational_deployment",
+    ]
+
+    for s in slots:
+        await bus.publish("invoke", Event(target_slot=s, payload={}))
+
+    for s in slots:
+        h = mon.get_slot_health(s)
+        assert h["throughput"] >= 1
