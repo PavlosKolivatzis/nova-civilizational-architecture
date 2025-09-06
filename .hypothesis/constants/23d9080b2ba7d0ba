@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\AppData\Roaming\Python\Python313\site-packages\numpy\lib\_nanfunctions_impl.py
-# hypothesis_version: 6.138.14
-
-[100, 600, 'Mean of empty slice', 'NaT', 'axis', 'c', 'dtype', 'f', 'fc', 'ignore', 'initial', 'inverted_cdf', 'keepdims', 'linear', 'm', 'nanargmax', 'nanargmin', 'nancumprod', 'nancumsum', 'nanmax', 'nanmean', 'nanmedian', 'nanmin', 'nanpercentile', 'nanprod', 'nanquantile', 'nanstd', 'nansum', 'nanvar', 'numpy', 'unsafe', 'where']

@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\slots\slot02_deltathresh\enhanced\config.py
-# hypothesis_version: 6.138.14
-
-[0.55, 0.6, 0.65, 0.7, 0.8, 0.85, 35.0, 300, 10000, '0.0.0.0:9090', 'CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'JWT_SECRET', 'LOG_LEVEL', 'OPERATIONAL_MODE', 'PROCESSING_MODE', 'SLOT2_ENV', 'WARNING', 'development', 'environment', 'level', 'operational_mode', 'processing_mode', 'production', 'staging', 'test']

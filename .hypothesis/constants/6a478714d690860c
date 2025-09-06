@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\src\runtime\memory_integrity.py
-# hypothesis_version: 6.138.14
-
-[0.95, -1000, 1000, 'Actor is required', 'EthicsGuard', 'MemoryLock', 'MemoryTamperError', 'PerformanceMonitor', 'RegistrationError', 'SecurityError', 'actor', 'audit_log', 'avg_ms', 'count', 'max_ms', 'p95_ms', 'read', 'unregister', 'write']

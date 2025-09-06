@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\config\feature_flags.py
-# hypothesis_version: 6.138.14
-
-[0.1, 0.25, 0.5, 0.7, 0.75, 0.8, 0.9, ',', '1', 'IDS_ALLOWED_SCOPES', 'IDS_ALPHA', 'IDS_BETA', 'IDS_EMA_LAMBDA', 'IDS_ENABLED', 'IDS_SANDBOX_ONLY', 'IDS_SCHEMA_VALIDATE', 'IDS_STABLE_THRESHOLD', 'IDS_WEIGHT', 'allowed_scopes', 'alpha', 'beta', 'content', 'diverging_threshold', 'ema_lambda', 'enabled', 'memory', 'on', 'sandbox_only', 'signals', 'stable_threshold', 'traits', 'true', 'weight', 'yes']

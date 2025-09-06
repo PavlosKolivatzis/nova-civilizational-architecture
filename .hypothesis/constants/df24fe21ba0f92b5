@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\frameworks\enums.py
-# hypothesis_version: 6.138.14
-
-['ANNOTATE', 'APPROVED', 'AnchorValidationMode', 'DiversityDimension', 'DiversityStatus', 'ERROR', 'LangOrientation', 'PsychologyType', 'RiskLevel', 'STRICT', 'collectivism', 'cultural', 'ethnic', 'high', 'individualism', 'linguistic', 'low', 'med', 'osv', 'ovs', 'sov', 'supported', 'svo', 'unsupported', 'vos', 'vso']

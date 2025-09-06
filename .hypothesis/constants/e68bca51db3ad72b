@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\logging_config.py
-# hypothesis_version: 6.138.14
-
-['INFO', 'asyncio', 'extra', 'function', 'level', 'line', 'logger', 'message', 'module', 'slot', 'status', 'timestamp', 'trace_id', 'urllib3']

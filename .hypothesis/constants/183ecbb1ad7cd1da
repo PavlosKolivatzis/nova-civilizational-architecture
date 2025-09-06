@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\orchestrator\core\event_bus.py
-# hypothesis_version: 6.138.14
-
-[1.0, 'end', 'error', 'event', 'event_bus', 'events', 'exception_failures', 'failed_attempts', 'ok', 'published', 'slot', 'start', 'status', 'successful_attempts', 'timeout_failures', 'total_attempts', 'trace', 'trace_id']

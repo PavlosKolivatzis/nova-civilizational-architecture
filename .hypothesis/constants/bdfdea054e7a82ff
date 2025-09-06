@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\orchestrator\core\circuit_breaker.py
-# hypothesis_version: 6.138.14
-
-[0.5, 60.0, 'Circuit is open', 'closed', 'error_rate', 'error_threshold', 'failure_count', 'half-open', 'last_failure', 'open', 'state', 'success_count', 'trip_count', 'tripped_slots']

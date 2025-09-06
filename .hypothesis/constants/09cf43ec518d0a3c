@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\orchestrator\health.py
-# hypothesis_version: 6.138.14
-
-['1.0.0', 'circuit_breaker', 'error', 'error_rate', 'error_threshold', 'failure_count', 'last_failure', 'latency_ms', 'latency_threshold_ms', 'multiplier', 'n/a', 'reason', 'router_thresholds', 'self_check', 'slot_self_checks', 'slots', 'state', 'success_count', 'timeout_cap', 'timeout_cap_s', 'timeout_multiplier', 'timestamp', 'version']

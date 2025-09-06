@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\AppData\Roaming\Python\Python313\site-packages\werkzeug\datastructures\accept.py
-# hypothesis_version: 6.138.14
-
-['*', ',', ', ', '/', '/|(?:\\s*;\\s*)', '[_-]', 'application/json', 'application/xml', 'text/html']

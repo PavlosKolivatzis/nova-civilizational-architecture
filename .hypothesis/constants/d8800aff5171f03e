@@ -1,4 +1,0 @@
-# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\tools\fuzzy_loader.py
-# hypothesis_version: 6.138.14
-
-[0.5, '.', '.git', '.mypy_cache', '.pytest_cache', '.venv', '[^a-z0-9]', '__main__', '__pycache__', 'build', 'dist', 'node_modules', 'venv']
