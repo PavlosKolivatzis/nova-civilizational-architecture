@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\slots\slot08_memory_ethics\ids_protection.py
+# hypothesis_version: 6.138.14
+
+[0.0, 0.15, 'actor', 'allowed', 'blocked_by', 'checksum', 'checksum_mismatch', 'drift', 'embedding', 'empty_vector', 'error', 'event', 'ids_disabled', 'ids_eligibility', 'ids_protection', 'memory', 'memory_write_blocked', 'memory_write_failed', 'metadata', 'passed', 'reason', 'stability', 'state', 'success', 'trace_id', 'unknown', 'write']

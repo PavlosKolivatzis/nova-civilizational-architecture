@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\services\ids\integration.py
+# hypothesis_version: 6.138.14
+
+[0.0, 0.05, 1000, 'Empty vector', 'Invalid drift value', 'Invalid state value', 'Missing trace_id', 'S04', 'active_scopes', 'consecutive_failures', 'content', 'detail', 'disintegrating', 'diverging', 'drift', 'error', 'event', 'failed_analyses', 'ids', 'ids_analysis_failed', 'ids_eval', 'ids_scope_warning', 'latency_ms', 'memory', 'performance', 'reason', 'reintegrating', 'scope', 'scope_instance_count', 'signals', 'slot', 'stability', 'stable', 'state', 'success_rate', 'total_analyses', 'trace_id', 'traits', 'unknown', 'vector_length']

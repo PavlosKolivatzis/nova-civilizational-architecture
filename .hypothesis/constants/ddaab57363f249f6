@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\slots\slot01_truth_anchor\truth_anchor_engine.py
+# hypothesis_version: 6.138.14
+
+['1.2.0', 'AnchorMetrics', 'AnchorRecord', 'EngineMetrics', 'TruthAnchorEngine', 'active_anchors', 'anchors', 'backup', 'failures', 'lookups', 'nova.core', 'recoveries', 'total_anchors', 'truth_anchor_engine', 'version']

@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\orchestrator\core\__init__.py
+# hypothesis_version: 6.138.14
+
+['AdaptiveRouter', 'CircuitBreaker', 'DEFAULT_FALLBACK_MAP', 'EventBus', 'FAILED', 'INFO', 'NOVA_GM_ENABLED', 'NOVA_LOG_LEVEL', 'NOVA_SLOT10_ENABLED', 'NovaOrchestrator', 'PerformanceMonitor', 'STRICT', 'anchor_id', 'anchor_status', 'bus', 'content', 'content.approved', 'content.blocked', 'content.validate', 'context', 'create_router', 'deploy.node', 'error', 'false', 'generic', 'institution_name', 'institution_type', 'nova.orchestrator', 'payload', 'profile', 'region', 'result', 'slot01_truth_anchor', 'slot02_deltathresh', 'slot05_constellation', 'slot08_memory_ethics', 'slot10_deployer', 'slot10_disabled', 'slot1_truth_anchor', 'slot4_tri', 'slot6_cultural', 'slots', 'system.status', 'true', 'uptime', 'validation']

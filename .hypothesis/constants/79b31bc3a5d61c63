@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\slots\slot08_memory_ethics\lock_guard.py
+# hypothesis_version: 6.138.14
+
+['%Y-%m-%dT%H:%M:%SZ', ',', ':', 'EthicsGuard', 'MemoryLock', 'T', 'access_denied', 'action', 'actor', 'ascii', 'audit_log', 'binary_serializer', 'checksum', 'count', 'created_at', 'detached', 'error', 'event', 'fast_json_serializer', 'list_objects', 'memory_id', 'policies_updated', 'read', 'read_failed', 'read_only', 'readers', 'registered', 'registry', 'size', 'timestamp', 'unregistered', 'utc_time', 'write', 'write_failed', 'writers']
