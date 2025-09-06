@@ -1,5 +1,7 @@
 """Slot 2 ΔTHRESH Integration Manager - core processing pipeline."""
 
+from __future__ import annotations
+
 import hashlib
 import logging
 import threading
@@ -25,7 +27,7 @@ class DeltaThreshProcessor:
     def __init__(
         self,
         config: Optional[ProcessingConfig] = None,
-        slot1_anchor_system: Any | None = None,
+        slot1_anchor_system: Optional[Any] = None,
     ) -> None:
         self.config = config or ProcessingConfig()
         self.anchor_system = slot1_anchor_system
