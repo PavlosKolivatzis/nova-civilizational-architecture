@@ -1,3 +1,3 @@
-from .constellation_engine import ConstellationEngine
+from .engine import ConstellationEngine
 
 __all__ = ["ConstellationEngine"]

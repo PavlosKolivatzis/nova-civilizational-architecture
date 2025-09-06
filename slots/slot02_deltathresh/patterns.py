@@ -1,6 +1,11 @@
 import re
 from typing import Dict, List, Pattern
 
+
+def _word_count_fast(text: str) -> int:
+    """Return approximate word count using a cheap space scan."""
+    return 1 + text.count(" ") if text else 0
+
 def compile_detection_patterns() -> Dict[str, List[Pattern]]:
     return {
         'delta': [
@@ -35,12 +40,14 @@ class PatternDetector:
         self.patterns = compile_detection_patterns()
 
     def detect_patterns(self, content: str) -> Dict[str, float]:
-        words = max(1, len(content.split()))
+        words = max(1, _word_count_fast(content))
         scores: Dict[str, float] = {}
         for layer, pats in self.patterns.items():
-            total = sum(len(p.findall(content)) for p in pats)
-            density = total / words
-            scores[layer] = min(1.0, density * 5.0)
+            hits = 0
+            for p in pats:
+                if p.search(content):
+                    hits += 1
+            scores[layer] = hits / max(1, len(pats))
         return scores
 
     def analyze_tri_patterns(self, content: str) -> Dict[str, int]:

@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict
 
 try:
-    from slots.slot05_constellation.constellation_engine import ConstellationEngine
+    from slots.slot05_constellation.engine import ConstellationEngine
     ENGINE = ConstellationEngine()
     AVAILABLE = True
 except Exception as exc:  # pragma: no cover - optional slot

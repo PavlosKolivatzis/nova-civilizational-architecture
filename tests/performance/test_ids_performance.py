@@ -3,6 +3,9 @@ import numpy as np
 import pytest
 from services.ids.integration import ids_service
 
+for i in range(100):
+    ids_service.analyze_vector([1.0, 0.5, 0.3, 0.1], trace_id=f"perf_pre_{i}")
+
 
 @pytest.mark.performance
 def test_ids_performance_baseline():

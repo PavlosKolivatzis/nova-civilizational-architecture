@@ -2,7 +2,7 @@
 from typing import Any, Dict
 
 try:
-    from .constellation_engine import ConstellationEngine
+    from .engine import ConstellationEngine
     ENGINE = ConstellationEngine()
     AVAILABLE = True
 except Exception:  # pragma: no cover - optional engine

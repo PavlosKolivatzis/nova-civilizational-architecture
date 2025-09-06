@@ -1,9 +1,12 @@
+from __future__ import annotations
+
+from .engine import TRIEngine
 from services.ids.integration import ids_service
 from config.feature_flags import IDS_ENABLED, IDS_WEIGHT, IDS_SANDBOX_ONLY
 
 
-def integrate_ids_into_tri(tri_engine, vector: list, trace_id: str, scope: str = "traits"):
-    """Integrate IDS analysis into TRI engine with proper env flag handling"""
+def integrate_ids_into_tri(tri_engine: TRIEngine, vector: list[float], trace_id: str, scope: str = "traits") -> dict:
+    """Integrate IDS analysis into TRI engine with proper env flag handling."""
     base_score = tri_engine.calculate_base_score(vector)
     if not IDS_ENABLED:
         return {

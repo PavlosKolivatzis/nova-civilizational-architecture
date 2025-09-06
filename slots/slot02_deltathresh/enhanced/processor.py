@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import threading
+from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..core import DeltaThreshProcessor
@@ -25,6 +26,14 @@ from .detector import EnhancedPatternDetector
 from .performance import EnhancedPerformanceTracker
 
 
+_base_proc = DeltaThreshProcessor()
+
+
+@lru_cache(maxsize=4096)
+def _tri_score_cached(content: str) -> float:
+    return _base_proc._calculate_tri_score(content)
+
+
 class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
     """ΔTHRESH Integration Manager with production enhancements."""
 
@@ -33,13 +42,18 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
     def __init__(
         self,
         config: Optional[EnhancedProcessingConfig] = None,
+        slot4_engine=None,
         slot1_anchor_system=None,
     ) -> None:
         config = config or EnhancedProcessingConfig()
         super().__init__(config=config, slot1_anchor_system=slot1_anchor_system)
         self.config: EnhancedProcessingConfig = config
         self.anchor_system = slot1_anchor_system
+        self.slot4_engine = slot4_engine
+        self._slot4_last: Optional[Dict[str, Any]] = None
         self.pattern_detector = EnhancedPatternDetector(self.config)
+        if self.slot4_engine is not None:
+            self.pattern_detector.detect_patterns = self._detect_patterns_slot4  # type: ignore[assignment]
         self.performance_tracker = EnhancedPerformanceTracker()
         self._lock = threading.RLock()
 
@@ -92,8 +106,19 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
     # ------------------------------------------------------------------
     def _calculate_tri_score(self, content: str) -> float:
         """Calculate TRI score with enhanced heuristics."""
-        base_score = super()._calculate_tri_score(content)
+        if self.slot4_engine is not None:
+            self._slot4_last = self.slot4_engine.calculate(content)
+            return float(self._slot4_last.get("score", 0.0))
+        base_score = _tri_score_cached(content)
         return self._calculate_enhanced_tri_score(content, base_score)
+
+    def reload_config(self, new_cfg: EnhancedProcessingConfig) -> None:  # type: ignore[override]
+        """Reload configuration and clear caches."""
+        _tri_score_cached.cache_clear()
+        self.config = new_cfg
+        self.pattern_detector = EnhancedPatternDetector(self.config)
+        if self.slot4_engine is not None:
+            self.pattern_detector.detect_patterns = self._detect_patterns_slot4  # type: ignore[assignment]
 
     # ---- enhanced TRI helpers -------------------------------------------------
     def _calculate_enhanced_tri_score(
@@ -188,6 +213,12 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
         matches = sum(len(re.findall(p, content, re.IGNORECASE)) for p in patterns)
         density = matches / words
         return min(1.0, density * 6.0)
+
+    # ---- slot4 integration ---------------------------------------------------
+    def _detect_patterns_slot4(self, content: str) -> Dict[str, float]:
+        if self._slot4_last is None:
+            self._slot4_last = self.slot4_engine.calculate(content)  # type: ignore[union-attr]
+        return dict(self._slot4_last.get("layer_scores", {}))
 
     # ------------------------------------------------------------------
     def _determine_action(
