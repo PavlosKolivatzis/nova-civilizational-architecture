@@ -95,7 +95,25 @@ class EnhancedConfigManager:
         self.slot_metadata: Dict[int, SlotMetadata] = {}
         self.runtime_configs: Dict[int, Dict[str, Any]] = {}
         self._listeners: List[Callable[[int, Dict[str, Any], Dict[str, Any]], None]] = []
-        self.enable_hot_reload = enable_hot_reload
+
+        # Serverless detection (Vercel/Lambda/GCF) → force-disable hot reload
+        serverless = bool(
+            os.getenv("VERCEL") or
+            os.getenv("VERCEL_ENV") or
+            os.getenv("AWS_LAMBDA_FUNCTION_NAME") or
+            os.getenv("FUNCTION_TARGET") or
+            os.getenv("K_SERVICE")
+        )
+        env_toggle = os.getenv("NOVA_HOT_RELOAD")  # explicit override
+        self.enable_hot_reload = (
+            False if serverless else enable_hot_reload
+        ) if env_toggle is None else (env_toggle.lower() == "true")
+        if serverless and self.enable_hot_reload:
+            # explicit override was TRUE in serverless; flip off and log
+            self.enable_hot_reload = False
+        if serverless:
+            logger.info("Serverless environment detected → hot reload disabled")
+
         self._observer: Optional[Observer] = None  # type: ignore
         self._lock = threading.RLock()
         self._loop: Optional[asyncio.AbstractEventLoop] = None
