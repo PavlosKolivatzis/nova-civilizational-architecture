@@ -28,7 +28,7 @@ def _round3(value: float) -> float:
 
 # Optional dependencies with graceful fallback
 try:
-    from pydantic import BaseModel, Field, validator
+    from pydantic import BaseModel, Field, field_validator
     from pydantic_settings import BaseSettings
     PYDANTIC_AVAILABLE = True
 except ImportError:
@@ -144,7 +144,8 @@ if PYDANTIC_AVAILABLE:
         include_detailed_analysis: bool = False
         priority: RequestPriority = RequestPriority.NORMAL
 
-        @validator('content')
+        @field_validator('content')
+        @classmethod
         def validate_content_not_empty(cls, v):
             if not v or not v.strip():
                 raise ValueError('Content cannot be empty or whitespace only')
