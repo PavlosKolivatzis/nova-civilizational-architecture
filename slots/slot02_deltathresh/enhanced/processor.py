@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import threading
-from functools import lru_cache
+from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..core import DeltaThreshProcessor
@@ -24,14 +24,6 @@ from ..config import OperationalMode, QuarantineReasonCode
 from .config import EnhancedProcessingConfig
 from .detector import EnhancedPatternDetector
 from .performance import EnhancedPerformanceTracker
-
-
-_base_proc = DeltaThreshProcessor()
-
-
-@lru_cache(maxsize=4096)
-def _tri_score_cached(content: str) -> float:
-    return _base_proc._calculate_tri_score(content)
 
 
 class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
@@ -56,6 +48,9 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
             self.pattern_detector.detect_patterns = self._detect_patterns_slot4  # type: ignore[assignment]
         self.performance_tracker = EnhancedPerformanceTracker()
         self._lock = threading.RLock()
+        self._tri_cache: OrderedDict[Tuple[str, int], float] = OrderedDict()
+        self._tri_cache_cap = 4096
+        self._cfg_epoch = 0
 
         self.logger = logging.getLogger("slot2_deltathresh_enhanced")
         if not self.logger.handlers:
@@ -104,18 +99,43 @@ class EnhancedDeltaThreshProcessor(DeltaThreshProcessor):
     # ------------------------------------------------------------------
     # internals
     # ------------------------------------------------------------------
+    def _cache_key(self, content: str) -> Tuple[str, int]:
+        h = hashlib.blake2b(content.encode("utf-8"), digest_size=8).hexdigest()
+        return (h, self._cfg_epoch)
+
+    def _tri_cache_get(self, key: Tuple[str, int]):
+        val = self._tri_cache.get(key)
+        if val is not None:
+            self._tri_cache.move_to_end(key)
+        return val
+
+    def _tri_cache_put(self, key: Tuple[str, int], val: float) -> None:
+        self._tri_cache[key] = val
+        self._tri_cache.move_to_end(key)
+        if len(self._tri_cache) > self._tri_cache_cap:
+            self._tri_cache.popitem(last=False)
+
     def _calculate_tri_score(self, content: str) -> float:
         """Calculate TRI score with enhanced heuristics."""
         if self.slot4_engine is not None:
             self._slot4_last = self.slot4_engine.calculate(content)
             return float(self._slot4_last.get("score", 0.0))
-        base_score = _tri_score_cached(content)
+
+        key = self._cache_key(content)
+        cached = self._tri_cache_get(key)
+        if cached is None:
+            base_score = super()._calculate_tri_score(content)
+            self._tri_cache_put(key, base_score)
+        else:
+            base_score = cached
+
         return self._calculate_enhanced_tri_score(content, base_score)
 
     def reload_config(self, new_cfg: EnhancedProcessingConfig) -> None:  # type: ignore[override]
         """Reload configuration and clear caches."""
-        _tri_score_cached.cache_clear()
         self.config = new_cfg
+        self._cfg_epoch += 1
+        self._tri_cache.clear()
         self.pattern_detector = EnhancedPatternDetector(self.config)
         if self.slot4_engine is not None:
             self.pattern_detector.detect_patterns = self._detect_patterns_slot4  # type: ignore[assignment]

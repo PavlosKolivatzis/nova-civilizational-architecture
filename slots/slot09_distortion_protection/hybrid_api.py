@@ -17,6 +17,7 @@ from contextlib import asynccontextmanager
 from functools import wraps
 import threading
 from datetime import datetime, timezone
+from slots.common.hashutils import compute_audit_hash
 
 # ---------------------------------------------------------------------------
 # Utility functions
@@ -774,22 +775,11 @@ class HybridDistortionDetectionAPI:
 
     def _add_hash_chain(self, audit_trail: Dict[str, Any]) -> Dict[str, Any]:
         """Add hash chaining fields to the audit trail."""
-        previous = self.last_audit_hash or ""
-        parts = (
-            audit_trail.get("trace_id", ""),
-            audit_trail.get("timestamp", ""),
-            audit_trail.get("policy_decision", ""),
-            audit_trail.get("decision_reason", ""),
-            json.dumps(audit_trail.get("compliance_markers", []), separators=(",", ":"), ensure_ascii=False),
-            json.dumps(audit_trail.get("processing_path", ""), separators=(",", ":"), ensure_ascii=False),
-            str(audit_trail.get("processing_time_ms", "")),
-        )
-        data = "|".join(parts).encode("utf-8")
-        current_hash = hashlib.sha256(previous.encode("utf-8") + data).hexdigest()
-        audit_trail["hash_signature"] = f"sha256:{current_hash}"
-        audit_trail["previous_event_hash"] = self.last_audit_hash
+        audit_trail["previous_hash"] = self.last_audit_hash or ""
         audit_trail["retention_policy"] = "7_years"
-        self.last_audit_hash = f"sha256:{current_hash}"
+        sig = compute_audit_hash(audit_trail)
+        audit_trail["hash_signature"] = sig
+        self.last_audit_hash = sig
         return audit_trail
 
     def _default_deployment_context(self, request: DistortionDetectionRequest) -> Dict[str, Any]:
