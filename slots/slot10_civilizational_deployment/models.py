@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import CulturalProfile
+from slots.slot06_cultural_synthesis.engine import CulturalProfile
 
 
 

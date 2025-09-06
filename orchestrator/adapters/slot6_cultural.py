@@ -10,12 +10,12 @@ except Exception:  # pragma: no cover - Slot 2 always available in tests
     ProcessingResult = Any  # type: ignore
 
 try:
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    from slots.slot06_cultural_synthesis.engine import (
         AdaptiveSynthesisEngine,
         MulticulturalTruthSynthesisAdapter,
         CulturalProfile,
         GuardrailValidationResult,
-        
+
     )
     ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
     AVAILABLE = True

@@ -11,13 +11,13 @@ Usage (CLI):
   python tools/fuzzy_repo.py move "slot6 meta yaml" --to slots/slot06_cultural_synthesis/slot6.meta.yaml --apply
   python tools/fuzzy_repo.py rm "civilization_deployment" --apply
   python tools/fuzzy_repo.py print "app py"
-  python tools.fuzzy_repo.py fix-import "slots.slot06_cultural_synthesis.multicultural_truth_synthesis"
+  python tools.fuzzy_repo.py fix-import "slots.slot06_cultural_synthesis.engine"
 
 Python API:
   from tools.fuzzy_repo import resolve_path, auto_import
   path = resolve_path("slot6 meta yaml").best
-  mod  = auto_import("slots.slot06_cultural_synthesis.multicultural_truth_synthesis",
-                     alt_queries=["multicultural_truth_synthesis", "slot6 cultural synthesis"])
+  mod  = auto_import("slots.slot06_cultural_synthesis.engine",
+                     alt_queries=["engine", "slot6 cultural synthesis"])
 """
 
 from __future__ import annotations

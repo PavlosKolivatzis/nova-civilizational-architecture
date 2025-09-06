@@ -1,4 +1,4 @@
-from adaptive_synthesis_engine import AdaptiveSynthesisEngine, SimulationResult
+from slots.slot06_cultural_synthesis.engine import AdaptiveSynthesisEngine, SimulationResult
 import math
 
 

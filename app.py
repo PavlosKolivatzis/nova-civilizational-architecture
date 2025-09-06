@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, render_template
 
 
 
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from slots.slot06_cultural_synthesis.engine import (
     AdaptiveSynthesisEngine,
     MulticulturalTruthSynthesisAdapter,
     CulturalProfile,

@@ -1,11 +1,11 @@
 import asyncio
 import pytest
 
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from slots.slot06_cultural_synthesis.engine import (
     CulturalProfile,
     GuardrailValidationResult,
-    DeploymentGuardrailResult,
 )
+from frameworks.enums import DeploymentGuardrailResult
 
 from orchestrator.core import NovaOrchestrator
 

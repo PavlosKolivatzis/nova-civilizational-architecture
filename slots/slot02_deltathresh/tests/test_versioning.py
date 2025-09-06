@@ -1,5 +1,5 @@
 from slots.slot02_deltathresh.adapters import adapt_processing_result
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from slots.slot06_cultural_synthesis.engine import (
     slot2_threat_bridge,
     GuardrailValidationResult,
     DeploymentGuardrailResult,

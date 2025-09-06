@@ -1,10 +1,10 @@
 import pytest
 
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from slots.slot06_cultural_synthesis.engine import (
     CulturalProfile,
     GuardrailValidationResult,
-    DeploymentGuardrailResult,
 )
+from frameworks.enums import DeploymentGuardrailResult
 from slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
 from slots.slot10_civilizational_deployment.models import MLSDecision
 
