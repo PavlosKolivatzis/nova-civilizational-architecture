@@ -33,6 +33,23 @@ except Exception as exc:  # pragma: no cover - slot optional
         version: str = "v0"
 
 
+def _fallback_result(content: str, action: str = "allow") -> ProcessingResult:
+    """Return a minimally populated ``ProcessingResult``.
+
+    This utility ensures mandatory fields are provided even when the
+    underlying ΔTHRESH engine is unavailable or raises errors.
+    """
+    return ProcessingResult(
+        content=content,
+        action=action,
+        reason_codes=[],
+        tri_score=0.0,
+        layer_scores={},
+        processing_time_ms=0.0,
+        content_hash="",
+    )
+
+
 class Slot2DeltaThreshAdapter:
     """Adapter wrapper for the Slot-2 ΔTHRESH processor."""
 
@@ -41,11 +58,11 @@ class Slot2DeltaThreshAdapter:
 
     def process(self, content: str, session_id: str = "default") -> ProcessingResult:
         if not self.available or not ENGINE:
-            return ProcessingResult(content=content, action="allow")
+            return _fallback_result(content)
         try:
             return ENGINE.process_content(content, session_id=session_id)
         except Exception:
             logging.getLogger(__name__).exception(
                 "ΔTHRESH processing failed", exc_info=True
             )
-            return ProcessingResult(content=content, action="error")
+            return _fallback_result(content, action="error")
