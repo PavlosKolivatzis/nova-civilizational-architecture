@@ -89,3 +89,11 @@ def test_safety_policy_module() -> None:
     assert metrics["emotional_tone"] == "neutral"
     assert metrics["score"] == 1.0
     assert "policy_warning" in metrics
+
+
+def test_booster_with_negation() -> None:
+    engine = EmotionalMatrixEngine()
+    # Booster "very" increases positivity, but preceding negation should flip it
+    res = engine.analyze("not very good")
+    assert res["score"] <= 0
+    assert res["emotional_tone"] in {"negative", "neutral"}
