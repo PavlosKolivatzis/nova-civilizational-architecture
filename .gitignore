@@ -1,3 +1,46 @@
-# Prevent binary artifacts without extensions
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+
+# Packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Testing and coverage
+.hypothesis/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Node dependencies
+node_modules/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.log
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Nova-specific deployment artifacts
 **/civilization_deployment
 **/*_deployment
