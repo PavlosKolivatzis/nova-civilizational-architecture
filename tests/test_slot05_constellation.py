@@ -155,6 +155,43 @@ class TestConstellationEngine:
             assert "constellation_size" in entry
             assert "link_count" in entry
             assert "stability_score" in entry
+
+    def test_stability_metrics_include_trend_and_factors(self):
+        """Ensure stability metrics include trend data and contributing factors."""
+        items = ["alpha item", "beta item", "gamma item"]
+        result = self.engine.map(items)
+
+        stability = result["stability"]
+
+        # Historical trend structure
+        assert "historical_trend" in stability
+        trend = stability["historical_trend"]
+        assert set(["trend", "confidence", "change_rate"]).issubset(trend.keys())
+
+        # Factor details
+        assert "factors" in stability
+        factors = stability["factors"]
+        expected_factors = {"item_distribution", "link_strength", "structure_balance"}
+        assert expected_factors.issubset(factors.keys())
+
+    def test_historical_trend_improving(self):
+        """Historical trend should detect improving stability over time."""
+        engine = ConstellationEngine()
+
+        # Patch base stability to simulate improvement across calls
+        with patch.object(
+            engine,
+            "_calculate_base_stability",
+            side_effect=[0.4, 0.4, 0.6, 0.6, 0.8, 0.8],
+        ):
+            engine.map(["one"])
+            engine.map(["one", "two"])
+            result = engine.map(["one", "two", "three"])
+
+        trend = result["stability"]["historical_trend"]
+        assert trend["trend"] == "improving"
+        assert trend["change_rate"] > 0
+        assert trend["confidence"] > 0
     
     def test_configuration_parameters(self):
         """Test that configuration parameters affect behavior."""

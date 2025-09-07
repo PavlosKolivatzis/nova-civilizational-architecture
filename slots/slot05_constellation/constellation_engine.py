@@ -3,6 +3,9 @@ from typing import Dict, List, Any, Tuple, Optional
 from collections import defaultdict
 import logging
 
+# Local caching utilities
+from functools import lru_cache
+
 logger = logging.getLogger(__name__)
 
 class ConstellationEngine:
@@ -20,6 +23,10 @@ class ConstellationEngine:
         # Tracking for stability metrics
         self._constellation_history = []
         self._link_history = []
+
+        # Ensure similarity caches start empty
+        self._calculate_similarity.cache_clear()
+        self._character_similarity.cache_clear()
         
     def map(self, items: list[str]) -> dict:
         """Enhanced constellation mapping with computed links and stability metrics.
@@ -167,44 +174,51 @@ class ConstellationEngine:
         
         return links
 
+    @lru_cache(maxsize=1024)
     def _calculate_similarity(self, item1: str, item2: str) -> float:
-        """Calculate similarity between two items using multiple methods."""
+        """Calculate similarity between two items using multiple methods.
+
+        Results are cached to avoid repeated computation for the same item
+        pairs, which can significantly improve performance for repeated
+        analyses.
+        """
         # Convert to lowercase for comparison
         text1 = item1.lower()
         text2 = item2.lower()
-        
+
         # Word-based similarity
         words1 = set(text1.split())
         words2 = set(text2.split())
-        
+
         if len(words1.union(words2)) == 0:
             return 0.0
-            
+
         jaccard = len(words1.intersection(words2)) / len(words1.union(words2))
-        
+
         # Character-based similarity (simple)
         char_similarity = self._character_similarity(text1, text2)
-        
+
         # Length similarity
         len_similarity = 1.0 - abs(len(text1) - len(text2)) / max(len(text1), len(text2), 1)
-        
+
         # Combine similarities with weights
         combined = (jaccard * 0.5 + char_similarity * 0.3 + len_similarity * 0.2)
-        
+
         return min(1.0, combined)
 
+    @lru_cache(maxsize=2048)
     def _character_similarity(self, text1: str, text2: str) -> float:
-        """Calculate character-level similarity."""
+        """Calculate character-level similarity with caching."""
         if not text1 or not text2:
             return 0.0
-            
+
         # Simple character overlap
         chars1 = set(text1)
         chars2 = set(text2)
-        
+
         if len(chars1.union(chars2)) == 0:
             return 0.0
-            
+
         return len(chars1.intersection(chars2)) / len(chars1.union(chars2))
 
     def _determine_link_type(self, item1: str, item2: str) -> str:
