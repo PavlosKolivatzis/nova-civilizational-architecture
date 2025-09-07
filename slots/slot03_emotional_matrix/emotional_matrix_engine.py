@@ -134,7 +134,9 @@ class EmotionalMatrixEngine:
                     else: neg += -val
                     matched += 1
                     applied = True
-                    break
+                    # Continue processing more tokens in negation window instead of breaking
+                    if window_left <= 0 and not (t in self.cfg.boosters or t in self.cfg.dampeners):
+                        break  # Only break when negation window is exhausted and not handling intensifiers
                 j += 1
 
             # If current token itself is sentiment and we didn't treat it via lookahead
