@@ -4,10 +4,10 @@ from flask import Flask, jsonify, request, render_template
 
 from slots.slot06_cultural_synthesis.engine import (
     AdaptiveSynthesisEngine,
-    MulticulturalTruthSynthesisAdapter,
     CulturalProfile,
     CulturalContext,
 )
+from slots.slot06_cultural_synthesis.adapter import MulticulturalTruthSynthesisAdapter
 
 # Initialize the Flask app and the Slot 6 engine adapter
 app = Flask(__name__, template_folder="interface")

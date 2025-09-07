@@ -1,9 +1,9 @@
 from .engine import (
     AdaptiveSynthesisEngine,
-    MulticulturalTruthSynthesisAdapter,
     CulturalProfile,
     GuardrailValidationResult,
 )
+from .adapter import MulticulturalTruthSynthesisAdapter
 
 # Backwards compatibility alias
 MulticulturalTruthSynthesis = MulticulturalTruthSynthesisAdapter
