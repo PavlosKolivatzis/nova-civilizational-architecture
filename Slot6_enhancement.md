@@ -32,7 +32,7 @@ print(result.result, result.compliance_score)
 Additional scenarios can be found in `slots/slot06_cultural_synthesis/test_implementation.py`.
 
 ## Implementation
-See [engine.py](slots/slot06_cultural_synthesis/engine.py) for the complete engine implementation, including the Slot 10 adapter and serialization helpers.
+See [engine.py](slots/slot06_cultural_synthesis/engine.py) for the core engine implementation, [adapter.py](slots/slot06_cultural_synthesis/adapter.py) for the Slot 10 adapter, and [serializers.py](slots/slot06_cultural_synthesis/serializers.py) for serialization helpers.
 
 ## Metrics
 `get_performance_metrics()` returns analysis counts, guardrail blocks, and principle preservation rate along with engine fingerprint and configuration.
