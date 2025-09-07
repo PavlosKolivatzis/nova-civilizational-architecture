@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request, render_template
+from functools import wraps
+from jwt import PyJWTError
 
-
-
+from auth import verify_jwt_token
 from slots.slot06_cultural_synthesis.engine import (
     AdaptiveSynthesisEngine,
     CulturalProfile,
@@ -14,12 +15,29 @@ app = Flask(__name__, template_folder="interface")
 cultural_synthesis_engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
 
 
+def require_auth(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        header = request.headers.get("Authorization", "")
+        if not header.startswith("Bearer "):
+            return jsonify({"error": "Unauthorized"}), 401
+        token = header.split(" ", 1)[1]
+        try:
+            verify_jwt_token(token)
+        except PyJWTError:
+            return jsonify({"error": "Invalid token"}), 401
+        return func(*args, **kwargs)
+    return wrapper
+
+
+
 @app.route("/")
 def index():
     return render_template("test_slot6_live.html")
 
 
 @app.route("/api/analyze", methods=["POST"])
+@require_auth
 def analyze():
 
 
@@ -59,6 +77,7 @@ def analyze():
 
 
 @app.route("/api/validate", methods=["POST"])
+@require_auth
 def validate():
     try:
         # ``get_json`` can raise an error for invalid JSON or return non-mapping
@@ -124,6 +143,7 @@ def validate():
 
 @app.route("/api/validate_architecture", methods=["POST"])
 @app.route("/validate_architecture", methods=["POST"])
+@require_auth
 def validate_architecture():
     """Light‑weight schema check for Slot‑10 architecture payloads.
 
