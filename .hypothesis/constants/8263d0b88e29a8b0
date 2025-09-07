@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\services\ids\core.py
+# hypothesis_version: 6.138.14
+
+[-1.0, 0.0, 1e-12, 1e-10, 0.25, 0.5, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1.0, 2.0, 4.0, -1000, -100, 100, 1000, 'E_DIMENSION_MISMATCH', 'content', 'count', 'disintegrating', 'diverging', 'drift', 'error', 'latency_ms', 'max', 'p50', 'p95', 'p99', 'reintegrating', 'scope', 'stability', 'stable', 'state', 'timestamp', 'trace_id', 'vector_length']

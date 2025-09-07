@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\slots\slot02_deltathresh\enhanced\performance.py
+# hypothesis_version: 6.138.14
+
+[0.0, 0.3, 100, 1000, 'allow_count', 'allow_rate', 'anomalies', 'avg_processing_time', 'avg_tri_score', 'basic', 'layer_detections', 'mean', 'neutralization_count', 'neutralization_rate', 'p95_processing_time', 'patterns', 'performance', 'processing_time_std', 'processing_times', 'quarantine_count', 'quarantine_rate', 'reason_code_counts', 'reasons', 'start_time', 'std', 'timestamp', 'total_processed', 'tri_score_count', 'tri_score_sum', 'uptime_seconds', 'value']

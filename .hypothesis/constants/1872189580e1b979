@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\orchestrator\core\performance_monitor.py
+# hypothesis_version: 6.138.14
+
+[0.0, 1000000.0, 500, 3600, 'avg_latency_ms', 'error', 'error_rate', 'latency_ms', 'ok', 'request_count', 'slot_id', 'start', 'status', 't0_ns', 'throughput', 'time_window_seconds', 'trace_id']

@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\slots\slot09_distortion_protection\ids_policy.py
+# hypothesis_version: 6.138.14
+
+[0.0, 0.02, 0.1, 0.25, 0.5, 0.75, 'ALLOW_FASTPATH', 'BLOCK_OR_SANDBOX', 'DEGRADE_AND_REVIEW', 'STANDARD_PROCESSING', 'content', 'content_analysis', 'drift', 'embedding_vectors', 'final_policy', 'final_reason', 'final_severity', 'high', 'ids_disabled', 'ids_enabled', 'low', 'medium', 'normal', 'policy', 'reason', 'severity', 'stability', 'state', 'trace_id', 'traits', 'traits_analysis']
