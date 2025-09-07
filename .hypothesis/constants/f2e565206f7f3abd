@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\config\feature_flags.py
+# hypothesis_version: 6.138.14
+
+[0.1, 0.25, 0.5, 0.7, 0.75, 0.8, 0.9, 60.0, 100, ',', '1', 'BACKUP_MODE_ENABLED', 'FAILOVER_ENABLED', 'HEALTH_CHECK_ENABLED', 'IDS_ALLOWED_SCOPES', 'IDS_ALPHA', 'IDS_BETA', 'IDS_EMA_LAMBDA', 'IDS_ENABLED', 'IDS_SANDBOX_ONLY', 'IDS_SCHEMA_VALIDATE', 'IDS_STABLE_THRESHOLD', 'IDS_WEIGHT', 'MAX_PAYLOAD_SIZE_MB', 'RATE_LIMIT_ENABLED', 'allowed_scopes', 'alpha', 'backup_mode_enabled', 'beta', 'burst_size', 'circuit_breaker', 'content', 'diverging_threshold', 'ema_lambda', 'enabled', 'error_threshold', 'failover', 'failure_threshold', 'health_check_enabled', 'max_payload_size_mb', 'memory', 'monitoring', 'on', 'rate_limiting', 'recovery_time', 'requests_per_minute', 'reset_timeout', 'resource_protection', 'sandbox_only', 'signals', 'stable_threshold', 'traits', 'true', 'weight', 'yes']

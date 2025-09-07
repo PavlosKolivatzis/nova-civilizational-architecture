@@ -1,0 +1,4 @@
+# file: C:\Users\paulk\OneDrive\Έγγραφα\GitHub\nova-civilizational-architecture\api\health_config.py
+# hypothesis_version: 6.138.14
+
+['/health/config', '_observer', '_poll_task', 'disabled', 'enable_hot_reload', 'health', 'hot_reload_enabled', 'hot_reload_mode', 'id', 'name', 'nova-config', 'polling', 'service', 'slots', 'slots_loaded', 'version', 'watchdog']
