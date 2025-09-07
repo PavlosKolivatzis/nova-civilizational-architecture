@@ -1,4 +1,5 @@
 from slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine, EmotionConfig
+from slots.slot03_emotional_matrix.safety_policy import basic_safety_policy
 import pytest
 
 
@@ -59,3 +60,32 @@ def test_length_guard() -> None:
     engine = EmotionalMatrixEngine(EmotionConfig(max_content_length=5))
     with pytest.raises(ValueError):
         engine.analyze("too long")
+
+
+def test_extended_lexicon_tokens() -> None:
+    engine = EmotionalMatrixEngine()
+    pos = engine.analyze("The meal was delightful")
+    neg = engine.analyze("The experience was dreadful")
+    assert pos["emotional_tone"] == "positive"
+    assert neg["emotional_tone"] == "negative"
+
+
+def test_configurable_policy_hooks() -> None:
+    called = []
+
+    def hook(metrics):
+        metrics["hooked"] = True
+        called.append(True)
+
+    engine = EmotionalMatrixEngine(EmotionConfig(policy_hooks=[hook]))
+    res = engine.analyze("good")
+    assert called
+    assert res.get("hooked") is True
+
+
+def test_safety_policy_module() -> None:
+    metrics = {"emotional_tone": "weird", "score": 5}
+    basic_safety_policy(metrics)
+    assert metrics["emotional_tone"] == "neutral"
+    assert metrics["score"] == 1.0
+    assert "policy_warning" in metrics

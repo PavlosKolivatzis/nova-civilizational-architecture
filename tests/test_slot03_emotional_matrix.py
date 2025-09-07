@@ -124,7 +124,8 @@ class TestEmotionalMatrixEngine:
             "I love this product",
             "This is fantastic and amazing",
             "Great job, excellent work",
-            "Happy and wonderful experience"
+            "Happy and wonderful experience",
+            "Delightful and superb service"
         ]
         
         for text in positive_texts:
@@ -139,7 +140,8 @@ class TestEmotionalMatrixEngine:
             "I hate this terrible product",
             "This is awful and horrible",
             "Bad experience, worst service",
-            "Sad and disgusting outcome"
+            "Sad and disgusting outcome",
+            "Dreadful and abysmal failure"
         ]
         
         for text in negative_texts:

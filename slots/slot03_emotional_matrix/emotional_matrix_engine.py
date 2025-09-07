@@ -4,6 +4,8 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Optional
 
+from .safety_policy import basic_safety_policy
+
 
 @dataclass(frozen=True)
 class EmotionConfig:
@@ -16,6 +18,8 @@ class EmotionConfig:
     # intensifiers: scale each matching token's magnitude
     boosters: Dict[str, float] = None
     dampeners: Dict[str, float] = None
+    # default policy hooks executed after analysis
+    policy_hooks: List[Callable[[Dict], None]] = None
 
     def __post_init__(self):
         # immutability-friendly defaults
@@ -25,6 +29,7 @@ class EmotionConfig:
         object.__setattr__(self, "dampeners", self.dampeners or {
             "slightly": 0.6, "somewhat": 0.7, "a_bit": 0.7, "kinda": 0.6, "barely": 0.5
         })
+        object.__setattr__(self, "policy_hooks", self.policy_hooks or [basic_safety_policy])
 
 
 class EmotionalMatrixEngine:
@@ -46,14 +51,16 @@ class EmotionalMatrixEngine:
         "—": " ", "–": " ", "…": " ",
     })
 
-    # small, hand-curated lexicons (intentionally tiny)
+    # sentiment lexicons (expanded but still lightweight)
     _POSITIVE = {
         "good", "great", "happy", "fantastic", "excellent", "love", "awesome",
-        "nice", "wonderful", "brilliant", "amazing",
+        "nice", "wonderful", "brilliant", "amazing", "delightful", "joyful",
+        "pleased", "superb", "outstanding", "marvelous", "cheerful", "upbeat",
     }
     _NEGATIVE = {
         "bad", "sad", "terrible", "hate", "awful", "horrible", "worse", "worst",
-        "disgusting", "annoying",
+        "disgusting", "annoying", "dreadful", "abysmal", "miserable", "horrendous",
+        "depressing", "lousy", "unhappy", "wretched", "frustrating",
     }
     _NEGATORS = {
         "not", "no", "never", "without", "hardly", "scarcely", "isnt", "doesnt",
@@ -91,9 +98,7 @@ class EmotionalMatrixEngine:
         tokens = self._tokenize(lower)
         if not tokens:
             metrics = {"emotional_tone": "unknown", "score": 0.0, "confidence": 0.0, "explain": {"matches": 0}}
-            if policy_hook:
-                try: policy_hook(metrics)
-                except Exception: metrics["policy_error"] = "policy hook failure"
+            self._apply_policy_hooks(metrics, policy_hook)
             return metrics
 
         pos, neg, matched = 0.0, 0.0, 0
@@ -183,15 +188,23 @@ class EmotionalMatrixEngine:
             "version": self.__version__,
         }
 
-        if policy_hook:
-            try:
-                policy_hook(metrics)
-            except Exception:
-                metrics["policy_error"] = "policy hook failure"
+        self._apply_policy_hooks(metrics, policy_hook)
 
         return metrics
 
     # tiny helper for batch use in pipelines
     def analyze_batch(self, contents: Iterable[str]) -> List[Dict]:
         return [self.analyze(c) for c in contents]
+
+    # internal helper to apply configured and extra policy hooks
+    def _apply_policy_hooks(self, metrics: Dict, extra_hook: Optional[Callable[[Dict], None]]) -> None:
+        hooks = list(self.cfg.policy_hooks)
+        if extra_hook:
+            hooks.append(extra_hook)
+        for hook in hooks:
+            try:
+                hook(metrics)
+            except Exception:
+                metrics["policy_error"] = "policy hook failure"
+                break
 
