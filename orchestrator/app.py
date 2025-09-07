@@ -10,7 +10,7 @@ when FastAPI is available.
 
 # Optional web framework (avoid import errors in environments without FastAPI)
 try:  # pragma: no cover - absence of FastAPI is acceptable
-    from fastapi import FastAPI
+    from fastapi import FastAPI, Response
     from api.health_config import router as health_router
     from contextlib import asynccontextmanager
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
@@ -27,6 +27,9 @@ from orchestrator.adapters import (
     Slot9DistortionProtectionAdapter,
     Slot10DeploymentAdapter,
 )
+from orchestrator.health import health_payload, prometheus_metrics
+import pkgutil
+import slots
 
 # Monitor, bus and router are created once and reused across requests
 monitor = PerformanceMonitor()
@@ -42,6 +45,13 @@ SLOT_REGISTRY = {
     "slot08_memory_ethics": Slot8MemoryEthicsAdapter().register,
     "slot09_distortion_protection": Slot9DistortionProtectionAdapter().detect,
     "slot10_civilizational_deployment": Slot10DeploymentAdapter().deploy,
+}
+
+# Registry of all slots for health/metrics aggregation (slots 1-10)
+METRIC_SLOT_REGISTRY = {
+    name: None
+    for _, name, _ in pkgutil.iter_modules(slots.__path__)
+    if name.startswith("slot")
 }
 try:  # pragma: no cover - illustrative orchestrator wiring
     from orchestrator.run import Orchestrator  # type: ignore
@@ -74,18 +84,18 @@ if FastAPI is not None:
 
     @app.get("/health")
     async def health():
-        slots = {sid: monitor.get_slot_health(sid) for sid in SLOT_REGISTRY.keys()}
-        router_thresholds = {
-            "latency_ms": getattr(router, "latency_threshold_ms", None),
-            "error_rate": getattr(router, "error_threshold", None),
-        }
-        cb_metrics = router.cb.get_metrics() if getattr(router, "cb", None) else {}
-        return {
-            "status": "ok",
-            "slots": slots,
-            "router_thresholds": router_thresholds,
-            "circuit_breaker": cb_metrics,
-        }
+        """Return aggregated health information for all slots."""
+        payload = health_payload(
+            METRIC_SLOT_REGISTRY, monitor, router, getattr(router, "cb", None)
+        )
+        payload["status"] = "ok"
+        return payload
+
+    @app.get("/metrics")
+    async def metrics() -> Response:
+        """Prometheus-compatible metrics for all slots."""
+        data = prometheus_metrics(METRIC_SLOT_REGISTRY, monitor)
+        return Response(content=data, media_type="text/plain")
 else:  # pragma: no cover - FastAPI not installed
     app = None
 
