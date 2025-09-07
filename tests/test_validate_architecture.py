@@ -10,8 +10,13 @@ def client():
         yield client
 
 
-def test_validate_architecture(client):
+def test_validate_architecture_requires_auth(client):
     response = client.post("/api/validate_architecture", json={})
+    assert response.status_code == 401
+
+
+def test_validate_architecture(client, auth_header):
+    response = client.post("/api/validate_architecture", json={}, headers=auth_header)
     assert response.status_code == 400
     assert response.get_json() == {
         "client": "test",
@@ -55,15 +60,15 @@ def test_validate_architecture(client):
         },
     }
 
-    response = client.post("/api/validate_architecture", json=payload)
+    response = client.post("/api/validate_architecture", json=payload, headers=auth_header)
     assert response.status_code == 200
     assert response.get_json() == payload
 
 
-def test_validate_architecture_rejects_non_mapping_payload(client):
+def test_validate_architecture_rejects_non_mapping_payload(client, auth_header):
     """The endpoint should gracefully handle JSON types other than objects."""
 
-    response = client.post("/api/validate_architecture", json=[1, 2, 3])
+    response = client.post("/api/validate_architecture", json=[1, 2, 3], headers=auth_header)
     assert response.status_code == 400
     assert response.get_json() == {
         "client": "test",

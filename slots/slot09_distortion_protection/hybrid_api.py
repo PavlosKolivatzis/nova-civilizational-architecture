@@ -1370,6 +1370,8 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
         from fastapi.responses import JSONResponse
         from fastapi.middleware.cors import CORSMiddleware
+        from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+        from auth import verify_jwt_token
         
         app = FastAPI(
             title="NOVA Slot 9 - Hybrid Distortion Protection API",
@@ -1387,12 +1389,22 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
             allow_methods=["*"],
             allow_headers=["*"],
         )
+
+        security = HTTPBearer(auto_error=False)
+
+        async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+            if credentials is None:
+                raise HTTPException(status_code=401, detail="Not authenticated")
+            try:
+                return verify_jwt_token(credentials.credentials)
+            except Exception:
+                raise HTTPException(status_code=401, detail="Invalid auth token")
         
-        @app.post("/api/v1/detect", 
+        @app.post("/api/v1/detect",
                  response_model=DistortionDetectionResponse,
                  summary="Detect distortions in content",
                  description="Main endpoint for distortion detection with full NOVA integration")
-        async def detect_distortion(request: DistortionDetectionRequest):
+        async def detect_distortion(request: DistortionDetectionRequest, user: Dict[str, Any] = Depends(get_current_user)):
             try:
                 return await api_instance.detect_distortion(request)
             except ValueError as e:
@@ -1404,7 +1416,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         @app.post("/api/v1/bulk-detect",
                  summary="Bulk distortion detection",
                  description="Process multiple detection requests in parallel")
-        async def bulk_detect_distortion(requests: List[DistortionDetectionRequest]):
+        async def bulk_detect_distortion(requests: List[DistortionDetectionRequest], user: Dict[str, Any] = Depends(get_current_user)):
             try:
                 if len(requests) > 100:
                     raise HTTPException(status_code=400, detail="Maximum 100 requests per batch")
@@ -1413,16 +1425,16 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
                 api_instance.logger.error(f"Bulk API endpoint error: {e}")
                 raise HTTPException(status_code=500, detail="Bulk processing error")
         
-        @app.get("/api/v1/health", 
+        @app.get("/api/v1/health",
                 summary="Comprehensive health check",
                 description="Get detailed system health and performance metrics")
-        async def health_check():
+        async def health_check(user: Dict[str, Any] = Depends(get_current_user)):
             return api_instance.get_comprehensive_system_health()
         
         @app.get("/api/v1/metrics",
                 summary="Performance metrics",
                 description="Get detailed performance and quality metrics")
-        async def get_metrics():
+        async def get_metrics(user: Dict[str, Any] = Depends(get_current_user)):
             health = api_instance.get_comprehensive_system_health()
             return {
                 "performance": health["performance_metrics"],
@@ -1433,7 +1445,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         @app.get("/api/v1/status",
                 summary="System status",
                 description="Get current system status and integration info")
-        async def get_status():
+        async def get_status(user: Dict[str, Any] = Depends(get_current_user)):
             health = api_instance.get_comprehensive_system_health()
             return {
                 "status": health["status"],
@@ -1446,7 +1458,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         @app.post("/api/v1/admin/cleanup",
                  summary="Admin cleanup",
                  description="Trigger system cleanup (admin only)")
-        async def admin_cleanup(background_tasks: BackgroundTasks):
+        async def admin_cleanup(background_tasks: BackgroundTasks, user: Dict[str, Any] = Depends(get_current_user)):
             background_tasks.add_task(api_instance.cleanup)
             return {"message": "Cleanup initiated"}
         

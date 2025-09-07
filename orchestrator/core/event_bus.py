@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 from collections import defaultdict
+from types import MappingProxyType
 
 logger = logging.getLogger("event_bus")
 
@@ -33,11 +34,14 @@ class EventBus:
         self._subs: Dict[str, List[Callable[[Event], Any]]] = defaultdict(list)
         self.monitor = monitor or _NullMonitor()
         self.metrics: Dict[str, int] = {"events": 0}
+        self._enhanced_cache: Optional[MappingProxyType] = None
+        self._metrics_dirty = True
 
     def subscribe(self, topic: str, handler: Callable[[Event], Any]) -> None:
         self._subs[topic].append(handler)
 
     async def publish(self, topic: str, event: Event) -> List[Any]:
+        self._metrics_dirty = True
         self.monitor.record_event_start(event)
         logger.info("trace", extra={"event": "start", "trace_id": event.trace_id, "slot": event.target_slot})
         handlers = self._subs.get(topic, [])
@@ -106,10 +110,13 @@ class EventBus:
 
     def get_enhanced_metrics(self) -> Dict[str, Any]:
         """Return enhanced-only metrics with the prefixed namespace."""
-        base = self.get_base_compatible_metrics()
-        enhanced = {f"enhanced_{k}": v for k, v in base.items()}
-        enhanced["enhanced_success_rate"] = self.get_success_rate()
-        return enhanced
+        if self._metrics_dirty or self._enhanced_cache is None:
+            base = self.get_base_compatible_metrics()
+            enhanced = {f"enhanced_{k}": v for k, v in base.items()}
+            enhanced["enhanced_success_rate"] = self.get_success_rate()
+            self._enhanced_cache = MappingProxyType(enhanced)
+            self._metrics_dirty = False
+        return self._enhanced_cache
 
     def supports_enhanced_metrics(self) -> bool:
         """Indicate whether enhanced metrics are supported."""
