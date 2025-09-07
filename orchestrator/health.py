@@ -5,6 +5,11 @@ from typing import Any, Callable, Dict
 import time
 
 
+def _prometheus_header(metric: str, mtype: str, help_text: str) -> str:
+    """Format a Prometheus metric header."""
+    return f"# HELP {metric} {help_text}\n# TYPE {metric} {mtype}"
+
+
 def collect_slot_health(slot_registry: Dict[str, Callable], monitor) -> Dict[str, Any]:
     """Aggregate per-slot health from the PerformanceMonitor."""
     return {slot_id: monitor.get_slot_health(slot_id) for slot_id in slot_registry.keys()}
@@ -61,3 +66,31 @@ def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict
         "timestamp": time.time(),
         "version": "1.0.0",
     }
+
+
+def prometheus_metrics(slot_registry: Dict[str, Callable], monitor) -> str:
+    """Generate Prometheus-compatible metrics for all slots."""
+    lines = []
+
+    # Average latency metric
+    metric = "slot_avg_latency_ms"
+    lines.append(_prometheus_header(metric, "gauge", "Average latency in milliseconds per slot"))
+    for slot_id in slot_registry.keys():
+        health = monitor.get_slot_health(slot_id)
+        lines.append(f'{metric}{{slot="{slot_id}"}} {health.get("avg_latency_ms", 0.0)}')
+
+    # Error rate metric
+    metric = "slot_error_rate"
+    lines.append(_prometheus_header(metric, "gauge", "Error rate per slot"))
+    for slot_id in slot_registry.keys():
+        health = monitor.get_slot_health(slot_id)
+        lines.append(f'{metric}{{slot="{slot_id}"}} {health.get("error_rate", 0.0)}')
+
+    # Throughput metric
+    metric = "slot_throughput"
+    lines.append(_prometheus_header(metric, "gauge", "Throughput per slot"))
+    for slot_id in slot_registry.keys():
+        health = monitor.get_slot_health(slot_id)
+        lines.append(f'{metric}{{slot="{slot_id}"}} {health.get("throughput", 0)}')
+
+    return "\n".join(lines) + "\n"
