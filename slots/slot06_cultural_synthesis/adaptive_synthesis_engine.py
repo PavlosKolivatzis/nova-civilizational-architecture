@@ -1,7 +1,11 @@
 from __future__ import annotations
+
 from warnings import warn
-from .engine import CulturalSynthesisEngine as _CSE
-from .adapter import CulturalSynthesisAdapter as _CSA
+
+from .multicultural_truth_synthesis import (
+    MulticulturalTruthSynthesis as _BaseCompat,
+    MulticulturalTruthSynthesisAdapter as _CSA,
+)
 
 warn(
     "Slot6: 'adaptive_synthesis_engine' is deprecated; "
@@ -11,28 +15,13 @@ warn(
 )
 
 
-class AdaptiveSynthesisEngine(_CSE):
-    """Deprecated alias for CulturalSynthesisEngine."""
+class AdaptiveSynthesisEngine(_BaseCompat):
     pass
 
 
 class AdaptiveSynthesisAdapter(_CSA):
-    """Deprecated alias for CulturalSynthesisAdapter."""
     pass
 
 
-# also export the multicultural names here for belt-and-suspenders compatibility
-class MulticulturalTruthSynthesis(_CSE):
-    pass
+__all__ = ["AdaptiveSynthesisEngine", "AdaptiveSynthesisAdapter"]
 
-
-class MulticulturalTruthSynthesisAdapter(_CSA):
-    pass
-
-
-__all__ = [
-    "AdaptiveSynthesisEngine",
-    "AdaptiveSynthesisAdapter",
-    "MulticulturalTruthSynthesis",
-    "MulticulturalTruthSynthesisAdapter",
-]
