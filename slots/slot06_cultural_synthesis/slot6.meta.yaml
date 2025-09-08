@@ -1,27 +1,14 @@
 slot: 6
-name: Adaptive Synthesis Engine
-version: "7.4.1"
-entry_point: slot06_cultural_synthesis/engine.py:AdaptiveSynthesisEngine
+name: Cultural Synthesis Engine
+version: "1.0.0"
+entry_point: slot06_cultural_synthesis/engine.py:CulturalSynthesisEngine
 adapter: slot06_cultural_synthesis/adapter.py:MulticulturalTruthSynthesisAdapter
 description: |
-  Production-hardened multicultural truth synthesis and bounded ethical simulation.
-  Integrates Slot 5 constellation budgets, provides Slot 10 compatibility interface.
+  Lightweight cultural synthesis providing adaptation effectiveness,
+  principle preservation and residual risk metrics.
 inputs:
-  institution_name: string
-  payload: object
-  context: object
+  profile: object
 outputs:
-  simulation_status: enum[approved, approved_with_transformation, blocked_by_guardrail, deferred_no_consent]
-  compliance_score: number
-  cultural_profile: object
-  violations: array[string]
-  recommendations: array[string]
-metrics:
-  - principle_preservation_rate
-  - total_analyses
-  - successful_simulations
-  - guardrail_blocks
-ci:
-  workflow: .github/workflows/nova-ci.yml
-  tests:
-    - slots/slot06_cultural_synthesis/test_implementation.py
+  adaptation_effectiveness: number
+  principle_preservation: number
+  residual_risk: number

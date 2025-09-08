@@ -22,9 +22,9 @@ def test_analyze_endpoint_validation(client, auth_header):
 
     response = client.post('/api/analyze', json={
         'institution_name': 'test institution',
-        'cultural_context': {'type': 'western'}
+        'cultural_context': {'clarity': 0.4}
     }, headers=auth_header)
     assert response.status_code == 200
     data = response.get_json()
     assert data.get('ok') is True
-    assert 'individualism_index' in data
+    assert 'adaptation_effectiveness' in data

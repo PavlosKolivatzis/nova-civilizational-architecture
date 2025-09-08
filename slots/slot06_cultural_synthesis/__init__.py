@@ -1,17 +1,20 @@
 from .engine import (
-    AdaptiveSynthesisEngine,
+    CulturalSynthesisEngine,
     CulturalProfile,
+    SynthesisConfig,
     GuardrailValidationResult,
 )
-from .adapter import MulticulturalTruthSynthesisAdapter
+from .adapter import CulturalSynthesisAdapter, MulticulturalTruthSynthesisAdapter
 
 # Backwards compatibility alias
 MulticulturalTruthSynthesis = MulticulturalTruthSynthesisAdapter
 
 __all__ = [
-    "AdaptiveSynthesisEngine",
+    "CulturalSynthesisEngine",
+    "CulturalSynthesisAdapter",
     "MulticulturalTruthSynthesisAdapter",
     "MulticulturalTruthSynthesis",
     "CulturalProfile",
+    "SynthesisConfig",
     "GuardrailValidationResult",
 ]

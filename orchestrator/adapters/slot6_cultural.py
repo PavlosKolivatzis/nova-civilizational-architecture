@@ -1,4 +1,4 @@
-from __future__ import annotations             
+from __future__ import annotations
 from dataclasses import dataclass, field
 from frameworks.enums import DeploymentGuardrailResult
 from typing import Any, Dict, Optional
@@ -11,12 +11,12 @@ except Exception:  # pragma: no cover - Slot 2 always available in tests
 
 try:
     from slots.slot06_cultural_synthesis.engine import (
-        AdaptiveSynthesisEngine,
+        CulturalSynthesisEngine,
         CulturalProfile,
         GuardrailValidationResult,
     )
     from slots.slot06_cultural_synthesis.adapter import MulticulturalTruthSynthesisAdapter
-    ENGINE = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
+    ENGINE = MulticulturalTruthSynthesisAdapter(CulturalSynthesisEngine())
     AVAILABLE = True
 except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
     logging.getLogger(__name__).exception(
@@ -26,15 +26,13 @@ except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
 
     @dataclass
     class CulturalProfile:  # type: ignore
-        individualism_index: float = 0.0
-        power_distance: float = 0.0
-        uncertainty_avoidance: float = 0.0
-        long_term_orientation: float = 0.0
-        adaptation_effectiveness: float = 0.0
-        cultural_context: Any = "unknown"
-        method_profile: Dict[str, float] = field(default_factory=dict)
-        slot2_patterns: list[str] = field(default_factory=list)
-        tri_gap: float = 0.0
+        clarity: float = 0.0
+        foresight: float = 0.0
+        empiricism: float = 0.0
+        anchor_confidence: float = 1.0
+        tri_score: float = 1.0
+        layer_scores: Dict[str, float] = field(default_factory=dict)
+        ideology_push: bool = False
 
     @dataclass
     class GuardrailValidationResult:  # type: ignore
@@ -47,7 +45,6 @@ except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests
         tri_gap: float = 0.0
         slot2_patterns: list[str] = field(default_factory=list)
 
-    
     ENGINE = None
 
 
@@ -62,23 +59,7 @@ class Slot6Adapter:
         context: Dict[str, Any],
         slot2_result: Optional[ProcessingResult | Dict[str, Any]] = None,
     ) -> CulturalProfile:
-        """Analyze an institution's cultural context.
-
-        Parameters
-        ----------
-        institution_name:
-            Name of the institution being analyzed.
-        context:
-            Supplemental context for the institution.
-        slot2_result:
-            Optional Slot 2 ``ProcessingResult`` (or mapping) whose TRI gap and
-            pattern codes will be attached to the resulting ``CulturalProfile``.
-
-        Returns
-        -------
-        CulturalProfile
-            Profile describing cultural dimensions plus any Slot 2 artifacts.
-        """
+        """Analyze an institution's cultural context."""
         if not self.available:
             return CulturalProfile()
         try:
@@ -100,26 +81,7 @@ class Slot6Adapter:
         payload: Dict[str, Any],
         slot2_result: Optional[ProcessingResult | Dict[str, Any]] = None,
     ) -> GuardrailValidationResult:
-        """Validate a payload against cultural guardrails.
-
-        Parameters
-        ----------
-        profile:
-            Cultural profile generated from ``analyze``.
-        institution_type:
-            The type or category of the institution.
-        payload:
-            Content slated for deployment.
-        slot2_result:
-            Optional Slot 2 ``ProcessingResult`` (or mapping). When provided,
-            its pattern violations and TRI gap are reflected in the returned
-            ``GuardrailValidationResult``.
-
-        Returns
-        -------
-        GuardrailValidationResult
-            Outcome of the validation, including any Slot 2 violations.
-        """
+        """Validate a payload against cultural guardrails."""
         if not self.available:
             return GuardrailValidationResult(result=DeploymentGuardrailResult.ERROR)
         try:
