@@ -1,0 +1,7 @@
+id: slot02_deltathresh
+name: ΔTHRESH Manager
+version: "1.0.0"
+optional: false
+produces: ["DETECTION_REPORT@1"]
+consumes: []
+description: "Advanced pattern detection and threshold management"

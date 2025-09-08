@@ -4,6 +4,58 @@ from slots.config import get_config_manager  # EnhancedConfigManager global
 
 router = APIRouter()
 
+def _get_plugin_info() -> Dict[str, Any]:
+    """Get plugin system information."""
+    try:
+        import os
+        from orchestrator.plugins.loader import PluginLoader
+        
+        # Check if plugins are enabled
+        enabled_env = os.getenv("NOVA_SLOTS", "").strip()
+        enabled = [s.strip() for s in enabled_env.split(",") if s.strip()] if enabled_env else None
+        
+        # Try to get loader instance (may not exist yet)
+        try:
+            # This would be from app state in real implementation
+            loader = PluginLoader(enabled=enabled).discover()
+            
+            plugins = {}
+            for slot_id, slot in loader.items():
+                plugins[slot_id] = {
+                    "version": slot.plugin.version if slot.plugin else None,
+                    "optional": slot.meta.get("optional", True),
+                    "contracts": list(slot.adapters.keys()) if slot.adapters else [],
+                    "loaded": bool(slot.plugin),
+                    "description": slot.meta.get("description", "")
+                }
+            
+            contracts_available = sorted({
+                c for slot in loader.values() 
+                for c in (slot.adapters or {}).keys()
+            })
+            
+            return {
+                "plugins": plugins,
+                "contracts_available": contracts_available,
+                "slots_enabled": enabled or "ALL"
+            }
+            
+        except Exception:
+            return {
+                "plugins": {},
+                "contracts_available": [],
+                "slots_enabled": enabled or "ALL",
+                "status": "plugin_system_not_initialized"
+            }
+            
+    except ImportError:
+        return {
+            "plugins": {},
+            "contracts_available": [],
+            "slots_enabled": "UNKNOWN",
+            "status": "plugin_system_unavailable"
+        }
+
 def _get_slot6_metrics() -> Dict[str, Any]:
     """Get Slot 6 observability metrics."""
     # Try centralized metrics first
@@ -50,6 +102,9 @@ async def health_config() -> Dict[str, Any]:
 
     # Get Slot 6 specific metrics
     slot6_metrics = _get_slot6_metrics()
+    
+    # Get plugin system information
+    plugin_info = _get_plugin_info()
 
     return {
         "service": "nova-config",
@@ -58,4 +113,8 @@ async def health_config() -> Dict[str, Any]:
         "slots_loaded": len(slots),
         "slots": slots,
         "slot6": slot6_metrics,  # Slot 6 observability
+        "plugins": plugin_info["plugins"],  # Plugin system status
+        "contracts_available": plugin_info["contracts_available"],
+        "slots_enabled": plugin_info["slots_enabled"],
+        "plugin_system_status": plugin_info.get("status", "operational")
     }

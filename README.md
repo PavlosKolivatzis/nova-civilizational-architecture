@@ -106,6 +106,7 @@ python -c "from slots.slot09_distortion_protection.hybrid_api import create_hybr
 ## 🔧 Recent Enhancements
 
 ### ✨ Latest Updates (2025-09-08)
+- **🔌 Plugin Architecture**: Config-driven slot enable/disable with contract-based routing
 - **🎯 Slot 6 Production Enhancement**: Complete legacy retirement strategy with environment gates
 - **🧪 Contract Testing**: Schema freeze tests prevent breaking changes to CULTURAL_PROFILE@1
 - **📊 Observability**: Decision metrics and legacy usage tracking via `/health/config`
@@ -117,6 +118,20 @@ python -c "from slots.slot09_distortion_protection.hybrid_api import create_hybr
 - **Following Release**: Legacy module removed entirely; clean new API only
 
 **Migration Path**: Use `engine.CulturalSynthesisEngine` and `adapter.CulturalSynthesisAdapter` instead of legacy classes.
+
+### Plugin System
+Slots are now plugins with config-driven enable/disable. Enable specific slots with:
+```bash
+export NOVA_SLOTS="slot02,slot04,slot06,slot10"
+```
+
+**Contract-Based Routing:**
+- `TRI_REPORT@1` (slot04 → slot02/slot05)
+- `CULTURAL_PROFILE@1` (slot06 → slot10) 
+- `DETECTION_REPORT@1` (slot02 → slot05/slot09)
+- `CONSTELLATION_STATE@1` (slot05 → slot09)
+
+Missing producers degrade gracefully via NullAdapters. Plugin status and contracts available at `/health/config`.
 
 ### ✨ Previous Updates (2025-09-06)
 - **🎉 Resolved GitHub conflicts**: Successfully merged enhanced Slot 9 features

@@ -1,0 +1,7 @@
+id: slot04_tri_engine
+name: TRI Engine
+version: "1.0.0"
+optional: false
+produces: ["TRI_REPORT@1"]
+consumes: []
+description: "Truth Risk Index calculation engine for content evaluation"

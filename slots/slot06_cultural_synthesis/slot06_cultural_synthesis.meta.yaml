@@ -1,0 +1,7 @@
+id: slot06_cultural_synthesis
+name: Cultural Synthesis
+version: "1.0.0"
+optional: false
+produces: ["CULTURAL_PROFILE@1"]
+consumes: ["TRI_REPORT@1"]
+description: "Cultural synthesis engine for multi-cultural truth assessment"

@@ -1,0 +1,7 @@
+id: slot05_constellation
+name: Constellation Navigator
+version: "1.0.0"
+optional: false
+produces: ["CONSTELLATION_STATE@1"]
+consumes: ["TRI_REPORT@1", "DETECTION_REPORT@1"]
+description: "Constellation navigation and stability index calculation"
