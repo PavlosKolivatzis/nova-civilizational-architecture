@@ -1,0 +1,72 @@
+nodes:
+  - id: S02
+    name: "ΔTHRESH"
+    version: 2.3
+  - id: S04
+    name: "TRI Engine"
+    version: 1.0
+  - id: S05
+    name: "Constellation"
+    version: 1.0
+  - id: S06
+    name: "Cultural Synthesis"
+    version: 4.2
+  - id: S09
+    name: "Distortion Protection"
+    version: 1.0
+  - id: S10
+    name: "Deployment"
+    version: 1.0
+  - id: S03
+    name: "Emotional Matrix"
+    version: 1.0
+  - id: S07
+    name: "Production Controls"
+    version: 1.0
+  - id: S01
+    name: "Truth Anchor"
+    version: 1.0
+  - id: S08
+    name: "Memory Ethics"
+    version: 1.0
+  - id: O
+    name: "Orchestrator"
+    version: 1.0
+edges:
+  - from: S02
+    to: S04
+    contract: TRI_QUERY
+    optional: false
+  - from: S04
+    to: S02
+    contract: TRI_REPORT@1
+    optional: false
+  - from: S02
+    to: S06
+    contract: CONTENT_ANALYSIS@1
+  - from: S06
+    to: S10
+    contract: PLAN_WITH_CONSENT@1
+  - from: S02
+    to: S05
+    contract: SIGNALS@1
+    optional: true
+  - from: S04
+    to: S05
+    contract: TRI_REPORT@1
+  - from: S05
+    to: S09
+    contract: CONSTELLATION_STATE@1
+  - from: S03
+    to: S07
+    contract: EMO_FEEDBACK@1
+  - from: S07
+    to: O
+    contract: CONTROL_CMDS@1
+constraints:
+  - from: S01
+    to: [S02, S06, S10]
+    type: truth_anchor
+  - from: S08
+    to: [S06, S09, S10]
+    type: memory_ethics
