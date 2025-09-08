@@ -20,6 +20,10 @@ Production-grade multicultural truth synthesis engine with 10-slot cognitive arc
 | **Gemini** | Multi-modal analysis, comprehensive reviews | Holistic system evaluation |
 | **Copilot** | Code completion, refactoring assistance | Development workflow optimization |
 
+## 🗺 Architecture
+
+See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the system map, data flows, and current maturity snapshot.
+
 ## 📊 System Maturity Dashboard
 
 ```
