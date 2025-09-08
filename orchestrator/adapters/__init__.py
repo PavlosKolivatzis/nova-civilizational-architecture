@@ -1,41 +1,31 @@
 # -*- coding: utf-8 -*-
 """Adapter registry for contract-based routing.
 
-Exports AdapterRegistry and (when present) the concrete slot adapters so
-legacy imports from orchestrator.app/tests continue to work.
+This module exposes all slot adapters from a single location. Adapters are
+lightweight wrappers around each slot's core logic and provide a consistent
+interface for the orchestrator and tests.
 """
 
-from __future__ import annotations
-from importlib import import_module
-from typing import List
+from .slot1_truth_anchor import Slot1TruthAnchorAdapter
+from .slot2_deltathresh import Slot2DeltaThreshAdapter
+from .slot3_emotional import Slot3EmotionalAdapter
+from .slot4_tri import Slot4TRIAdapter
+from .slot5_constellation import Slot5ConstellationAdapter
+from .slot6_cultural import Slot6Adapter
+from .slot7_production_controls import Slot7ProductionControlsAdapter
+from .slot8_memory_ethics import Slot8MemoryEthicsAdapter
+from .slot9_distortion_protection import Slot9DistortionProtectionAdapter
+from .slot10_civilizational import Slot10DeploymentAdapter
 
-from .registry import AdapterRegistry  # always exported
-
-__all__: List[str] = ["AdapterRegistry"]
-
-# best effort re-exports for backward compatibility
-# (skip silently if an optional adapter module is missing)
-_ADAPTER_MODULES = [
-    "slot1_truth_anchor",
-    "slot2_deltathresh",
-    "slot3_emotional",
-    "slot4_tri",
-    "slot5_constellation",
-    "slot6_cultural",
-    "slot7_production_controls",
-    "slot8_memory_ethics",
-    "slot9_distortion_protection",
-    "slot10_civilizational",
+__all__ = [
+    "Slot1TruthAnchorAdapter",
+    "Slot2DeltaThreshAdapter",
+    "Slot3EmotionalAdapter",
+    "Slot4TRIAdapter",
+    "Slot5ConstellationAdapter",
+    "Slot6Adapter",
+    "Slot7ProductionControlsAdapter",
+    "Slot8MemoryEthicsAdapter",
+    "Slot9DistortionProtectionAdapter",
+    "Slot10DeploymentAdapter",
 ]
-
-for modname in _ADAPTER_MODULES:
-    try:
-        mod = import_module(f".{modname}", __package__)
-        # export every symbol that endswith 'Adapter' from the module
-        for k, v in vars(mod).items():
-            if k.endswith("Adapter"):
-                globals()[k] = v  # type: ignore[assignment]
-                __all__.append(k)
-    except Exception:
-        # adapter is optional or not present in this build – ignore
-        continue
