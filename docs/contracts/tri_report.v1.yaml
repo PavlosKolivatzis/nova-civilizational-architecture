@@ -1,0 +1,13 @@
+id: TRI_REPORT
+version: 1
+producer: [slot04]
+consumer: [slot02, slot05]
+schema:
+  score: float
+  layer_scores:
+    delta: float
+    sigma: float
+    theta: float
+    omega: float
+invariants:
+  - 0.0 <= score <= 1.0
