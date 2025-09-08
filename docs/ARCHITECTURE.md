@@ -50,6 +50,7 @@ graph LR
   WS -.-> O
 ```
 
+codex/create-architecture-documentation
 ### Evolvable system map
 
 The following map is generated from [`system_map.yaml`](system_map.yaml) in CI and
@@ -94,6 +95,8 @@ graph LR
   S08 -. "memory_ethics" .-> S10
 ```
 
+=======
+main
 ## Slot summaries
 - **Slot 1 – Truth Anchor:** core reality lock with recovery protocols.
 - **Slot 2 – ΔTHRESH Integration Manager:** threshold detection and pattern analysis pipeline.
@@ -128,8 +131,13 @@ graph LR
 - Orchestrator composes the final response.
 
 ## Legend
+codex/create-architecture-documentation
 - `-->` solid arrow: contract-bound data flow.
 - `-.->` dashed arrow: labeled constraint or external interaction.
 - `(opt)` denotes an optional flow; `⚗️` marks experimental paths.
 - Edge labels like `TRI_REPORT(v1)` map to files in `docs/contracts/`.
+
+- `-->` solid arrow: direct invocation or loading.
+- `-.->` dashed arrow: external or optional interaction.
+main
 - Rectangles: functional components or slots.
