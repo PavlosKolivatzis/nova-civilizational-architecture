@@ -1,6 +1,7 @@
 from .engine import (
-    AdaptiveSynthesisEngine,
+    CulturalSynthesisEngine,
     CulturalProfile,
+    SynthesisConfig,
     GuardrailValidationResult,
 )
 from .adapter import MulticulturalTruthSynthesisAdapter
@@ -9,9 +10,10 @@ from .adapter import MulticulturalTruthSynthesisAdapter
 MulticulturalTruthSynthesis = MulticulturalTruthSynthesisAdapter
 
 __all__ = [
-    "AdaptiveSynthesisEngine",
+    "CulturalSynthesisEngine",
     "MulticulturalTruthSynthesisAdapter",
     "MulticulturalTruthSynthesis",
     "CulturalProfile",
+    "SynthesisConfig",
     "GuardrailValidationResult",
 ]

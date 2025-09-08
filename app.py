@@ -1,18 +1,21 @@
-from flask import Flask, jsonify, request, render_template
+from __future__ import annotations
+
 from functools import wraps
+
+from flask import Flask, jsonify, request, render_template
 from jwt import PyJWTError
 
 from auth import verify_jwt_token
 from slots.slot06_cultural_synthesis.engine import (
-    AdaptiveSynthesisEngine,
+    CulturalSynthesisEngine,
     CulturalProfile,
-    CulturalContext,
+    GuardrailValidationResult,
 )
 from slots.slot06_cultural_synthesis.adapter import MulticulturalTruthSynthesisAdapter
 
 # Initialize the Flask app and the Slot 6 engine adapter
 app = Flask(__name__, template_folder="interface")
-cultural_synthesis_engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())
+cultural_synthesis_engine = MulticulturalTruthSynthesisAdapter(CulturalSynthesisEngine())
 
 
 def require_auth(func):
@@ -27,8 +30,8 @@ def require_auth(func):
         except PyJWTError:
             return jsonify({"error": "Invalid token"}), 401
         return func(*args, **kwargs)
-    return wrapper
 
+    return wrapper
 
 
 @app.route("/")
@@ -39,120 +42,55 @@ def index():
 @app.route("/api/analyze", methods=["POST"])
 @require_auth
 def analyze():
-
-
-
-
-
-    
-
-    # ``get_json`` may return non-mapping types (e.g. a list) or raise when the
-    # request body isn't valid JSON.  Using ``silent=True`` avoids exceptions and
-    # allows us to gracefully handle unexpected payload shapes.
     raw = request.get_json(silent=True)
     data = raw if isinstance(raw, dict) else {}
     institution_name = data.get("institution_name")
     context = data.get("cultural_context")
-    if not institution_name or not context:
-        return jsonify({"error": "Missing required fields: institution_name and cultural_context"}), 400
-    try:
-        profile = cultural_synthesis_engine.analyze_cultural_context(institution_name, context)
-        result = {
-            "individualism_index": profile.individualism_index,
-            "power_distance": profile.power_distance,
-            "uncertainty_avoidance": profile.uncertainty_avoidance,
-            "long_term_orientation": profile.long_term_orientation,
-            "adaptation_effectiveness": profile.adaptation_effectiveness,
-            "cultural_context": profile.cultural_context.value,
-            "method_profile": profile.method_profile,
-        }
-        return jsonify({"ok": True, **result})
-
-    
-    except ValueError as e:
-        return jsonify({"error": f"Invalid input: {str(e)}"}), 400
-    except Exception as e:
-        app.logger.error(f"Analysis failed: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+    if not institution_name or not isinstance(context, dict):
+        return (
+            jsonify(
+                {
+                    "error": "Missing required fields: institution_name and cultural_context",
+                }
+            ),
+            400,
+        )
+    profile: CulturalProfile = cultural_synthesis_engine.analyze_cultural_context(
+        institution_name, context
+    )
+    return jsonify({"ok": True, **profile})
 
 
 @app.route("/api/validate", methods=["POST"])
 @require_auth
 def validate():
-    try:
-        # ``get_json`` can raise an error for invalid JSON or return non-mapping
-        # types (e.g. a list).  Using ``silent=True`` avoids exceptions and
-        # allows us to fall back to an empty mapping when the payload is not a
-        # JSON object.  This mirrors the defensive parsing used in other
-        # endpoints.
-        raw = request.get_json(silent=True)
-        data = raw if isinstance(raw, dict) else {}
-
-        profile_data = data.get("profile")
-        # ``profile`` must be a mapping.  When the client submits a list or any
-        # other non-dictionary type, attempting to access ``.get`` would raise
-        # an exception and trigger a 500 response.  Guard against that scenario
-        # and return a deterministic 400 error instead.
-        if not isinstance(profile_data, dict):
-            return jsonify({"error": "Profile data is required"}), 400
-
-        context_enum = next(
-            (item for item in CulturalContext if item.value == profile_data.get("cultural_context")),
-            CulturalContext.MIXED,
-        )
-
-        profile = CulturalProfile(
-            individualism_index=profile_data.get("individualism_index"),
-            power_distance=profile_data.get("power_distance"),
-            uncertainty_avoidance=profile_data.get("uncertainty_avoidance"),
-            long_term_orientation=profile_data.get("long_term_orientation"),
-            adaptation_effectiveness=profile_data.get("adaptation_effectiveness"),
-            cultural_context=context_enum,
-            method_profile=profile_data.get("method_profile"),
-        )
-
-        institution_type = data.get("institutionType")
-        payload = data.get("payload")
-        if not institution_type or payload is None:
-            return jsonify({"error": "institutionType and payload are required"}), 400
-
-        if not isinstance(payload, dict):
-            return jsonify({"error": "payload must be a JSON object"}), 400
-
-        if "content" not in payload:
-            return jsonify({"error": "payload.content is required"}), 400
-
-        validation_result = cultural_synthesis_engine.validate_cultural_deployment(
-            profile, institution_type, payload
-        )
-
-        validation_dict = {
-            "result": validation_result.result.value,
-            "compliance_score": validation_result.compliance_score,
-            "violations": validation_result.violations,
-            "recommendations": validation_result.recommendations,
-            "transformation_required": validation_result.transformation_required,
-            "max_safe_adaptation": validation_result.max_safe_adaptation,
+    raw = request.get_json(silent=True)
+    data = raw if isinstance(raw, dict) else {}
+    profile = data.get("profile")
+    if not isinstance(profile, dict):
+        return jsonify({"error": "Profile data is required"}), 400
+    payload = data.get("payload")
+    if not isinstance(payload, dict):
+        return jsonify({"error": "payload must be a JSON object"}), 400
+    institution_type = data.get("institutionType", "")
+    result: GuardrailValidationResult = cultural_synthesis_engine.validate_cultural_deployment(
+        profile, institution_type, payload
+    )
+    return jsonify(
+        {
+            "result": result.result.value,
+            "compliance_score": result.compliance_score,
+            "violations": result.violations,
+            "recommendations": result.recommendations,
         }
-
-        return jsonify(validation_dict)
-    except Exception as e:
-        app.logger.error(f"Validation failed: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+    )
 
 
 @app.route("/api/validate_architecture", methods=["POST"])
 @app.route("/validate_architecture", methods=["POST"])
 @require_auth
 def validate_architecture():
-    """Light‑weight schema check for Slot‑10 architecture payloads.
-
-    The associated tests exercise the happy path where a fully populated payload
-    should be echoed back verbatim.  When required fields are missing the
-    endpoint responds with a deterministic error structure, mirroring the sample
-    provided in the test-suite.
-    """
-
+    """Light‑weight schema check for Slot‑10 architecture payloads."""
     raw = request.get_json(silent=True)
     data = raw if isinstance(raw, dict) else {}
     required = {
@@ -162,9 +100,7 @@ def validate_architecture():
         "philosophy_enforcement",
         "diversity_model",
     }
-
     if not required.issubset(data):
-        # The tests expect the client identifier "test" in the error payload.
         return (
             jsonify(
                 {
@@ -175,8 +111,6 @@ def validate_architecture():
             ),
             400,
         )
-
-    # All required sections are present; mirror back exactly what was sent.
     return jsonify({key: data[key] for key in required})
 
 

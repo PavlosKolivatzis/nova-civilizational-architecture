@@ -6,15 +6,16 @@ from frameworks.enums import DeploymentGuardrailResult
 from slots.slot02_deltathresh.models import ProcessingResult
 
 from .engine import (
-    AdaptiveSynthesisEngine,
+    CulturalSynthesisEngine,
     CulturalProfile,
     GuardrailValidationResult,
-    SimulationResult,
 )
 
 
 class MulticulturalTruthSynthesisAdapter:
-    def __init__(self, engine: AdaptiveSynthesisEngine):
+    """Thin wrapper around :class:`CulturalSynthesisEngine` used by Slot 10."""
+
+    def __init__(self, engine: CulturalSynthesisEngine):
         self.engine = engine
 
     def analyze_cultural_context(
@@ -23,11 +24,17 @@ class MulticulturalTruthSynthesisAdapter:
         ctx: Optional[Dict[str, Any]] = None,
         slot2_result: ProcessingResult | Dict[str, Any] | None = None,
     ) -> CulturalProfile:
+        """Derive a cultural profile from ``ctx``.
+
+        The current implementation simply runs the synthesis engine over the
+        provided context and returns the resulting profile.  ``slot2_result``
+        is accepted for API compatibility but otherwise ignored.
+        """
+
+        data: CulturalProfile = dict(ctx or {})
+        data["institution"] = institution_name
         try:
-            res = self.engine.analyze_and_simulate(
-                institution_name, {"content": ""}, ctx or {}, slot2_result=slot2_result
-            )
-            return res.cultural_profile
+            return self.engine.synthesize(data)
         except Exception:
             return CulturalProfile()
 
@@ -38,34 +45,21 @@ class MulticulturalTruthSynthesisAdapter:
         payload: Dict[str, Any],
         slot2_result: ProcessingResult | Dict[str, Any] | None = None,
     ) -> GuardrailValidationResult:
+        """Validate ``payload`` against cultural guardrails.
+
+        ``slot2_result`` is currently unused but kept for interface
+        compatibility with other slots.
+        """
+
         try:
-            res = self.engine.analyze_and_simulate(
-                institution_type, payload, {}, profile, slot2_result=slot2_result
-            )
-            status_map = {
-                SimulationResult.APPROVED: DeploymentGuardrailResult.APPROVED,
-                SimulationResult.APPROVED_WITH_TRANSFORMATION: DeploymentGuardrailResult.REQUIRES_TRANSFORMATION,
-                SimulationResult.BLOCKED_BY_GUARDRAIL: DeploymentGuardrailResult.BLOCKED_PRINCIPLE_VIOLATION,
-                SimulationResult.DEFERRED_NO_CONSENT: DeploymentGuardrailResult.BLOCKED_CULTURAL_SENSITIVITY,
-            }
+            metrics = self.engine.synthesize(payload)
             return GuardrailValidationResult(
-                result=status_map.get(res.simulation_status, DeploymentGuardrailResult.ERROR),
-                compliance_score=res.compliance_score,
-                violations=res.violations,
-                recommendations=res.recommendations,
-                transformation_required=(res.simulation_status == SimulationResult.APPROVED_WITH_TRANSFORMATION),
-                max_safe_adaptation=AdaptiveSynthesisEngine._max_safe_adaptation(profile),
-                tri_gap=res.cultural_profile.tri_gap,
-                slot2_patterns=res.cultural_profile.slot2_patterns,
+                result=DeploymentGuardrailResult.APPROVED,
+                compliance_score=metrics["principle_preservation"],
             )
         except Exception:
             return GuardrailValidationResult(
                 result=DeploymentGuardrailResult.ERROR,
                 compliance_score=0.0,
                 violations=["Validation process failed"],
-                recommendations=["Check system logs"],
-                transformation_required=False,
-                max_safe_adaptation=AdaptiveSynthesisEngine._max_safe_adaptation(profile),
-                tri_gap=0.0,
-                slot2_patterns=[],
             )

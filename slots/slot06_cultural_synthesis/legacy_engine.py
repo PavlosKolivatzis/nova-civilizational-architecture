@@ -1,0 +1,595 @@
+""" 
+Slot 6 — Adaptive Synthesis Engine v7.4.1 (Production Consolidation)
+ΔTHRESH v6.6 | Unified Cultural & Ethical Simulation
+Highlights:
+- Non-recursive deep iteration (BFS) with cycle/depth caps
+- Canonical forbidden mapping with boundary-safe regex
+- Consent-aware simulation gating
+- Constellation budget integration (Slot 5)
+- Thread-safe metrics (EMA preservation rate)
+- Timeout & memory caps; graceful shutdown
+This single file intentionally ships with the Slot 10 adapter and
+serialization helper for drop-in deployment. In large repos consider
+splitting into: engine.py, adapter.py, serializers.py.
+"""
+from __future__ import annotations
+from dataclasses import dataclass, field, asdict, is_dataclass
+from enum import Enum
+from frameworks.enums import DeploymentGuardrailResult
+from typing import Any, Dict, List, Optional, Iterable, Mapping
+from slots.slot02_deltathresh.models import ProcessingResult
+import time
+import hashlib
+import threading
+import re
+from collections import deque
+import logging
+import json
+logger = logging.getLogger("synthesis_engine")
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+    logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+VERSION = "7.4.1"
+
+
+def slot2_threat_bridge(result: Any, tri_min_score: float = 0.8) -> float:
+    """Compute threat level from a Slot 2 ProcessingResult with version check.
+
+    Accepts legacy dictionaries or objects lacking a ``version`` field by using
+    the Slot 2 adapter to normalize them to the current structure.
+    """
+    from slots.slot02_deltathresh.adapters import adapt_processing_result
+
+    if isinstance(result, dict) or not hasattr(result, "version"):
+        if not isinstance(result, dict) and is_dataclass(result):
+            result = adapt_processing_result(asdict(result))
+        else:
+            result = adapt_processing_result(result)
+
+    version = getattr(result, "version", "v1")
+    if version != "v1":
+        raise ValueError(f"Unsupported ProcessingResult version: {version}")
+
+    layer_scores = getattr(result, "layer_scores", {}) or {}
+    tri_score = float(getattr(result, "tri_score", 1.0))
+    risk = max(layer_scores.values()) if layer_scores else 0.0
+    tri_gap = max(0.0, tri_min_score - tri_score)
+    threat_level = getattr(result, "threat_level", None)
+    if threat_level is None:
+        threat_level = min(1.0, 0.5 * risk + 0.5 * tri_gap)
+    return float(threat_level)
+@dataclass(frozen=True)
+class EngineConfig:
+    regex_text_cap: int = 2_000_000
+    max_container_depth: int = 50
+    analysis_timeout: float = 5.0
+    max_string_length: int = 100_000
+    min_safe_adaptation: float = 0.15
+    max_safe_adaptation: float = 0.85
+    max_budget_relaxation: float = 0.10
+class CulturalContext(Enum):
+    INDIVIDUALIST = "individualist"
+    COLLECTIVIST = "collectivist"
+    MIXED = "mixed"
+    INSTITUTIONAL = "institutional"
+class SimulationResult(Enum):
+    APPROVED = "approved"
+    APPROVED_WITH_TRANSFORMATION = "approved_with_transformation"
+    BLOCKED_BY_GUARDRAIL = "blocked_by_guardrail"
+    DEFERRED_NO_CONSENT = "deferred_no_consent"
+    
+@dataclass(frozen=True)
+class EngineMetrics:
+    total_analyses: int
+    successful_simulations: int
+    guardrail_blocks: int
+    principle_preservation_rate: float
+    version: str
+    engine_fingerprint: str
+    config: Dict[str, Any]
+@dataclass
+class CulturalProfile:
+    individualism_index: float = 0.5
+    power_distance: float = 0.5
+    uncertainty_avoidance: float = 0.5
+    long_term_orientation: float = 0.5
+    adaptation_effectiveness: float = 0.0
+    cultural_context: CulturalContext = CulturalContext.MIXED
+    method_profile: Dict[str, float] = field(default_factory=dict)
+    forbidden_elements_detected: List[str] = field(default_factory=list)
+    guardrail_compliance: bool = True
+    principle_preservation_score: float = 1.0
+    slot2_patterns: List[str] = field(default_factory=list)
+    tri_gap: float = 0.0
+@dataclass
+class SynthesisResult:
+    simulation_status: SimulationResult
+    cultural_profile: CulturalProfile
+    compliance_score: float = 1.0
+    violations: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+    anchor_verification: Optional[Dict[str, Any]] = None
+@dataclass
+class GuardrailValidationResult:
+    result: DeploymentGuardrailResult
+    compliance_score: float
+    violations: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+    transformation_required: bool = False
+    max_safe_adaptation: float = 0.0
+    tri_gap: float = 0.0
+    slot2_patterns: List[str] = field(default_factory=list)
+class AdaptiveSynthesisEngine:
+    _DEFAULT_METHODS = {
+        "greek_logic": 0.8, "buddhist_impermanence": 0.7, "confucian_precision": 0.7,
+        "indigenous_longterm": 0.8, "scientific_empiricism": 0.9,
+    }
+    _FORBIDDEN_CANON: Mapping[str, str] = {
+        "divine_revelation": "divine revelation",
+        "spiritual_authority": "spiritual authority",
+        "faith_based_claims": "faith based claims",
+        "toxic_positivity": "toxic positivity",
+        "cultural_supremacy": "cultural supremacy",
+        "mystical_bypassing": "mystical bypassing",
+        "manipulate": "manipulate",
+        "exploit": "exploit",
+    }
+    _REGION_BIASES = {
+        "EU": {"individualism_index": 0.6, "power_distance": 0.45, "uncertainty_avoidance": 0.55},
+        "US": {"individualism_index": 0.75, "power_distance": 0.4, "uncertainty_avoidance": 0.45},
+        "EA": {"individualism_index": 0.45, "power_distance": 0.55, "uncertainty_avoidance": 0.6},
+        "LA": {"individualism_index": 0.5, "power_distance": 0.55, "uncertainty_avoidance": 0.55},
+        "AF": {"individualism_index": 0.48, "power_distance": 0.58, "uncertainty_avoidance": 0.57},
+        "ME": {"individualism_index": 0.44, "power_distance": 0.62, "uncertainty_avoidance": 0.6},
+    }
+    _TRIGGER_TERMS = (r"imagine|what\\s+if|pretend|role-?\\s*play|simulate|perspective|"
+                      r"experience|understand\\s+how|feel\\s+like|empathize")
+    _TRIGGER_PATTERN = re.compile(rf"(?<!\\w)({_TRIGGER_TERMS})(?!\\w)", flags=re.IGNORECASE)
+    _FORBIDDEN_PATTERN = re.compile(r"\b(" + "|".join(map(re.escape, _FORBIDDEN_CANON.values())) + r")\b")
+    _CLEAN_PATTERN = re.compile(r"[^a-z0-9_ ]+")
+    def __init__(self, deterministic_fingerprint: str = None, config: EngineConfig = None) -> None:
+        self._cfg = config or EngineConfig()
+        self._metrics_lock = threading.RLock()
+        self._total_analyses = 0
+        self._successful_simulations = 0
+        self._guardrail_blocks = 0
+        self._principle_preservation_rate = 1.0
+        self._instance_fingerprint = deterministic_fingerprint or hashlib.sha256(
+            f"SLOT6_{VERSION}::{time.time()}".encode()
+        ).hexdigest()[:16]
+        self._shutdown_flag = threading.Event()
+        self._truth_anchor_adapter = None
+        self._tri_engine_adapter = None
+        logger.info("Synthesis engine initialized")
+
+    def set_truth_anchor_adapter(self, adapter) -> None:
+        """Set truth anchor adapter for epistemic verification."""
+        self._truth_anchor_adapter = adapter
+        logger.info("Truth anchor adapter integrated")
+
+    def set_tri_engine_adapter(self, adapter) -> None:
+        """Set TRI engine adapter for dynamic penalty calculation."""
+        self._tri_engine_adapter = adapter
+        logger.info("TRI engine adapter integrated")
+
+    def _now(self) -> float:
+        return time.perf_counter()
+    def shutdown(self):
+        self._shutdown_flag.set()
+    def _iter_strings_bfs(self, obj: Any) -> Iterable[str]:
+        queue = deque([(obj, 0)])
+        visited = set()
+        MAX_VISITED = 100_000
+        while queue and not self._shutdown_flag.is_set():
+            current, depth = queue.popleft()
+            if depth > self._cfg.max_container_depth:
+                break
+            oid = id(current)
+            if oid in visited:
+                continue
+            if len(visited) >= MAX_VISITED:
+                break
+            visited.add(oid)
+            if isinstance(current, dict):
+                for k, v in current.items():
+                    if isinstance(k, str) and len(k) <= self._cfg.max_string_length:
+                        yield k.lower()
+                    queue.append((v, depth + 1))
+            elif isinstance(current, (list, tuple)):
+                for item in current:
+                    queue.append((item, depth + 1))
+            elif isinstance(current, (str, bytes)):
+                if isinstance(current, bytes):
+                    try:
+                        current = current.decode("utf-8", "ignore")
+                    except Exception:
+                        continue
+                if len(current) <= self._cfg.max_string_length:
+                    yield current.lower()
+    def _scan_forbidden_any(self, payload: Any) -> List[str]:
+        start = self._now()
+        total_size = 0
+        buffer: List[str] = []
+        for s in self._iter_strings_bfs(payload):
+            if self._now() - start > self._cfg.analysis_timeout:
+                break
+            if total_size >= self._cfg.regex_text_cap:
+                break
+            if total_size + len(s) > self._cfg.regex_text_cap:
+                s = s[: self._cfg.regex_text_cap - total_size]
+            buffer.append(s)
+            total_size += len(s)
+        if not buffer:
+            return []
+        cleaned = self._CLEAN_PATTERN.sub(" ", " ".join(buffer))
+        hits_display = {m.group(0) for m in self._FORBIDDEN_PATTERN.finditer(cleaned)}
+        reverse_map = {v: k for k, v in self._FORBIDDEN_CANON.items()}
+        hits_snake = {reverse_map.get(h, h.replace(" ", "_")) for h in hits_display}
+        hits_snake &= set(self._FORBIDDEN_CANON.keys())
+        return sorted(hits_snake)
+    def _update_principle_rate(self, compliance_penalty: float):
+        target = max(0.0, 1.0 - compliance_penalty)
+        alpha = 0.10
+        with self._metrics_lock:
+            self._principle_preservation_rate = (1 - alpha) * self._principle_preservation_rate + alpha * target
+    def _apply_creativity_budget(self, base_max_safe: float, context: Dict[str, Any]) -> float:
+        if not context:
+            return base_max_safe
+        try:
+            budget = (context.get("constellation_budget") or {})
+            scale = budget.get("scale", None)
+            if scale is None:
+                tw = float(budget.get("temporal_window", 0.02))
+                depth = float(budget.get("max_depth", 1))
+                scale = max(0.0, min(1.0, 0.5 * (tw - 0.02) / 0.08 + 0.5 * (depth - 1) / 2))
+            scale = float(scale)
+            if not (0.0 <= scale <= 1.0):
+                scale = max(0.0, min(1.0, scale))
+            relaxed = base_max_safe + self._cfg.max_budget_relaxation * scale
+            return min(self._cfg.max_safe_adaptation, max(self._cfg.min_safe_adaptation, relaxed))
+        except Exception:
+            return base_max_safe
+
+    def _verify_anchor_integrity(self, content: str) -> Dict[str, Any]:
+        """Verify content against truth anchors with full content analysis."""
+        if not self._truth_anchor_adapter:
+            return {
+                "anchor_status": "NOT_AVAILABLE",
+                "anchor_confidence": 1.0,
+                "anchor_verified": True,
+                "anchor_violations": [],
+            }
+
+        violations = []
+        anchor_confidence = 1.0
+
+        try:
+            core_facts = self._truth_anchor_adapter.get_anchor_facts("nova.core")
+            if not core_facts:
+                return {
+                    "anchor_status": "NO_CORE_ANCHORS",
+                    "anchor_confidence": 0.8,
+                    "anchor_verified": True,
+                    "anchor_violations": [],
+                }
+
+            content_lower = content.lower()
+            for fact in core_facts:
+                fact_lower = fact.lower()
+                if ("not " in content_lower or "no " in content_lower) and any(
+                    word in content_lower for word in fact_lower.split()[:3]
+                ):
+                    violations.append(f"Potential contradiction of: {fact[:50]}...")
+                    anchor_confidence *= 0.7
+
+            anchor_status = "VERIFIED" if not violations else "VIOLATED"
+            if anchor_confidence < 0.5:
+                anchor_status = "FAILED"
+
+        except Exception as e:
+            logger.warning(f"Anchor verification failed: {e}")
+            anchor_status = "ERROR"
+            anchor_confidence = 0.5
+            violations = [f"Verification error: {str(e)}"]
+
+        return {
+            "anchor_status": anchor_status,
+            "anchor_confidence": anchor_confidence,
+            "anchor_verified": anchor_status in [
+                "VERIFIED",
+                "NOT_AVAILABLE",
+                "NO_CORE_ANCHORS",
+            ],
+            "anchor_violations": violations,
+        }
+
+    def _calculate_epistemic_penalty(self, anchor_confidence: float) -> float:
+        """Calculate dynamic penalty based on anchor confidence and system TRI."""
+        system_tri = 1.0
+        if self._tri_engine_adapter:
+            try:
+                system_tri = self._tri_engine_adapter.get_current_tri_score()
+            except Exception as e:
+                logger.warning(f"Failed to fetch TRI score: {e}")
+        base_penalty = 1.0 - anchor_confidence
+        adjusted_penalty = base_penalty / (system_tri + 0.1)
+        return min(1.0, max(0.0, adjusted_penalty))
+
+    def _apply_anchor_constraints(
+        self, profile: CulturalProfile, anchor_result: Dict[str, Any]
+    ) -> CulturalProfile:
+        """Apply truth anchor constraints to cultural profile."""
+        if anchor_result["anchor_verified"]:
+            return profile
+
+        penalty = self._calculate_epistemic_penalty(
+            anchor_result["anchor_confidence"]
+        )
+        anchor_status = anchor_result["anchor_status"]
+
+        baseline = min(
+            profile.adaptation_effectiveness,
+            self._max_safe_adaptation(profile),
+        )
+        modified_profile = CulturalProfile(
+            individualism_index=profile.individualism_index,
+            power_distance=profile.power_distance,
+            uncertainty_avoidance=profile.uncertainty_avoidance,
+            long_term_orientation=getattr(profile, "long_term_orientation", 0.5),
+            adaptation_effectiveness=baseline,
+            cultural_context=profile.cultural_context,
+        )
+
+        if anchor_status == "FAILED":
+            modified_profile.adaptation_effectiveness *= (1.0 - penalty) * 0.5
+        elif anchor_status in ["VIOLATED", "ERROR"]:
+            modified_profile.adaptation_effectiveness *= (1.0 - penalty)
+
+        modified_profile.adaptation_effectiveness = max(
+            self._cfg.min_safe_adaptation,
+            min(self._cfg.max_safe_adaptation, modified_profile.adaptation_effectiveness),
+        )
+
+        return modified_profile
+
+    def get_config(self) -> Dict[str, Any]:
+        return asdict(self._cfg)
+    def analyze_and_simulate(
+        self,
+        institution_name: str,
+        payload: Dict[str, Any],
+        context: Dict[str, Any] = None,
+        profile: CulturalProfile | None = None,
+        slot2_result: ProcessingResult | Dict[str, Any] | None = None,
+    ) -> SynthesisResult:
+        if self._shutdown_flag.is_set():
+            return SynthesisResult(
+                simulation_status=SimulationResult.BLOCKED_BY_GUARDRAIL,
+                cultural_profile=CulturalProfile(),
+                compliance_score=0.0,
+                violations=["Engine is shutting down"],
+            )
+        with self._metrics_lock:
+            self._total_analyses += 1
+        try:
+            institution_name = str(institution_name)[:256] if institution_name else "UNKNOWN"
+            context = context or {}
+            payload = payload or {}
+            if not isinstance(payload, dict):
+                payload = {"content": str(payload)}
+        except Exception:
+            return SynthesisResult(
+                simulation_status=SimulationResult.BLOCKED_BY_GUARDRAIL,
+                cultural_profile=CulturalProfile(),
+                compliance_score=0.0,
+                violations=["Input validation failed"],
+            )
+        anchor_result = self._verify_anchor_integrity(str(payload.get("content", "")))
+        slot2_patterns: List[str] = []
+        tri_gap = 0.0
+        if slot2_result is not None:
+            try:
+                slot2_patterns = list(
+                    getattr(slot2_result, "reason_codes", []) or []
+                )
+                from slots.slot02_deltathresh.adapters import adapt_processing_result
+
+                if isinstance(slot2_result, dict) or not hasattr(
+                    slot2_result, "version"
+                ):
+                    if not isinstance(slot2_result, dict) and is_dataclass(
+                        slot2_result
+                    ):
+                        slot2_result = adapt_processing_result(asdict(slot2_result))
+                    else:
+                        slot2_result = adapt_processing_result(slot2_result)
+                tri_score = float(getattr(slot2_result, "tri_score", 1.0))
+                tri_gap = max(0.0, 0.8 - tri_score)
+            except Exception:
+                pass
+        profile = profile or self._generate_cultural_profile(context)
+        profile.slot2_patterns = slot2_patterns
+        profile.tri_gap = tri_gap
+        if tri_gap > 0:
+            profile.guardrail_compliance = False
+        if not anchor_result["anchor_verified"]:
+            profile = self._apply_anchor_constraints(profile, anchor_result)
+        slot2_violations = [f"SLOT2_PATTERN:{p}" for p in slot2_patterns]
+        if tri_gap > 0:
+            slot2_violations.append(f"TRI_GAP:{tri_gap:.2f}")
+        if not anchor_result["anchor_verified"]:
+            slot2_violations += anchor_result.get("anchor_violations", [])
+        ideology_push = False
+        try:
+            ideology_push = bool((payload.get("messaging") or {}).get("ideology"))
+        except Exception:
+            pass
+        compliance_penalty = 0.05 if ideology_push else 0.0
+        anchor_penalty = 0.0
+        if not anchor_result["anchor_verified"]:
+            anchor_penalty = self._calculate_epistemic_penalty(anchor_result["anchor_confidence"])
+            compliance_penalty += anchor_penalty
+            if anchor_result["anchor_status"] == "FAILED":
+                with self._metrics_lock:
+                    self._guardrail_blocks += 1
+                self._update_principle_rate(1.0)
+                return SynthesisResult(
+                    simulation_status=SimulationResult.BLOCKED_BY_GUARDRAIL,
+                    cultural_profile=profile,
+                    compliance_score=0.0,
+                    violations=slot2_violations,
+                    anchor_verification=anchor_result,
+                )
+        try:
+            forbidden_hits = self._scan_forbidden_any({"institution": institution_name, "payload": payload})
+        except Exception:
+            forbidden_hits = ["SCAN_ERROR"]
+        if forbidden_hits:
+            with self._metrics_lock:
+                self._guardrail_blocks += 1
+            self._update_principle_rate(1.0)
+            return SynthesisResult(
+                simulation_status=SimulationResult.BLOCKED_BY_GUARDRAIL,
+                cultural_profile=profile,
+                compliance_score=0.0,
+                violations=slot2_violations
+                + [f"FORBIDDEN_ELEMENTS:{','.join(forbidden_hits)}"],
+                anchor_verification=anchor_result,
+            )
+        simulation_requested = False
+        has_consent = False
+        try:
+            content = json.dumps({"institution": institution_name, "payload": payload}, ensure_ascii=False)[:10000]
+            simulation_requested = bool(self._TRIGGER_PATTERN.search(content))
+            has_consent = context.get("explicit_consent", False) or context.get("educational_context", False)
+        except Exception:
+            pass
+        if simulation_requested and not has_consent:
+            return SynthesisResult(
+                simulation_status=SimulationResult.DEFERRED_NO_CONSENT,
+                cultural_profile=profile,
+                violations=slot2_violations
+                + ["Simulation requested without sufficient consent"],
+                anchor_verification=anchor_result,
+            )
+        base_max = self._max_safe_adaptation(profile)
+        max_safe_adapt = self._apply_creativity_budget(base_max, context)
+        if profile.adaptation_effectiveness > max_safe_adapt:
+            rec = f"Reduce adaptation_effectiveness from {profile.adaptation_effectiveness:.2f} to <= {max_safe_adapt:.2f}"
+            profile.adaptation_effectiveness = max_safe_adapt
+            with self._metrics_lock:
+                self._successful_simulations += 1
+            self._update_principle_rate(compliance_penalty)
+            return SynthesisResult(
+                simulation_status=SimulationResult.APPROVED_WITH_TRANSFORMATION,
+                cultural_profile=profile,
+                compliance_score=max(0.0, 0.9 - compliance_penalty),
+                recommendations=[rec],
+                violations=slot2_violations,
+                anchor_verification=anchor_result,
+            )
+        with self._metrics_lock:
+            self._successful_simulations += 1
+        self._update_principle_rate(compliance_penalty)
+        simulation_status = SimulationResult.APPROVED
+        if not anchor_result["anchor_verified"]:
+            simulation_status = SimulationResult.APPROVED_WITH_TRANSFORMATION
+        return SynthesisResult(
+            simulation_status=simulation_status,
+            cultural_profile=profile,
+            compliance_score=max(0.0, 1.0 - compliance_penalty),
+            violations=slot2_violations,
+            anchor_verification=anchor_result,
+        )
+    def _generate_cultural_profile(self, context: Dict[str, Any]) -> CulturalProfile:
+        try:
+            region = (context.get("region") or "").upper()
+            base = {"individualism_index": 0.5, "power_distance": 0.5, "uncertainty_avoidance": 0.5}
+            if region in self._REGION_BIASES:
+                for k, v in self._REGION_BIASES[region].items():
+                    if k in base:
+                        base[k] = max(0.0, min(1.0, v))
+            clarity = float(context.get("clarity_priority", 0.5))
+            foresight = float(context.get("foresight_priority", 0.5))
+            empiricism = float(context.get("empiricism_priority", 0.5))
+            adaptation_effectiveness = self._score_adaptation(self._DEFAULT_METHODS, clarity, foresight, empiricism)
+            long_term_orientation = 0.5 * float(context.get("foresight_priority", 0.5)) + 0.5 * float(
+                context.get("long_term_orientation", base.get("long_term_orientation", 0.5))
+            )
+            return CulturalProfile(
+                individualism_index=round(base["individualism_index"], 3),
+                power_distance=round(base["power_distance"], 3),
+                uncertainty_avoidance=round(base["uncertainty_avoidance"], 3),
+                long_term_orientation=round(long_term_orientation, 3),
+                adaptation_effectiveness=round(adaptation_effectiveness, 3),
+                cultural_context=self._label_context(base),
+                method_profile=self._DEFAULT_METHODS.copy(),
+                forbidden_elements_detected=[],
+                guardrail_compliance=True,
+                principle_preservation_score=self._principle_preservation_rate,
+            )
+        except Exception:
+            return CulturalProfile(
+                method_profile=self._DEFAULT_METHODS.copy(),
+                forbidden_elements_detected=[],
+                guardrail_compliance=False,
+                principle_preservation_score=1.0,
+            )
+    def get_performance_metrics(self) -> Dict[str, Any]:
+        with self._metrics_lock:
+            snap = EngineMetrics(
+                total_analyses=self._total_analyses,
+                successful_simulations=self._successful_simulations,
+                guardrail_blocks=self._guardrail_blocks,
+                principle_preservation_rate=round(self._principle_preservation_rate, 3),
+                version=VERSION,
+                engine_fingerprint=self._instance_fingerprint,
+                config=asdict(self._cfg),
+            )
+        return {
+            "synthesis_metrics": {
+                "total_analyses": snap.total_analyses,
+                "successful_simulations": snap.successful_simulations,
+                "guardrail_blocks": snap.guardrail_blocks,
+                "principle_preservation_rate": snap.principle_preservation_rate,
+            },
+            "engine_fingerprint": snap.engine_fingerprint,
+            "version": snap.version,
+            "config": snap.config,
+        }
+    @staticmethod
+    def _label_context(base: Dict[str, float]) -> CulturalContext:
+        try:
+            if base["individualism_index"] >= 0.65:
+                return CulturalContext.INDIVIDUALIST
+            if base["power_distance"] >= 0.60 or base["uncertainty_avoidance"] >= 0.65:
+                return CulturalContext.COLLECTIVIST
+            if base["power_distance"] >= 0.55 and base["uncertainty_avoidance"] >= 0.55:
+                return CulturalContext.INSTITUTIONAL
+            return CulturalContext.MIXED
+        except KeyError:
+            return CulturalContext.MIXED
+    @staticmethod
+    def _score_adaptation(methods: Dict[str, float], clarity: float, foresight: float, empiricism: float) -> float:
+        clarity = max(0.0, min(1.0, clarity))
+        foresight = max(0.0, min(1.0, foresight))
+        empiricism = max(0.0, min(1.0, empiricism))
+        score = (0.35 * methods["scientific_empiricism"] * empiricism
+                 + 0.25 * methods["greek_logic"] * clarity
+                 + 0.25 * methods["indigenous_longterm"] * foresight
+                 + 0.10 * methods["confucian_precision"] * clarity
+                 + 0.05 * methods["buddhist_impermanence"] * (1 - abs(0.5 - foresight) * 2))
+        return max(0.0, min(1.0, score))
+    @staticmethod
+    def _max_safe_adaptation(profile: CulturalProfile) -> float:
+        try:
+            penalty = 0.25 * profile.power_distance + 0.15 * profile.uncertainty_avoidance
+            return max(0.15, min(0.85, 0.45 + (0.15 - penalty)))
+        except AttributeError:
+            return 0.85
+if __name__ == "__main__":
+    eng = AdaptiveSynthesisEngine()
+    res = eng.analyze_and_simulate("Demo", {"content": "imagine safe scenario"}, {"educational_context": True})
+    print(res.simulation_status.value, res.compliance_score)
