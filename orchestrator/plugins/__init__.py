@@ -1,6 +1,6 @@
 """Plugin system for NOVA slots."""
 
-from .filepython import PythonFilePlugin
-from .rest import RestAPIPlugin
+from .abc import SlotPlugin
+from .loader import PluginLoader
 
-__all__ = ["PythonFilePlugin", "RestAPIPlugin"]
+__all__ = ["SlotPlugin", "PluginLoader"]
