@@ -1,8 +1,22 @@
 """Tests for Slot 6 legacy compatibility layer."""
 
 import json
+import os
 import pytest
 from collections.abc import Mapping
+
+
+def _env_truthy(name: str) -> bool:
+    """Check if environment variable is set to a truthy value."""
+    v = os.getenv(name, "")
+    return v.lower() in {"1", "true", "yes", "on"}
+
+
+# Skip all legacy tests if legacy imports are blocked
+pytestmark = pytest.mark.skipif(
+    _env_truthy("NOVA_BLOCK_LEGACY_SLOT6"),
+    reason="Legacy Slot6 API blocked by NOVA_BLOCK_LEGACY_SLOT6"
+)
 
 
 def test_profile_wrapper_is_mapping_and_attr_access():

@@ -10,6 +10,7 @@ def _get_slot6_metrics() -> Dict[str, Any]:
         from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import get_legacy_usage_count
         legacy_calls = get_legacy_usage_count()
     except (ImportError, AttributeError):
+        # Legacy module blocked or not available
         legacy_calls = None
     
     # TODO: Add last decision metrics when implemented
