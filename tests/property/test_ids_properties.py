@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given, strategies as st, settings, HealthCheck
 from services.ids.core import InterpretiveDriftSynthesizer
 
 
 @pytest.mark.property
 @given(st.lists(st.floats(min_value=-10, max_value=10), min_size=2, max_size=100))
+@settings(suppress_health_check=[HealthCheck.too_slow])
 def test_stability_range(vector):
     """Test stability always returns values between 0 and 1"""
     ids = InterpretiveDriftSynthesizer()
