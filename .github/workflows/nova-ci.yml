@@ -12,6 +12,14 @@ on:
 jobs:
   validate-architecture:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: "standard"
+            env: {}
+          - name: "legacy-blocked"
+            env:
+              NOVA_BLOCK_LEGACY_SLOT6: "1"
 
     steps:
     - name: Checkout NOVA Architecture
@@ -27,11 +35,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest markdown pyyaml
         pip install -r requirements.txt
+      env: ${{ matrix.env }}
 
     
 
     - name: Run tests
       run: pytest -q
+      env: ${{ matrix.env }}
     - name: Validate Slot Structure
       run: |
         set -e
@@ -56,26 +66,52 @@ jobs:
         echo "print('✅ All 10 slots present')" >> ci_validate_slots.py
         python ci_validate_slots.py
 
-    - name: Test Slot 6 Enhancement
+    - name: Test Slot 6 New API
       run: |
         set -e
-          echo "🧪 Testing Slot 6 v7.4.1 adaptive synthesis engine..."
-        if [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
-          echo "✅ Slot 6 implementation found"
-          echo "import sys, os" > ci_test_slot6.py
-          echo "sys.path.insert(0, os.path.abspath('slots'))" >> ci_test_slot6.py
-          echo "try:" >> ci_test_slot6.py
-          echo "    from slot06_cultural_synthesis.multicultural_truth_synthesis import AdaptiveSynthesisEngine, MulticulturalTruthSynthesisAdapter" >> ci_test_slot6.py
-          echo "    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())" >> ci_test_slot6.py
-          echo "    profile = engine.analyze_cultural_context('TestInstitution', {'region':'EU'})" >> ci_test_slot6.py
-          echo "    print(f'✅ Slot 6 v7.4.1 test passed: effectiveness={profile.adaptation_effectiveness:.3f}')" >> ci_test_slot6.py
-          echo "except Exception as e:" >> ci_test_slot6.py
-          echo "    print(f'❌ Slot 6 test failed: {e}')" >> ci_test_slot6.py
-          echo "    exit(1)" >> ci_test_slot6.py
-          python ci_test_slot6.py
+        echo "🧪 Testing Slot 6 new CulturalSynthesisEngine API..."
+        echo "import sys, os" > ci_test_slot6_new.py
+        echo "sys.path.insert(0, os.path.abspath('slots'))" >> ci_test_slot6_new.py
+        echo "try:" >> ci_test_slot6_new.py
+        echo "    from slot06_cultural_synthesis.engine import CulturalSynthesisEngine" >> ci_test_slot6_new.py
+        echo "    from slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter" >> ci_test_slot6_new.py
+        echo "    engine = CulturalSynthesisEngine()" >> ci_test_slot6_new.py
+        echo "    adapter = CulturalSynthesisAdapter(engine)" >> ci_test_slot6_new.py
+        echo "    profile = {'institution': 'TestInstitution', 'region': 'EU'}" >> ci_test_slot6_new.py
+        echo "    metrics = engine.synthesize(profile)" >> ci_test_slot6_new.py
+        echo "    # Validate contract" >> ci_test_slot6_new.py
+        echo "    assert 0.0 <= metrics.get('principle_preservation_score', 0) <= 1.0" >> ci_test_slot6_new.py
+        echo "    assert 0.0 <= metrics.get('residual_risk', 1) <= 1.0" >> ci_test_slot6_new.py
+        echo "    assert metrics['residual_risk'] < 0.7, f'Risk too high: {metrics[\"residual_risk\"]}'" >> ci_test_slot6_new.py
+        echo "    print(f'✅ Slot 6 new API test passed: pps={metrics.get(\"principle_preservation_score\", 0):.3f}, risk={metrics.get(\"residual_risk\", 1):.3f}')" >> ci_test_slot6_new.py
+        echo "except Exception as e:" >> ci_test_slot6_new.py
+        echo "    print(f'❌ Slot 6 new API test failed: {e}')" >> ci_test_slot6_new.py
+        echo "    exit(1)" >> ci_test_slot6_new.py
+        python ci_test_slot6_new.py
+
+    - name: Test Slot 6 Legacy Compatibility
+      run: |
+        set -e
+        if [ "${{ matrix.env.NOVA_BLOCK_LEGACY_SLOT6 }}" == "1" ]; then
+          echo "🚫 Skipping legacy test - legacy imports blocked in this job"
+        elif [ -f "slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py" ]; then
+          echo "🔄 Testing Slot 6 legacy compatibility (for CI transition)..."
+          echo "✅ Slot 6 legacy implementation found"
+          echo "import sys, os" > ci_test_slot6_legacy.py
+          echo "sys.path.insert(0, os.path.abspath('slots'))" >> ci_test_slot6_legacy.py
+          echo "try:" >> ci_test_slot6_legacy.py
+          echo "    from slot06_cultural_synthesis.multicultural_truth_synthesis import AdaptiveSynthesisEngine, MulticulturalTruthSynthesisAdapter" >> ci_test_slot6_legacy.py
+          echo "    engine = MulticulturalTruthSynthesisAdapter(AdaptiveSynthesisEngine())" >> ci_test_slot6_legacy.py
+          echo "    profile = engine.analyze_cultural_context('TestInstitution', {'region':'EU'})" >> ci_test_slot6_legacy.py
+          echo "    print(f'✅ Slot 6 legacy test passed: effectiveness={profile.adaptation_effectiveness:.3f}')" >> ci_test_slot6_legacy.py
+          echo "except Exception as e:" >> ci_test_slot6_legacy.py
+          echo "    print(f'❌ Slot 6 legacy test failed: {e}')" >> ci_test_slot6_legacy.py
+          echo "    exit(1)" >> ci_test_slot6_legacy.py
+          python ci_test_slot6_legacy.py
         else
-          echo "⚠️ Slot 6 implementation not found (documentation-only commit)"
+          echo "⚠️ Slot 6 legacy implementation not found (already migrated)"
         fi
+      env: ${{ matrix.env }}
 
     - name: Validate Enhancement Files
       run: |

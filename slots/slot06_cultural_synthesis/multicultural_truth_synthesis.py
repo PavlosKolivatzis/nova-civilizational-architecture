@@ -1,8 +1,22 @@
 from __future__ import annotations
+
+# --- legacy import hard gate ---
+import os
+
+def _env_truthy(name: str) -> bool:
+    v = os.getenv(name, "")
+    return v.lower() in {"1", "true", "yes", "on"}
+
+if _env_truthy("NOVA_BLOCK_LEGACY_SLOT6"):
+    raise ImportError(
+        "Legacy Slot6 API is disabled (NOVA_BLOCK_LEGACY_SLOT6). "
+        "Use engine.CulturalSynthesisEngine and adapter.CulturalSynthesisAdapter."
+    )
+# --- rest of file (aliases, ProfileWrapper, etc.) ---
+
 from collections.abc import Mapping
 from typing import Iterator, Any, Dict, Optional
 from warnings import warn
-import os
 
 from .engine import CulturalSynthesisEngine, CulturalProfile
 from .adapter import CulturalSynthesisAdapter
@@ -18,13 +32,6 @@ def _increment_legacy_usage():
 def get_legacy_usage_count():
     """Get current legacy usage count."""
     return _LEGACY_CALL_COUNT
-
-# Fail fast if legacy is blocked
-if os.getenv("NOVA_BLOCK_LEGACY_SLOT6") == "1":
-    raise ImportError(
-        "Legacy Slot6 multicultural_truth_synthesis is blocked. "
-        "Use engine.CulturalSynthesisEngine and adapter.CulturalSynthesisAdapter instead."
-    )
 
 warn(
     "Slot6: 'multicultural_truth_synthesis' is deprecated; use 'engine.CulturalSynthesisEngine' and 'adapter.CulturalSynthesisAdapter' instead.",

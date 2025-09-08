@@ -64,9 +64,14 @@ class CulturalSynthesisAdapter:
         data: CulturalProfile = dict(ctx or {})
         data["institution"] = institution_name
         try:
-            return self.engine.synthesize(data)
+            result = self.engine.synthesize(data)
+            # Ensure institution is included in response
+            result["institution"] = institution_name
+            return result
         except Exception:
-            return CulturalProfile()
+            profile = CulturalProfile()
+            profile["institution"] = institution_name
+            return profile
 
     def validate_cultural_deployment(
         self,

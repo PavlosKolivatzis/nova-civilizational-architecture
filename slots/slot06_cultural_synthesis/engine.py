@@ -149,6 +149,9 @@ class CulturalSynthesisEngine:
             "principle_preservation": principle,
             "principle_preservation_score": principle,
             "residual_risk": risk,
+            "policy_actions": [],  # CULTURAL_PROFILE@1 contract requirement
+            "forbidden_hits": [],  # CULTURAL_PROFILE@1 contract requirement  
+            "consent_required": False,  # CULTURAL_PROFILE@1 contract requirement
         }
 
     # ------------------------------------------------------------------
@@ -189,8 +192,14 @@ class CulturalSynthesisEngine:
         except Exception:
             risk = 0.0
         tri_gap = max(0.0, self.config.tri_min_score - tri_score)
-        threat_level = 0.5 * risk + 0.5 * tri_gap
-        return self._clamp(threat_level)
+        
+        # For very low TRI scores, ensure high residual risk
+        if tri_score < 0.3:
+            base_risk = max(0.6, 0.5 * risk + 0.5 * tri_gap)
+        else:
+            base_risk = 0.5 * risk + 0.5 * tri_gap
+            
+        return self._clamp(base_risk)
 
     @staticmethod
     def _clamp(value: float) -> float:
