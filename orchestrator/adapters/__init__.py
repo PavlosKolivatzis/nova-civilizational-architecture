@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 """Adapter registry for contract-based routing.
 
-This module exposes all slot adapters so that they can be imported from a
-single location.  The adapters are lightweight wrappers around each slot's
-core logic and provide a consistent interface for the orchestrator and tests.
+This module exposes all slot adapters from a single location. Adapters are
+lightweight wrappers around each slot’s core logic and provide a consistent
+interface for the orchestrator and tests.
 """
 
 from .slot1_truth_anchor import Slot1TruthAnchorAdapter
