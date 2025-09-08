@@ -107,38 +107,47 @@ class CulturalSynthesisEngine:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
-    def synthesize(self, profile: CulturalProfile) -> Dict[str, float]:
-        """Return synthesis metrics for ``profile``.
+    def synthesize(
+        self,
+        profile: CulturalProfile | str | Mapping[str, Any] | None = None,
+        **overrides: Any,
+    ) -> Dict[str, Any]:
+        """Return synthesis metrics for ``profile`` or ``content``.
 
-        Parameters
-        ----------
-        profile:
-            Cultural characteristics and analysis context.
-
-        Returns
-        -------
-        dict
-            Mapping containing ``adaptation_effectiveness``,
-            ``principle_preservation`` and ``residual_risk``.
+        The method accepts a flexible mapping or content string plus keyword
+        overrides.  Unknown values are ignored, allowing callers to pass
+        additional context without affecting the core formulas.
         """
 
+        data: Dict[str, Any]
+        if profile is None:
+            data = {}
+        elif isinstance(profile, Mapping):
+            data = dict(profile)
+        else:
+            data = {"content": str(profile)}
+
+        data.update(overrides)
+
         adaptation = self._score_adaptation(
-            profile.get("clarity", 0.5),
-            profile.get("foresight", 0.5),
-            profile.get("empiricism", 0.5),
+            data.get("clarity", 0.5),
+            data.get("foresight", 0.5),
+            data.get("empiricism", 0.5),
         )
         principle = self._principle_preservation(
-            profile.get("anchor_confidence", 1.0),
-            profile.get("tri_score", 1.0),
-            profile.get("ideology_push", False),
+            data.get("anchor_confidence", 1.0),
+            data.get("tri_score", 1.0),
+            data.get("ideology_push", False),
         )
         risk = self._residual_risk(
-            profile.get("layer_scores", {}),
-            profile.get("tri_score", 1.0),
+            data.get("layer_scores", {}),
+            data.get("tri_score", 1.0),
         )
+
         return {
             "adaptation_effectiveness": adaptation,
             "principle_preservation": principle,
+            "principle_preservation_score": principle,
             "residual_risk": risk,
         }
 
