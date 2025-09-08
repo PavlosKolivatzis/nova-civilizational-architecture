@@ -20,6 +20,7 @@ class _CompatResult:
     """Legacy attribute-style view over synthesis metrics."""
 
     adaptation_effectiveness: float
+    principle_preservation: float
     principle_preservation_score: float
     residual_risk: float
     policy_actions: List[str]
@@ -31,6 +32,7 @@ class _CompatResult:
     def from_metrics(cls, m: Dict[str, Any]) -> "_CompatResult":
         return cls(
             float(m.get("adaptation_effectiveness", 0.0)),
+            float(m.get("principle_preservation", m.get("principle_preservation_score", 0.0))),
             float(m.get("principle_preservation_score", 0.0)),
             float(m.get("residual_risk", 1.0)),
             list(m.get("policy_actions", [])),
@@ -59,7 +61,7 @@ def _compat_analyze_and_simulate(
 
     content = payload.get("content") if isinstance(payload, dict) else str(payload)
     tri_score = float(_get(slot2_result, "tri_score", 0.5))
-    layer_scores = _get(slot2_result, "layer_scores", {}) or []
+    layer_scores = _get(slot2_result, "layer_scores", {}) or {}
     forbidden_hits = (
         _get(slot2_result, "forbidden_hits", None)
         or _get(slot2_result, "forbidden", [])
