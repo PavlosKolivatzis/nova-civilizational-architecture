@@ -112,6 +112,8 @@ class CulturalSynthesisAdapter:
                 metrics.get("principle_preservation", 0.0),
             )
         )
+        # Clamp to valid bounds (safety measure)
+        pps = max(0.0, min(1.0, pps))
         residual = float(metrics.get("residual_risk", 1.0))
         actions: List[str] = list(metrics.get("policy_actions", []))
         forbidden_hits: List[str] = list(
@@ -148,6 +150,22 @@ class CulturalSynthesisAdapter:
             result = DeploymentGuardrailResult.APPROVED
             violations = []
 
+        # Record decision metrics
+        try:
+            from orchestrator.metrics import get_slot6_metrics
+            metrics_collector = get_slot6_metrics()
+            metrics_collector.record_decision(
+                result_name=result.name if hasattr(result, 'name') else str(result),
+                pps=pps,
+                residual_risk=residual,
+                institution_type=institution_type,
+                tri_score=s2["tri_score"],
+                violations=len(violations)
+            )
+        except ImportError:
+            # Metrics collection is optional
+            pass
+        
         return GuardrailValidationResult(
             result=result,
             compliance_score=pps,

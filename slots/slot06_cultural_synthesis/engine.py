@@ -180,7 +180,10 @@ class CulturalSynthesisEngine:
 
         penalty = self.config.ideology_penalty if ideology_push else 0.0
         base_penalty = 1.0 - self._clamp(anchor_confidence)
-        tri_score = max(0.0, tri_score)
+        try:
+            tri_score = max(0.0, float(tri_score))
+        except (TypeError, ValueError):
+            tri_score = 0.5  # Safe default
         penalty += base_penalty / (tri_score + 0.1)
         return self._clamp(1.0 - penalty)
 
@@ -191,6 +194,12 @@ class CulturalSynthesisEngine:
             risk = max(layer_scores.values()) if layer_scores else 0.0
         except Exception:
             risk = 0.0
+        
+        try:
+            tri_score = float(tri_score)
+        except (TypeError, ValueError):
+            tri_score = 0.5  # Safe default
+            
         tri_gap = max(0.0, self.config.tri_min_score - tri_score)
         
         # For very low TRI scores, ensure high residual risk
@@ -203,4 +212,8 @@ class CulturalSynthesisEngine:
 
     @staticmethod
     def _clamp(value: float) -> float:
-        return max(0.0, min(1.0, float(value)))
+        try:
+            return max(0.0, min(1.0, float(value)))
+        except (TypeError, ValueError):
+            # If conversion fails, return safe default
+            return 0.5

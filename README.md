@@ -105,7 +105,20 @@ python -c "from slots.slot09_distortion_protection.hybrid_api import create_hybr
 
 ## 🔧 Recent Enhancements
 
-### ✨ Latest Updates (2025-09-06)
+### ✨ Latest Updates (2025-09-08)
+- **🎯 Slot 6 Production Enhancement**: Complete legacy retirement strategy with environment gates
+- **🧪 Contract Testing**: Schema freeze tests prevent breaking changes to CULTURAL_PROFILE@1
+- **📊 Observability**: Decision metrics and legacy usage tracking via `/health/config`
+- **🚀 CI/CD Matrix**: Dual testing (standard + legacy-blocked) for controlled migration
+
+### Slot 6 API Deprecation Timeline
+- **Current (v7.4.1)**: Legacy `multicultural_truth_synthesis` available with warnings; `NOVA_BLOCK_LEGACY_SLOT6` enables hard block
+- **Next Release**: CI defaults to `NOVA_BLOCK_LEGACY_SLOT6=1`; legacy compatibility job maintained
+- **Following Release**: Legacy module removed entirely; clean new API only
+
+**Migration Path**: Use `engine.CulturalSynthesisEngine` and `adapter.CulturalSynthesisAdapter` instead of legacy classes.
+
+### ✨ Previous Updates (2025-09-06)
 - **🎉 Resolved GitHub conflicts**: Successfully merged enhanced Slot 9 features
 - **🔄 Pydantic v2 Migration**: Complete compatibility upgrade for modern CI/CD
 - **🌟 Enhanced Hybrid API**: Added hash chain audit trails, deployment feedback system

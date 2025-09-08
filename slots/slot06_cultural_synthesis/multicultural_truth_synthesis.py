@@ -28,6 +28,14 @@ def _increment_legacy_usage():
     """Track legacy usage for retirement metrics."""
     global _LEGACY_CALL_COUNT
     _LEGACY_CALL_COUNT += 1
+    
+    # Also record in centralized metrics if available
+    try:
+        from orchestrator.metrics import get_slot6_metrics
+        get_slot6_metrics().record_legacy_call()
+    except ImportError:
+        # Centralized metrics not available, use local counter only
+        pass
 
 def get_legacy_usage_count():
     """Get current legacy usage count."""

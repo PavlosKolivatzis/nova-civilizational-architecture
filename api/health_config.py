@@ -6,21 +6,27 @@ router = APIRouter()
 
 def _get_slot6_metrics() -> Dict[str, Any]:
     """Get Slot 6 observability metrics."""
+    # Try centralized metrics first
     try:
-        from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import get_legacy_usage_count
-        legacy_calls = get_legacy_usage_count()
-    except (ImportError, AttributeError):
-        # Legacy module blocked or not available
-        legacy_calls = None
-    
-    # TODO: Add last decision metrics when implemented
-    return {
-        "version": "v7.4.1",
-        "legacy_calls_total": legacy_calls,
-        "last_decision": None,  # Placeholder for future implementation
-        "p95_residual_risk": None,  # Placeholder for future implementation
-        "decisions_total": None,  # Placeholder for future implementation
-    }
+        from orchestrator.metrics import get_slot6_metrics
+        return get_slot6_metrics().get_metrics()
+    except ImportError:
+        # Fall back to legacy-only metrics
+        try:
+            from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import get_legacy_usage_count
+            legacy_calls = get_legacy_usage_count()
+        except (ImportError, AttributeError):
+            # Legacy module blocked or not available
+            legacy_calls = None
+        
+        return {
+            "version": "v7.4.1",
+            "legacy_calls_total": legacy_calls,
+            "last_decision": None,
+            "p95_residual_risk": None,
+            "decisions_total": None,
+            "decisions": {"approved": None, "transform": None, "blocked": None}
+        }
 
 @router.get("/health/config", tags=["health"])
 async def health_config() -> Dict[str, Any]:
