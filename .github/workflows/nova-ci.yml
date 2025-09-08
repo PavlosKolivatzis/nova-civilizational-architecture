@@ -15,11 +15,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: "standard"
-            env: {}
-          - name: "legacy-blocked"
+          - name: "standard-blocked"
             env:
               NOVA_BLOCK_LEGACY_SLOT6: "1"
+          - name: "legacy-compat"
+            env: {}
 
     steps:
     - name: Checkout NOVA Architecture
