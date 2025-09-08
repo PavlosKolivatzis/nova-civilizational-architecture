@@ -18,10 +18,22 @@ pytestmark = pytest.mark.skipif(
     reason="Legacy Slot6 API blocked by NOVA_BLOCK_LEGACY_SLOT6"
 )
 
+# Conditional imports to avoid ImportError during test collection
+if not _env_truthy("NOVA_BLOCK_LEGACY_SLOT6"):
+    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+        ProfileWrapper,
+        AdaptiveSynthesisEngine, 
+        MulticulturalTruthSynthesisAdapter
+    )
+else:
+    # Define stubs for when legacy is blocked
+    ProfileWrapper = None
+    AdaptiveSynthesisEngine = None
+    MulticulturalTruthSynthesisAdapter = None
+
 
 def test_profile_wrapper_is_mapping_and_attr_access():
     """Test ProfileWrapper behaves as both Mapping and supports attribute access."""
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import ProfileWrapper
     
     # Test with CI-expected data
     data = {
@@ -60,7 +72,6 @@ def test_profile_wrapper_is_mapping_and_attr_access():
 
 def test_profile_wrapper_conservative_defaults():
     """Test ProfileWrapper only adds defaults when missing."""
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import ProfileWrapper
     
     # Test with missing keys - should get conservative defaults
     empty_data = {"custom": "value"}
@@ -86,10 +97,6 @@ def test_profile_wrapper_conservative_defaults():
 
 def test_legacy_module_returns_wrapper():
     """Test legacy module returns ProfileWrapper with both access patterns."""
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
-        AdaptiveSynthesisEngine, 
-        MulticulturalTruthSynthesisAdapter
-    )
     
     engine = AdaptiveSynthesisEngine()
     adapter = MulticulturalTruthSynthesisAdapter(engine)
@@ -120,7 +127,9 @@ def test_legacy_deprecation_warning():
     
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import AdaptiveSynthesisEngine
+        # Re-import the module to trigger deprecation warning
+        import importlib
+        importlib.import_module(module_name)
         
         # Should have at least one deprecation warning
         assert len(w) >= 1
@@ -130,7 +139,6 @@ def test_legacy_deprecation_warning():
 
 def test_profile_wrapper_attribute_error():
     """Test ProfileWrapper raises AttributeError for missing attributes."""
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import ProfileWrapper
     
     wrapper = ProfileWrapper({"existing": "value"})
     
