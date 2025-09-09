@@ -77,3 +77,66 @@ jobs:
           assert "router_thresholds" in data
           assert "circuit_breaker" in data
           PY
+
+      - name: Assert provenance for Slot 3 & Slot 6
+        run: |
+          if ${{ matrix.serverless }}; then export VERCEL=1; fi
+          export NOVA_HOT_RELOAD=false
+          python - <<'PY'
+          import json, sys
+          from fastapi.testclient import TestClient
+
+          # Import the app the same way your smoke test does
+          from orchestrator.app import app
+
+          c = TestClient(app)
+          r = c.get("/health")
+          assert r.status_code == 200, r.text
+          data = r.json()
+
+          def walk(obj, pred):
+              """DFS search for a dict that satisfies pred."""
+              if isinstance(obj, dict):
+                  if pred(obj):
+                      return obj
+                  for v in obj.values():
+                      hit = walk(v, pred)
+                      if hit is not None:
+                          return hit
+              elif isinstance(obj, list):
+                  for v in obj:
+                      hit = walk(v, pred)
+                      if hit is not None:
+                          return hit
+              return None
+
+          def has_provenance(d):
+              return isinstance(d, dict) and ("schema_id" in d) and ("schema_version" in d)
+
+          # Heuristics to locate Slot 3 and Slot 6 health blocks within /health
+          # (We keep this flexible across environments.)
+          slot3_hint_keys = {"engine_status", "escalation_status", "basic_analysis", "emotional_tone"}
+          slot6_hint_keys = {"culture_id", "principle_preservation_score", "residual_risk"}
+
+          def looks_like_slot3(d):
+              return has_provenance(d) and any(k in d for k in slot3_hint_keys)
+
+          def looks_like_slot6(d):
+              return has_provenance(d) and any(k in d for k in slot6_hint_keys)
+
+          s3 = walk(data, looks_like_slot3)
+          s6 = walk(data, looks_like_slot6)
+
+          if not s3:
+              print("DEBUG /health (truncated):")
+              print(json.dumps(data, indent=2)[:2000])
+              sys.exit("FAIL: could not find Slot 3 provenance (schema_id & schema_version) in /health payload")
+
+          if not s6:
+              print("DEBUG /health (truncated):")
+              print(json.dumps(data, indent=2)[:2000])
+              sys.exit("FAIL: could not find Slot 6 provenance (schema_id & schema_version) in /health payload")
+
+          print("OK: Slot 3 provenance →", s3["schema_id"], s3["schema_version"])
+          print("OK: Slot 6 provenance →", s6["schema_id"], s6["schema_version"])
+          PY
