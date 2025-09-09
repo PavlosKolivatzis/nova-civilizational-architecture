@@ -25,7 +25,16 @@ def validate_metrics(metrics: dict) -> list[str]:
         if not (0.0 <= c <= 1.0):
             errors.append("confidence_out_of_bounds")
 
-    # Keep space for future checks (score bounds, explain fields, etc.)
+    # Check score bounds
+    score = metrics.get("score")
+    if score is not None:
+        try:
+            s = float(score)
+            if not (-1.0 <= s <= 1.0):
+                errors.append("score_out_of_bounds")
+        except Exception:
+            errors.append("score_out_of_bounds")
+    
     return errors
 from typing import Dict
 
