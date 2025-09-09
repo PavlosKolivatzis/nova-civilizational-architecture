@@ -15,7 +15,10 @@ def health() -> Dict[str, Any]:
         base_health = {
             "self_check": "ok",
             "engine_status": "operational",
-            "version": getattr(emotional_matrix_engine, "EmotionalMatrixEngine", {}).get("__version__", "0.3.0"),
+            # Use getattr directly on the class object instead of treating it like a dict
+            "version": getattr(
+                emotional_matrix_engine.EmotionalMatrixEngine, "__version__", "0.3.0"
+            ),
             "capabilities": ["emotional_analysis", "escalation", "advanced_safety"],
             "timestamp": time.time()
         }
