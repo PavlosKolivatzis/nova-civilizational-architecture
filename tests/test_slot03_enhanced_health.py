@@ -21,9 +21,9 @@ class TestSlot3HealthMonitoring:
         mock_engine_class.return_value = mock_engine
         
         # Mock all the enhanced components to be available
-        with patch('slots.slot03_emotional_matrix.health.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.health.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.health.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Setup escalation manager mock
             mock_escalation_instance = Mock()
@@ -72,9 +72,9 @@ class TestSlot3HealthMonitoring:
         mock_engine_class.return_value = mock_engine
         
         # Mock escalation manager to fail
-        with patch('slots.slot03_emotional_matrix.health.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.health.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.health.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Make escalation manager fail
             mock_escalation.side_effect = Exception("Escalation manager failed")
@@ -155,9 +155,9 @@ class TestDetailedMetrics:
 
     def test_get_detailed_metrics_success(self):
         """Test successful detailed metrics collection."""
-        with patch('slots.slot03_emotional_matrix.health.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.health.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.health.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Setup mocks
             mock_escalation_instance = Mock()
@@ -208,9 +208,9 @@ class TestDetailedMetrics:
 
     def test_get_detailed_metrics_with_failures(self):
         """Test detailed metrics collection with component failures."""
-        with patch('slots.slot03_emotional_matrix.health.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.health.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.health.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Make escalation manager fail
             mock_escalation.side_effect = Exception("Escalation failed")
@@ -231,7 +231,7 @@ class TestDetailedMetrics:
 
     def test_get_detailed_metrics_critical_failure(self):
         """Test detailed metrics with critical failure."""
-        with patch('slots.slot03_emotional_matrix.health.EmotionalEscalationManager') as mock_escalation:
+        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation:
             # Make the entire function fail
             mock_escalation.side_effect = Exception("Critical failure")
             
