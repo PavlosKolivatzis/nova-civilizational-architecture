@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
-      # Gate Slot 3 schema updates (extend the list below for other schemas)
+      # Gate Slot 3 & Slot 6 schema updates (extend the list below for other schemas)
       - name: Guard schema changes unless explicitly tagged
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
@@ -19,6 +19,7 @@ jobs:
           set -e
           CHANGED=$(git diff --name-only origin/$BASE...HEAD -- \
             contracts/slot3_health_schema.json \
+            contracts/slot6_cultural_profile_schema.json \
           || true)
 
           if [ -z "$CHANGED" ]; then
