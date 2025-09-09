@@ -6,6 +6,27 @@ should avoid raising exceptions.
 """
 from __future__ import annotations
 
+ALLOWED_TONES = {"positive", "negative", "neutral", "unknown", "joy", "sadness", "anger", "fear", "surprise", "disgust"}
+
+def validate_metrics(metrics: dict) -> list[str]:
+    """Validate metrics and return list of error codes."""
+    errors: list[str] = []
+
+    tone = metrics.get("emotional_tone")
+    if tone not in ALLOWED_TONES:
+        errors.append("invalid_tone")
+
+    conf = metrics.get("confidence", 0.0)
+    try:
+        c = float(conf)
+    except Exception:
+        errors.append("confidence_out_of_bounds")
+    else:
+        if not (0.0 <= c <= 1.0):
+            errors.append("confidence_out_of_bounds")
+
+    # Keep space for future checks (score bounds, explain fields, etc.)
+    return errors
 from typing import Dict
 
 _ALLOWED_TONES = {"positive", "negative", "neutral", "unknown"}
