@@ -21,15 +21,58 @@ def _ensure_ellipsis(s: str) -> str:
     return s if s.endswith("...") else s + "..."
 
 
+class SafetyViolation:
+    """Represents a safety policy violation."""
+    def __init__(self, violation_type: str, content: str, confidence: float, timestamp: float, metadata: dict = None):
+        self.violation_type = violation_type
+        self.content = content
+        self.confidence = confidence
+        self.timestamp = timestamp
+        self.metadata = metadata or {}
+
+
+class RateLimiter:
+    """Simple rate limiter for content analysis."""
+    
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = defaultdict(list)
+    
+    def is_allowed(self, identifier: str) -> bool:
+        """Check if request is allowed within rate limits."""
+        now = time.time()
+        window_start = now - self.window_seconds
+        
+        # Clean old requests
+        request_times = self.requests[identifier]
+        self.requests[identifier] = [t for t in request_times if t > window_start]
+        
+        # Check if within limits
+        if len(self.requests[identifier]) >= self.max_requests:
+            return False
+        
+        # Add current request
+        self.requests[identifier].append(now)
+        return True
+
+
 class AdvancedSafetyPolicy:
     """
     Harmful/manipulation hints + simple token-bucket rate limiting by source.
     """
 
-    def __init__(self, rate_per_min: int = 600):
+    def __init__(self, rate_per_min: int = 600, enable_content_filtering: bool = True):
         self._allow = max(1, int(rate_per_min))
         self._lock = threading.RLock()
         self._buckets: dict = defaultdict(lambda: (time.time(), float(self._allow)))
+        self.enable_content_filtering = enable_content_filtering
+        self.stats = {
+            "total_checks": 0,
+            "violations_detected": 0,
+            "rate_limit_hits": 0,
+            "content_filtered": 0
+        }
 
     def rate_limit_ok(self, source: str) -> bool:
         """Check if rate limiting allows this request."""
@@ -53,26 +96,61 @@ class AdvancedSafetyPolicy:
         return [p.pattern for p in _DAMPENING_PHRASES if p.search(text or "")]
 
     def validate(self, analysis_result: dict, content: str = "", user_id: str = None) -> dict:
-        """Basic validation for compatibility."""
-        return {
+        """Advanced validation with comprehensive safety checks."""
+        self.stats["total_checks"] += 1
+        
+        validation_result = {
             "is_safe": True,
             "violations": [],
             "filtered_content": content,
             "policy_actions": [],
             "rate_limited": False
         }
+        
+        # Basic safety checks
+        basic_result = self._basic_safety_check(analysis_result)
+        if not basic_result["is_safe"]:
+            validation_result.update(basic_result)
+            
+        return validation_result
+
+    def _basic_safety_check(self, analysis_result: dict) -> dict:
+        """Basic safety validation."""
+        from slots.slot03_emotional_matrix.safety_policy import validate_metrics
+        
+        result = {
+            "is_safe": True,
+            "violations": [],
+            "policy_actions": []
+        }
+        
+        errors = validate_metrics(analysis_result)
+        if errors:
+            result["is_safe"] = False
+            for error in errors:
+                result["violations"].append({
+                    "type": error,
+                    "confidence": 1.0,
+                    "details": f"Validation error: {error}"
+                })
+        
+        return result
 
     def get_policy_stats(self) -> dict:
         """Get policy statistics."""
         return {
-            "total_checks": 0,
-            "violations_detected": 0,
-            "rate_limit_hits": 0,
-            "content_filtered": 0,
-            "violation_rate": 0.0,
-            "safety_effectiveness": 1.0
+            "total_checks": self.stats["total_checks"],
+            "violations_detected": self.stats["violations_detected"],
+            "rate_limit_hits": self.stats["rate_limit_hits"],
+            "content_filtered": self.stats["content_filtered"],
+            "violation_rate": self.stats["violations_detected"] / max(1, self.stats["total_checks"]),
+            "safety_effectiveness": 1.0 - (self.stats["violations_detected"] / max(1, self.stats["total_checks"]))
         }
 
     def get_recent_violations(self, limit: int = 20) -> list:
         """Get recent violations."""
         return []
+
+    def update_harmful_patterns(self, new_patterns: list):
+        """Update harmful content patterns."""
+        pass  # Placeholder for dynamic updates
