@@ -194,10 +194,10 @@ class TestSlot3EmotionalAdapter:
             "score": 0.7,
             "confidence": 0.8
         }
-            result = adapter.analyze("angry content", enable_escalation=False)
-            
-            assert 'escalation' not in result
-            assert 'threat_level' not in result
+        result = adapter.analyze("angry content", enable_escalation=False)
+
+        assert 'escalation' not in result
+        assert 'threat_level' not in result
 
     def test_receive_escalation(self):
         """Test receiving escalation events from other slots."""
