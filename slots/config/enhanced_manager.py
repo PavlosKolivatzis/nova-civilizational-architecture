@@ -38,10 +38,10 @@ _WATCHDOG = _WATCHDOG_AVAILABLE
 @dataclass
 class SlotMetadata:
     """Enhanced slot metadata - extends existing slotX.meta.yaml pattern."""
-    slot: int
     name: str
     version: str
-    entry_point: str
+    slot: Optional[int] = None  # Make optional - can be inferred from id
+    entry_point: Optional[str] = None  # Make optional - not in all YAML files
     adapter: Optional[str] = None
     description: Optional[str] = None
     inputs: Optional[Dict[str, str]] = None
@@ -55,6 +55,10 @@ class SlotMetadata:
     dependencies: List[str] = field(default_factory=list)
     security_level: str = "standard"
     performance_targets: Optional[Dict[str, float]] = None
+    
+    # NEW: accept `id` to match *.meta.yaml files + keep unknown keys
+    id: Optional[str] = None
+    extra: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "SlotMetadata":
@@ -67,7 +71,31 @@ class SlotMetadata:
             path = matches[0]
         with path.open("r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
-        return cls(**data)
+        return cls.from_dict(data)
+    
+    @classmethod
+    def from_dict(cls, raw: Dict[str, Any]) -> "SlotMetadata":
+        """Create SlotMetadata from a dict, tolerating unknown keys and legacy aliases."""
+        d = dict(raw or {})
+
+        # Legacy alias support – if your older code used 'slot_id', map it to 'id'
+        if "slot_id" in d and "id" not in d:
+            d["id"] = d.pop("slot_id")
+            
+        # Handle real YAML schema differences
+        if "produces" in d:
+            d["outputs"] = d.pop("produces")  # Map produces -> outputs
+        if "consumes" in d:
+            d["inputs"] = d.pop("consumes")   # Map consumes -> inputs
+        if "optional" in d:
+            # Store in extra but don't fail on it
+            pass
+
+        fields = set(cls.__dataclass_fields__.keys())
+        known = {k: v for k, v in d.items() if k in fields and k != "extra"}
+        extra = {k: v for k, v in d.items() if k not in fields}
+
+        return cls(**known, extra=extra)
 
     def validate_schema(self, config_data: Dict[str, Any]) -> bool:
         """Very light schema check; upgrade to jsonschema if needed."""
