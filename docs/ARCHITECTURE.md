@@ -1,167 +1,93 @@
-# NOVA Architecture
-
-NOVA's civilizational system centers on an **Orchestrator** and **Slot Loader** that coordinate ten specialized slots. External interfaces like the test framework and WebSocket adapter feed requests into the orchestrator, while each slot contributes focused capabilities such as truth anchoring, cultural synthesis, and distortion protection.
-
-```mermaid
-graph LR
-  TF[Test Framework]
-  WS[WebSocket Interface]
-  SL[Slot Loader]
-  O[Orchestrator]
-
-  subgraph Slots
-    S1[Slot01 – Truth Anchor]
-    S2[Slot02 – ΔTHRESH Integration]
-    S3[Slot03 – Emotional Matrix]
-    S4[Slot04 – TRI Engine]
-    S5[Slot05 – Constellation]
-    S6[Slot06 – Cultural Synthesis]
-    S7[Slot07 – Production Controls]
-    S8[Slot08 – Memory Ethics]
-    S9[Slot09 – Distortion Protection]
-    S10[Slot10 – Civilizational Deployment]
-  end
-
-  SL --> S1
-  SL --> S2
-  SL --> S3
-  SL --> S4
-  SL --> S5
-  SL --> S6
-  SL --> S7
-  SL --> S8
-  SL --> S9
-  SL --> S10
-
-  O --> S1
-  O --> S2
-  O --> S3
-  O --> S4
-  O --> S5
-  O --> S6
-  O --> S7
-  O --> S8
-  O --> S9
-  O --> S10
-
-  TF -.-> SL
-  TF -.-> O
-  TF -.-> WS
-  WS -.-> O
-```
-
-codex/create-architecture-documentation
-### Evolvable system map
-
-The following map is generated from [`system_map.yaml`](system_map.yaml) in CI and
-uses contract IDs that link to machine-readable definitions under
-[`docs/contracts/`](contracts/).
+## High-Level Overview
+NOVA employs a 10-slot modular model coordinated by an Orchestrator. Slots expose adapters through a Plugin Loader/Registry, communicate via an in-process Event Bus, and surface health signals through per-slot `/health` endpoints.
 
 ```mermaid
 graph LR
-  subgraph "Data Plane"
-    S02["S02@2.3 ΔTHRESH"]
-    S04["S04@1.0 TRI Engine"]
-    S05["S05@1.0 Constellation"]
-    S06["S06@4.2 Cultural Synthesis"]
-    S09["S09@1.0 Distortion Protection"]
-    S10["S10@1.0 Deployment"]
-  end
+    subgraph Core
+        O[Orchestrator] --> B(Event Bus)
+        O --> L(Slot Loader/Adapters)
+    end
 
-  subgraph "Control Plane"
-    S03["S03@1.0 Emotional Matrix"]
-    S07["S07@1.0 Production Controls"]
-    O["O@1.0 Orchestrator"]
-  end
+    subgraph Slots
+        S1[Slot 1 – Truth Anchor]
+        S2[Slot 2 – ΔTHRESH]
+        S3[Slot 3 – Emotional Matrix]
+        S4[Slot 4 – TRI Engine]
+        S5[Slot 5 – Constellation]
+        S6[Slot 6 – Cultural Synthesis]
+        S7[Slot 7 – Production Controls]
+        S8[Slot 8 – Memory Ethics]
+        S9[Slot 9 – Distortion Protection]
+        S10[Slot 10 – Civilizational Deployment]
+    end
 
-  S01["S01@1.0 Truth Anchor"]
-  S08["S08@1.0 Memory Ethics"]
-
-  S02 -- "TRI_QUERY" --> S04
-  S04 -- "TRI_REPORT(v1)" --> S02
-  S02 -- "SIGNALS(v1) (opt)" --> S05
-  S04 -- "TRI_REPORT(v1)" --> S05
-  S05 -- "CONSTELLATION_STATE(v1)" --> S09
-  S02 -- "CONTENT_ANALYSIS(v1)" --> S06
-  S06 -- "PLAN_WITH_CONSENT(v1)" --> S10
-  S03 -- "EMO_FEEDBACK(v1)" --> S07
-  S07 -- "CONTROL_CMDS(v1)" --> O
-
-  S01 -. "truth_anchor" .-> S02
-  S01 -. "truth_anchor" .-> S06
-  S01 -. "truth_anchor" .-> S10
-  S08 -. "memory_ethics" .-> S06
-  S08 -. "memory_ethics" .-> S09
-  S08 -. "memory_ethics" .-> S10
+    L --> S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10
+    S6 <--> S2
+    S6 <--> S4
+    S6 <--> S10
+    S3 --> S2
+    S3 --> S4
+    S3 --> S6
+    S3 --> S7
 ```
 
-=======
-main
-## Slot summaries
-- **Slot 1 – Truth Anchor:** core reality lock with recovery protocols.
-- **Slot 2 – ΔTHRESH Integration Manager:** threshold detection and pattern analysis pipeline.
-- **Slot 3 – Emotional Matrix Safety:** distributed emotional computation with escalation management, advanced safety policies, and inter-slot threat routing. Produces: EMOTION_REPORT@1. Triggers: DELTA_THREAT@1, PRODUCTION_CONTROL@1, enriches TRI_REPORT@1.
-- **Slot 4 – TRI Engine:** advanced truth measurement with Kalman/Bayesian components.
-- **Slot 5 – Constellation Navigation:** phase-space navigation anchored for failover.
-- **Slot 6 – Cultural Synthesis:** multicultural adaptation engine with formal contract.
-- **Slot 7 – Production Controls:** system orchestration and cross-slot coordination.
-- **Slot 8 – Memory Ethics & Protection:** immutable memory safeguards and ethical boundaries.
-- **Slot 9 – Distortion Protection:** infrastructure-aware detection and defense.
-- **Slot 10 – Civilizational Deployment:** deployment layer wrapping Slot 6 guardrails.
+```mermaid
+flowchart LR
+    subgraph Orchestrator
+        P[PluginLoader] --> R[AdapterRegistry]
+        R -->|call()| Providers[(Slot Adapters)]
+        R -->|null| NullAdapters[(Null Adapters)]
+    end
 
-## Slot maturity
-| Slot | Name                         | Score | Level      |
-| ---: | ---------------------------- | ----: | ---------- |
-| 1    | Truth Anchor                 | 4     | Processual |
-| 2    | ΔTHRESH Integration Manager  | 4     | Processual |
-| 3    | Emotional Matrix Safety      | 4     | Processual |
-| 4    | TRI Engine                   | 3     | Structural |
-| 5    | Constellation Navigation     | 2     | Relational |
-| 6    | Adaptive Synthesis Engine    | 4     | Processual |
-| 7    | Production Controls          | 2     | Relational |
-| 8    | Memory Lock & IDS Protection | 3     | Structural |
-| 9    | Distortion Protection        | 4     | Processual |
-| 10   | Deployment & Modeling        | 3     | Structural |
+    subgraph Contracts
+        EM[EMOTION_REPORT@1]
+        DT[DELTA_THREAT@1]
+        TRI[TRI_REPORT@1]
+        PC[PRODUCTION_CONTROL@1]
+        CP[CULTURAL_PROFILE@1]
+    end
 
-## Slot 3 Health Monitoring
+    Providers --> EM & DT & TRI & PC & CP
+    NullAdapters --> EM & DT & TRI & PC & CP
+```
 
-Slot 3 provides comprehensive health status with the following fields:
+### Slot Summaries
+| Slot | Purpose | Key Modules | Health Endpoint |
+|------|---------|-------------|-----------------|
+|1 Truth Anchor|Cryptographic reality lock & recovery|`truth_anchor_engine.py`, `enhanced_truth_anchor_engine.py`|`slots/slot01_truth_anchor/health.py`|
+|2 ΔTHRESH|Pattern detection & manipulation mitigation|`core.py`, `models.py`, `patterns.py`|Plugin `health()`|
+|3 Emotional Matrix|Emotional analysis with escalation & advanced safety|`emotional_matrix_engine.py`, `escalation.py`, `advanced_policy.py`|`health/__init__.py`|
+|4 TRI Engine|Truth Resonance Index calculation|`engine.py`, `ids_integration.py`|Plugin `health()`|
+|5 Constellation|Navigation & stability index|`constellation_engine.py`, `health.py`|`health.py`|
+|6 Cultural Synthesis|Cultural profile synthesis (legacy+new engines)|`engine.py`, `multicultural_truth_synthesis.py`, `adapter.py`|Plugin `health()`|
+|7 Production Controls|Rate limit, circuit breaker, resource protection|`production_control_engine.py`, `health.py`|`health.py`|
+|8 Memory Ethics|IDS protection & lock guard|`ids_protection.py`, `lock_guard.py`|None (adapter metrics only)|
+|9 Distortion Protection|Hybrid IDS policy & audit|`hybrid_api.py`, `ids_policy.py`|None|
+|10 Civilizational Deployment|Deployment flow, MLS, models|`deployer.py`, `phase_space.py`, `mls.py`|None|
 
-**Core Status Fields:**
-- `self_check`: Overall system status ("ok" | "error")
-- `engine_status`: Base emotional analysis engine ("operational" | "failed") 
-- `basic_analysis`: Analysis functionality ("functional" | "degraded")
-- `escalation_status`: Threat escalation system ("operational" | "degraded")
-- `safety_policy_status`: Content safety validation ("operational" | "degraded")
-- `enhanced_engine_status`: Performance monitoring wrapper ("operational" | "degraded")
+### Inter-slot Contracts
+| Producer → Consumer | Contract | Payload Keys | Failure/Fallback |
+|---------------------|----------|--------------|-----------------|
+|Slot3 → Orchestrator/Slots|EMOTION_REPORT@1|`emotional_tone`, `score`, `confidence`, `safety`|NullAdapter returns neutral report|
+|Slot3 → Slot2|DELTA_THREAT@1|`threat_level`, `confidence`, `content_hash`|NullAdapter returns `{error: "no_provider_for_contract: DELTA_THREAT@1"}`|
+|Slot4 → Slot3|TRI_REPORT@1|`tri_score`, `variance`, `source_slot`|NullAdapter provides baseline TRI report|
+|Slot3 → Slot7|PRODUCTION_CONTROL@1|`action`, `rate_limited`, `reason_codes`|Fallback triggers local circuit breaker|
+|Slot6 → Orchestrator/Slots|CULTURAL_PROFILE@1|`culture_id`, `principle_preservation_score`, `residual_risk`|NullAdapter supplies default profile|
 
-**System Assessment:**
-- `overall_status`: System-wide health ("fully_operational" | "partially_operational" | "critical_failure")
-- `maturity_level`: Implementation completeness ("0/4_missing" to "4/4_processual")
-- `timestamp`: Health check execution time (Unix timestamp)
+### Feature Flags
+| Flag | Default | Effect | Risk |
+|------|--------|--------|------|
+|SLOT3_ESCALATION_ENABLED|True|Enable Slot‑3 escalation manager|False alarms if mis-tuned|
+|SLOT3_RATE_PER_MIN|600|Escalation rate limiter|Throttling legitimate alerts|
+|SLOT3_SWING_WINDOW|30|Swing detection window|Too small → noise; too big → delay|
+|SLOT3_SWING_DELTA|1.2|Swing threshold|Mis-sized sensitivity|
+|SLOT3_PREVIEW_MAXLEN|160|Escalation preview truncation|Information loss on context|
+|PRODUCTION_CONTROLS_ENABLED|True|Activate Slot‑7 controls|Over-blocking if misconfigured|
+|RATE_LIMIT_ENABLED|True|Global request limiter|DoS risk if disabled|
+|RESOURCE_PROTECTION_ENABLED|True|Payload/time/concurrency caps|Exhaustion if disabled|
+|HEALTH_CHECK_ENABLED|True|Expose `/health` endpoints|Undetected failures if off|
 
-**Diagnostic Data:**
-- `sample_analysis`: Real-time analysis sample {tone, score, confidence}
-- `escalation_test`: Escalation system validation ("passed")
-- `safety_test`: Safety policy validation ("passed") 
-- `performance_metrics`: Enhanced engine performance data
-- `engine_version`: Emotional matrix engine version string
-
-## How data flows
-- Test Framework or WebSocket sends a request.
-- Slot Loader initializes and loads all slots.
-- Orchestrator routes the request to relevant slots.
-- Slots process data and return results to the orchestrator.
-- Orchestrator composes the final response.
-
-## Legend
-codex/create-architecture-documentation
-- `-->` solid arrow: contract-bound data flow.
-- `-.->` dashed arrow: labeled constraint or external interaction.
-- `(opt)` denotes an optional flow; `⚗️` marks experimental paths.
-- Edge labels like `TRI_REPORT(v1)` map to files in `docs/contracts/`.
-
-- `-->` solid arrow: direct invocation or loading.
-- `-.->` dashed arrow: external or optional interaction.
-main
-- Rectangles: functional components or slots.
+### Operational Health
+* `/health` aggregates slot metrics, router thresholds, circuit breaker status, and slot self-checks (`collect_slot_selfchecks`).
+* `/health/config` returns hot-reload flag, slot list, and environment configuration.
+* Slot 3 health adds `escalation_status`, `safety_policy_status`, `enhanced_engine_status`, and `sample_analysis` as defined in [`contracts/slot3_health_schema.json`](../contracts/slot3_health_schema.json).

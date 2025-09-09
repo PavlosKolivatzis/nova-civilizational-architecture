@@ -1,0 +1,130 @@
+{
+  "slot01_truth_anchor": {
+    "name": "Truth Anchor",
+    "module": "slots.slot01_truth_anchor.truth_anchor_engine.TruthAnchorEngine",
+    "adapter": "orchestrator.adapters.slot1_truth_anchor.Slot1TruthAnchorAdapter",
+    "health": "slots.slot01_truth_anchor.health.health",
+    "produces": [],
+    "consumes": [],
+    "feature_flags": []
+  },
+  "slot02_deltathresh": {
+    "name": "\u0394THRESH Manager",
+    "module": "slots.slot02_deltathresh.core.DeltaThreshProcessor",
+    "adapter": "orchestrator.adapters.slot2_deltathresh.Slot2DeltaThreshAdapter",
+    "health": null,
+    "produces": [
+      "DETECTION_REPORT@1"
+    ],
+    "consumes": [],
+    "feature_flags": []
+  },
+  "slot03_emotional_matrix": {
+    "name": "Emotional Matrix",
+    "module": "slots.slot03_emotional_matrix.emotional_matrix_engine.EmotionalMatrixEngine",
+    "adapter": "orchestrator.adapters.slot3_emotional.Slot3EmotionalAdapter",
+    "health": "slots.slot03_emotional_matrix.health.health",
+    "produces": [
+      "EMOTION_REPORT@1",
+      "DELTA_THREAT@1",
+      "PRODUCTION_CONTROL@1"
+    ],
+    "consumes": [],
+    "feature_flags": [
+      "SLOT3_ESCALATION_ENABLED",
+      "SLOT3_RATE_PER_MIN",
+      "SLOT3_SWING_WINDOW",
+      "SLOT3_SWING_DELTA",
+      "SLOT3_PREVIEW_MAXLEN"
+    ]
+  },
+  "slot04_tri_engine": {
+    "name": "TRI Engine",
+    "module": "slots.slot04_tri_engine.engine.TRIEngine",
+    "adapter": "orchestrator.adapters.slot4_tri.Slot4TRIAdapter",
+    "health": null,
+    "produces": [
+      "TRI_REPORT@1"
+    ],
+    "consumes": [],
+    "feature_flags": []
+  },
+  "slot05_constellation": {
+    "name": "Constellation Navigator",
+    "module": "slots.slot05_constellation.constellation_engine.ConstellationEngine",
+    "adapter": "orchestrator.adapters.slot5_constellation.Slot5ConstellationAdapter",
+    "health": "slots.slot05_constellation.health.health",
+    "produces": [
+      "CONSTELLATION_STATE@1"
+    ],
+    "consumes": [
+      "TRI_REPORT@1",
+      "DETECTION_REPORT@1"
+    ],
+    "feature_flags": []
+  },
+  "slot06_cultural_synthesis": {
+    "name": "Cultural Synthesis",
+    "module": "slots.slot06_cultural_synthesis.engine.CulturalSynthesisEngine",
+    "adapter": "orchestrator.adapters.slot6_cultural.Slot6Adapter",
+    "health": null,
+    "produces": [
+      "CULTURAL_PROFILE@1"
+    ],
+    "consumes": [
+      "TRI_REPORT@1"
+    ],
+    "feature_flags": []
+  },
+  "slot07_production_controls": {
+    "name": "Production Controls",
+    "module": "slots.slot07_production_controls.production_control_engine.ProductionControlEngine",
+    "adapter": "orchestrator.adapters.slot7_production_controls.Slot7ProductionControlsAdapter",
+    "health": "slots.slot07_production_controls.health.health",
+    "produces": [],
+    "consumes": [
+      "PRODUCTION_CONTROL@1"
+    ],
+    "feature_flags": [
+      "PRODUCTION_CONTROLS_ENABLED",
+      "CIRCUIT_BREAKER_ENABLED",
+      "RATE_LIMIT_ENABLED",
+      "RESOURCE_PROTECTION_ENABLED",
+      "HEALTH_CHECK_ENABLED",
+      "FAILOVER_ENABLED"
+    ]
+  },
+  "slot08_memory_ethics": {
+    "name": "Memory Ethics",
+    "module": null,
+    "adapter": "orchestrator.adapters.slot8_memory_ethics.Slot8MemoryEthicsAdapter",
+    "health": null,
+    "produces": [],
+    "consumes": [],
+    "feature_flags": []
+  },
+  "slot09_distortion_protection": {
+    "name": "Distortion Protection",
+    "module": null,
+    "adapter": "orchestrator.adapters.slot9_distortion_protection.Slot9DistortionProtectionAdapter",
+    "health": null,
+    "produces": [],
+    "consumes": [],
+    "feature_flags": [
+      "IDS_ENABLED",
+      "IDS_WEIGHT",
+      "IDS_SANDBOX_ONLY"
+    ]
+  },
+  "slot10_civilizational_deployment": {
+    "name": "Civilizational Deployment",
+    "module": "slots.slot10_civilizational_deployment.deployer.InstitutionalNodeDeployer",
+    "adapter": "orchestrator.adapters.slot10_civilizational.Slot10DeploymentAdapter",
+    "health": null,
+    "produces": [],
+    "consumes": [
+      "CULTURAL_PROFILE@1"
+    ],
+    "feature_flags": []
+  }
+}
