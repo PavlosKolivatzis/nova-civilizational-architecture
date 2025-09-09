@@ -37,6 +37,14 @@
     },
     "notes": {
       "type": "string"
+    },
+    "schema_id": {
+      "type": "string",
+      "description": "URI identifier of the schema this payload conforms to"
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Version of the contract schema for provenance tracking"
     }
   }
 }

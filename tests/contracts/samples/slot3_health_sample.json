@@ -1,0 +1,25 @@
+{
+  "self_check": "ok",
+  "engine_status": "operational",
+  "basic_analysis": "functional",
+  "escalation_status": "operational",
+  "safety_policy_status": "operational", 
+  "enhanced_engine_status": "operational",
+  "overall_status": "fully_operational",
+  "maturity_level": "4/4_processual",
+  "timestamp": 1735689600.0,
+  "engine_version": "2.1.0",
+  "sample_analysis": {
+    "tone": "neutral",
+    "score": 0.75,
+    "confidence": 0.92
+  },
+  "escalation_test": "passed",
+  "safety_test": "passed",
+  "performance_metrics": {
+    "response_time_ms": 45,
+    "memory_usage_mb": 128
+  },
+  "schema_id": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot3_health_schema.json",
+  "schema_version": "1"
+}

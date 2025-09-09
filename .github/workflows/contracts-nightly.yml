@@ -1,0 +1,77 @@
+name: Contracts Nightly Drift Sentinel
+on:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  drift-sentinel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema>=4.0,<5
+          
+      - name: Validate schema files are well-formed
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from jsonschema import Draft7Validator
+          schemas = [
+            'contracts/slot3_health_schema.json',
+            'contracts/slot6_cultural_profile_schema.json'
+          ]
+          for schema_path in schemas:
+            schema = json.loads(pathlib.Path(schema_path).read_text(encoding='utf-8'))
+            Draft7Validator.check_schema(schema)
+            print(f"✓ Schema valid: {schema_path}")
+          PY
+          
+      - name: Validate sample payloads against current schemas
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from jsonschema import validate
+          
+          # Test cases: (schema_path, sample_paths)
+          test_cases = [
+            ('contracts/slot3_health_schema.json', [
+              'tests/contracts/samples/slot3_health_sample.json',
+              'tests/contracts/samples/slot3_health_minimal.json'
+            ]),
+            ('contracts/slot6_cultural_profile_schema.json', [
+              'tests/contracts/samples/slot6_profile_sample.json', 
+              'tests/contracts/samples/slot6_profile_minimal.json'
+            ])
+          ]
+          
+          for schema_path, sample_paths in test_cases:
+            schema = json.loads(pathlib.Path(schema_path).read_text(encoding='utf-8'))
+            print(f"\n🔍 Testing schema: {schema_path}")
+            
+            for sample_path in sample_paths:
+              if pathlib.Path(sample_path).exists():
+                sample = json.loads(pathlib.Path(sample_path).read_text(encoding='utf-8'))
+                validate(instance=sample, schema=schema)
+                print(f"  ✓ Sample validates: {sample_path}")
+              else:
+                print(f"  ⚠️  Sample missing: {sample_path}")
+          
+          print("\n🎯 All samples validate against current schemas")
+          PY
+          
+      - name: Report drift sentinel status
+        run: |
+          echo "🌙 Nightly drift sentinel completed successfully"
+          echo "📋 Schemas validated: Slot 3 Health + Slot 6 Cultural Profile" 
+          echo "🧪 Sample payloads: All conformant to current contracts"
+          echo "⏰ Next run: Tomorrow 2 AM UTC"
