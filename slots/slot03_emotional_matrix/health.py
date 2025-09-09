@@ -33,7 +33,7 @@ def health() -> Dict[str, Any]:
         
         # Test escalation components
         try:
-            from .escalation import EmotionalEscalationManager, ThreatLevel
+            from slots.slot03_emotional_matrix.escalation import EmotionalEscalationManager, ThreatLevel
             escalation_mgr = EmotionalEscalationManager()
             threat_level = escalation_mgr.classify_threat(test_result or {})
             base_health["escalation_status"] = "operational"
@@ -44,7 +44,7 @@ def health() -> Dict[str, Any]:
         
         # Test advanced safety policy
         try:
-            from .advanced_policy import AdvancedSafetyPolicy
+            from slots.slot03_emotional_matrix.advanced_policy import AdvancedSafetyPolicy
             safety_policy = AdvancedSafetyPolicy()
             safety_result = safety_policy.validate(test_result or {}, "test content")
             base_health["safety_policy_status"] = "operational"
@@ -58,7 +58,7 @@ def health() -> Dict[str, Any]:
         
         # Test enhanced engine wrapper
         try:
-            from .enhanced_engine import EnhancedEmotionalMatrixEngine
+            from slots.slot03_emotional_matrix.enhanced_engine import EnhancedEmotionalMatrixEngine
             enhanced_engine = EnhancedEmotionalMatrixEngine()
             enhanced_result = enhanced_engine.analyze("test")
             metrics = enhanced_engine.get_performance_metrics()
@@ -113,7 +113,7 @@ def get_detailed_metrics() -> Dict[str, Any]:
         
         # Escalation manager metrics
         try:
-            from .escalation import EmotionalEscalationManager
+            from slots.slot03_emotional_matrix.escalation import EmotionalEscalationManager
             escalation_mgr = EmotionalEscalationManager()
             escalation_summary = escalation_mgr.get_escalation_summary()
             metrics["component_metrics"]["escalation"] = escalation_summary
@@ -122,7 +122,7 @@ def get_detailed_metrics() -> Dict[str, Any]:
         
         # Safety policy metrics  
         try:
-            from .advanced_policy import AdvancedSafetyPolicy
+            from slots.slot03_emotional_matrix.advanced_policy import AdvancedSafetyPolicy
             safety_policy = AdvancedSafetyPolicy()
             policy_stats = safety_policy.get_policy_stats()
             metrics["component_metrics"]["safety_policy"] = policy_stats
@@ -131,7 +131,7 @@ def get_detailed_metrics() -> Dict[str, Any]:
         
         # Enhanced engine metrics
         try:
-            from .enhanced_engine import EnhancedEmotionalMatrixEngine
+            from slots.slot03_emotional_matrix.enhanced_engine import EnhancedEmotionalMatrixEngine
             enhanced_engine = EnhancedEmotionalMatrixEngine()
             performance_metrics = enhanced_engine.get_performance_metrics()
             metrics["component_metrics"]["enhanced_engine"] = performance_metrics

@@ -26,13 +26,13 @@ class Slot3EmotionalAdapter:
     """
 
     def __init__(self, adapter_registry: Optional[Dict] = None) -> None:
+        global ESCALATION_MANAGER
         self.available = AVAILABLE
         self.logger = logging.getLogger(__name__)
         self.adapter_registry = adapter_registry or {}
         
         # Initialize escalation manager with registry
         if AVAILABLE and ESCALATION_MANAGER is None:
-            global ESCALATION_MANAGER
             ESCALATION_MANAGER = EmotionalEscalationManager(adapter_registry)
         
         self.escalation_manager = ESCALATION_MANAGER
