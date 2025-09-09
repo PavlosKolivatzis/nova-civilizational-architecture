@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Slot 3 Health Response Schema",
+  "type": "object",
+  "required": [
+    "self_check",
+    "engine_status",
+    "basic_analysis",
+    "overall_status",
+    "maturity_level",
+    "timestamp"
+  ],
+  "properties": {
+    "self_check": {
+      "type": "string",
+      "enum": ["ok", "error"]
+    },
+    "engine_status": {
+      "type": "string",
+      "enum": ["operational", "failed"]
+    },
+    "basic_analysis": {
+      "type": "string",
+      "enum": ["functional", "degraded"]
+    },
+    "escalation_status": {
+      "type": "string",
+      "enum": ["operational", "degraded"]
+    },
+    "safety_policy_status": {
+      "type": "string",
+      "enum": ["operational", "degraded"]
+    },
+    "enhanced_engine_status": {
+      "type": "string",
+      "enum": ["operational", "degraded"]
+    },
+    "overall_status": {
+      "type": "string",
+      "enum": ["fully_operational", "partially_operational", "critical_failure"]
+    },
+    "maturity_level": {
+      "type": "string",
+      "enum": ["0/4_missing", "1/4_anchor", "2/4_relational", "3/4_structural", "4/4_processual"]
+    },
+    "timestamp": {
+      "type": "number"
+    },
+    "engine_version": {
+      "type": "string"
+    },
+    "sample_analysis": {
+      "type": "object",
+      "properties": {
+        "tone": {"type": "string"},
+        "score": {"type": "number"},
+        "confidence": {"type": "number"}
+      }
+    },
+    "escalation_test": {
+      "type": "string",
+      "enum": ["passed"]
+    },
+    "safety_test": {
+      "type": "string", 
+      "enum": ["passed"]
+    },
+    "performance_metrics": {
+      "type": "object"
+    },
+    "error": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    }
+  }
+}
