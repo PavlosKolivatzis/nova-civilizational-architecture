@@ -1,0 +1,24 @@
+name: Contracts Freeze
+on: [pull_request]
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+      - name: Prevent breaking changes to Slot 3 schema without a version bump note
+        run: |
+          base=${{ github.base_ref }}
+          diff=$(git diff --name-only origin/$base...HEAD -- contracts/slot3_health_schema.json || true)
+          if [ -n "$diff" ]; then
+            echo "🔒 Schema changed. Ensure PR description includes: CONTRACT:BUMP or CONTRACT:EXPLAIN"
+            if ! grep -qiE 'CONTRACT:(BUMP|EXPLAIN)' <<<"${{ github.event.pull_request.body }}"; then
+              echo "❌ Missing CONTRACT:BUMP/EXPLAIN tag in PR description"; exit 1
+            else
+              echo "✅ Contract change properly tagged"
+            fi
+          else
+            echo "✅ No contract schema changes detected"
+          fi

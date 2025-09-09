@@ -1,0 +1,11 @@
+# Global fallback
+* @PavlosKolivatzis
+
+# Contract schemas require explicit review
+/contracts/* @PavlosKolivatzis
+
+# Core slot implementations
+/slots/ @PavlosKolivatzis
+
+# Orchestration layer
+/orchestrator/ @PavlosKolivatzis
