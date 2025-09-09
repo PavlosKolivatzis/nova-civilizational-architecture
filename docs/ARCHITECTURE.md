@@ -123,6 +123,18 @@ main
 | 9    | Distortion Protection        | 4     | Processual |
 | 10   | Deployment & Modeling        | 3     | Structural |
 
+## Contract Schemas & Governance
+
+**Protected Schemas** (require `CONTRACT:BUMP/EXPLAIN` for changes):
+- **Slot 3 Health**: [`slot3_health_schema.json`](../contracts/slot3_health_schema.json) - Health monitoring contract
+- **Slot 6 Cultural Profile**: [`slot6_cultural_profile_schema.json`](../contracts/slot6_cultural_profile_schema.json) - Cultural synthesis contract
+
+**Schema Versioning Policy:**
+- Breaking changes require `schema_version` field bump + `CONTRACT:BUMP` PR tag
+- Compatible changes require `CONTRACT:EXPLAIN` PR tag  
+- All schemas enforced via CI contract tests
+- CODEOWNERS review required for schema modifications
+
 ## Slot 3 Health Monitoring
 
 Slot 3 provides comprehensive health status with the following fields:
