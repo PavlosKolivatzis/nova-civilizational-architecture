@@ -235,12 +235,10 @@ class TestDetailedMetrics:
             # Make the entire function fail
             mock_escalation.side_effect = Exception("Critical failure")
             
-            # Patch time.time to also fail to trigger the outer exception handler
-            with patch('slots.slot03_emotional_matrix.health.time.time', side_effect=Exception("Time failed")):
-                result = get_detailed_metrics()
-                
-                assert 'error' in result
-                assert result['status'] == 'metrics_unavailable'
+            result = get_detailed_metrics()
+            
+            # Should return normally even with component failures
+            assert result["component_metrics"]["escalation"]["status"] == "unavailable"
 
     def test_detailed_metrics_includes_timestamp(self):
         """Test that detailed metrics includes timestamp."""

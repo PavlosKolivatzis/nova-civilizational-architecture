@@ -107,6 +107,13 @@ class TestSlot3EmotionalAdapter:
         }
         
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         result = adapter.analyze("harmful content", user_id="user1")
         
         assert 'safety' in result
@@ -132,6 +139,13 @@ class TestSlot3EmotionalAdapter:
         }
         
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         result = adapter.analyze("normal content", user_id="user1")
         
         assert result['safety']['rate_limited'] is True
@@ -142,10 +156,14 @@ class TestSlot3EmotionalAdapter:
     def test_unavailable_adapter(self):
         """Test adapter behavior when components are unavailable."""
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         result = adapter.analyze("test content")
-        # Should still return analysis even if safety policy fails
-        if not result:  # If completely empty, add minimal structure
-            result = {"emotional_tone": "error", "analysis_failed": True}
         
         assert result == {}
         assert adapter.available is False
@@ -169,6 +187,13 @@ class TestSlot3EmotionalAdapter:
             }
             
             adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
             result = adapter.analyze("angry content", enable_escalation=False)
             
             assert 'escalation' not in result
@@ -180,6 +205,13 @@ class TestSlot3EmotionalAdapter:
         import time
         
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         
         escalation_event = EscalationEvent(
             threat_level=ThreatLevel.HIGH,
@@ -195,6 +227,13 @@ class TestSlot3EmotionalAdapter:
     def test_receive_escalation_error_handling(self):
         """Test escalation event processing error handling."""
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         
         # Pass invalid escalation event
         result = adapter.receive_escalation("invalid_event")
@@ -217,6 +256,13 @@ class TestSlot3EmotionalAdapter:
         }
         
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         health = adapter.get_health_status()
         
         assert health['available'] is True
@@ -228,6 +274,13 @@ class TestSlot3EmotionalAdapter:
     def test_adapter_registry_update(self):
         """Test adapter registry updating."""
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         
         new_registry = {'slot01_truth': Mock(), 'slot02_delta': Mock()}
         adapter.update_adapter_registry(new_registry)
@@ -241,18 +294,28 @@ class TestSlot3EmotionalAdapter:
         mock_engine.analyze.side_effect = Exception("Analysis failed")
         
         adapter = Slot3EmotionalAdapter()
-        result = adapter.analyze("test content")
-        # Should still return analysis even if safety policy fails
-        if not result:  # If completely empty, add minimal structure
-            result = {"emotional_tone": "error", "analysis_failed": True}
         
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
+        result = adapter.analyze("test content")
         assert result == {}
 
     @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
     @patch('orchestrator.adapters.slot3_emotional.ENGINE')
-    def test_full_integration(self):
+    def test_full_integration(self, mock_engine):
         """Test full integration with actual components."""
         adapter = Slot3EmotionalAdapter()
+        
+        # Mock the engine to return realistic analysis data
+        mock_engine.analyze.return_value = {
+            "emotional_tone": "joy",
+            "score": 0.7,
+            "confidence": 0.8
+        }
         
         if not adapter.available:
             pytest.skip("Slot 3 components not available")
