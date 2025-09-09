@@ -28,6 +28,13 @@ IDS_ALLOWED_SCOPES = get_feature_flag(
 )
 IDS_STRICT_SCOPE_VALIDATE = get_feature_flag("IDS_STRICT_SCOPE_VALIDATE", False)
 
+# Slot 3 - Emotional Matrix Configuration
+SLOT3_ESCALATION_ENABLED = get_feature_flag("SLOT3_ESCALATION_ENABLED", True)
+SLOT3_RATE_PER_MIN = get_feature_flag("SLOT3_RATE_PER_MIN", 600)
+SLOT3_SWING_WINDOW = get_feature_flag("SLOT3_SWING_WINDOW", 30)
+SLOT3_SWING_DELTA = get_feature_flag("SLOT3_SWING_DELTA", 1.2)
+SLOT3_PREVIEW_MAXLEN = get_feature_flag("SLOT3_PREVIEW_MAXLEN", 160)
+
 IDS_ALPHA = get_feature_flag("IDS_ALPHA", 0.9)
 IDS_BETA = get_feature_flag("IDS_BETA", 0.8)
 IDS_EMA_LAMBDA = get_feature_flag("IDS_EMA_LAMBDA", 0.7)
