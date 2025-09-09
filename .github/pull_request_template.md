@@ -1,25 +1,24 @@
-# Pull Request
+## What
+<!-- concise description of the change -->
 
-## Summary
-**What**: <!-- Brief description of changes -->
+## Why
+<!-- the reason/value (bugfix, governance, safety, etc.) -->
 
-**Why**: <!-- Context and motivation -->
+## Tests
+- [ ] Unit tests
+- [ ] Contract tests
+- [ ] E2E / smoke
+- [ ] N/A
 
-**Tests**: <!-- How was this tested? -->
+## Contracts
+- [ ] None
+- [ ] ✅ Compatible change → **add `CONTRACT:EXPLAIN` below**
+- [ ] 🚨 Breaking change → **add `CONTRACT:BUMP` below**
 
-## Contract Impact
-- [ ] **None** - No schema/contract changes
-- [ ] **Compatible** - Backward-compatible changes → **CONTRACT:EXPLAIN** <!-- Explain in description -->  
-- [ ] **Breaking** - Schema version bump required → **CONTRACT:BUMP** <!-- Justify in description -->
+**CONTRACT NOTE (optional)**  
+<!-- CONTRACT:EXPLAIN or CONTRACT:BUMP with rationale -->
 
 ## Checklist
-- [ ] Tests pass locally (`pytest -q`)
-- [ ] Conventional commit messages used
-- [ ] Documentation updated (if applicable)
-- [ ] No sensitive data in commits
-
-## Slot Impact (if applicable)
-<!-- Which slots are affected and how? -->
-
----
-*For schema changes: Add CONTRACT:BUMP or CONTRACT:EXPLAIN to your description above*
+- [ ] Conventional commit message
+- [ ] CI green
+- [ ] Docs updated (if user-facing)

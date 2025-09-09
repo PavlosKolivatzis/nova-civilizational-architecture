@@ -1,8 +1,9 @@
-# Global fallback
-* @PavlosKolivatzis
-
-# Contract schemas require explicit review
+# Contracts & governance
 /contracts/* @PavlosKolivatzis
+
+# Optional: docs & CI
+/docs/* @PavlosKolivatzis
+/.github/workflows/* @PavlosKolivatzis
 
 # Core slot implementations
 /slots/ @PavlosKolivatzis

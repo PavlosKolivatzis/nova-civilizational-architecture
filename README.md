@@ -1,5 +1,8 @@
 # NOVA Civilizational Architecture 🌟
 
+![CI](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions/workflows/nova-ci.yml/badge.svg)
+![Health Matrix](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions/workflows/health-config-matrix.yml/badge.svg)
+
 > **Multi-AI Collaborative Project** created and coordinated by **Pavlos Kolivatzis**  
 > Built through cooperation between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot
 

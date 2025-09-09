@@ -1,24 +1,37 @@
 name: Contracts Freeze
-on: [pull_request]
+on:
+  pull_request:
+    branches: [ main ]
 
 jobs:
   freeze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: 
-          fetch-depth: 0
-      - name: Prevent breaking changes to Slot 3 schema without a version bump note
+        with: { fetch-depth: 0 }
+
+      # Gate Slot 3 schema updates (extend the list below for other schemas)
+      - name: Guard schema changes unless explicitly tagged
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE: ${{ github.base_ref }}
         run: |
-          base=${{ github.base_ref }}
-          diff=$(git diff --name-only origin/$base...HEAD -- contracts/slot3_health_schema.json || true)
-          if [ -n "$diff" ]; then
-            echo "🔒 Schema changed. Ensure PR description includes: CONTRACT:BUMP or CONTRACT:EXPLAIN"
-            if ! grep -qiE 'CONTRACT:(BUMP|EXPLAIN)' <<<"${{ github.event.pull_request.body }}"; then
-              echo "❌ Missing CONTRACT:BUMP/EXPLAIN tag in PR description"; exit 1
-            else
-              echo "✅ Contract change properly tagged"
-            fi
-          else
-            echo "✅ No contract schema changes detected"
+          set -e
+          CHANGED=$(git diff --name-only origin/$BASE...HEAD -- \
+            contracts/slot3_health_schema.json \
+          || true)
+
+          if [ -z "$CHANGED" ]; then
+            echo "No guarded contract changes detected."
+            exit 0
           fi
+
+          echo "Detected guarded contract changes:"
+          echo "$CHANGED"
+          echo "Require 'CONTRACT:BUMP' or 'CONTRACT:EXPLAIN' in PR body."
+
+          echo "$PR_BODY" | grep -qiE 'CONTRACT:(BUMP|EXPLAIN)' \
+            && echo "Found contract note ✅" && exit 0
+
+          echo "❌ Missing CONTRACT:BUMP/EXPLAIN tag in PR body."
+          exit 1
