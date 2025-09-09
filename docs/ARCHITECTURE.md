@@ -100,7 +100,7 @@ main
 ## Slot summaries
 - **Slot 1 – Truth Anchor:** core reality lock with recovery protocols.
 - **Slot 2 – ΔTHRESH Integration Manager:** threshold detection and pattern analysis pipeline.
-- **Slot 3 – Emotional Matrix Safety:** distributed emotional computation with safety bounds.
+- **Slot 3 – Emotional Matrix Safety:** distributed emotional computation with escalation management, advanced safety policies, and inter-slot threat routing. Produces: EMOTION_REPORT@1. Triggers: DELTA_THREAT@1, PRODUCTION_CONTROL@1, enriches TRI_REPORT@1.
 - **Slot 4 – TRI Engine:** advanced truth measurement with Kalman/Bayesian components.
 - **Slot 5 – Constellation Navigation:** phase-space navigation anchored for failover.
 - **Slot 6 – Cultural Synthesis:** multicultural adaptation engine with formal contract.
@@ -114,7 +114,7 @@ main
 | ---: | ---------------------------- | ----: | ---------- |
 | 1    | Truth Anchor                 | 4     | Processual |
 | 2    | ΔTHRESH Integration Manager  | 4     | Processual |
-| 3    | Emotional Matrix Safety      | 2     | Relational |
+| 3    | Emotional Matrix Safety      | 4     | Processual |
 | 4    | TRI Engine                   | 3     | Structural |
 | 5    | Constellation Navigation     | 2     | Relational |
 | 6    | Adaptive Synthesis Engine    | 4     | Processual |
@@ -122,6 +122,30 @@ main
 | 8    | Memory Lock & IDS Protection | 3     | Structural |
 | 9    | Distortion Protection        | 4     | Processual |
 | 10   | Deployment & Modeling        | 3     | Structural |
+
+## Slot 3 Health Monitoring
+
+Slot 3 provides comprehensive health status with the following fields:
+
+**Core Status Fields:**
+- `self_check`: Overall system status ("ok" | "error")
+- `engine_status`: Base emotional analysis engine ("operational" | "failed") 
+- `basic_analysis`: Analysis functionality ("functional" | "degraded")
+- `escalation_status`: Threat escalation system ("operational" | "degraded")
+- `safety_policy_status`: Content safety validation ("operational" | "degraded")
+- `enhanced_engine_status`: Performance monitoring wrapper ("operational" | "degraded")
+
+**System Assessment:**
+- `overall_status`: System-wide health ("fully_operational" | "partially_operational" | "critical_failure")
+- `maturity_level`: Implementation completeness ("0/4_missing" to "4/4_processual")
+- `timestamp`: Health check execution time (Unix timestamp)
+
+**Diagnostic Data:**
+- `sample_analysis`: Real-time analysis sample {tone, score, confidence}
+- `escalation_test`: Escalation system validation ("passed")
+- `safety_test`: Safety policy validation ("passed") 
+- `performance_metrics`: Enhanced engine performance data
+- `engine_version`: Emotional matrix engine version string
 
 ## How data flows
 - Test Framework or WebSocket sends a request.
