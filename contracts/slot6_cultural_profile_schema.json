@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot6_cultural_profile_schema.json",
   "title": "Slot 6 Cultural Profile Schema (CULTURAL_PROFILE@1)",
+  "description": "Cultural profile contract for Slot 6 Cultural Synthesis system. Validates principle preservation scores, residual risk assessments, and cultural adaptation metrics with strict bounds enforcement.",
   "type": "object",
   "required": [
     "culture_id",

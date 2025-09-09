@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot3_health_schema.json",
   "title": "Slot 3 Health Response Schema",
+  "description": "Health monitoring contract for Slot 3 Emotional Matrix Safety system. Validates comprehensive health status including engine status, escalation system, safety policies, and performance metrics.",
   "type": "object",
   "required": [
     "self_check",

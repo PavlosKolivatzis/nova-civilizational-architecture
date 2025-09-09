@@ -1,0 +1,18 @@
+# Pre-commit hooks for code quality and schema validation
+repos:
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.28.6
+    hooks:
+      - id: check-jsonschema
+        name: Validate contract schemas
+        files: ^contracts/.*\.json$
+        args: ['--schemafile', 'http://json-schema.org/draft-07/schema#']
+      
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+        files: ^contracts/.*\.json$
