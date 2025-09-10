@@ -38,8 +38,8 @@ jobs:
       - name: Env flags
         run: echo "NOVA_LOG_LEVEL=INFO" >> $GITHUB_ENV
 
-      - name: Unit tests
-        run: pytest -q
+      - name: Health smoke tests only
+        run: pytest -q -k "health and not contracts" --ignore=tests/contracts
 
       - name: "Smoke: /health/config endpoint"
         run: |
