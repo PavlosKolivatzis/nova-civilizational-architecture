@@ -41,6 +41,16 @@ jobs:
       - name: Health smoke tests only
         run: pytest -q -m health --ignore=tests/contracts
 
+      - name: Assert smoke-only selection (guard)
+        run: |
+          # Verify we're only collecting health tests, not contracts
+          TEST_COUNT=$(pytest --collect-only -q -m health --ignore=tests/contracts | grep -c "<Function\|<Method" || echo "0")
+          echo "Collected $TEST_COUNT health tests"
+          if [ "$TEST_COUNT" -gt 15 ]; then
+            echo "ERROR: Too many tests collected ($TEST_COUNT > 15). Health matrix should only run lightweight smoke tests."
+            exit 1
+          fi
+
       - name: "Smoke: /health/config endpoint"
         run: |
           if ${{ matrix.serverless }}; then export VERCEL=1; fi

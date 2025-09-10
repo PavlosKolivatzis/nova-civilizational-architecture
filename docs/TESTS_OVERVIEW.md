@@ -174,12 +174,13 @@
 
 #### 2. `health-config-matrix.yml` - Health System Testing  
 **Trigger**: Push, Pull Request  
-**Matrix**: Python 3.9, 3.11, 3.13 × Normal/Serverless modes  
+**Matrix**: Python 3.10, 3.11, 3.12 × Normal/Serverless modes  
 **Coverage**:
 - Health endpoint validation across environments
 - Configuration system testing
 - Slot metadata tolerance verification
 - Provenance assertion validation (Slot 3 & 6)
+- **Test Selection**: Uses `@pytest.mark.health` marker with `pytest -m health --ignore=tests/contracts` for lightweight smoke tests only
 
 #### 3. `contracts-freeze.yml` - Schema Governance
 **Trigger**: Push to protected paths  
