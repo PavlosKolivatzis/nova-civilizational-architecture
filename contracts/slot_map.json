@@ -1,0 +1,419 @@
+{
+  "version": "1.0.0",
+  "schema": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot_map.json",
+  "generated": "2025-01-15T09:30:00Z",
+  "description": "Machine-readable inventory of NOVA civilizational architecture slots",
+  
+  "slots": [
+    {
+      "id": 1,
+      "name": "Truth Anchor",
+      "slug": "slot01_truth_anchor",
+      "module_path": "slots.slot01_truth_anchor",
+      "adapter_class": "TruthAnchorAdapter",
+      "health_path": "slots.slot01_truth_anchor.health",
+      "maturity_level": 4,
+      "maturity_stage": "Processual",
+      "description": "Reality verification and truth assessment with recovery protocols",
+      "key_modules": [
+        "enhanced_truth_anchor_engine.py",
+        "orchestrator_adapter.py", 
+        "truth_anchor_engine.py"
+      ],
+      "contracts": {
+        "produces": [],
+        "consumes": []
+      },
+      "flags": [],
+      "operational_status": "active"
+    },
+    {
+      "id": 2,
+      "name": "ΔTHRESH Integration",
+      "slug": "slot02_deltathresh", 
+      "module_path": "slots.slot02_deltathresh",
+      "adapter_class": "Slot2DeltaThreshAdapter",
+      "health_path": "orchestrator.health",
+      "maturity_level": 4,
+      "maturity_stage": "Processual",
+      "description": "Delta threshold detection and pattern analysis pipeline",
+      "key_modules": [
+        "core_processing_engine"
+      ],
+      "contracts": {
+        "produces": [
+          "DELTA_THREAT@1"
+        ],
+        "consumes": [
+          "DELTA_THREAT@1",
+          "CULTURAL_PROFILE@1"
+        ]
+      },
+      "flags": [],
+      "operational_status": "active"
+    },
+    {
+      "id": 3,
+      "name": "Emotional Matrix",
+      "slug": "slot03_emotional_matrix",
+      "module_path": "slots.slot03_emotional_matrix", 
+      "adapter_class": "Slot3EmotionalMatrixAdapter",
+      "health_path": "slots.slot03_emotional_matrix.health",
+      "maturity_level": 4,
+      "maturity_stage": "Processual",
+      "description": "Emotional analysis with escalation management and advanced safety policies",
+      "key_modules": [
+        "emotional_matrix_engine.py",
+        "escalation.py",
+        "advanced_policy.py", 
+        "enhanced_engine.py",
+        "safety_policy.py"
+      ],
+      "contracts": {
+        "produces": [
+          "EMOTION_REPORT@1",
+          "DELTA_THREAT@1", 
+          "TRI_REPORT@1",
+          "PRODUCTION_CONTROL@1"
+        ],
+        "consumes": []
+      },
+      "flags": [
+        "SLOT3_ESCALATION_ENABLED",
+        "SLOT3_RATE_PER_MIN", 
+        "SLOT3_SWING_WINDOW",
+        "SLOT3_SWING_DELTA",
+        "SLOT3_PREVIEW_MAXLEN"
+      ],
+      "operational_status": "active",
+      "health_schema": "slot3_health_schema.json"
+    },
+    {
+      "id": 4,
+      "name": "TRI Engine",
+      "slug": "slot04_tri_engine",
+      "module_path": "slots.slot04_tri_engine",
+      "adapter_class": "Slot4TRIAdapter", 
+      "health_path": "orchestrator.health",
+      "maturity_level": 3,
+      "maturity_stage": "Structural",
+      "description": "Three-factor risk assessment with Kalman/Bayesian components",
+      "key_modules": [
+        "minimal_implementation"
+      ],
+      "contracts": {
+        "produces": [
+          "TRI_REPORT@1"
+        ],
+        "consumes": [
+          "TRI_REPORT@1",
+          "CULTURAL_PROFILE@1"
+        ]
+      },
+      "flags": [],
+      "operational_status": "active"
+    },
+    {
+      "id": 5,
+      "name": "Constellation Navigation", 
+      "slug": "slot05_constellation",
+      "module_path": "slots.slot05_constellation",
+      "adapter_class": "Slot5ConstellationAdapter",
+      "health_path": "orchestrator.health",
+      "maturity_level": 2,
+      "maturity_stage": "Relational",
+      "description": "Pattern constellation mapping and phase-space navigation",
+      "key_modules": [
+        "multi_engine_system"
+      ],
+      "contracts": {
+        "produces": [
+          "CONSTELLATION_STATE@1"
+        ],
+        "consumes": [
+          "SIGNALS@1",
+          "TRI_REPORT@1"
+        ]
+      },
+      "flags": [],
+      "operational_status": "active"
+    },
+    {
+      "id": 6,
+      "name": "Cultural Synthesis",
+      "slug": "slot06_cultural_synthesis",
+      "module_path": "slots.slot06_cultural_synthesis", 
+      "adapter_class": "Slot6CulturalSynthesisAdapter",
+      "health_path": "slots.slot06_cultural_synthesis.health",
+      "maturity_level": 4,
+      "maturity_stage": "Processual",
+      "description": "Multicultural truth synthesis with formal contract and legacy migration",
+      "key_modules": [
+        "multicultural_truth_synthesis.py",
+        "engine.py",
+        "adapter.py",
+        "legacy_engine.py",
+        "plugin.py"
+      ],
+      "contracts": {
+        "produces": [
+          "CULTURAL_PROFILE@1",
+          "PLAN_WITH_CONSENT@1"
+        ],
+        "consumes": [
+          "CONTENT_ANALYSIS@1",
+          "EMOTION_REPORT@1"
+        ]
+      },
+      "flags": [],
+      "operational_status": "active",
+      "legacy_support": true,
+      "health_schema": "slot6_cultural_profile_schema.json"
+    },
+    {
+      "id": 7,
+      "name": "Production Controls",
+      "slug": "slot07_production_controls",
+      "module_path": "slots.slot07_production_controls",
+      "adapter_class": "Slot7ProductionControlsAdapter",
+      "health_path": "orchestrator.health", 
+      "maturity_level": 2,
+      "maturity_stage": "Relational",
+      "description": "System orchestration, circuit breaker, and cross-slot coordination",
+      "key_modules": [
+        "core_control_mechanisms"
+      ],
+      "contracts": {
+        "produces": [
+          "CONTROL_CMDS@1"
+        ],
+        "consumes": [
+          "PRODUCTION_CONTROL@1",
+          "DELTA_THREAT@1",
+          "DISTORTION_DETECTION@1", 
+          "MEMORY_ETHICS@1",
+          "EMO_FEEDBACK@1"
+        ]
+      },
+      "flags": [
+        "PRODUCTION_CONTROLS_ENABLED",
+        "CIRCUIT_BREAKER_ENABLED",
+        "CIRCUIT_BREAKER_FAILURE_THRESHOLD",
+        "CIRCUIT_BREAKER_ERROR_THRESHOLD",
+        "CIRCUIT_BREAKER_RESET_TIMEOUT",
+        "CIRCUIT_BREAKER_RECOVERY_TIME",
+        "RATE_LIMIT_ENABLED", 
+        "RATE_LIMIT_REQUESTS_PER_MINUTE",
+        "RATE_LIMIT_BURST_SIZE",
+        "RESOURCE_PROTECTION_ENABLED",
+        "MAX_PAYLOAD_SIZE_MB",
+        "MAX_PROCESSING_TIME_SECONDS",
+        "MAX_CONCURRENT_REQUESTS",
+        "FAILOVER_ENABLED",
+        "GRACEFUL_DEGRADATION_ENABLED"
+      ],
+      "operational_status": "active"
+    },
+    {
+      "id": 8,
+      "name": "Memory Ethics",
+      "slug": "slot08_memory_ethics",
+      "module_path": "slots.slot08_memory_ethics",
+      "adapter_class": "Slot8MemoryEthicsAdapter",
+      "health_path": "orchestrator.health",
+      "maturity_level": 3,
+      "maturity_stage": "Structural",
+      "description": "Memory management, ethical boundaries, and IDS protection",
+      "key_modules": [
+        "ethical_memory_handling",
+        "memory_lock_guard"
+      ],
+      "contracts": {
+        "produces": [
+          "MEMORY_ETHICS@1"
+        ],
+        "consumes": []
+      },
+      "flags": [
+        "IDS_ENABLED",
+        "IDS_WEIGHT", 
+        "IDS_SANDBOX_ONLY",
+        "IDS_SCHEMA_VALIDATE",
+        "IDS_ALLOWED_SCOPES",
+        "IDS_STRICT_SCOPE_VALIDATE",
+        "IDS_ALPHA",
+        "IDS_BETA",
+        "IDS_EMA_LAMBDA",
+        "IDS_STABLE_THRESHOLD",
+        "IDS_REINTEGRATING_THRESHOLD",
+        "IDS_DIVERGING_THRESHOLD"
+      ],
+      "operational_status": "active"
+    },
+    {
+      "id": 9,
+      "name": "Distortion Protection",
+      "slug": "slot09_distortion_protection",
+      "module_path": "slots.slot09_distortion_protection",
+      "adapter_class": "Slot9DistortionProtectionAdapter",
+      "health_path": "orchestrator.health",
+      "maturity_level": 4,
+      "maturity_stage": "Processual", 
+      "description": "Infrastructure-aware distortion detection and defense systems",
+      "key_modules": [
+        "detection_systems",
+        "response_mechanisms"
+      ],
+      "contracts": {
+        "produces": [
+          "DISTORTION_DETECTION@1"
+        ],
+        "consumes": [
+          "CONSTELLATION_STATE@1"
+        ]
+      },
+      "flags": [],
+      "operational_status": "active",
+      "schema_files": [
+        "distortion_detection_response.schema.json"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Civilizational Deployment", 
+      "slug": "slot10_civilizational_deployment",
+      "module_path": "slots.slot10_civilizational_deployment",
+      "adapter_class": "Slot10DeploymentAdapter",
+      "health_path": "orchestrator.health",
+      "maturity_level": 3,
+      "maturity_stage": "Structural",
+      "description": "Large-scale deployment coordination with Slot 6 guardrails",
+      "key_modules": [
+        "deployment_orchestration"
+      ],
+      "contracts": {
+        "produces": [],
+        "consumes": [
+          "PLAN_WITH_CONSENT@1", 
+          "CULTURAL_PROFILE@1"
+        ]
+      },
+      "flags": [],
+      "operational_status": "active"
+    }
+  ],
+  
+  "orchestrator": {
+    "module_path": "orchestrator", 
+    "health_path": "orchestrator.health",
+    "key_components": [
+      "app.py",
+      "health.py",
+      "bus.py", 
+      "metrics.py",
+      "core/performance_monitor.py",
+      "core/event_bus.py"
+    ],
+    "adapters_path": "orchestrator.adapters",
+    "plugins_path": "orchestrator.plugins",
+    "contracts_supported": [
+      "EMOTION_REPORT@1",
+      "DELTA_THREAT@1",
+      "TRI_REPORT@1", 
+      "PRODUCTION_CONTROL@1",
+      "CULTURAL_PROFILE@1",
+      "DISTORTION_DETECTION@1", 
+      "MEMORY_ETHICS@1",
+      "CONSTELLATION_STATE@1",
+      "CONTROL_CMDS@1"
+    ]
+  },
+  
+  "configuration": {
+    "manager_class": "EnhancedConfigManager",
+    "module_path": "slots.config.enhanced_manager",
+    "hot_reload_supported": true,
+    "metadata_tolerance": true,
+    "feature_flags_path": "config.feature_flags",
+    "environment_integration": [
+      "NOVA_SLOT*_*",
+      "NOVA_HOT_RELOAD", 
+      "NOVA_SLOTS",
+      "VERCEL",
+      "AWS_LAMBDA_FUNCTION_NAME"
+    ]
+  },
+  
+  "contracts": {
+    "base_path": "contracts/",
+    "validated_schemas": [
+      "slot3_health_schema.json",
+      "slot6_cultural_profile_schema.json", 
+      "distortion_detection_response.schema.json",
+      "feature.ids.contract.json"
+    ],
+    "governance": {
+      "freeze_protection": true,
+      "ci_validation": true,
+      "nightly_drift_detection": true,
+      "provenance_tracking": true
+    }
+  },
+  
+  "health_monitoring": {
+    "endpoints": [
+      "/health",
+      "/health/config", 
+      "/metrics"
+    ],
+    "aggregation_path": "orchestrator.health.health_payload",
+    "self_checks_path": "orchestrator.health.collect_slot_selfchecks",
+    "provenance_fields": [
+      "schema_id",
+      "schema_version"
+    ],
+    "monitoring_format": "prometheus"
+  },
+  
+  "testing": {
+    "total_test_files": 67,
+    "test_categories": [
+      "api",
+      "chaos", 
+      "config",
+      "contracts",
+      "e2e",
+      "orch",
+      "perf",
+      "performance", 
+      "plugins",
+      "property",
+      "slo",
+      "slot-specific"
+    ],
+    "ci_workflows": [
+      "nova-ci.yml",
+      "health-config-matrix.yml",
+      "contracts-freeze.yml", 
+      "contracts-nightly.yml",
+      "ids-ci.yml",
+      "commitlint.yml"
+    ]
+  },
+  
+  "metadata": {
+    "repository": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture",
+    "architecture_version": "1.0.0",
+    "total_slots": 10,
+    "active_slots": 10,
+    "mature_slots": 6,
+    "last_updated": "2025-01-15T09:30:00Z",
+    "documentation_files": [
+      "docs/ARCHITECTURE.md",
+      "docs/SYSTEM_ANALYSIS.md", 
+      "docs/INTERSLOT_CONTRACTS.md",
+      "docs/TESTS_OVERVIEW.md",
+      "contracts/slot_map.json"
+    ]
+  }
+}
