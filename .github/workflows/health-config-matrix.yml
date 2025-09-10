@@ -116,7 +116,7 @@ jobs:
           # Heuristics to locate Slot 3 and Slot 6 health blocks within /health
           # (We keep this flexible across environments.)
           slot3_hint_keys = {"engine_status", "escalation_status", "basic_analysis", "emotional_tone"}
-          slot6_hint_keys = {"culture_id", "principle_preservation_score", "residual_risk"}
+          slot6_hint_keys = {"basic_synthesis", "legacy_calls_total", "version", "principle_preservation_score", "residual_risk"}
 
           def looks_like_slot3(d):
               return has_provenance(d) and any(k in d for k in slot3_hint_keys)
