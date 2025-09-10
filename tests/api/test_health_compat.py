@@ -1,5 +1,7 @@
 import pytest
 
+pytestmark = pytest.mark.health
+
 try:
     from fastapi.testclient import TestClient
     from orchestrator.app import app

@@ -39,7 +39,7 @@ jobs:
         run: echo "NOVA_LOG_LEVEL=INFO" >> $GITHUB_ENV
 
       - name: Health smoke tests only
-        run: pytest -q -k "health and not contracts" --ignore=tests/contracts
+        run: pytest -q -m health --ignore=tests/contracts
 
       - name: "Smoke: /health/config endpoint"
         run: |
