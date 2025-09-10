@@ -7,7 +7,7 @@ import yaml
 import asyncio
 import logging
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
+from dataclasses import field
 from typing import Dict, Any, Optional, List, Callable
 import threading
 from datetime import datetime
@@ -35,30 +35,45 @@ _WATCHDOG = _WATCHDOG_AVAILABLE
 
 # --- Data ---------------------------------------------------------------------
 
-@dataclass
 class SlotMetadata:
     """Enhanced slot metadata - extends existing slotX.meta.yaml pattern."""
-    name: str
-    version: str
-    slot: Optional[int] = None  # Make optional - can be inferred from id
-    entry_point: Optional[str] = None  # Make optional - not in all YAML files
-    adapter: Optional[str] = None
-    description: Optional[str] = None
-    inputs: Optional[Dict[str, str]] = None
-    outputs: Optional[Dict[str, str]] = None
-    metrics: Optional[List[str]] = None
-    ci: Optional[Dict[str, Any]] = None
-
-    # Enhanced capabilities
-    config_schema: Optional[Dict[str, Any]] = None
-    runtime_constraints: Optional[Dict[str, Any]] = None
-    dependencies: List[str] = field(default_factory=list)
-    security_level: str = "standard"
-    performance_targets: Optional[Dict[str, float]] = None
     
-    # NEW: accept `id` to match *.meta.yaml files + keep unknown keys
-    id: Optional[str] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
+    def __init__(self, name: str = None, version: str = None, 
+                 slot: Optional[int] = None, entry_point: Optional[str] = None,
+                 adapter: Optional[str] = None, description: Optional[str] = None,
+                 inputs: Optional[Dict[str, str]] = None, outputs: Optional[Dict[str, str]] = None,
+                 metrics: Optional[List[str]] = None, ci: Optional[Dict[str, Any]] = None,
+                 config_schema: Optional[Dict[str, Any]] = None, 
+                 runtime_constraints: Optional[Dict[str, Any]] = None,
+                 dependencies: List[str] = None, security_level: str = "standard",
+                 performance_targets: Optional[Dict[str, float]] = None,
+                 id: Optional[str] = None, **kwargs):
+        """Initialize SlotMetadata with flexible parameters and unknown field tolerance."""
+        # Required fields
+        if not name:
+            raise ValueError("name is required")
+        if not version:
+            raise ValueError("version is required")
+            
+        self.name = name
+        self.version = version
+        self.slot = slot
+        self.entry_point = entry_point
+        self.adapter = adapter
+        self.description = description
+        self.inputs = inputs
+        self.outputs = outputs
+        self.metrics = metrics
+        self.ci = ci
+        self.config_schema = config_schema
+        self.runtime_constraints = runtime_constraints
+        self.dependencies = dependencies or []
+        self.security_level = security_level
+        self.performance_targets = performance_targets
+        self.id = id
+        
+        # Store any extra/unknown fields
+        self.extra = kwargs
 
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "SlotMetadata":
@@ -91,11 +106,19 @@ class SlotMetadata:
             # Store in extra but don't fail on it
             pass
 
-        fields = set(cls.__dataclass_fields__.keys())
-        known = {k: v for k, v in d.items() if k in fields and k != "extra"}
-        extra = {k: v for k, v in d.items() if k not in fields}
+        # Define known fields since we're no longer using @dataclass
+        known_fields = {
+            'name', 'version', 'slot', 'entry_point', 'adapter', 'description',
+            'inputs', 'outputs', 'metrics', 'ci', 'config_schema', 
+            'runtime_constraints', 'dependencies', 'security_level',
+            'performance_targets', 'id'
+        }
+        
+        known = {k: v for k, v in d.items() if k in known_fields}
+        extra = {k: v for k, v in d.items() if k not in known_fields}
 
-        return cls(**known, extra=extra)
+        # Pass extra fields as **kwargs which will be captured by the **kwargs parameter
+        return cls(**known, **extra)
 
     def validate_schema(self, config_data: Dict[str, Any]) -> bool:
         """Very light schema check; upgrade to jsonschema if needed."""
@@ -211,7 +234,26 @@ class EnhancedConfigManager:
 
     def _build_runtime_config(self, slot_id: int, metadata: SlotMetadata) -> Dict[str, Any]:
         cfg: Dict[str, Any] = {}
-        cfg.update(asdict(metadata))  # base metadata
+        # Convert metadata to dict manually since we're no longer using @dataclass
+        cfg.update({
+            'name': metadata.name,
+            'version': metadata.version,
+            'slot': metadata.slot,
+            'entry_point': metadata.entry_point,
+            'adapter': metadata.adapter,
+            'description': metadata.description,
+            'inputs': metadata.inputs,
+            'outputs': metadata.outputs,
+            'metrics': metadata.metrics,
+            'ci': metadata.ci,
+            'config_schema': metadata.config_schema,
+            'runtime_constraints': metadata.runtime_constraints,
+            'dependencies': metadata.dependencies,
+            'security_level': metadata.security_level,
+            'performance_targets': metadata.performance_targets,
+            'id': metadata.id,
+            **metadata.extra  # Include any unknown fields
+        })
 
         # Env overrides (Nova precedence preserved)
         cfg.update(self._extract_env_overrides(slot_id))
@@ -405,9 +447,32 @@ class EnhancedConfigManager:
         with self._lock:
             metadata = self.slot_metadata.get(slot_id)
             runtime_config = dict(self.runtime_configs.get(slot_id, {}))
+        # Convert metadata to dict manually since we're no longer using @dataclass
+        metadata_dict = None
+        if metadata:
+            metadata_dict = {
+                'name': metadata.name,
+                'version': metadata.version,
+                'slot': metadata.slot,
+                'entry_point': metadata.entry_point,
+                'adapter': metadata.adapter,
+                'description': metadata.description,
+                'inputs': metadata.inputs,
+                'outputs': metadata.outputs,
+                'metrics': metadata.metrics,
+                'ci': metadata.ci,
+                'config_schema': metadata.config_schema,
+                'runtime_constraints': metadata.runtime_constraints,
+                'dependencies': metadata.dependencies,
+                'security_level': metadata.security_level,
+                'performance_targets': metadata.performance_targets,
+                'id': metadata.id,
+                **metadata.extra
+            }
+        
         return {
             "slot_id": slot_id,
-            "metadata": asdict(metadata) if metadata else None,
+            "metadata": metadata_dict,
             "runtime_config": runtime_config,
             "timestamp": datetime.now().isoformat(),
         }

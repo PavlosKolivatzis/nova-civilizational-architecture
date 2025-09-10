@@ -99,8 +99,8 @@ class TestSlotMetadataTolerance:
     def test_empty_or_none_input(self):
         """SlotMetadata should handle empty/None input gracefully."""
         # This will fail due to missing required fields, but shouldn't crash on the dict handling
-        with pytest.raises(TypeError):  # Missing required fields
+        with pytest.raises(ValueError):  # Missing required fields (name/version)
             SlotMetadata.from_dict({})
             
-        with pytest.raises(TypeError):  # Missing required fields  
+        with pytest.raises(ValueError):  # Missing required fields  
             SlotMetadata.from_dict(None)
