@@ -214,6 +214,36 @@ import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)
 - **Circuit Breakers**: Production resilience patterns
 - **Health Monitoring**: Comprehensive system observability
 
+## 🔒 Governance & CI Protection
+
+### Branch Protection
+**Main branch** is protected with required status checks and code review:
+- **Required Checks**: `nova-ci` (full test suite), `health-config-matrix` (smoke tests), `IDS CI`
+- **CODEOWNERS Protection**: Changes to `contracts/`, `.github/workflows/`, and docs require approval
+- **No Direct Pushes**: All changes flow through pull requests with review
+
+### Health Test Strategy
+- **Health Matrix**: Runs lightweight smoke tests (`@pytest.mark.health`) across Python 3.10/3.11/3.12 
+- **Guard Protection**: Matrix job fails if >15 tests collected (prevents scope drift)
+- **Test Selection**: `pytest -m health --ignore=tests/contracts` keeps health matrix fast
+- **Contract Testing**: Full contract validation runs in main CI with `jsonschema` dependency
+
+### Schema Change Process
+- **Provenance Tracking**: Slot 3 & 6 emit `schema_id` + `schema_version` in `/health` endpoint
+- **Centralized Management**: Schema versions managed in `orchestrator/contracts/provenance.py`
+- **Contract Evolution**: Use `CONTRACT:BUMP` labels for schema changes, update `SCHEMA_VERSION`
+- **Freeze Protection**: `contracts-freeze.yml` prevents accidental breaking changes
+
+### Adding Health Tests
+```python
+import pytest
+
+@pytest.mark.health  # Required marker for health matrix inclusion
+def test_my_health_check():
+    # Fast smoke test only - no heavy operations
+    pass
+```
+
 ## 🗺️ Development Roadmap
 
 ### Next Phase Priorities
