@@ -10,91 +10,89 @@ The NOVA Civilizational Architecture is a 10-slot AI system designed for advance
 
 ```mermaid
 graph LR
-    subgraph "Core Infrastructure"
-        O[Orchestrator]
-        EB[Event Bus]
-        PM[Performance Monitor]
-        CM[Config Manager]
-    end
+  subgraph Orchestrator
+    O[Orchestrator]
+    EB[Event Bus]
+    SL[Slot Loader / Adapters]
+  end
+  O<-->EB
+  O<-->SL
+  EB<-->SL
 
-    subgraph "API Layer"
-        API["/health, /metrics"]
-        HC[Health Aggregator]
-        CC[Circuit Breaker]
-    end
+  subgraph Slots
+    S1[Slot 1 • Truth Anchor]
+    S2[Slot 2 • ΔTHRESH]
+    S3[Slot 3 • Emotional Matrix]
+    S4[Slot 4 • TRI]
+    S5[Slot 5 • Constellation]
+    S6[Slot 6 • Cultural Synthesis]
+    S7[Slot 7 • Production Controls]
+    S8[Slot 8 • Memory Ethics]
+    S9[Slot 9 • Distortion Protection]
+    S10[Slot 10 • Deployment]
+  end
 
-    subgraph "Slots 1-5: Foundation & Analysis"
-        S1[Slot 1<br/>Truth Anchor]
-        S2[Slot 2<br/>ΔTHRESH]
-        S3[Slot 3<br/>Emotional Matrix]
-        S4[Slot 4<br/>TRI Engine]
-        S5[Slot 5<br/>Constellation]
-    end
+  O<-->S1
+  O<-->S2
+  O<-->S3
+  O<-->S4
+  O<-->S5
+  O<-->S6
+  O<-->S7
+  O<-->S8
+  O<-->S9
+  O<-->S10
 
-    subgraph "Slots 6-10: Synthesis & Control"
-        S6[Slot 6<br/>Cultural Synthesis]
-        S7[Slot 7<br/>Production Controls]
-        S8[Slot 8<br/>Memory Ethics]
-        S9[Slot 9<br/>Distortion Protection]
-        S10[Slot 10<br/>Deployment]
-    end
-
-    O --> EB
-    O --> PM
-    O --> CM
-    
-    API --> HC
-    HC --> O
-    O --> CC
-
-    EB --> S1
-    EB --> S2
-    EB --> S3
-    EB --> S4
-    EB --> S5
-    EB --> S6
-    EB --> S7
-    EB --> S8
-    EB --> S9
-    EB --> S10
-
-    S3 -->|DELTA_THREAT@1| S2
-    S3 -->|TRI_REPORT@1| S4
-    S3 -->|EMOTION_REPORT@1| S6
-    S3 -->|PRODUCTION_CONTROL@1| S7
-    S6 -->|CULTURAL_PROFILE@1| S2
-    S6 -->|CULTURAL_PROFILE@1| S4
-    S6 -->|CULTURAL_PROFILE@1| S10
-    S2 -->|DELTA_THREAT@1| S7
-    S9 -->|DISTORTION_DETECTION@1| S7
-    S8 -->|MEMORY_ETHICS@1| S7
+  %% Inter-slot flows
+  S3-->S2
+  S3-->S4
+  S3-->S6
+  S3-->S7
+  S6<-->S2
+  S6<-->S4
+  S6<-->S10
 ```
 
 ### Evolvable Plugin Model
 
 ```mermaid
 graph LR
-    subgraph "Plugin Infrastructure"
-        AR[Adapter Registry]
-        PL[Plugin Loader]
-        CR[Contract Registry]
-        MD[Metadata Discovery]
-    end
+  subgraph Orchestrator
+    PL[PluginLoader]
+    AR[AdapterRegistry]
+  end
+  PL-->AR
 
-    subgraph "Contract Types"
-        ER[EMOTION_REPORT@1]
-        DT[DELTA_THREAT@1]
-        TR[TRI_REPORT@1]
-        PC[PRODUCTION_CONTROL@1]
-        CP[CULTURAL_PROFILE@1]
-        DD[DISTORTION_DETECTION@1]
-    end
+  subgraph Contracts
+    ER[EMOTION_REPORT@1]
+    DT[DELTA_THREAT@1]
+    TR[TRI_REPORT@1]
+    PC[PRODUCTION_CONTROL@1]
+    CP[CULTURAL_PROFILE@1]
+    NA[NullAdapters]
+  end
 
-    subgraph "Adapter Types"
-        NA[NullAdapter<br/>Fallback]
-        RA[Real Adapter<br/>Implementation]
-        PA[Proxy Adapter<br/>External]
-    end
+  AR-->ER
+  AR-->DT
+  AR-->TR
+  AR-->PC
+  AR-->CP
+  AR-->NA
+
+  subgraph Slots
+    S3[Slot 3]
+    S2[Slot 2]
+    S4[Slot 4]
+    S7[Slot 7]
+    S6[Slot 6]
+  end
+
+  ER-->S6
+  DT-->S2
+  TR-->S4
+  PC-->S7
+  CP-->S2
+```
 
     subgraph "Discovery Sources"
         YF[YAML Files<br/>*.meta.yaml]
@@ -139,6 +137,8 @@ graph LR
 | 8 | Memory Ethics | Memory management and ethical constraints | Ethical memory handling | Via orchestrator | 3/4 Structural |
 | 9 | Distortion Protection | Reality distortion detection and mitigation | Detection and response systems | Via orchestrator | 4/4 Processual |
 | 10 | Civilizational Deployment | Large-scale deployment coordination | Deployment orchestration | Via orchestrator | 3/4 Structural |
+
+> **Note:** Slots without dedicated health modules export via the orchestrator aggregate.
 
 ## Inter-Slot Contracts
 
