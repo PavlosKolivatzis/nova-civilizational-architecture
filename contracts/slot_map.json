@@ -41,9 +41,7 @@
         "core_processing_engine"
       ],
       "contracts": {
-        "produces": [
-          "DELTA_THREAT@1"
-        ],
+        "produces": [],
         "consumes": [
           "DELTA_THREAT@1",
           "CULTURAL_PROFILE@1"
@@ -325,6 +323,7 @@
       "DISTORTION_DETECTION@1", 
       "MEMORY_ETHICS@1",
       "CONSTELLATION_STATE@1",
+      "PLAN_WITH_CONSENT@1",
       "CONTROL_CMDS@1"
     ]
   },

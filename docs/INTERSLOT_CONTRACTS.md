@@ -147,6 +147,114 @@ timeout:
   retry_backoff: [500, 1000, 2000]
   max_retries: 2  # fewer retries for critical path
 
+---
+
+## CONSTELLATION_STATE@1
+
+**Producer**: slot05_constellation  
+**Consumers**: slot09_distortion_protection  
+
+payload:
+  type: object
+  required_fields:
+    - position
+    - stability_index
+    - timestamp
+  optional_fields:
+    - phase_space_region
+    - trend_vector
+
+schema:
+  position:
+    type: array
+    items:
+      type: number
+    minItems: 3
+    maxItems: 3
+    description: "Current position in 3D constellation space"
+  
+  stability_index:
+    type: number
+    minimum: 0.0
+    maximum: 1.0
+    description: "System stability measurement"
+  
+  phase_space_region:
+    type: string
+    enum: ["stable", "transition", "chaotic", "unknown"]
+    description: "Current phase space classification"
+  
+  trend_vector:
+    type: array
+    items:
+      type: number
+    minItems: 3
+    maxItems: 3
+    description: "Direction and magnitude of system evolution"
+  
+  timestamp:
+    type: number
+    description: "Unix timestamp of constellation state"
+
+timeout:
+  processing: 1500  # 1.5 seconds
+  retry_backoff: []
+  max_retries: 0  # no retries for state snapshots
+
+---
+
+## PLAN_WITH_CONSENT@1
+
+**Producer**: slot06_cultural_synthesis  
+**Consumers**: slot10_civilizational_deployment  
+
+payload:
+  type: object
+  required_fields:
+    - consent_level
+    - plan
+    - residual_risk
+  optional_fields:
+    - cultural_context
+    - deployment_phase
+
+schema:
+  consent_level:
+    type: string
+    enum: ["none", "implicit", "explicit", "educational"]
+    description: "Level of consent obtained for deployment"
+  
+  plan:
+    type: object
+    description: "Deployment plan structure"
+    properties:
+      deployment_strategy: {type: string}
+      timeline: {type: object}
+      success_metrics: {type: array}
+  
+  residual_risk:
+    type: number
+    minimum: 0.0
+    maximum: 1.0
+    description: "Remaining risk after cultural synthesis"
+  
+  cultural_context:
+    type: object
+    description: "Cultural adaptation context"
+    properties:
+      target_cultures: {type: array, items: {type: string}}
+      adaptation_level: {type: number}
+  
+  deployment_phase:
+    type: string
+    enum: ["planning", "staging", "active", "monitoring"]
+    description: "Current deployment phase"
+
+timeout:
+  processing: 2000  # 2 seconds
+  retry_backoff: []
+  max_retries: 0  # no retries for consent-based operations
+
 invariants:
   - "critical/existential threat_level must have confidence >= 0.8"
   - "escalation_path must include slot07_production for high+ threats"
