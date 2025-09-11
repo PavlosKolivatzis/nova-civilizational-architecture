@@ -33,6 +33,11 @@ class SystemConfig:
     # Deployment
     DEPLOYMENT_MODES: tuple[str, ...] = ("testing", "staging", "production")
     CURRENT_MODE: str = os.getenv("NOVA_CURRENT_MODE", "testing")
+    
+    # Flow Fabric - Adaptive Connections
+    ADAPTIVE_CONNECTIONS_ENABLED: bool = os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", "false").lower() == "true"
+    FLOW_METRICS_ENABLED: bool = os.getenv("NOVA_FLOW_METRICS_ENABLED", "true").lower() == "true"
+    FLOW_MODE: str = os.getenv("NOVA_FLOW_MODE", "BALANCED")
 
 
 config = SystemConfig()

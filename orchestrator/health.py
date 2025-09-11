@@ -52,8 +52,18 @@ def collect_slot_selfchecks(slot_registry: Dict[str, Callable]) -> Dict[str, Any
 def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict[str, Any]:
     """Generate comprehensive health payload for the system."""
     cb_metrics = get_circuit_breaker_metrics(circuit_breaker)
+    
+    # Include Flow Fabric metrics if enabled
+    flow_health = {}
+    try:
+        from .flow_metrics import flow_metrics
+        from .config import config
+        if config.FLOW_METRICS_ENABLED:
+            flow_health = flow_metrics.get_flow_health_summary()
+    except ImportError:
+        pass  # Flow metrics not available
 
-    return {
+    payload = {
         "slots": collect_slot_health(slot_registry, monitor),
         "slot_self_checks": collect_slot_selfchecks(slot_registry),
         "router_thresholds": {
@@ -66,6 +76,12 @@ def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict
         "timestamp": time.time(),
         "version": "1.0.0",
     }
+    
+    # Add flow fabric health if available
+    if flow_health:
+        payload["flow_fabric"] = flow_health
+    
+    return payload
 
 
 def prometheus_metrics(slot_registry: Dict[str, Callable], monitor) -> str:
