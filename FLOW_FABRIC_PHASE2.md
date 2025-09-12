@@ -65,3 +65,9 @@ pytest tests/flow/test_slot7_reflex_integration.py -v
 ✅ AdaptiveLink only modifies routing parameters (frequency, weight)
 ✅ Contract payloads remain unchanged
 ✅ Full backward compatibility when adaptation disabled
+✅ Health endpoint maintains existing contract (engine_status="operational")
+
+## Health Contract Compatibility
+- **engine_status**: "operational" (maintains CI test compatibility)
+- **status_alias**: "healthy" (new semantic clarity)
+- **reflex.api_version**: "1" (for future compatibility tracking)
