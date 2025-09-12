@@ -456,7 +456,7 @@ class ProductionControlEngine:
         metrics = self.get_comprehensive_metrics()
         
         # Determine health status
-        health_status = "operational"
+        health_status = "healthy"
         health_issues = []
         
         if self.circuit_breaker.state == "open":
@@ -471,7 +471,7 @@ class ProductionControlEngine:
             health_issues.append("circuit_breaker_trips_detected")
         
         if not health_issues:
-            health_status = "operational"
+            health_status = "healthy"
         
         return {
             "status": health_status,

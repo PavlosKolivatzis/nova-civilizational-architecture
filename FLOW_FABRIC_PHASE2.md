@@ -68,6 +68,8 @@ pytest tests/flow/test_slot7_reflex_integration.py -v
 ✅ Health endpoint maintains existing contract (engine_status="operational")
 
 ## Health Contract Compatibility
-- **engine_status**: "operational" (maintains CI test compatibility)
-- **status_alias**: "healthy" (new semantic clarity)
-- **reflex.api_version**: "1" (for future compatibility tracking)
+**Proper Layer Separation:**
+- **Engine Internal API**: `status ∈ {"healthy", "degraded"}` (maintains engine test compatibility)
+- **Health Wrapper API**: `engine_status = "operational"` (maintains CI test compatibility)  
+- **Semantic Bridge**: `status_alias = engine.status` (preserves internal semantics)
+- **Version Tracking**: `reflex.api_version = "1"` (future compatibility)

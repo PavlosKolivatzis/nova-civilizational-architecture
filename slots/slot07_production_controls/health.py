@@ -40,10 +40,10 @@ def health() -> Dict[str, Any]:
         
         # Build comprehensive health payload
         health_payload = {
-            # Core health information
+            # Core health information  
             "self_check": "ok",
-            "engine_status": engine_health.get("status", "operational"),
-            "status_alias": "healthy" if engine_health.get("status", "operational") == "operational" else "unhealthy",
+            "engine_status": "operational" if engine_health.get("status") == "healthy" else "degraded",
+            "status_alias": engine_health.get("status", "healthy"),
             "overall_status": overall_status,
             "version": getattr(production_control_engine.ProductionControlEngine, "__version__", "2.0.0"),
             "timestamp": time.time(),
@@ -137,8 +137,8 @@ def _calculate_policy_hash(config: Dict[str, Any]) -> str:
 
 def _determine_overall_health_status(engine_health: Dict[str, Any], metrics_summary: Dict[str, Any]) -> str:
     """Determine overall health status from engine and metrics data."""
-    engine_status = engine_health.get("status", "operational")
-    metrics_status = metrics_summary.get("metrics_status", "operational")
+    engine_status = engine_health.get("status", "healthy")
+    metrics_status = metrics_summary.get("metrics_status", "healthy")
     
     # Prioritize worst status
     if engine_status == "degraded" or metrics_status == "degraded":
@@ -146,7 +146,7 @@ def _determine_overall_health_status(engine_health: Dict[str, Any], metrics_summ
     elif engine_status == "critical_failure":
         return "critical_failure"
     else:
-        return "operational"
+        return "healthy"
 
 
 def _calculate_pressure_level(engine: production_control_engine.ProductionControlEngine, 
