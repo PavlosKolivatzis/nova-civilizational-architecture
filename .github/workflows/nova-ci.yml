@@ -42,6 +42,13 @@ jobs:
     - name: Run tests
       run: pytest -q
       env: ${{ matrix.env }}
+    
+    - name: Run Flow Fabric Integration Tests
+      run: |
+        echo "🌊 Running Flow Fabric Phase 2 integration tests..."
+        pytest tests/flow/test_slot7_reflex_integration.py -v --tb=short
+        echo "✅ Flow Fabric tests completed"
+      env: ${{ matrix.env }}
     - name: Validate Slot Structure
       run: |
         set -e

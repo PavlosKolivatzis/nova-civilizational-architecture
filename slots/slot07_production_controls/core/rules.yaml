@@ -1,0 +1,174 @@
+# Slot 7 Production Controls - Reflex Emission Policy
+# Defines thresholds, cooldowns, and bounds for reflex signal emission
+
+# Global reflex settings
+reflex_policy:
+  # Master controls
+  enabled: false  # NOVA_REFLEX_ENABLED override
+  shadow_mode: true  # NOVA_REFLEX_SHADOW override - compute but don't act
+  
+  # Rate limiting for reflex emissions
+  max_emission_rate: 1.0  # Maximum 1 signal per second across all types
+  burst_allowance: 3      # Allow burst of 3 signals in rapid succession
+  
+  # Global hysteresis and smoothing
+  smoothing_alpha: 0.2    # Exponential smoothing factor (0.1-0.5)
+  debounce_window_seconds: 5.0  # Minimum time between same-type signals
+  
+  # Trace and audit
+  audit_enabled: true
+  ledger_retention_minutes: 60
+  max_ledger_entries: 1000
+
+# Reflex signal type definitions
+signals:
+  breaker_pressure:
+    description: "Circuit breaker pressure signal for upstream throttling"
+    
+    # Emission thresholds
+    thresholds:
+      low_pressure: 0.3     # Start monitoring at 30% pressure
+      medium_pressure: 0.6  # Emit warning-level signal
+      high_pressure: 0.8    # Emit urgent throttling signal
+      critical_pressure: 0.95  # Emergency throttling
+    
+    # Hysteresis prevention (different thresholds for rise/fall)
+    hysteresis:
+      rise_threshold: 0.8   # Emit signal when pressure rises above 80%
+      fall_threshold: 0.6   # Stop signal when pressure falls below 60%
+      
+    # Cooldown and debounce
+    cooldown_seconds: 10.0  # Minimum 10s between breaker_pressure signals
+    max_consecutive: 5      # Maximum 5 consecutive signals before forced cooldown
+    
+    # Signal clamping (bounds for downstream effects)
+    clamps:
+      min_frequency_multiplier: 0.3  # Never throttle below 30% of normal
+      max_frequency_multiplier: 1.0  # Never boost frequency for pressure signals
+      min_weight_multiplier: 0.5     # Never reduce weight below 50%
+      max_weight_multiplier: 1.0     # No weight boost for pressure
+    
+    # Pressure calculation parameters
+    calculation:
+      circuit_state_weights:
+        closed: 0.0
+        half_open: 0.7
+        open: 1.0
+      failure_rate_weight: 0.4  # 40% weight to failure rate
+      response_time_weight: 0.3 # 30% weight to response time
+      active_requests_weight: 0.3  # 30% weight to request load
+
+  memory_pressure:
+    description: "Memory/resource pressure signal for resource-intensive operations"
+    
+    thresholds:
+      low_pressure: 0.4
+      medium_pressure: 0.7
+      high_pressure: 0.85
+      critical_pressure: 0.95
+    
+    hysteresis:
+      rise_threshold: 0.85
+      fall_threshold: 0.7
+      
+    cooldown_seconds: 15.0
+    max_consecutive: 3
+    
+    clamps:
+      min_frequency_multiplier: 0.2
+      max_frequency_multiplier: 1.0
+      min_weight_multiplier: 0.3
+      max_weight_multiplier: 1.0
+    
+    calculation:
+      active_requests_weight: 0.5
+      resource_violations_weight: 0.3
+      processing_time_weight: 0.2
+
+  integrity_violation:
+    description: "Security/integrity violation signal for safety escalation"
+    
+    thresholds:
+      low_severity: 0.2
+      medium_severity: 0.5
+      high_severity: 0.8
+      critical_severity: 0.95
+    
+    hysteresis:
+      rise_threshold: 0.8
+      fall_threshold: 0.5
+      
+    cooldown_seconds: 30.0  # Longer cooldown for security signals
+    max_consecutive: 2      # Fewer consecutive security signals
+    
+    clamps:
+      min_frequency_multiplier: 0.1  # More aggressive throttling for security
+      max_frequency_multiplier: 1.0
+      min_weight_multiplier: 0.1
+      max_weight_multiplier: 2.0     # Allow weight boost for security escalation
+    
+    calculation:
+      integrity_violation_weight: 0.8
+      policy_violation_weight: 0.2
+
+# Environment-specific overrides
+environments:
+  development:
+    reflex_policy:
+      enabled: true         # Enable in dev for testing
+      shadow_mode: false    # Actually emit signals in dev
+      max_emission_rate: 2.0  # Allow higher rate for testing
+      
+  staging:
+    reflex_policy:
+      enabled: true
+      shadow_mode: true     # Shadow mode in staging
+      
+  production:
+    reflex_policy:
+      enabled: false        # Conservative default for prod
+      shadow_mode: true     # Always shadow in prod initially
+
+# Adaptive thresholds (future enhancement)
+adaptive_thresholds:
+  enabled: false
+  learning_rate: 0.01
+  adaptation_window_minutes: 60
+  min_samples: 100
+  
+# Integration points with other slots
+integration:
+  # Target slots for reflex signals
+  downstream_slots:
+    - slot01_truth_anchor     # Memory pressure → reduce truth verification frequency
+    - slot03_emotional_matrix # Breaker pressure → reduce emotional analysis rate
+    - slot06_cultural_synthesis # All signals → modulate synthesis operations
+    - slot10_civilizational_deployment # Integrity → halt deployments
+  
+  # Contracts affected by reflex signals
+  affected_contracts:
+    - EMOTION_REPORT@1        # Primary target for breaker_pressure
+    - TRI_REPORT@1           # Secondary target for memory_pressure
+    - CULTURAL_PROFILE@1     # Target for all signal types
+    - PRODUCTION_CONTROL@1   # Internal feedback loop
+
+# Monitoring and alerting
+monitoring:
+  # Metrics to track
+  track_emission_rate: true
+  track_pressure_levels: true
+  track_downstream_effects: true
+  
+  # Alert thresholds
+  alerts:
+    high_emission_rate: 5.0   # Alert if >5 signals/minute sustained
+    stuck_pressure: 0.9       # Alert if pressure >90% for >5 minutes
+    failed_emissions: 10      # Alert if >10 emission failures
+    
+  # Dashboard recommendations
+  grafana_panels:
+    - slot7_breaker_state
+    - slot7_breaker_trips_total
+    - slot7_reflex_emitted_total
+    - adaptive_link_frequency{contract="EMOTION_REPORT@1"}
+    - slot7_pressure_levels_by_type

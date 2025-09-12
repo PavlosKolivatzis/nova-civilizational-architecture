@@ -5,6 +5,7 @@ from typing import Dict, Any
 # Schema identifiers - these should match the actual $id in the JSON schemas
 SLOT3_SCHEMA_ID = "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot3_health_schema.json"
 SLOT6_SCHEMA_ID = "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot6_cultural_profile_schema.json"
+SLOT7_SCHEMA_ID = "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot7_production_controls_health_schema.json"
 
 # Schema version - increment when breaking changes are made
 SCHEMA_VERSION = "1"
@@ -32,3 +33,7 @@ def slot3_provenance() -> Dict[str, Any]:
 def slot6_provenance() -> Dict[str, Any]:
     """Generate Slot 6 (Cultural Synthesis) provenance block.""" 
     return provenance(SLOT6_SCHEMA_ID)
+
+def slot7_provenance() -> Dict[str, Any]:
+    """Generate Slot 7 (Production Controls) provenance block."""
+    return provenance(SLOT7_SCHEMA_ID)
