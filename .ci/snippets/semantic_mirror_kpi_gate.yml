@@ -1,0 +1,92 @@
+# Semantic Mirror KPI Gate Steps
+# Include these steps in your workflow to validate KPI thresholds
+
+- name: Run Semantic Mirror KPI Check
+  id: kpi-check
+  run: |
+    # Get compact dashboard output
+    compact_output=$(python scripts/semantic_mirror_dashboard.py --compact --once)
+    echo "Compact output: $compact_output"
+    
+    # Parse KPI values using shell parameter expansion
+    hit_pct=$(echo "$compact_output" | sed -n 's/.*hit=\([0-9.]*\)%.*/\1/p')
+    deny_pct=$(echo "$compact_output" | sed -n 's/.*deny=\([0-9.]*\)%.*/\1/p')
+    rl_pct=$(echo "$compact_output" | sed -n 's/.*rl=\([0-9.]*\)%.*/\1/p')
+    reads=$(echo "$compact_output" | sed -n 's/.*reads=\([0-9]*\).*/\1/p')
+    active=$(echo "$compact_output" | sed -n 's/.*active=\([0-9]*\).*/\1/p')
+    
+    echo "Parsed KPIs:"
+    echo "  Hit Rate: ${hit_pct}%"
+    echo "  Denial Rate: ${deny_pct}%"
+    echo "  Rate Limit Rate: ${rl_pct}%"
+    echo "  Total Reads: ${reads}"
+    echo "  Active Contexts: ${active}"
+    
+    # Set outputs for downstream steps
+    echo "hit_rate=${hit_pct}" >> $GITHUB_OUTPUT
+    echo "denial_rate=${deny_pct}" >> $GITHUB_OUTPUT
+    echo "rate_limit_rate=${rl_pct}" >> $GITHUB_OUTPUT
+    echo "total_reads=${reads}" >> $GITHUB_OUTPUT
+    echo "active_contexts=${active}" >> $GITHUB_OUTPUT
+    
+    # Check thresholds (convert percentages to integers for comparison)
+    hit_int=$(echo "$hit_pct" | cut -d. -f1)
+    deny_int=$(echo "$deny_pct" | cut -d. -f1)
+    rl_int=$(echo "$rl_pct" | cut -d. -f1)
+    
+    # Default to 0 if parsing fails
+    hit_int=${hit_int:-0}
+    deny_int=${deny_int:-100}
+    rl_int=${rl_int:-100}
+    
+    echo "Checking thresholds..."
+    exit_code=0
+    
+    # Hit rate >= 60%
+    if [ "$hit_int" -lt 60 ]; then
+      echo "FAIL: Hit rate ${hit_pct}% below threshold (60%)"
+      exit_code=1
+    else
+      echo "PASS: Hit rate ${hit_pct}% meets threshold"
+    fi
+    
+    # Denial rate <= 10%
+    if [ "$deny_int" -gt 10 ]; then
+      echo "FAIL: Denial rate ${deny_pct}% above threshold (10%)"
+      exit_code=1
+    else
+      echo "PASS: Denial rate ${deny_pct}% meets threshold"
+    fi
+    
+    # Rate limit rate <= 1%
+    if [ "$rl_int" -gt 1 ]; then
+      echo "FAIL: Rate limit rate ${rl_pct}% above threshold (1%)"
+      exit_code=1
+    else
+      echo "PASS: Rate limit rate ${rl_pct}% meets threshold"
+    fi
+    
+    if [ $exit_code -eq 0 ]; then
+      echo "✅ All KPI thresholds met"
+    else
+      echo "❌ KPI threshold violations detected"
+    fi
+    
+    exit $exit_code
+
+- name: Generate Health Snapshot
+  if: always()
+  run: |
+    python scripts/semantic_mirror_dashboard.py --once > semantic_mirror_snapshot.txt
+    python scripts/semantic_mirror_dashboard.py --once --csv semantic_mirror_kpis.csv
+    echo "Health snapshot generated"
+
+- name: Upload Semantic Mirror Health
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: semantic-mirror-health
+    path: |
+      semantic_mirror_snapshot.txt
+      semantic_mirror_kpis.csv
+    retention-days: 7
