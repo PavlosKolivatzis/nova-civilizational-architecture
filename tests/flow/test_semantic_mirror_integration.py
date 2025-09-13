@@ -80,6 +80,11 @@ class TestSemanticMirrorCore:
     
     def test_ttl_expiration(self):
         """Test that contexts expire based on TTL."""
+        # Allow S6 to read this INTERNAL key
+        self.mirror.add_access_rules({
+            "slot07.test_data": ["slot06_cultural_synthesis"]
+        })
+        
         # Publish with short TTL
         self.mirror.publish_context(
             "slot07.test_data",
@@ -106,6 +111,11 @@ class TestSemanticMirrorCore:
     
     def test_rate_limiting(self):
         """Test query rate limiting per slot."""
+        # Allow S6 to read this INTERNAL key
+        self.mirror.add_access_rules({
+            "slot07.rate_test": ["slot06_cultural_synthesis"]
+        })
+        
         # Set very low rate limit for testing
         self.mirror.max_queries_per_minute = 2
         
@@ -518,6 +528,9 @@ class TestFullSemanticMirrorIntegration:
     def test_context_isolation_and_access_control(self):
         """Test that context isolation and access control work across slots."""
         mirror = get_semantic_mirror()
+        
+        # Note: Using default access rules which now include the needed permissions
+        # slot07.public_metrics and slot06.synthesis_results are in the defaults
         
         # Slot 7 publishes context
         mirror.publish_context("slot07.internal_state", "sensitive_data", "slot07_production_controls", ContextScope.PRIVATE)

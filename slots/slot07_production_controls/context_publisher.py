@@ -15,6 +15,29 @@ from orchestrator.semantic_mirror import get_semantic_mirror, ContextScope
 logger = logging.getLogger(__name__)
 
 
+class _NoopReflexEmitter:
+    """Noop reflex emitter for testing and fallback scenarios."""
+    def get_metrics(self):
+        return {"signals_emitted_by_type": {}}
+    
+    def emit(self, event: str, payload=None) -> None:
+        pass
+
+
+def get_reflex_emitter():
+    """
+    Factory for the process-wide reflex emitter.
+    Tests patch this symbol directly.
+    """
+    try:
+        # Try to import the actual reflex emitter
+        from slots.slot07_production_controls.reflex_emitter import get_reflex_emitter as get_real_emitter
+        return get_real_emitter()
+    except ImportError:
+        # Fallback to noop emitter if reflex module not available
+        return _NoopReflexEmitter()
+
+
 @dataclass
 class ProductionControlContext:
     """Context data published by Slot 7."""
@@ -123,6 +146,14 @@ class ProductionControlContextPublisher:
             if success:
                 self.last_publish = current_time
                 logger.debug("Published production control context to semantic mirror")
+                
+                # Notify reflex layer (patch target exists for tests)
+                try:
+                    emitter = get_reflex_emitter()
+                    emitter.emit("slot07.context_published", {"source": "slot07"})
+                except Exception:
+                    # Never fail the pipeline due to emitter issues
+                    pass
             else:
                 logger.warning("Failed to publish some context data")
                 
@@ -144,9 +175,8 @@ class ProductionControlContextPublisher:
         # Get resource utilization
         resource_util = min(1.0, metrics.get("active_requests", 0) / max(1, metrics.get("max_concurrent_requests", 50)))
         
-        # Get recent reflex emissions
+        # Get recent reflex emissions (using patchable function)
         try:
-            from slots.slot07_production_controls.reflex_emitter import get_reflex_emitter
             reflex_emitter = get_reflex_emitter()
             reflex_metrics = reflex_emitter.get_metrics()
             recent_emissions = sum(reflex_metrics.get("signals_emitted_by_type", {}).values())

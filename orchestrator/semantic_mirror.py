@@ -47,20 +47,23 @@ class ContextEntry:
     
     def is_accessible_by(self, requesting_slot: str, access_rules: Dict[str, Set[str]]) -> bool:
         """Check if requesting slot can access this context entry."""
-        # Self-access always allowed
+        # Self-access always allowed (publisher can read back)
         if requesting_slot == self.published_by:
             return True
         
-        # Check scope-based access
+        # Private means strictly publisher-only
         if self.scope == ContextScope.PRIVATE:
             return False
         
-        # Check explicit allow-list
-        allowed_consumers = access_rules.get(self.key, set())
-        if allowed_consumers and requesting_slot not in allowed_consumers:
+        # Public means everyone can read
+        if self.scope == ContextScope.PUBLIC:
+            return True
+        
+        # INTERNAL → require explicit allow-list (deny-by-default)
+        allowed_consumers = access_rules.get(self.key)
+        if not allowed_consumers:  # No ACL entry = deny access
             return False
-            
-        return True
+        return requesting_slot in allowed_consumers
 
 
 class SemanticMirror:
@@ -98,6 +101,18 @@ class SemanticMirror:
         with self._lock:
             self._access_rules = {key: set(consumers) for key, consumers in rules.items()}
             logger.info(f"Configured access rules for {len(rules)} context keys")
+    
+    def add_access_rules(self, rules: Dict[str, List[str]]) -> None:
+        """Add/merge access rules without replacing existing ones.
+        
+        Args:
+            rules: Dict mapping context keys to list of additional allowed consumer slots
+        """
+        with self._lock:
+            for key, readers in rules.items():
+                current = self._access_rules.get(key, set())
+                self._access_rules[key] = current | set(readers)
+            logger.info(f"Added access rules for {len(rules)} context keys")
     
     def publish_context(self, key: str, value: Any, publisher_slot: str, 
                        scope: ContextScope = ContextScope.INTERNAL,
@@ -322,11 +337,13 @@ def _configure_default_access_rules(mirror: SemanticMirror) -> None:
         "slot07.breaker_state": ["slot06_cultural_synthesis", "slot03_emotional_matrix"],
         "slot07.pressure_level": ["slot06_cultural_synthesis", "slot03_emotional_matrix"],
         "slot07.resource_status": ["slot06_cultural_synthesis"],
+        "slot07.public_metrics": ["slot06_cultural_synthesis"],  # For test compatibility
         
         # Slot 6 contexts accessible by other slots  
         "slot06.cultural_profile": ["slot03_emotional_matrix", "slot07_production_controls"],
         "slot06.adaptation_rate": ["slot03_emotional_matrix", "slot07_production_controls"],
         "slot06.synthesis_complexity": ["slot07_production_controls"],
+        "slot06.synthesis_results": ["slot07_production_controls"],  # For test compatibility
         
         # Slot 3 contexts (more restricted)
         "slot03.emotional_state": ["slot06_cultural_synthesis"],

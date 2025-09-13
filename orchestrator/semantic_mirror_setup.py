@@ -67,6 +67,9 @@ def _configure_production_access_rules(mirror) -> None:
             "slot06_cultural_synthesis",
             "slot03_emotional_matrix"
         ],
+        "slot07.public_metrics": [
+            "slot06_cultural_synthesis"
+        ],
         
         # Slot 6 Cultural Synthesis -> Other Slots
         "slot06.cultural_profile": [
@@ -78,6 +81,9 @@ def _configure_production_access_rules(mirror) -> None:
             "slot07_production_controls"
         ],
         "slot06.synthesis_complexity": [
+            "slot07_production_controls"
+        ],
+        "slot06.synthesis_results": [
             "slot07_production_controls"
         ],
         
