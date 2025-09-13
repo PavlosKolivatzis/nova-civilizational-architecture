@@ -1,0 +1,29 @@
+# Semantic Mirror Dashboard CI Steps
+# Include these steps in your existing workflow jobs
+
+- name: Run Semantic Mirror Dashboard Health Check
+  run: |
+    python scripts/semantic_mirror_dashboard.py --once > semantic_mirror_health.txt
+    echo "Dashboard health check completed"
+    cat semantic_mirror_health.txt
+
+- name: Generate Semantic Mirror CSV Metrics
+  run: |
+    python scripts/semantic_mirror_dashboard.py --once --csv mirror_metrics.csv
+    echo "CSV metrics generated"
+    ls -la mirror_metrics.csv
+    head -n 5 mirror_metrics.csv
+
+- name: Upload Semantic Mirror Health Artifacts
+  uses: actions/upload-artifact@v4
+  with:
+    name: semantic-mirror-health
+    path: |
+      semantic_mirror_health.txt
+      mirror_metrics.csv
+    retention-days: 7
+
+- name: Run Compact Health Summary
+  run: |
+    echo "Compact health summary:"
+    python scripts/semantic_mirror_dashboard.py --compact --once
