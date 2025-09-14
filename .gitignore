@@ -46,4 +46,6 @@ Thumbs.db
 **/*_deployment
 *.pyc
 .env.semantic_mirror
-cutover_20250914_084256.txt
+cutover_*.txt
+scripts/*.py.bak
+daily_snapshots.txt
