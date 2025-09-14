@@ -45,3 +45,5 @@ Thumbs.db
 **/civilization_deployment
 **/*_deployment
 *.pyc
+.env.semantic_mirror
+cutover_20250914_084256.txt
