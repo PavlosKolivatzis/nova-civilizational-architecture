@@ -1,0 +1,2 @@
+timestamp,status,feature_enabled,issues_count,active_contexts,total_contexts,publications_total,queries_successful,queries_not_found,queries_access_denied,queries_rate_limited,queries_expired,entries_expired,mirror_reads_total,hit_rate,denial_rate,rate_limit_rate
+2025-09-14T14:09:02.443349,degraded,False,1,0,0,0,0,0,0,0,0,0,0,0.0,0.0,0.0
