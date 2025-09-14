@@ -1,0 +1,4 @@
+# Operational tooling requirements
+# Install with: ./.venv/Scripts/python.exe -m pip install -r ops/requirements-ops.txt
+
+PyYAML==6.0.2
