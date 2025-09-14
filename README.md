@@ -77,6 +77,16 @@ npm run maturity
 python -c "from slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api; print('✅ System ready')"
 ```
 
+## Process Scope Note
+
+The Semantic Mirror operates **in-process** - each CLI invocation starts with an empty mirror state. This is by design for security and isolation.
+
+**For live visibility:**
+- Use `--serve` mode: `python scripts/semantic_mirror_dashboard.py --serve 8787 --watch`
+- Or publish a heartbeat: `python -c "from orchestrator.semantic_mirror import publish; publish('slot07.heartbeat', {'tick':1}, 'slot07_production_controls', ttl=120.0)"`
+
+If you see `active=0` in compact mode, this indicates a stateless probe. Use the above methods to show live activity.
+
 ## 🏗️ Architecture Overview
 
 ### 10-Slot Civilizational Framework
