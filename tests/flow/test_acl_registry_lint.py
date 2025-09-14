@@ -20,7 +20,9 @@ DOCUMENTED_KEYS = {
     "slot06.synthesis_complexity",
     "slot03.confidence_level",
     "slot03.emotional_state",
-    "slot10.deployer"
+    "slot10.deployer",
+    "slot05.adaptation_event",
+    "slot05.constellation_mapped"
 }
 
 # Valid key pattern (no stray 'test.' matches)
@@ -37,23 +39,32 @@ def _extract_keys_from_code():
         Path("slots"),
         Path("tests"),  # we do scan tests, but will filter allowlisted keys
     ]
-    keys = set()
+
+    found_keys = set()
     for root in roots:
         if not root.exists():
             continue
-        for path in root.rglob("*.py"):
+
+        for pyfile in root.rglob("*.py"):
             try:
-                text = path.read_text(encoding="utf-8", errors="ignore")
-            except Exception:
+                content = pyfile.read_text(encoding="utf-8")
+                matches = VALID_KEY_RE.findall(content)
+                found_keys.update(matches)
+            except Exception as e:
+                # Skip files that can't be read
                 continue
-            for m in VALID_KEY_RE.finditer(text):
-                keys.add(m.group(0))
-    # drop test-only keys/prefixes
-    filtered = {
-        k for k in keys
-        if k not in ALLOWED_TEST_KEYS and not any(k.startswith(prefix) for prefix in ALLOWED_TEST_PREFIXES)
-    }
-    return filtered
+
+    # Remove allowlisted test keys
+    filtered_keys = set()
+    for key in found_keys:
+        if key in ALLOWED_TEST_KEYS:
+            continue
+        if any(key.startswith(prefix) for prefix in ALLOWED_TEST_PREFIXES):
+            continue
+        filtered_keys.add(key)
+
+    return filtered_keys
+
 
 def test_acl_registry_coverage():
     """Ensure all context keys are documented and no unknown keys exist."""
@@ -63,11 +74,20 @@ def test_acl_registry_coverage():
     unknown_keys = code_keys - DOCUMENTED_KEYS
     assert not unknown_keys, f"Undocumented context keys found: {sorted(unknown_keys)}"
 
-def test_acl_registry_staleness():
-    """Warn about documented keys not found in code (potential cleanup needed)."""
-    code_keys = _extract_keys_from_code()
+    # Soft warning: documented keys not found in code
+    unused_keys = DOCUMENTED_KEYS - code_keys
+    if unused_keys:
+        print(f"Warning: Documented keys not found in code: {sorted(unused_keys)}")
 
-    # Soft warning: documented but unused keys
-    unused_docs = DOCUMENTED_KEYS - code_keys
-    if unused_docs:
-        pytest.xfail(f"Documented keys not found in code: {sorted(unused_docs)}")
+
+def test_acl_key_format():
+    """Test that all documented keys follow proper naming convention."""
+    for key in DOCUMENTED_KEYS:
+        assert VALID_KEY_RE.match(key), f"Invalid key format: {key}"
+        assert key.startswith("slot"), f"Key should start with 'slot': {key}"
+
+
+if __name__ == "__main__":
+    test_acl_registry_coverage()
+    test_acl_key_format()
+    print("✅ ACL registry validation passed")

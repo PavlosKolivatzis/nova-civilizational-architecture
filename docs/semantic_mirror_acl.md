@@ -20,6 +20,8 @@
 | `slot07.context_published` | slot07_production_controls | * | 180s | Context publication event |
 | `slot07.internal_state` | slot07_production_controls | * | 180s | Internal state snapshot |
 | `slot10.deployer` | slot10_deployment_model | * | 300s | Deployment configuration |
+| `slot05.adaptation_event` | slot05_constellation_navigation | * | 300s | Adaptive threshold changes |
+| `slot05.constellation_mapped` | slot05_constellation_navigation | * | 600s | Constellation mapping results |
 
 ### Test-only keys (ignored by linter)
 - slot07.test_data
