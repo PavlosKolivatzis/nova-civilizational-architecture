@@ -58,7 +58,7 @@ class SelfHealingOrchestrator:
         ids_config = {
             "surge_threshold": 200,
             "surge_window_s": 60,
-            "forbidden_paths": ["/etc/passwd", "/etc/shadow", "*.key"],
+            "forbidden_paths": ["/etc/passwd", "/etc/shadow", r".*\.key"],
             "replay_window_s": 300
         }
         self.ids_suite = IDSDetectorSuite(ids_config)
@@ -329,8 +329,8 @@ class TestSelfHealingIntegration:
         policy = Slot8Policy(
             mttr_target_s=3.0,
             quarantine_flip_max_s=0.5,
-            auto_recovery_after_s=1.0,
-            max_auto_recoveries=2
+            quarantine_timeout_s=1,
+            max_repair_attempts=2
         )
 
         orchestrator = SelfHealingOrchestrator(store_dir, snapshot_dir, policy)

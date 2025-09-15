@@ -51,12 +51,12 @@ class Slot8Policy:
         """Initialize default values for mutable fields."""
         if self.forbidden_paths is None:
             self.forbidden_paths = [
-                "/etc/",
-                "/var/lib/nova/secrets/",
-                "/root/",
-                "*.key",
-                "*.pem",
-                "*.p12"
+                "/etc/.*",
+                "/var/lib/nova/secrets/.*",
+                "/root/.*",
+                r".*\.key",
+                r".*\.pem",
+                r".*\.p12"
             ]
 
     @property

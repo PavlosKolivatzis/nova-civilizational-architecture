@@ -69,8 +69,8 @@ class ProcessualTestHarness:
         self.policy = Slot8Policy(
             mttr_target_s=5.0,
             quarantine_flip_max_s=1.0,
-            auto_recovery_after_s=2.0,
-            max_auto_recoveries=3
+            quarantine_timeout_s=2,  # Use the correct parameter name
+            max_repair_attempts=3
         )
 
         # Initialize core components
@@ -86,7 +86,7 @@ class ProcessualTestHarness:
         ids_config = {
             "surge_threshold": 100,  # Lower for testing
             "surge_window_s": 10,
-            "forbidden_paths": ["/etc/shadow", "*.key", "/tmp/test_forbidden/*"],
+            "forbidden_paths": ["/etc/shadow", r".*\.key", "/tmp/test_forbidden/.*"],
             "replay_window_s": 60
         }
         self.ids_suite = IDSDetectorSuite(ids_config)

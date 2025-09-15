@@ -6,7 +6,14 @@ from collections import deque, defaultdict
 from typing import List, Dict, Any, Optional, Set, Callable
 from pathlib import Path
 
-from ..core.types import IDSEvent, ThreatLevel
+# Handle imports for both pytest and direct execution
+try:
+    from ..core.types import IDSEvent, ThreatLevel
+except ImportError:
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path(__file__).parent.parent))
+    from core.types import IDSEvent, ThreatLevel
 
 
 class SurgeDetector:
