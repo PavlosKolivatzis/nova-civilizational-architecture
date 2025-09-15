@@ -123,9 +123,14 @@ class ProcessualTestHarness:
     def simulate_attack(self, attack_type: str):
         """Simulate various attack scenarios."""
         if attack_type == "write_surge":
-            # Simulate write surge
+            # Simulate write surge and return the event
+            surge_event = None
             for _ in range(150):  # Above threshold
-                self.ids_suite.check_write_surge(1)
+                event = self.ids_suite.check_write_surge(1)
+                if event:
+                    surge_event = event
+                    break  # Return first detected surge event
+            return surge_event
         elif attack_type == "forbidden_access":
             # Simulate forbidden path access
             return self.ids_suite.check_forbidden_access("/etc/shadow", "read")
@@ -307,11 +312,15 @@ class TestProcessualCapabilities:
             {"test_scenario": "learning"}
         )
 
+        # Record multiple successes to show learning
         harness.repair_planner.record_repair_outcome(decision, True, 2.5)
+        harness.repair_planner.record_repair_outcome(decision, True, 2.3)
+        harness.repair_planner.record_repair_outcome(decision, True, 2.1)
 
-        # Verify learning occurred
-        success_rate = harness.repair_planner.success_rates.get(decision.action, 0.7)
-        assert success_rate > 0.7, "Success rate should improve with positive feedback"
+        # Verify learning occurred (Beta posterior with 3 successes, 0 failures)
+        # Expected: (3+1)/(3+0+2) = 4/5 = 0.8
+        success_rate = harness.repair_planner.success_rates.get(decision.action, 0.5)
+        assert success_rate >= 0.75, f"Success rate should improve with positive feedback: got {success_rate:.3f}"
 
         print("✓ Adaptive learning mechanisms operational")
 

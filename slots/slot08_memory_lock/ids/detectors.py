@@ -369,14 +369,15 @@ class IDSDetectorSuite:
 
     def check_write_surge(self, count: int = 1) -> Optional[IDSEvent]:
         """Check for write surge and return event if detected."""
-        if self.surge_detector.record_write(count):
+        surge_event = self.surge_detector.record_write(count)
+        if surge_event:
             return IDSEvent(
                 event_type="write_surge",
                 threat_level=ThreatLevel.HIGH,
                 source_path="memory_system",
                 description=f"Write surge detected: {count} operations",
                 ts_ms=int(time.time() * 1000),
-                metadata=self.surge_detector.get_metrics()
+                metadata=surge_event  # Use the event dict as metadata
             )
         return None
 
