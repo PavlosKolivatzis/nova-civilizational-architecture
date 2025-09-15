@@ -80,6 +80,33 @@ capabilities:
     tests:
       - slots/slot04_tri/tests/test_processual_tri.py::test_snapshot_ops
 
+  # Slot 10 Civilizational Deployment Capabilities (Processual 4.0)
+  - key: DEPLOY/GATEKEEPER@1
+    owner: slot10
+    status: active
+    desc: Gate evaluation using Slot 8/4 health signals for deployment decisions
+    requires: [MEM/SELF_HEAL@1, TRI/CALCULATE@1]
+    tests:
+      - slots/slot10_civilizational_deployment/tests/test_gates.py::test_gate_block_on_quarantine
+      - slots/slot10_civilizational_deployment/tests/test_gates.py::test_gate_block_on_drift
+
+  - key: DEPLOY/CANARY@1
+    owner: slot10
+    status: active
+    desc: Progressive delivery controlled by ACL gates with autonomous rollback
+    requires: [DEPLOY/GATEKEEPER@1, MEM/SELF_HEAL@1, TRI/CALCULATE@1]
+    tests:
+      - slots/slot10_civilizational_deployment/tests/test_canary.py::test_canary_promotes_when_all_green
+      - slots/slot10_civilizational_deployment/tests/test_canary.py::test_canary_rolls_back_on_slo_violation
+
+  - key: DEPLOY/SNAPSHOT_BACKOUT@1
+    owner: slot10
+    status: active
+    desc: Cross-slot snapshot coordination for consistent rollback
+    requires: [MEM/SNAPSHOT_SIGNING@1, TRI/SNAPSHOT@1]
+    tests:
+      - slots/slot10_civilizational_deployment/tests/test_backout.py::test_cross_slot_rollback
+
 # System Integration Gates (top-level)
 gates:
   slot10_deploy:
