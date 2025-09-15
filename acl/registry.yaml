@@ -1,13 +1,13 @@
 # Nova Civilizational Architecture ACL Registry
 # Defines capabilities, ownership, and governance for critical system components
 
-version: 1
-schema: capability_registry@1
+version: "1.0"
+schema: "capability_registry"
 
 meta:
   owner: nova-meta-controller
   updated: 2025-09-15
-  notes: "Initial ACL bootstrap for Slot 8 Processual"
+  notes: "ACL registry for Slot 8 & Slot 4 Processual capabilities"
 
 capabilities:
   # Slot 8 Memory Lock & IDS Capabilities (Processual 4.0)
@@ -40,37 +40,60 @@ capabilities:
     desc: Ed25519 snapshot manifest signing & verification
     tests: []
 
-  # Slot 4 TRI Engine Capabilities (planned)
-  - key: TRI/CALCULATE@1
-    owner: slot04
-    status: planned
-    desc: Truth Resonance Index calculation with Bayesian/Kalman filtering
-    requires: [TRI/PATTERN_DETECT@1, TRI/CONFIDENCE_BOUNDS@1]
-    tests: []
-
+  # Slot 4 TRI Engine Capabilities (Processual 4.0)
   - key: TRI/PATTERN_DETECT@1
     owner: slot04
-    status: planned
-    desc: Content pattern detection and anomaly identification
-    tests: []
+    status: active
+    desc: Drift/surge detection for TRI streams with O(1) rolling stats
+    tests:
+      - slots/slot04_tri/tests/test_processual_tri.py::test_autonomous_detection_and_recovery
+      - slots/slot04_tri/tests/test_processual_tri.py::test_surge_respects_warmup
+
+  - key: TRI/CALCULATE@1
+    owner: slot04
+    status: active
+    desc: TRI scoring with confidence intervals and safe-mode gating
+    requires: [TRI/PATTERN_DETECT@1, TRI/CONFIDENCE_BOUNDS@1]
+    tests:
+      - slots/slot04_tri/tests/test_processual_tri.py::test_confidence_interval_behavior
+      - slots/slot04_tri/tests/test_processual_tri.py::test_safe_mode_continuity
+      - slots/slot04_tri/tests/test_processual_tri.py::test_threshold_adapts_and_reverts
 
   - key: TRI/CONFIDENCE_BOUNDS@1
     owner: slot04
-    status: planned
-    desc: Statistical confidence interval calculation for TRI scores
-    tests: []
+    status: active
+    desc: Statistical confidence interval calculation with adaptive thresholds
+    tests:
+      - slots/slot04_tri/tests/test_processual_tri.py::test_confidence_interval_behavior
 
-extensions:
-  gates:
-    slot10_deploy:
-      description: "Deployment gate requiring Slot 8 health before Slot 10 promotion"
-      conditions:
-        - integrity_score >= 0.7
-        - quarantine_active == false
-        - recent_recoveries.success_rate_5m >= 0.8
-    slot4_data_guard:
-      description: "Data guard blocking training input during integrity violations"
-      conditions:
-        - checksum_mismatch == false
-        - tamper_evidence == false
-      fallback: "read-only snapshot materialized views"
+  - key: TRI/SAFE_MODE@1
+    owner: slot04
+    status: active
+    desc: Production-grade safe mode with monotonic timing and auto-expiry
+    tests:
+      - slots/slot04_tri/tests/test_processual_tri.py::test_safe_mode_continuity
+
+  - key: TRI/SNAPSHOT@1
+    owner: slot04
+    status: active
+    desc: Signed TRI model snapshots with path-bound Merkle verification
+    tests:
+      - slots/slot04_tri/tests/test_processual_tri.py::test_snapshot_ops
+
+# System Integration Gates (top-level)
+gates:
+  slot10_deploy:
+    description: "Deployment gate requiring Slot 8 & TRI health before Slot 10 promotion"
+    conditions:
+      - slot08.integrity_score >= 0.7
+      - slot08.quarantine_active == false
+      - slot08.recent_recoveries.success_rate_5m >= 0.8
+      - slot04.safe_mode_active == false
+      - slot04.drift_z < 3.0
+
+  slot4_data_guard:
+    description: "Data guard blocking TRI training input during integrity violations"
+    conditions:
+      - slot08.checksum_mismatch == false
+      - slot08.tamper_evidence == false
+    fallback: "read-only snapshot materialized views"
