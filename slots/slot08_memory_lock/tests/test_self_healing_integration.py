@@ -12,15 +12,31 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 import pytest
+import sys
 
-from ..core.types import ThreatLevel, RepairAction, QuarantineReason, HealthMetrics, IDSEvent
-from ..core.policy import Slot8Policy
-from ..core.integrity_store import MerkleIntegrityStore
-from ..core.snapshotter import IntegritySnapshotter
-from ..core.repair_planner import RepairPlanner
-from ..core.quarantine import QuarantineSystem
-from ..core.entropy_monitor import EntropyMonitor
-from ..ids.detectors import IDSDetectorSuite
+# Handle imports for both pytest and direct execution
+try:
+    from ..core.types import ThreatLevel, RepairAction, QuarantineReason, HealthMetrics, IDSEvent
+    from ..core.policy import Slot8Policy
+    from ..core.integrity_store import MerkleIntegrityStore
+    from ..core.snapshotter import IntegritySnapshotter
+    from ..core.repair_planner import RepairPlanner
+    from ..core.quarantine import QuarantineSystem
+    from ..core.entropy_monitor import EntropyMonitor
+    from ..ids.detectors import IDSDetectorSuite
+except ImportError:
+    # Add the slot08 directory to the path for pytest execution from repo root
+    slot08_path = Path(__file__).parent.parent
+    sys.path.insert(0, str(slot08_path))
+
+    from core.types import ThreatLevel, RepairAction, QuarantineReason, HealthMetrics, IDSEvent
+    from core.policy import Slot8Policy
+    from core.integrity_store import MerkleIntegrityStore
+    from core.snapshotter import IntegritySnapshotter
+    from core.repair_planner import RepairPlanner
+    from core.quarantine import QuarantineSystem
+    from core.entropy_monitor import EntropyMonitor
+    from ids.detectors import IDSDetectorSuite
 
 
 class SelfHealingOrchestrator:
