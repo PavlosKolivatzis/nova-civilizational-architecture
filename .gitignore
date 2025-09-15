@@ -43,7 +43,9 @@ Thumbs.db
 
 # Nova-specific deployment artifacts
 **/civilization_deployment
-**/*_deployment
+**/temp_deployment/
+**/build_deployment/
+**/runtime_deployment/
 *.pyc
 .env.semantic_mirror
 cutover_*.txt

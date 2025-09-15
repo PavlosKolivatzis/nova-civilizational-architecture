@@ -22,14 +22,23 @@ DOCUMENTED_KEYS = {
     "slot03.emotional_state",
     "slot10.deployer",
     "slot05.adaptation_event",
-    "slot05.constellation_mapped"
+    "slot05.constellation_mapped",
+    # Slot 8 Memory Lock & IDS health metrics for deployment gates
+    "slot08.integrity_score",
+    "slot08.quarantine_active",
+    "slot08.recent_recoveries",
+    "slot08.checksum_mismatch",
+    "slot08.tamper_evidence",
+    # Slot 4 TRI Engine health metrics for deployment gates
+    "slot04.safe_mode_active",
+    "slot04.drift_z"
 }
 
 # Valid key pattern (no stray 'test.' matches)
 VALID_KEY_RE = re.compile(r"\bslot\d{2}\.[a-z0-9_]+(?:\.[a-z0-9_]+)*", re.I)
 
 # Allowlisted test-only keys/prefixes
-ALLOWED_TEST_KEYS = {"slot07.test_data", "slot07.rate_test", "slot07.test"}
+ALLOWED_TEST_KEYS = {"slot07.test_data", "slot07.rate_test", "slot07.test", "slot04.get", "slot08.get"}
 ALLOWED_TEST_PREFIXES = ("slot07.test_",)
 
 def _extract_keys_from_code():
