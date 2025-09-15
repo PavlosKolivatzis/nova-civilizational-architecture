@@ -8,15 +8,18 @@ from typing import Any, Dict, List, Optional, Tuple
 from statistics import mean, stdev
 
 from .types import HealthMetrics
+from .policy import Slot8Policy
 
 
 class EntropyMonitor:
     """Monitors schema drift and data entropy for anomaly detection."""
 
-    def __init__(self, window_size: int = 50, entropy_threshold: float = 0.8):
+    def __init__(self, window_size: int = 50, entropy_threshold: float = 0.8,
+                 policy: Optional[Slot8Policy] = None):
         """Initialize entropy monitor with sliding window."""
         self.window_size = window_size
         self.entropy_threshold = entropy_threshold
+        self.policy = policy or Slot8Policy()
 
         # Sliding windows for different metrics
         self.schema_hashes = deque(maxlen=window_size)
@@ -174,9 +177,9 @@ class EntropyMonitor:
                 self._frozen_baseline_threshold = theta
 
         # 2) adapt + mean-revert
-        # reactive step
+        # reactive step - use policy parameters instead of magic numbers
         if context == "anomaly":
-            alpha = 0.30  # move faster during anomaly
+            alpha = self.policy.entropy_alpha_up  # Fast adaptation during anomalies
             self.anomaly_count += 1
         else:
             alpha = 0.10  # slower during normal/baseline
@@ -185,8 +188,12 @@ class EntropyMonitor:
 
         # mean-revert toward frozen baseline only when data is normal/baseline
         if context in ("normal", "baseline") and self._frozen_baseline_threshold is not None:
-            beta = 0.15  # pull strength toward true baseline
+            beta = self.policy.entropy_k_revert  # Reversion strength from policy
             theta = (1 - beta) * theta + beta * self._frozen_baseline_threshold
+
+            # Optional safety: prevent drift below baseline
+            min_threshold = self.policy.entropy_min_rel_baseline * self._frozen_baseline_threshold
+            theta = max(min_threshold, theta)
 
         # clamp
         self.adaptive_entropy_threshold = max(0.05, min(0.95, theta))

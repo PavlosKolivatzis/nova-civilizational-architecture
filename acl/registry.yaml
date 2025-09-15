@@ -1,0 +1,76 @@
+# Nova Civilizational Architecture ACL Registry
+# Defines capabilities, ownership, and governance for critical system components
+
+version: 1
+schema: capability_registry@1
+
+meta:
+  owner: nova-meta-controller
+  updated: 2025-09-15
+  notes: "Initial ACL bootstrap for Slot 8 Processual"
+
+capabilities:
+  # Slot 8 Memory Lock & IDS Capabilities (Processual 4.0)
+  - key: MEM/SELF_HEAL@1
+    owner: slot08
+    status: active
+    desc: Self-healing memory with signed snapshots, quarantine, adaptive repair
+    requires: [MEM/SNAPSHOT_SIGNING@1, MEM/QUARANTINE_POLICY@1, IDS/STORE_SURGE@1]
+    tests:
+      - slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_mttr_requirement
+      - slots/slot08_memory_lock/tests/test_self_healing_integration.py::TestSelfHealingIntegration::test_end_to_end_recovery_workflow
+
+  - key: MEM/QUARANTINE_POLICY@1
+    owner: slot08
+    status: active
+    desc: Versioned quarantine policy with activation <=1s, auto-recovery, read-only continuity
+    tests:
+      - slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_quarantine_flip_time
+
+  - key: IDS/STORE_SURGE@1
+    owner: slot08
+    status: active
+    desc: Write-surge detection that emits structured events
+    tests:
+      - slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_autonomous_threat_detection
+
+  - key: MEM/SNAPSHOT_SIGNING@1
+    owner: slot08
+    status: active
+    desc: Ed25519 snapshot manifest signing & verification
+    tests: []
+
+  # Slot 4 TRI Engine Capabilities (planned)
+  - key: TRI/CALCULATE@1
+    owner: slot04
+    status: planned
+    desc: Truth Resonance Index calculation with Bayesian/Kalman filtering
+    requires: [TRI/PATTERN_DETECT@1, TRI/CONFIDENCE_BOUNDS@1]
+    tests: []
+
+  - key: TRI/PATTERN_DETECT@1
+    owner: slot04
+    status: planned
+    desc: Content pattern detection and anomaly identification
+    tests: []
+
+  - key: TRI/CONFIDENCE_BOUNDS@1
+    owner: slot04
+    status: planned
+    desc: Statistical confidence interval calculation for TRI scores
+    tests: []
+
+extensions:
+  gates:
+    slot10_deploy:
+      description: "Deployment gate requiring Slot 8 health before Slot 10 promotion"
+      conditions:
+        - integrity_score >= 0.7
+        - quarantine_active == false
+        - recent_recoveries.success_rate_5m >= 0.8
+    slot4_data_guard:
+      description: "Data guard blocking training input during integrity violations"
+      conditions:
+        - checksum_mismatch == false
+        - tamper_evidence == false
+      fallback: "read-only snapshot materialized views"

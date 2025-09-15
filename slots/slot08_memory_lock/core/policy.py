@@ -47,6 +47,21 @@ class Slot8Policy:
     learning_rate: float = 0.1
     confidence_threshold: float = 0.7
 
+    # Entropy monitor parameters (no magic numbers in code)
+    entropy_alpha_up: float = 0.35  # Fast adaptation during anomalies
+    entropy_k_revert: float = 0.50  # Reversion strength to baseline
+    entropy_min_rel_baseline: float = 0.92  # Minimum relative to baseline
+
+    # Surge detection parameters
+    surge_window: int = 10  # Detection window in seconds
+    surge_threshold_base: int = 50  # Base threshold for surge detection
+    surge_cooldown_s: float = 0.0  # Cooldown between surge detections
+
+    # Performance SLOs
+    mttr_target_s: float = 5.0  # Mean Time To Recovery SLO
+    quarantine_flip_max_s: float = 1.0  # Max quarantine activation time
+    quarantine_timeout_s: int = 300  # Auto-recovery timeout
+
     def __post_init__(self):
         """Initialize default values for mutable fields."""
         if self.forbidden_paths is None:
