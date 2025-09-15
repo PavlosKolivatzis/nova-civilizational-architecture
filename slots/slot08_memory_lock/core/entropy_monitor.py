@@ -33,6 +33,8 @@ class EntropyMonitor:
         self.adaptive_entropy_threshold = entropy_threshold
         self.baseline_entropy = 0.0
         self.anomaly_count = 0
+        self._baseline_seen = 0
+        self._frozen_baseline_threshold = None  # set after enough baseline samples
 
     def update(self, obj: Any, operation_type: str = "unknown") -> float:
         """Update entropy monitor with new object and return entropy score."""
@@ -57,7 +59,7 @@ class EntropyMonitor:
         entropy_score = self._calculate_entropy_score()
 
         # Update adaptive threshold
-        self._update_adaptive_threshold(entropy_score)
+        self._update_adaptive_threshold(entropy_score, operation_type)
 
         return entropy_score
 
@@ -156,53 +158,38 @@ class EntropyMonitor:
 
         return min(1.0, combined_entropy)
 
-    def _update_adaptive_threshold(self, current_entropy: float):
-        """Update adaptive entropy threshold with mean-reversion."""
+    def _update_adaptive_threshold(self, current_entropy: float, context: str = "unknown"):
+        """Update adaptive entropy threshold with context-aware mean-reversion."""
         if len(self.schema_hashes) < 5:
             return  # Need some data for meaningful adaptation
 
-        # Update baseline with recent normal observations
-        if len(self.schema_hashes) > 10:
-            # Calculate baseline from early observations (more stable)
-            early_window = min(10, len(self.schema_hashes) // 2)
-            if not hasattr(self, '_baseline_set'):
-                self.baseline_entropy = sum(self._calculate_entropy_score()
-                                          for _ in range(early_window)) / early_window
-                self._baseline_set = True
-
-        baseline = getattr(self, "baseline_entropy", 0.5)
         obs = current_entropy
+        theta = self.adaptive_entropy_threshold
 
-        if obs > self.adaptive_entropy_threshold:
-            # React faster to spikes
-            alpha = 0.30
+        # 1) capture a stable baseline from early "baseline" samples
+        if context == "baseline":
+            self._baseline_seen += 1
+            # freeze after enough samples so it's not noisy
+            if self._baseline_seen == 10 and self._frozen_baseline_threshold is None:
+                self._frozen_baseline_threshold = theta
+
+        # 2) adapt + mean-revert
+        # reactive step
+        if context == "anomaly":
+            alpha = 0.30  # move faster during anomaly
             self.anomaly_count += 1
         else:
-            # Revert more slowly
-            alpha = 0.10
+            alpha = 0.10  # slower during normal/baseline
 
-        # Apply standard EMA
-        self.adaptive_entropy_threshold = (
-            (1 - alpha) * self.adaptive_entropy_threshold + alpha * obs
-        )
+        theta = (1 - alpha) * theta + alpha * obs
 
-        # Strong mean reversion when returning to normal patterns
-        consecutive_normal = getattr(self, '_consecutive_normal', 0)
-        if obs <= baseline * 1.1:  # Within 10% of baseline
-            consecutive_normal += 1
-            # Stronger pull back to baseline after consecutive normal observations
-            if consecutive_normal > 5:
-                beta = 0.15  # Stronger reversion
-                self.adaptive_entropy_threshold = (
-                    (1 - beta) * self.adaptive_entropy_threshold + beta * baseline
-                )
-        else:
-            consecutive_normal = 0
+        # mean-revert toward frozen baseline only when data is normal/baseline
+        if context in ("normal", "baseline") and self._frozen_baseline_threshold is not None:
+            beta = 0.15  # pull strength toward true baseline
+            theta = (1 - beta) * theta + beta * self._frozen_baseline_threshold
 
-        self._consecutive_normal = consecutive_normal
-
-        # clamp bounds
-        self.adaptive_entropy_threshold = max(0.05, min(0.95, self.adaptive_entropy_threshold))
+        # clamp
+        self.adaptive_entropy_threshold = max(0.05, min(0.95, theta))
 
     def is_anomalous(self, entropy_score: Optional[float] = None) -> bool:
         """Check if current or provided entropy score indicates anomaly."""
