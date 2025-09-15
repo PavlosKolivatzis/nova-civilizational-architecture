@@ -157,24 +157,52 @@ class EntropyMonitor:
         return min(1.0, combined_entropy)
 
     def _update_adaptive_threshold(self, current_entropy: float):
-        """Update adaptive entropy threshold based on system behavior."""
-        # Simple adaptive mechanism
-        if len(self.schema_hashes) > 10:
-            # Calculate baseline from recent history
-            recent_entropies = [self._calculate_entropy_score() for _ in range(min(5, len(self.schema_hashes)))]
-            if recent_entropies:
-                self.baseline_entropy = mean(recent_entropies)
+        """Update adaptive entropy threshold with mean-reversion."""
+        if len(self.schema_hashes) < 5:
+            return  # Need some data for meaningful adaptation
 
-                # Adapt threshold based on baseline
-                if current_entropy > self.adaptive_entropy_threshold:
-                    self.anomaly_count += 1
-                    # Increase threshold if we're seeing too many anomalies
-                    if self.anomaly_count > 5:
-                        self.adaptive_entropy_threshold = min(0.95, self.adaptive_entropy_threshold * 1.1)
-                        self.anomaly_count = 0
-                else:
-                    # Decrease threshold slowly if system is stable
-                    self.adaptive_entropy_threshold = max(0.3, self.adaptive_entropy_threshold * 0.99)
+        # Update baseline with recent normal observations
+        if len(self.schema_hashes) > 10:
+            # Calculate baseline from early observations (more stable)
+            early_window = min(10, len(self.schema_hashes) // 2)
+            if not hasattr(self, '_baseline_set'):
+                self.baseline_entropy = sum(self._calculate_entropy_score()
+                                          for _ in range(early_window)) / early_window
+                self._baseline_set = True
+
+        baseline = getattr(self, "baseline_entropy", 0.5)
+        obs = current_entropy
+
+        if obs > self.adaptive_entropy_threshold:
+            # React faster to spikes
+            alpha = 0.30
+            self.anomaly_count += 1
+        else:
+            # Revert more slowly
+            alpha = 0.10
+
+        # Apply standard EMA
+        self.adaptive_entropy_threshold = (
+            (1 - alpha) * self.adaptive_entropy_threshold + alpha * obs
+        )
+
+        # Strong mean reversion when returning to normal patterns
+        consecutive_normal = getattr(self, '_consecutive_normal', 0)
+        if obs <= baseline * 1.1:  # Within 10% of baseline
+            consecutive_normal += 1
+            # Stronger pull back to baseline after consecutive normal observations
+            if consecutive_normal > 5:
+                beta = 0.15  # Stronger reversion
+                self.adaptive_entropy_threshold = (
+                    (1 - beta) * self.adaptive_entropy_threshold + beta * baseline
+                )
+        else:
+            consecutive_normal = 0
+
+        self._consecutive_normal = consecutive_normal
+
+        # clamp bounds
+        self.adaptive_entropy_threshold = max(0.05, min(0.95, self.adaptive_entropy_threshold))
 
     def is_anomalous(self, entropy_score: Optional[float] = None) -> bool:
         """Check if current or provided entropy score indicates anomaly."""

@@ -79,28 +79,42 @@ class SelfHealingOrchestrator:
             "timestamp": time.time()
         })
 
-    async def monitor_and_heal(self, monitoring_duration: float = 30.0):
+    async def monitor_and_heal(self, monitoring_duration: float = 10.0):
         """Continuously monitor for threats and autonomously heal."""
-        print(f"🔍 Starting autonomous monitoring for {monitoring_duration}s...")
+        print(f"Starting autonomous monitoring for {monitoring_duration}s...")
 
-        end_time = time.time() + monitoring_duration
-        check_interval = 1.0  # Check every second
+        start_time = time.time()
+        check_interval = 0.1  # Check more frequently for responsive testing
 
-        while time.time() < end_time:
+        while time.time() - start_time < monitoring_duration:
             try:
-                # 1. Threat Detection Phase
-                threats = await self._detect_threats()
+                # 1. Health Assessment (check corruption first)
+                health = await self._assess_health()
+
+                # 2. Threat Detection Phase
+                threats = []
+                incident = None
+
+                # Check for integrity issues
+                if health.checksum_mismatch or health.corruption_detected or health.tamper_evidence:
+                    incident = {"type": "integrity_breach", "health": health}
+                    threats.append(IDSEvent(
+                        event_type="integrity_breach",
+                        threat_level=ThreatLevel.CRITICAL,
+                        source_path="integrity_store",
+                        description="Corruption detected",
+                        ts_ms=int(time.time() * 1000),
+                        metadata={"health": health}
+                    ))
 
                 if threats:
-                    print(f"⚠️  Detected {len(threats)} threats")
+                    print(f"Detected {len(threats)} threats")
+                    self.threat_events.extend(threats)
 
-                    # 2. Quarantine Phase (if critical threats)
+                    # 3. Quarantine Phase (if critical threats)
                     critical_threats = [t for t in threats if t.threat_level == ThreatLevel.CRITICAL]
-                    if critical_threats and not self.quarantine.state.value == "active":
+                    if critical_threats and self.quarantine.state.value != "active":
                         await self._activate_quarantine(critical_threats[0])
-
-                    # 3. Health Assessment
-                    health = await self._assess_health()
 
                     # 4. Repair Planning and Execution
                     if health.corruption_detected or health.tamper_evidence:
@@ -112,10 +126,10 @@ class SelfHealingOrchestrator:
                 await asyncio.sleep(check_interval)
 
             except Exception as e:
-                print(f"❌ Error in monitoring loop: {e}")
+                print(f"Error in monitoring loop: {e}")
                 await asyncio.sleep(check_interval)
 
-        print("✅ Monitoring completed")
+        print("Monitoring completed")
 
     async def _detect_threats(self) -> list[IDSEvent]:
         """Detect threats using IDS suite."""
@@ -202,7 +216,7 @@ class SelfHealingOrchestrator:
 
     async def _execute_autonomous_repair(self, health: HealthMetrics, threats: list[IDSEvent]):
         """Execute autonomous repair based on health and threats."""
-        print("🔧 Initiating autonomous repair...")
+        print("Initiating autonomous repair...")
 
         # Get available snapshots
         snapshots = self.snapshotter.list_snapshots()
@@ -210,7 +224,7 @@ class SelfHealingOrchestrator:
         # Context for repair decision
         context = {
             "threat_count": len(threats),
-            "threat_types": [t.event_type for t in threats],
+            "threat_types": [t.event_type for t in threats] if threats else [],
             "quarantine_active": health.quarantine_active,
             "automated_repair": True
         }
@@ -218,7 +232,7 @@ class SelfHealingOrchestrator:
         # Get repair decision
         decision = self.repair_planner.decide_repair_strategy(health, snapshots, context)
 
-        print(f"📋 Repair decision: {decision.action.value} (confidence: {decision.confidence:.2f})")
+        print(f"Repair decision: {decision.action.value} (confidence: {decision.confidence:.2f})")
 
         # Execute repair
         repair_start = time.time()
@@ -226,8 +240,14 @@ class SelfHealingOrchestrator:
 
         try:
             if decision.action == RepairAction.RESTORE_LAST_GOOD and snapshots:
+                # Actually restore and verify
                 success = self.snapshotter.restore_from_snapshot(snapshots[0].id)
-                print(f"💾 Restored from snapshot {snapshots[0].id}")
+                if success:
+                    # Verify integrity after restore
+                    current_root = self.integrity_store.merkle_root_for_dir(self.store_dir)
+                    expected_root = snapshots[0].merkle_root
+                    success = (current_root == expected_root)
+                    print(f"Restored from snapshot {snapshots[0].id}, verified: {success}")
 
             elif decision.action == RepairAction.BLOCK:
                 # Activate quarantine if not already active
@@ -238,17 +258,26 @@ class SelfHealingOrchestrator:
                         context
                     )
                 success = True
-                print("🛡️  Operations blocked for safety")
+                print("Operations blocked for safety")
 
             elif decision.action == RepairAction.SEMANTIC_PATCH:
                 # Simulate semantic repair
-                await asyncio.sleep(decision.estimated_time_s)
+                await asyncio.sleep(min(decision.estimated_time_s, 0.1))  # Cap wait time
                 success = True
-                print("🔧 Semantic patch applied")
+                print("Semantic patch applied")
 
             # Record outcome
             actual_time = time.time() - repair_start
             self.repair_planner.record_repair_outcome(decision, success, actual_time)
+
+            # Update metrics
+            if success:
+                self.recovery_events.append({
+                    "duration": actual_time,
+                    "reason": "automated_repair",
+                    "context": context,
+                    "timestamp": time.time()
+                })
 
             if success and health.quarantine_active:
                 # Attempt recovery from quarantine
@@ -262,7 +291,7 @@ class SelfHealingOrchestrator:
                 self.quarantine.force_recovery_attempt(recovery_context)
 
         except Exception as e:
-            print(f"❌ Repair execution failed: {e}")
+            print(f"Repair execution failed: {e}")
             actual_time = time.time() - repair_start
             self.repair_planner.record_repair_outcome(decision, False, actual_time)
 

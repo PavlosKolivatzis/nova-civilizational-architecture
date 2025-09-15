@@ -19,16 +19,18 @@ except ImportError:
 class SurgeDetector:
     """Detects anomalous write surges that may indicate attacks."""
 
-    def __init__(self, window_s: int = 60, threshold: int = 500):
+    def __init__(self, window_s: int = 60, threshold: int = 500, cooldown_s: float = 5.0):
         """Initialize surge detector with time window and threshold."""
         self.window_s = window_s
         self.threshold = threshold
         self.events = deque(maxlen=1000)  # Keep last 1000 events
         self.adaptive_threshold = threshold
         self.baseline_rate = 0.0
+        self._last_fired_ts = 0.0
+        self._cooldown_s = cooldown_s
 
-    def record_write(self, count: int = 1, timestamp: Optional[float] = None) -> bool:
-        """Record write operations and return True if surge detected."""
+    def record_write(self, count: int = 1, timestamp: Optional[float] = None):
+        """Record write operations and return surge event dict if detected, else None."""
         if timestamp is None:
             timestamp = time.time()
 
@@ -45,13 +47,23 @@ class SurgeDetector:
         # Update adaptive threshold
         self._update_adaptive_threshold(current_rate)
 
-        # Check for surge
-        is_surge = current_rate > self.adaptive_threshold
+        # Check for surge with cooldown
+        is_surge = (current_rate > self.adaptive_threshold and
+                   (timestamp - self._last_fired_ts) >= self._cooldown_s)
 
         if is_surge:
+            self._last_fired_ts = timestamp
             self._log_surge_event(current_rate, timestamp)
+            return {
+                "type": "write_surge",
+                "ts": timestamp,
+                "window_sec": self.window_s,
+                "window_sum": current_rate,
+                "threshold": self.adaptive_threshold,
+                "baseline": self.baseline_rate,
+            }
 
-        return is_surge
+        return None
 
     def _update_adaptive_threshold(self, current_rate: int):
         """Update adaptive threshold based on recent behavior."""

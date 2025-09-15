@@ -5,6 +5,7 @@ import logging
 from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 from statistics import mean
+from collections import defaultdict
 
 from .types import RepairDecision, RepairAction, HealthMetrics, SnapshotMeta
 from .policy import Slot8Policy
@@ -23,6 +24,10 @@ class RepairPlanner:
         self.repair_history = []
         self.success_rates = {}
         self.recovery_times = {}
+
+        # Better learning with counts (Beta posterior)
+        self._success_counts = defaultdict(int)
+        self._failure_counts = defaultdict(int)
 
         # Adaptive decision parameters
         self.confidence_threshold = 0.7
@@ -375,17 +380,21 @@ class RepairPlanner:
                 log_entry["actual_time"] = actual_time
                 break
 
-        # Update success rates
+        # Update counts and success rates
         action = decision.action
-        if action not in self.success_rates:
-            self.success_rates[action] = 0.7  # Default
+        if success:
+            self._success_counts[action] += 1
+        else:
+            self._failure_counts[action] += 1
+
+        # Calculate success rate using Beta posterior (s+1)/(s+f+2)
+        s = self._success_counts[action]
+        f = self._failure_counts[action]
+        # Beta(1,1) posterior mean nudges toward 0.5, preventing extreme values
+        self.success_rates[action] = (s + 1) / (s + f + 2)
+
         if action not in self.recovery_times:
             self.recovery_times[action] = []
-
-        # Update running averages
-        current_rate = self.success_rates[action]
-        new_rate = current_rate + self.learning_rate * (1.0 if success else 0.0 - current_rate)
-        self.success_rates[action] = max(0.1, min(0.95, new_rate))
 
         # Update timing estimates
         self.recovery_times[action].append(actual_time)

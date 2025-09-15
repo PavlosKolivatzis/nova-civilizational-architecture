@@ -117,7 +117,8 @@ class ProcessualTestHarness:
             # Corrupt file metadata (simulate timestamp change)
             target_file = test_files[0]
             current_time = time.time()
-            target_file.touch(times=(current_time, current_time + 3600))  # Future timestamp
+            import os
+            os.utime(target_file, (current_time, current_time + 3600))  # set atime, mtime
 
     def simulate_attack(self, attack_type: str):
         """Simulate various attack scenarios."""

@@ -48,7 +48,7 @@ class SnapshotMeta:
     ts_ms: int
     merkle_root: str
     signer: str
-    sig: bytes
+    sig: str  # hex-encoded signature for consistency
     status: SnapshotStatus = SnapshotStatus.OK
     content_size: int = 0
     file_count: int = 0

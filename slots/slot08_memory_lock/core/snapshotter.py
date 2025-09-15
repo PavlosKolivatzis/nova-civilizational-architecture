@@ -100,7 +100,7 @@ class IntegritySnapshotter:
                 ts_ms=current_time,
                 merkle_root=merkle_root,
                 signer=self.signer.pubkey_fpr(),
-                sig=signature,
+                sig=signature.hex(),  # Store as hex string
                 status=SnapshotStatus.OK,
                 content_size=content_size,
                 file_count=file_count
@@ -183,7 +183,7 @@ class IntegritySnapshotter:
                     ts_ms=metadata["ts_ms"],
                     merkle_root=metadata["merkle_root"],
                     signer=metadata["signer"],
-                    sig=signature,
+                    sig=metadata.get("sig", ""),  # Keep as hex string
                     status=SnapshotStatus.OK,
                     content_size=metadata.get("content_size", 0),
                     file_count=metadata.get("file_count", 0)
