@@ -15,17 +15,23 @@ class Slot10Policy:
 
     # Canary progression stages
     canary_stages: List[float] = None  # Will be set in __post_init__
-    min_stage_duration_s: int = 120  # Minimum observation time per stage
+    min_stage_duration_s: int = 300  # Minimum observation time per stage (5 minutes)
+    # Minimum time between promotions (seconds). 0 disables the velocity guard.
+    min_promotion_gap_s: float = 0.0
+
+    # Canary invariants and safety limits
+    max_stage_rollback_velocity_per_hour: int = 6  # Max one stage promotion per 10 minutes
+    frozen_baseline_window_s: int = 300  # 5 minutes of stable metrics before canary
 
     # Gate thresholds (matching ACL registry gates)
     slot08_integrity_threshold: float = 0.7
     slot08_recovery_rate_threshold: float = 0.8
     slot04_drift_z_threshold: float = 3.0
 
-    # Slot 10 golden signals SLOs
-    error_rate_multiplier: float = 1.2  # Allow 20% increase from baseline
-    latency_p95_multiplier: float = 1.2  # Allow 20% latency increase
-    saturation_threshold: float = 0.85  # 85% resource utilization limit
+    # Slot 10 golden signals SLOs (tightened for production)
+    error_rate_multiplier: float = 1.15  # Allow 15% increase from baseline
+    latency_p95_multiplier: float = 1.10  # Allow 10% latency increase
+    saturation_threshold: float = 0.80  # 80% resource utilization limit
 
     # Cross-slot snapshot coordination
     snapshot_consistency_timeout_s: float = 30.0
