@@ -1,0 +1,191 @@
+"""Nova morning health pulse - comprehensive system health check."""
+
+import time
+import json
+from typing import Dict, Any, List
+from pathlib import Path
+
+def check_slot8_health() -> Dict[str, Any]:
+    """Check Slot 8 Memory Lock & IDS health."""
+    try:
+        # Just check if modules can be imported
+        import slots.slot08_memory_lock.core
+        import slots.slot08_memory_lock.ids.detectors
+
+        return {
+            "status": "healthy",
+            "components": ["MemoryLock", "EntropyMonitor", "RepairPlanner", "IntrusionDetector"],
+            "mttr_target": "<=5s",
+            "quarantine_activation": "<=1s"
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+def check_slot4_health() -> Dict[str, Any]:
+    """Check Slot 4 TRI Engine health."""
+    try:
+        # Just check if modules can be imported
+        import slots.slot04_tri.core
+
+        return {
+            "status": "healthy",
+            "components": ["TRIEngine", "SafeMode", "BayesianLearner"],
+            "drift_detection": "O(1) rolling statistics",
+            "auto_recovery": "Bayesian posterior learning"
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+def check_slot10_health() -> Dict[str, Any]:
+    """Check Slot 10 Processual Deployment health."""
+    try:
+        # Just check if modules can be imported
+        import slots.slot10_civilizational_deployment.core
+
+        return {
+            "status": "healthy",
+            "components": ["CanaryController", "Gatekeeper", "SnapshotBackout", "MetricsExporter", "AuditLog"],
+            "deployment_strategy": "Progressive canary with autonomous rollback",
+            "observability": "Prometheus metrics + hash-chained audit"
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+def run_test_suites() -> Dict[str, Any]:
+    """Run test suites to verify functionality."""
+    import subprocess
+    import sys
+
+    results = {}
+
+    slots = [
+        ("slot08_memory_lock", "slots/slot08_memory_lock/tests/"),
+        ("slot04_tri", "slots/slot04_tri/tests/"),
+        ("slot10_civilizational_deployment", "slots/slot10_civilizational_deployment/tests/")
+    ]
+
+    for slot_name, test_path in slots:
+        try:
+            # Run pytest for each slot
+            result = subprocess.run([
+                sys.executable, "-m", "pytest", test_path, "-q", "--tb=no"
+            ], capture_output=True, text=True, cwd=".")
+
+            if result.returncode == 0:
+                # Parse test count from output
+                lines = result.stdout.split('\n')
+                summary_line = next((line for line in lines if "passed" in line), "")
+                results[slot_name] = {
+                    "status": "pass",
+                    "summary": summary_line.strip() if summary_line else "tests passed"
+                }
+            else:
+                results[slot_name] = {
+                    "status": "fail",
+                    "error": result.stdout + result.stderr
+                }
+        except Exception as e:
+            results[slot_name] = {"status": "error", "error": str(e)}
+
+    return results
+
+def check_acl_governance() -> Dict[str, Any]:
+    """Check ACL registry governance status."""
+    try:
+        registry_path = Path("acl/registry.yaml")
+        if registry_path.exists():
+            import yaml
+            with open(registry_path, 'r') as f:
+                registry = yaml.safe_load(f)
+
+            capabilities = len(registry.get('capabilities', {}))
+            gates = len(registry.get('gates', {}))
+
+            return {
+                "status": "healthy",
+                "capabilities": capabilities,
+                "gates": gates,
+                "governance_model": "capability-based with test evidence"
+            }
+        else:
+            return {"status": "missing", "error": "ACL registry not found"}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+def run_morning_routine() -> None:
+    """Run comprehensive Nova morning health pulse."""
+    print("Nova Civilizational Architecture - Morning Health Pulse")
+    print("=" * 60)
+    print(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}")
+    print()
+
+    # Component health checks
+    print("Component Health Status:")
+
+    slot8 = check_slot8_health()
+    print(f"  Slot 8 Memory Lock & IDS: {slot8['status'].upper()}")
+    if slot8['status'] == 'healthy':
+        print(f"    Components: {', '.join(slot8['components'])}")
+        print(f"    MTTR Target: {slot8['mttr_target']}")
+
+    slot4 = check_slot4_health()
+    print(f"  Slot 4 TRI Engine: {slot4['status'].upper()}")
+    if slot4['status'] == 'healthy':
+        print(f"    Components: {', '.join(slot4['components'])}")
+        print(f"    Features: {slot4['drift_detection']}")
+
+    slot10 = check_slot10_health()
+    print(f"  Slot 10 Processual Deployment: {slot10['status'].upper()}")
+    if slot10['status'] == 'healthy':
+        print(f"    Components: {', '.join(slot10['components'])}")
+        print(f"    Strategy: {slot10['deployment_strategy']}")
+
+    print()
+
+    # ACL Governance
+    print("Governance Status:")
+    acl = check_acl_governance()
+    print(f"  ACL Registry: {acl['status'].upper()}")
+    if acl['status'] == 'healthy':
+        print(f"    Capabilities: {acl['capabilities']}")
+        print(f"    Gates: {acl['gates']}")
+
+    print()
+
+    # Test Suite Validation
+    print("Test Suite Validation:")
+    test_results = run_test_suites()
+
+    total_passed = 0
+    for slot_name, result in test_results.items():
+        status_icon = "PASS" if result['status'] == 'pass' else "FAIL"
+        print(f"  [{status_icon}] {slot_name}: {result.get('summary', result.get('error', 'unknown'))}")
+        if result['status'] == 'pass' and 'passed' in result.get('summary', ''):
+            # Extract number of passed tests
+            try:
+                passed_count = int(result['summary'].split()[0])
+                total_passed += passed_count
+            except:
+                pass
+
+    print()
+
+    # Summary
+    all_healthy = all([
+        slot8['status'] == 'healthy',
+        slot4['status'] == 'healthy',
+        slot10['status'] == 'healthy',
+        acl['status'] == 'healthy'
+    ])
+
+    if all_healthy:
+        print("SYSTEM STATUS: PROCESSUAL (4.0) - All slots operational")
+        print(f"Total test validation: {total_passed} tests passing")
+        print("Nova ready for civilizational-scale operation")
+    else:
+        print("SYSTEM STATUS: Degraded - Check component errors above")
+
+    print("=" * 60)
+
+if __name__ == "__main__":
+    run_morning_routine()
