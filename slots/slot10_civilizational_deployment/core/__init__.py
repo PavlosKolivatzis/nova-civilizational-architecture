@@ -8,6 +8,8 @@ from .health_feed import (
     HealthFeedAdapter, MockHealthFeed, LiveHealthFeed,
     Slot8Health, Slot4Health, RuntimeMetrics,
 )
+from .audit import AuditLog, AuditRecord, AuditSigner
+from .metrics import CanaryMetrics, CanaryMetricsExporter
 
 __all__ = [
     "Slot10Policy",
@@ -16,4 +18,6 @@ __all__ = [
     "SnapshotBackout", "SnapshotSet", "RollbackResult",
     "HealthFeedAdapter", "MockHealthFeed", "LiveHealthFeed",
     "Slot8Health", "Slot4Health", "RuntimeMetrics",
+    "AuditLog", "AuditRecord", "AuditSigner",
+    "CanaryMetrics", "CanaryMetricsExporter",
 ]

@@ -9,6 +9,8 @@ import logging
 from .policy import Slot10Policy
 from .gatekeeper import Gatekeeper
 from .health_feed import HealthFeedAdapter, MockHealthFeed, RuntimeMetrics
+from .audit import AuditLog
+from .metrics import CanaryMetricsExporter, CanaryMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +50,14 @@ class CanaryController:
         policy: Slot10Policy,
         gatekeeper: Gatekeeper,
         health_feed: Optional[HealthFeedAdapter] = None,
+        audit: Optional[AuditLog] = None,
+        metrics_exporter: Optional[CanaryMetricsExporter] = None,
     ):
         self.policy = policy
         self.gatekeeper = gatekeeper
         self.health_feed = health_feed or MockHealthFeed()
+        self.audit = audit
+        self.metrics_exporter = metrics_exporter
 
         self.current_stage_idx = 0
         self.stages = [CanaryStage(pct) for pct in policy.canary_stages]
@@ -74,6 +80,17 @@ class CanaryController:
 
         logger.info("Starting canary deployment at %.1f%%", self.stages[0].percentage * 100.0)
         logger.info("Frozen baseline: %s", self.frozen_baseline)
+
+        # Audit logging
+        if self.audit:
+            self.audit.record(
+                action="start",
+                stage_idx=0,
+                reason=f"Initialized at {self.stages[0].percentage:.1%}",
+                pct_from=0.0,
+                pct_to=self.stages[0].percentage,
+                metrics={"stage_count": len(self.stages), "frozen_baseline": self.frozen_baseline}
+            )
 
         return CanaryResult(
             success=True,
@@ -205,6 +222,20 @@ class CanaryController:
 
         logger.info("Promoting to stage %d: %.1f%%", self.current_stage_idx, next_stage.percentage * 100.0)
 
+        # Audit logging
+        if self.audit:
+            self.audit.record(
+                action="promote",
+                stage_idx=self.current_stage_idx,
+                reason=f"Promoted to {next_stage.percentage:.1%}",
+                pct_from=current_stage.percentage,
+                pct_to=next_stage.percentage,
+                metrics={
+                    "previous_stage_duration": current_stage.duration,
+                    "promotion_timestamp": self._last_promotion_ts
+                }
+            )
+
         return CanaryResult(
             success=True,
             action="promote",
@@ -222,6 +253,21 @@ class CanaryController:
         stage = self.stages[self.current_stage_idx]
         stage.end_time = time.time()
         logger.warning("Triggering rollback: %s", reason)
+
+        # Audit logging
+        if self.audit:
+            self.audit.record(
+                action="rollback",
+                stage_idx=self.current_stage_idx,
+                reason=reason,
+                pct_from=stage.percentage,
+                pct_to=0.0,
+                metrics={
+                    "stage_duration": stage.duration,
+                    "slo_violations": stage.slo_violations,
+                }
+            )
+
         return CanaryResult(
             success=False,
             action="rollback",
@@ -258,4 +304,38 @@ class CanaryController:
             "saturation": rt.saturation,
         }
 
-        return self.evaluate_stage(current, slot08, slot04)
+        result = self.evaluate_stage(current, slot08, slot04)
+
+        # Export metrics if configured
+        self._emit_metrics(result, current, slot08, slot04)
+
+        return result
+
+    @property
+    def current_percentage(self) -> float:
+        """Get current stage percentage for metrics."""
+        if self.current_stage_idx < len(self.stages):
+            return self.stages[self.current_stage_idx].percentage
+        return 1.0
+
+    def _emit_metrics(self, result: CanaryResult, runtime_metrics: dict, slot08_metrics: dict, slot04_metrics: dict):
+        """Emit metrics to exporter if configured."""
+        if not self.metrics_exporter or not self.metrics_exporter.should_export():
+            return
+
+        # Capture current canary state
+        metrics = self.metrics_exporter.capture_canary_state(self)
+
+        # Update with gate result if available
+        gate_result = self.gatekeeper.last_gate_result if hasattr(self.gatekeeper, 'last_gate_result') else None
+
+        # Update metrics with runtime and gate data
+        updated_metrics = self.metrics_exporter.update_metrics(
+            metrics,
+            gate_result=gate_result,
+            runtime_metrics=runtime_metrics,
+            rollback_reason=result.reason if result.action == "rollback" else ""
+        )
+
+        # Export metrics
+        self.metrics_exporter.export_metrics(updated_metrics)

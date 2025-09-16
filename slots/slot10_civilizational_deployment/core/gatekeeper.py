@@ -22,6 +22,7 @@ class Gatekeeper:
     def __init__(self, policy: Optional[Slot10Policy] = None, health_feed: Optional[HealthFeedAdapter] = None):
         self.policy = policy or Slot10Policy()
         self.health_feed = health_feed or MockHealthFeed()
+        self.last_gate_result: Optional[GateResult] = None
 
     def evaluate_deploy_gate(self, slot08: Optional[Dict[str, Any]] = None, slot04: Optional[Dict[str, Any]] = None) -> GateResult:
         """Evaluate deployment gate using live health feeds or provided dicts (for testing)."""
@@ -79,9 +80,13 @@ class Gatekeeper:
         else:
             logger.debug("Gate PASS (eval_time=%.3fs)", evaluation_time)
 
-        return GateResult(
+        result = GateResult(
             passed=passed,
             failed_conditions=fails,
             evaluation_time_s=evaluation_time,
             health_snapshot={"slot8": slot8_health, "slot4": slot4_health}
         )
+
+        # Store for metrics access
+        self.last_gate_result = result
+        return result
