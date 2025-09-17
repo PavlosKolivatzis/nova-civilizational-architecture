@@ -1,4 +1,5 @@
 import math
+import os
 from typing import Dict, List, Any, Tuple, Optional
 from collections import defaultdict
 import logging
@@ -464,9 +465,142 @@ class ConstellationEngine:
             "link_count": len(links),
             "stability_score": self._calculate_base_stability(constellation, links)
         }
-        
+
         self._constellation_history.append(entry)
-        
+
+        # Keep history within window
+        if len(self._constellation_history) > self.stability_window:
+            self._constellation_history = self._constellation_history[-self.stability_window:]
+
+    def get_current_position(self) -> Dict[str, Any]:
+        """Get current constellation position for TRI integration.
+
+        This method is gated by NOVA_ENABLE_TRI_LINK environment variable.
+        Returns the latest constellation state.
+
+        Returns:
+            Dict with current position data
+        """
+        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip().lower()
+        enabled = flag in {"1", "true", "yes", "on"}
+        if not enabled:
+            return {
+                "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+                "stability": 1.0,
+                "item_count": 0,
+                "disabled": True
+            }
+
+        # Calculate current position based on constellation history
+        if not self._constellation_history:
+            return {
+                "position": {"x": 0.5, "y": 0.5, "z": 0.5},
+                "stability": 1.0,
+                "item_count": 0,
+                "disabled": False
+            }
+
+        latest = self._constellation_history[-1]
+
+        # Calculate position based on constellation metrics
+        x = min(1.0, latest["constellation_size"] / 20.0)  # Normalize by typical size
+        y = min(1.0, latest["link_count"] / 50.0)         # Normalize by typical link count
+        z = latest["stability_score"]                      # Already normalized [0,1]
+
+        return {
+            "position": {"x": x, "y": y, "z": z},
+            "stability": latest["stability_score"],
+            "item_count": latest["constellation_size"],
+            "disabled": False
+        }
+
+    def update_from_tri(self, tri_score: float, layer_scores: Dict[str, float]) -> Dict[str, Any]:
+        """Update constellation based on TRI analysis results.
+
+        This method is gated by NOVA_ENABLE_TRI_LINK environment variable.
+        Integrates TRI scoring to influence constellation stability.
+
+        Args:
+            tri_score: Main TRI score [0,1]
+            layer_scores: Dict of layer-specific scores
+
+        Returns:
+            Dict with updated position and stability metrics
+        """
+        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip().lower()
+        enabled = flag in {"1", "true", "yes", "on"}
+        if not enabled:
+            return {
+                "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+                "stability_index": 1.0,
+                "tri_influence": 0.0,
+                "disabled": True
+            }
+
+        # Get current position before update
+        current = self.get_current_position()
+        current_pos = current["position"]
+
+        # Calculate TRI influence on constellation position
+        tri_influence = self._calculate_tri_influence(tri_score, layer_scores)
+
+        # Update position based on TRI analysis
+        new_position = {
+            "x": self._blend_coordinate(current_pos["x"], layer_scores.get("structural", 0.0), tri_influence),
+            "y": self._blend_coordinate(current_pos["y"], layer_scores.get("semantic", 0.0), tri_influence),
+            "z": self._blend_coordinate(current_pos["z"], layer_scores.get("expression", 0.0), tri_influence)
+        }
+
+        # Calculate new stability index influenced by TRI
+        base_stability = current.get("stability", 1.0)
+        tri_stability_factor = 1.0 - abs(tri_score - 0.5) * 0.5  # More extreme scores reduce stability
+        new_stability = base_stability * (0.7 + 0.3 * tri_stability_factor)
+
+        # Update internal history with TRI-influenced data
+        self._record_tri_update(new_position, new_stability, tri_score, layer_scores)
+
+        return {
+            "position": new_position,
+            "stability_index": max(0.0, min(1.0, new_stability)),
+            "tri_influence": tri_influence,
+            "tri_score": tri_score,
+            "layer_scores": layer_scores,
+            "disabled": False
+        }
+
+    def _calculate_tri_influence(self, tri_score: float, layer_scores: Dict[str, float]) -> float:
+        """Calculate how much TRI analysis should influence constellation position."""
+        # Higher TRI scores (more confident) have more influence
+        base_influence = tri_score * 0.3  # Max 30% influence
+
+        # Layer consistency increases influence
+        layer_values = [layer_scores.get(k, 0.0) for k in ["structural", "semantic", "expression"]]
+        layer_variance = self._calculate_variance(layer_values) if len(layer_values) > 1 else 0.0
+        consistency_bonus = (1.0 - layer_variance) * 0.2  # Up to 20% bonus for consistency
+
+        return min(0.5, base_influence + consistency_bonus)  # Cap at 50% influence
+
+    def _blend_coordinate(self, current: float, tri_layer: float, influence: float) -> float:
+        """Blend current coordinate with TRI layer score using influence factor."""
+        blended = current * (1.0 - influence) + tri_layer * influence
+        return max(0.0, min(1.0, blended))
+
+    def _record_tri_update(self, position: Dict[str, float], stability: float,
+                          tri_score: float, layer_scores: Dict[str, float]):
+        """Record TRI-influenced update in constellation history."""
+        entry = {
+            "timestamp": len(self._constellation_history),
+            "constellation_size": len(self._constellation_history),  # Approximate
+            "link_count": max(1, len(self._constellation_history) * 2),  # Approximate
+            "stability_score": stability,
+            "tri_enhanced": True,
+            "tri_score": tri_score,
+            "layer_scores": layer_scores.copy(),
+            "position": position.copy()
+        }
+
+        self._constellation_history.append(entry)
+
         # Keep history within window
         if len(self._constellation_history) > self.stability_window:
             self._constellation_history = self._constellation_history[-self.stability_window:]

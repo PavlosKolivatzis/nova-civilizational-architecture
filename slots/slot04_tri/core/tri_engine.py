@@ -1,8 +1,8 @@
 from __future__ import annotations
-import time, math
+import time, math, os, tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Union
 from .policy import TriPolicy
 from .types import Health, RepairDecision
 from .detectors import DriftDetector, SurgeDetector
@@ -30,7 +30,7 @@ class TriEngine:
     """
     Minimal TRI engine with adaptive recovery & safe mode.
     """
-    def __init__(self, model_dir: Path, snapshot_dir: Path, policy: TriPolicy | None = None):
+    def __init__(self, model_dir: Union[Path, str, None] = None, snapshot_dir: Union[Path, str, None] = None, policy: TriPolicy | None = None, **kw):
         self.policy = policy or TriPolicy()
         self.metrics = TriMetrics()
         self._alpha_up = self.policy.ema_alpha_up
@@ -45,7 +45,12 @@ class TriEngine:
         self.drift = DriftDetector(self.policy.drift_window, self.policy.drift_z_threshold)
         self.surge = SurgeDetector(self.policy.surge_window, self.policy.surge_threshold, self.policy.surge_cooldown_s)
         self.repair = RepairPlanner()
-        self.snapshotter = TriSnapshotter(model_dir, snapshot_dir)
+
+        # Handle model and snapshot directories with sensible defaults
+        self.model_dir = Path(model_dir) if model_dir else Path(tempfile.mkdtemp(prefix="tri_model_"))
+        self.snapshot_dir = Path(snapshot_dir) if snapshot_dir else Path(tempfile.mkdtemp(prefix="tri_snap_"))
+        self.snapshotter = TriSnapshotter(self.model_dir, self.snapshot_dir)
+
         # detector state for assess()
         self._last_drift_z: float = 0.0
         self._surge_events_window: int = 0
@@ -134,4 +139,87 @@ class TriEngine:
             "surge.events_window": self._surge_events_window,
             "safe.active": self.safe_mode.active,
             "ci95.lo": lo, "ci95.hi": hi,
+        }
+
+    def calculate(self, content: str) -> Dict[str, Any]:
+        """Calculate TRI score and layer scores for content analysis.
+
+        This method is gated by NOVA_ENABLE_TRI_LINK environment variable.
+        Used for integration with Constellation Engine in Slot 5.
+
+        Args:
+            content: Text content to analyze
+
+        Returns:
+            Dict with "score" and "layer_scores" keys
+        """
+        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip().lower()
+        if flag not in {"1", "true", "yes", "on"}:
+            # Return a harmless stub instead of raising to avoid accidental call sites exploding.
+            return {
+                "score": 0.0,
+                "layer_scores": {"structural": 0.0, "semantic": 0.0, "expression": 0.0,
+                                 "delta": 0.0, "sigma": 0.0, "theta": 0.0},  # alias keys too
+                "metadata": {"disabled": True, "reason": "NOVA_ENABLE_TRI_LINK not enabled"}
+            }
+
+        # Simple content analysis to extract features
+        features = self._extract_features_from_content(content)
+
+        # Calculate main TRI score
+        main_score = max(0.0, min(1.0, self._tri_score(features)))  # clamp for safety
+
+        # Calculate layer-specific scores
+        layer_scores = self._calculate_layer_scores(content, features)
+        # Provide alias keys expected by other components/tests without breaking your current naming.
+        layer_scores = {
+            **layer_scores,
+            "delta": layer_scores.get("structural", 0.0),
+            "sigma": layer_scores.get("semantic", 0.0),
+            "theta": layer_scores.get("expression", 0.0)
+        }
+
+        return {
+            "score": main_score,
+            "layer_scores": layer_scores,
+            "metadata": {
+                "content_length": len(content),
+                "feature_count": len(features),
+                "method": "tri_layered_analysis",
+                "disabled": False
+            }
+        }
+
+    def _extract_features_from_content(self, content: str) -> Dict[str, float]:
+        """Extract features from text content for TRI analysis."""
+        words = content.split()
+        sentences = content.split('.')
+
+        return {
+            "length_factor": min(1.0, len(content) / 1000.0),
+            "word_density": len(words) / max(1, len(content)),
+            "sentence_complexity": len(sentences) / max(1, len(words)),
+            "caps_ratio": sum(1 for c in content if c.isupper()) / max(1, len(content)),
+            "punctuation_density": sum(1 for c in content if c in "!?.,;:") / max(1, len(content)),
+            "uniqueness": len(set(word.lower() for word in words)) / max(1, len(words))
+        }
+
+    def _calculate_layer_scores(self, content: str, features: Dict[str, float]) -> Dict[str, float]:
+        """Calculate layer-specific TRI scores for different analysis dimensions."""
+        # Layer 1: Structural analysis
+        structural_score = (features.get("length_factor", 0) +
+                           features.get("sentence_complexity", 0)) / 2
+
+        # Layer 2: Semantic density
+        semantic_score = (features.get("word_density", 0) +
+                         features.get("uniqueness", 0)) / 2
+
+        # Layer 3: Expression intensity
+        expression_score = (features.get("caps_ratio", 0) +
+                           features.get("punctuation_density", 0)) / 2
+
+        return {
+            "structural": max(0.0, min(1.0, structural_score)),
+            "semantic": max(0.0, min(1.0, semantic_score)),
+            "expression": max(0.0, min(1.0, expression_score))
         }

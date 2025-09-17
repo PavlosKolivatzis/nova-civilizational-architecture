@@ -51,3 +51,6 @@ Thumbs.db
 cutover_*.txt
 scripts/*.py.bak
 daily_snapshots.txt
+__pycache__/
+*.py[cod]
+*.pyo
