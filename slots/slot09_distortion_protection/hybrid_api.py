@@ -10,6 +10,7 @@ import asyncio
 import hashlib
 import uuid
 import json
+import os
 from typing import Dict, Any, Optional, List, Tuple, Union
 from enum import Enum
 from dataclasses import dataclass, asdict
@@ -47,10 +48,26 @@ except ImportError:
     # Fallback enums
     class IDSState(str, Enum):
         STABLE = "stable"
-        REINTEGRATING = "reintegrating"  
+        REINTEGRATING = "reintegrating"
         DIVERGING = "diverging"
         DISINTEGRATING = "disintegrating"
     IDS_ENABLED = True
+
+# Shared hash utility with fallback
+try:
+    from slots.common.hashutils import compute_audit_hash  # blake2b(backed)
+    SHARED_HASH_AVAILABLE = True
+except Exception:  # ImportError or any init error -> mark unavailable
+    compute_audit_hash = None  # type: ignore
+    SHARED_HASH_AVAILABLE = False
+    # Fallback to current SHA256 implementation
+
+def _env_truthy(name: str) -> bool:
+    v = os.getenv(name, "").strip().lower()
+    return v in {"1", "true", "yes", "on"}
+
+# Exported snapshot (for tests/introspection); runtime re-reads each call.
+NOVA_USE_SHARED_HASH = _env_truthy("NOVA_USE_SHARED_HASH")
 
 # ============================================================================
 # 1. ENHANCED CORE TYPES AND CONFIGURATION
@@ -775,22 +792,53 @@ class HybridDistortionDetectionAPI:
 
     def _add_hash_chain(self, audit_trail: Dict[str, Any]) -> Dict[str, Any]:
         """Add hash chaining fields to the audit trail."""
-        previous = self.last_audit_hash or ""
-        parts = (
-            audit_trail.get("trace_id", ""),
-            audit_trail.get("timestamp", ""),
-            audit_trail.get("policy_decision", ""),
-            audit_trail.get("decision_reason", ""),
-            json.dumps(audit_trail.get("compliance_markers", []), separators=(",", ":"), ensure_ascii=False),
-            json.dumps(audit_trail.get("processing_path", ""), separators=(",", ":"), ensure_ascii=False),
-            str(audit_trail.get("processing_time_ms", "")),
-        )
-        data = "|".join(parts).encode("utf-8")
-        current_hash = hashlib.sha256(previous.encode("utf-8") + data).hexdigest()
-        audit_trail["hash_signature"] = f"sha256:{current_hash}"
-        audit_trail["previous_event_hash"] = self.last_audit_hash
+        audit_trail = dict(audit_trail)  # don't mutate caller's dict
+        audit_trail["previous_event_hash"] = self.last_audit_hash or ""
+
+        use_shared = _env_truthy("NOVA_USE_SHARED_HASH")
+        if SHARED_HASH_AVAILABLE and use_shared and compute_audit_hash:
+            # Use shared hash utility for cross-slot compatibility
+            previous = self.last_audit_hash or ""
+
+            # Prepare structured record for shared hash
+            hash_record = {
+                "id": audit_trail.get("trace_id", ""),
+                "slot": "slot09",
+                "type": "audit_trail",
+                "timestamp": audit_trail.get("timestamp", ""),
+                "api_version": audit_trail.get("api_version", self.VERSION),
+                "data": {
+                    "policy_decision": audit_trail.get("policy_decision", ""),
+                    "decision_reason": audit_trail.get("decision_reason", ""),
+                    "compliance_markers": audit_trail.get("compliance_markers", []),
+                    "processing_path": audit_trail.get("processing_path", ""),
+                    "processing_time_ms": audit_trail.get("processing_time_ms", 0)
+                },
+                "previous_hash": previous
+            }
+
+            current_hash = compute_audit_hash(hash_record)
+            audit_trail["hash_signature"] = current_hash
+            audit_trail["hash_method"] = "shared_blake2b"
+        else:
+            # Fallback to current SHA256 implementation
+            previous = self.last_audit_hash or ""
+            parts = (
+                audit_trail.get("trace_id", ""),
+                audit_trail.get("timestamp", ""),
+                audit_trail.get("policy_decision", ""),
+                audit_trail.get("decision_reason", ""),
+                json.dumps(audit_trail.get("compliance_markers", []), separators=(",", ":"), ensure_ascii=False),
+                json.dumps(audit_trail.get("processing_path", ""), separators=(",", ":"), ensure_ascii=False),
+                str(audit_trail.get("processing_time_ms", "")),
+            )
+            data = "|".join(parts).encode("utf-8")
+            current_hash = hashlib.sha256(previous.encode("utf-8") + data).hexdigest()
+            audit_trail["hash_signature"] = f"sha256:{current_hash}"
+            audit_trail["hash_method"] = "fallback_sha256"
+
         audit_trail["retention_policy"] = "7_years"
-        self.last_audit_hash = f"sha256:{current_hash}"
+        self.last_audit_hash = audit_trail["hash_signature"]
         return audit_trail
 
     def _default_deployment_context(self, request: DistortionDetectionRequest) -> Dict[str, Any]:

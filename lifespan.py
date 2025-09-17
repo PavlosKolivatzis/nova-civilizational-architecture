@@ -1,0 +1,141 @@
+"""Optional FastAPI lifespan manager for NOVA infrastructure.
+
+This module provides a gated lifespan manager that can be enabled
+via NOVA_ENABLE_LIFESPAN environment variable for dependency management.
+"""
+
+import os
+import logging
+import asyncio
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Any, Callable, Awaitable, Tuple, List, Set
+
+logger = logging.getLogger(__name__)
+
+class LifespanManager:
+    """Manages application startup and shutdown lifecycle with optional gating."""
+
+    def __init__(self):
+        self.startup_tasks: List[Tuple[str, Callable[[], Awaitable[None]]]] = []
+        self.shutdown_tasks: List[Tuple[str, Callable[[], Awaitable[None]]]] = []
+        self.startup_complete = False
+        self.shutdown_complete = False
+        self._names_seen: Set[str] = set()
+        self._lock = asyncio.Lock()
+
+    def add_startup_task(self, task_name: str, coro_func):
+        """Add a startup task to be executed during application startup."""
+        if task_name not in self._names_seen:
+            self._names_seen.add(task_name)
+            self.startup_tasks.append((task_name, coro_func))
+
+    def add_shutdown_task(self, task_name: str, coro_func):
+        """Add a shutdown task to be executed during application shutdown."""
+        if task_name not in self._names_seen:
+            self._names_seen.add(task_name)
+            self.shutdown_tasks.append((task_name, coro_func))
+
+    async def startup(self):
+        """Execute all registered startup tasks."""
+        async with self._lock:
+            if self.startup_complete:
+                logger.warning("Startup already completed, skipping")
+                return
+
+            logger.info(f"Executing {len(self.startup_tasks)} startup tasks")
+
+            for task_name, task_func in self.startup_tasks:
+                try:
+                    logger.debug(f"Starting task: {task_name}")
+                    await task_func()
+                    logger.debug(f"Completed task: {task_name}")
+                except Exception as e:
+                    logger.error(f"Startup task '{task_name}' failed: {e}")
+                    raise
+
+            self.startup_complete = True
+            logger.info("Application startup completed successfully")
+
+    async def shutdown(self):
+        """Execute all registered shutdown tasks."""
+        async with self._lock:
+            if self.shutdown_complete:
+                logger.warning("Shutdown already completed, skipping")
+                return
+
+            logger.info(f"Executing {len(self.shutdown_tasks)} shutdown tasks")
+
+            # Execute shutdown tasks in reverse order (LIFO)
+            for task_name, task_func in reversed(self.shutdown_tasks):
+                try:
+                    logger.debug(f"Stopping task: {task_name}")
+                    await task_func()
+                    logger.debug(f"Stopped task: {task_name}")
+                except Exception as e:
+                    logger.error(f"Shutdown task '{task_name}' failed: {e}")
+                    # Continue with other shutdown tasks even if one fails
+
+            self.shutdown_complete = True
+            logger.info("Application shutdown completed")
+
+    def reset(self) -> None:
+        """Reset manager to a clean state (useful for tests)."""
+        self.startup_tasks.clear()
+        self.shutdown_tasks.clear()
+        self._names_seen.clear()
+        self.startup_complete = False
+        self.shutdown_complete = False
+
+    @asynccontextmanager
+    async def lifespan_context(self, app: Any) -> AsyncGenerator[None, None]:
+        """ASGI lifespan context manager for FastAPI applications."""
+        flag = os.getenv("NOVA_ENABLE_LIFESPAN", "").strip().lower()
+        enabled = flag in {"1", "true", "yes", "on"}
+
+        if not enabled:
+            logger.info("Lifespan management disabled (NOVA_ENABLE_LIFESPAN not set)")
+            yield
+            return
+
+        logger.info("Starting lifespan management")
+
+        try:
+            await self.startup()
+            yield
+        finally:
+            await self.shutdown()
+
+# Global lifespan manager instance
+_manager = LifespanManager()
+
+def get_lifespan_manager() -> LifespanManager:
+    """Get the global lifespan manager instance."""
+    return _manager
+
+async def example_startup_task():
+    """Example startup task for demonstration."""
+    logger.info("Example startup task executed")
+
+async def example_shutdown_task():
+    """Example shutdown task for demonstration."""
+    logger.info("Example shutdown task executed")
+
+def create_example_lifespan():
+    """Create an example lifespan setup for testing."""
+    manager = get_lifespan_manager()
+    # Avoid duplicate registration if tests import multiple times
+    manager.reset()
+    manager.add_startup_task("example_startup", example_startup_task)
+    manager.add_shutdown_task("example_shutdown", example_shutdown_task)
+    return manager.lifespan_context
+
+# Export for FastAPI integration
+def create_fastapi_lifespan(scoped: bool = False):
+    """
+    Create lifespan context for FastAPI applications.
+    If scoped=True, returns a fresh manager per call to avoid cross-app/test leakage.
+    """
+    if scoped:
+        mgr = LifespanManager()
+        return mgr.lifespan_context
+    return get_lifespan_manager().lifespan_context
