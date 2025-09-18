@@ -11,6 +11,7 @@ if os.getenv("GITHUB_ACTIONS") and sys.version_info >= (3, 12):
     )
 
 
+@pytest.mark.slow
 @pytest.mark.performance
 def test_ids_performance_baseline():
     """Test IDS performance meets 1.0ms p95 requirement"""
@@ -32,6 +33,7 @@ def test_ids_performance_baseline():
     assert p99 <= 2.0, f"p99 latency {p99:.3f}ms exceeds 2.0ms budget"
 
 
+@pytest.mark.slow
 @pytest.mark.performance
 def test_ids_backpressure_mechanism():
     """Test backpressure triggers at appropriate error rates"""
