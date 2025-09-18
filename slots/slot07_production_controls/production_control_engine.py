@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Callable
 from dataclasses import dataclass, field
 
 from config.feature_flags import get_production_controls_config
+from .flag_metrics import get_flag_state_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -448,7 +449,8 @@ class ProductionControlEngine:
             "rate_limiter": self.rate_limiter.get_metrics(),
             "resource_protector": self.resource_protector.get_metrics(),
             "safeguards_active": self._get_active_safeguards(),
-            "config": self.config
+            "config": self.config,
+            "feature_flags": get_flag_state_metrics(),
         }
     
     def health_check(self) -> Dict[str, Any]:
