@@ -1,7 +1,7 @@
 """Signed audit logging for canary deployments with hash-chaining."""
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import json, time, os, hmac, hashlib
 from typing import Any, Dict, Optional, Union
@@ -44,6 +44,9 @@ class AuditRecord:
     sig: str                     # hmac signature
     hash_method: str             # "shared_blake2b" or "fallback_sha256"
     api_version: str             # e.g., "3.1.0-slot10"
+    pct_from: Optional[float] = None
+    pct_to: Optional[float] = None
+    extra: Dict[str, Any] = field(default_factory=dict)
 
 class AuditLog:
     """Simple append-style audit log that maintains chain state."""
@@ -60,6 +63,9 @@ class AuditLog:
         reason: str,
         metrics: Optional[Dict[str, Any]] = None,
         gate: Optional[Dict[str, Any]] = None,
+        pct_from: Optional[float] = None,
+        pct_to: Optional[float] = None,
+        **extra: Any,
     ) -> AuditRecord:
         prev = self._last_hash
         body: Dict[str, Any] = {
@@ -71,6 +77,17 @@ class AuditLog:
             "previous_hash": prev,         # canonical key for chain linking
             "api_version": "3.1.0-slot10",
         }
+        # Include canary rollout details when provided
+        canary = {}
+        if pct_from is not None:
+            canary["pct_from"] = pct_from
+        if pct_to is not None:
+            canary["pct_to"] = pct_to
+        if canary:
+            body["canary"] = canary
+        # Preserve any future kwargs without breaking callers
+        if extra:
+            body["extra"] = extra
         use_shared = _env_truthy("NOVA_USE_SHARED_HASH")
         if SHARED_HASH_AVAILABLE and use_shared and compute_audit_hash:
             body["hash_method"] = "shared_blake2b"
@@ -97,4 +114,7 @@ class AuditLog:
             sig=sig,
             hash_method=body["hash_method"],
             api_version=body["api_version"],
+            pct_from=pct_from,
+            pct_to=pct_to,
+            extra=extra or {},
         )
