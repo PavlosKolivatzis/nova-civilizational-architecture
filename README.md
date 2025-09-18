@@ -214,7 +214,7 @@ export NOVA_SLOTS="slot02,slot04,slot06,slot10"
 - `CONSTELLATION_STATE@1` (slot05 → slot09)
 
 Missing producers degrade gracefully via NullAdapters. Plugin status and contracts available at `/health/config`.
-n## Phase 2 Feature Flags
+## Phase-2 Feature Flags & Observability
 
 | Flag                   | Default | Scope            | Effect when enabled                          |
 |------------------------|---------|------------------|----------------------------------------------|
