@@ -1,0 +1,57 @@
+name: Lifespan Manager
+slug: lifespan
+version: "1.0.0"
+description: Thread-safe ASGI lifespan management with task deduplication
+
+status: stable
+feature_flags: ["NOVA_ENABLE_LIFESPAN"]
+
+compat:
+  min_version: "3.1.0"
+  provides:
+    - "api.lifespan.manager.v1"
+  consumes: []
+
+contracts:
+  - name: lifespan.create_fastapi_lifespan
+    stability: stable
+    inputs:
+      - scoped: bool
+    outputs:
+      - lifespan_context: callable
+  - name: lifespan.add_startup_task
+    stability: stable
+    inputs:
+      - name: str
+      - task: callable
+    outputs: []
+  - name: lifespan.add_shutdown_task
+    stability: stable
+    inputs:
+      - name: str
+      - task: callable
+    outputs: []
+
+dependencies:
+  internal: []
+  external: ["fastapi", "starlette"]
+
+tests:
+  paths:
+    - "tests/web/test_lifespan.py"
+  expectations:
+    coverage_min: 0.85
+    fail_fast: true
+
+telemetry:
+  metrics:
+    - lifespan_enabled_counter
+    - startup_task_duration_ms
+    - shutdown_task_duration_ms
+  logs:
+    - "lifespan:INFO"
+    - "lifespan:WARN"
+
+security:
+  pii_handling: "none"
+  audit_chain: "not_applicable"

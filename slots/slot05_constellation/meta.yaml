@@ -1,0 +1,56 @@
+name: Constellation Engine
+slug: slot05_constellation
+version: "1.0.0"
+description: Spatial positioning and navigation system for truth constellation mapping
+
+status: stable
+feature_flags: ["NOVA_ENABLE_TRI_LINK"]
+
+compat:
+  min_version: "3.1.0"
+  provides:
+    - "api.slot05.constellation.v1"
+  consumes:
+    - "api.slot04.tri.v1"
+
+contracts:
+  - name: constellation.get_position
+    stability: stable
+    inputs: []
+    outputs:
+      - position: dict
+  - name: constellation.update_from_tri
+    stability: beta
+    inputs:
+      - tri_score: float
+      - layer_scores: dict
+    outputs:
+      - position: dict
+      - stability_index: float
+      - tri_influence: dict
+      - disabled: bool
+
+dependencies:
+  internal: ["slot04_tri"]
+  external: []
+
+tests:
+  paths:
+    - "tests/e2e/test_constellation_with_tri.py"
+    - "tests/*constellation*"
+  expectations:
+    coverage_min: 0.75
+    fail_fast: true
+
+telemetry:
+  metrics:
+    - constellation_position_updates
+    - tri_integration_latency_ms
+    - stability_index_distribution
+  logs:
+    - "slot05.constellation:INFO"
+    - "slot05.constellation:WARN"
+
+security:
+  pii_handling: "none"
+  audit_chain: "not_applicable"

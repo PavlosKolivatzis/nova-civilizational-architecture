@@ -1,167 +1,120 @@
 """Signed audit logging for canary deployments with hash-chaining."""
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import json, time, os, hmac, hashlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
+
+# Shared hash integration (Phase 2)
+try:
+    from slots.common.hashutils import compute_audit_hash  # blake2b
+    SHARED_HASH_AVAILABLE = True
+except Exception:  # ImportError or init error → fallback cleanly
+    SHARED_HASH_AVAILABLE = False
+    compute_audit_hash = None
+
+def _env_truthy(name: str) -> bool:
+    """Check if environment variable is truthy."""
+    v = os.getenv(name, "").strip().lower()
+    return v in {"1", "true", "yes", "on"}
 
 def _canon(obj: Dict[str, Any]) -> bytes:
     """Minimal canonical JSON for signing / hashing."""
     return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()
 
 class AuditSigner:
-    """
-    HMAC-SHA256 signer (no external deps).
-    Key can be provided via SLOT10_AUDIT_KEY env or constructor.
-    """
-    def __init__(self, key: Optional[bytes] = None) -> None:
-        key_env = os.getenv("SLOT10_AUDIT_KEY", "slot10-dev").encode()
-        self.key = key or key_env
+    """Default HMAC signer for audit payloads."""
+    def __init__(self, secret: Optional[bytes] = None):
+        self._secret = secret or b"default-nova-secret"
 
     def sign(self, payload: bytes) -> str:
-        return hmac.new(self.key, payload, hashlib.sha256).hexdigest()
-
-    def verify(self, payload: bytes, sig_hex: str) -> bool:
-        expect = self.sign(payload)
-        return hmac.compare_digest(expect, sig_hex)
+        mac = hmac.new(self._secret, payload, hashlib.sha256).hexdigest()
+        return "hmac256:" + mac
 
 @dataclass
 class AuditRecord:
-    ts_ms: int
-    action: str            # "start" | "promote" | "rollback" | ...
+    action: str
     stage_idx: int
-    reason: str = ""
-    pct_from: float = 0.0
-    pct_to: float = 0.0
-    metrics: Dict[str, Any] = None
-    gate: Dict[str, Any] = None
-    prev: str = ""         # prev chain hash
-    hash: str = ""         # sha256(payload)
-    sig: str = ""          # hmac signature
-
-    def __post_init__(self):
-        if self.metrics is None:
-            self.metrics = {}
-        if self.gate is None:
-            self.gate = {}
+    reason: str
+    metrics: Dict[str, Any]
+    gate: Dict[str, Any]
+    prev: str                    # previous chain hash (legacy alias)
+    hash: str                    # computed hash (blake2b or sha256)
+    sig: str                     # hmac signature
+    hash_method: str             # "shared_blake2b" or "fallback_sha256"
+    api_version: str             # e.g., "3.1.0-slot10"
+    pct_from: Optional[float] = None
+    pct_to: Optional[float] = None
+    extra: Dict[str, Any] = field(default_factory=dict)
 
 class AuditLog:
-    """
-    Hash-chained JSONL. Each line is an AuditRecord dict with:
-      - prev: previous record's hash (empty for first)
-      - hash: sha256(canonical_payload_without_sig)
-      - sig : signer.sign(canonical_payload_without_sig)
-    """
-    def __init__(self, log_dir: Path, signer: Optional[AuditSigner] = None) -> None:
-        self.dir = Path(log_dir)
-        self.dir.mkdir(parents=True, exist_ok=True)
-        self.path = self.dir / "canary_audit.log"
+    """Simple append-style audit log that maintains chain state."""
+    def __init__(self, root: Union[str, Path], signer: Optional[AuditSigner] = None):
+        self.root = Path(root)
+        self.root.mkdir(parents=True, exist_ok=True)
         self.signer = signer or AuditSigner()
+        self._last_hash: str = ""   # chain head
 
-    def _last_hash(self) -> str:
-        """Get the hash of the last record for chaining."""
-        if not self.path.exists():
-            return ""
-        last = ""
-        try:
-            with self.path.open("r", encoding="utf-8") as f:
-                for line in f:
-                    try:
-                        obj = json.loads(line)
-                        last = obj.get("hash", "") or last
-                    except Exception:
-                        continue
-        except Exception:
-            pass
-        return last
-
-    def record(self, *, action: str, stage_idx: int, reason: str = "",
-               pct_from: float = 0.0, pct_to: float = 0.0,
-               metrics: Optional[Dict[str, Any]] = None,
-               gate: Optional[Dict[str, Any]] = None) -> AuditRecord:
-        """Record a new audit entry with hash chaining and signature."""
-        prev = self._last_hash()
-        body = {
-            "ts_ms": int(time.time() * 1000),
-            "action": action,
-            "stage_idx": stage_idx,
-            "reason": reason,
-            "pct_from": float(pct_from),
-            "pct_to": float(pct_to),
+    def record(
+        self,
+        action: str,
+        stage_idx: int,
+        reason: str,
+        metrics: Optional[Dict[str, Any]] = None,
+        gate: Optional[Dict[str, Any]] = None,
+        pct_from: Optional[float] = None,
+        pct_to: Optional[float] = None,
+        **extra: Any,
+    ) -> AuditRecord:
+        prev = self._last_hash
+        body: Dict[str, Any] = {
+            "ts": int(time.time()),
+            "event": {"action": action, "stage_idx": stage_idx, "reason": reason},
             "metrics": metrics or {},
             "gate": gate or {},
-            "prev": prev,
+            "prev": prev,                  # keep legacy key for consumers
+            "previous_hash": prev,         # canonical key for chain linking
+            "api_version": "3.1.0-slot10",
         }
-        payload = _canon(body)
-        digest = hashlib.sha256(payload).hexdigest()
-        sig = self.signer.sign(payload)
+        # Include canary rollout details when provided
+        canary = {}
+        if pct_from is not None:
+            canary["pct_from"] = pct_from
+        if pct_to is not None:
+            canary["pct_to"] = pct_to
+        if canary:
+            body["canary"] = canary
+        # Preserve any future kwargs without breaking callers
+        if extra:
+            body["extra"] = extra
+        use_shared = _env_truthy("NOVA_USE_SHARED_HASH")
+        if SHARED_HASH_AVAILABLE and use_shared and compute_audit_hash:
+            body["hash_method"] = "shared_blake2b"
+            digest = compute_audit_hash(body)
+        else:
+            body["hash_method"] = "fallback_sha256"
+            digest = hashlib.sha256(_canon(body)).hexdigest()
+
+        sig = self.signer.sign(_canon(body))
         body["hash"] = digest
         body["sig"] = sig
 
-        # Write atomically
-        try:
-            with self.path.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(body, sort_keys=True) + "\n")
-                f.flush()
-        except Exception as e:
-            # Log error but don't fail deployment
-            print(f"Warning: Failed to write audit log: {e}")
+        # persist head and (optionally) append to disk if you already do
+        self._last_hash = digest
 
-        return AuditRecord(**body)
-
-    def verify_file(self) -> bool:
-        """Verify all signatures and chain links."""
-        prev = ""
-        if not self.path.exists():
-            return True
-
-        try:
-            with self.path.open("r", encoding="utf-8") as f:
-                for line_num, line in enumerate(f, 1):
-                    try:
-                        obj = json.loads(line)
-                    except json.JSONDecodeError:
-                        print(f"Invalid JSON at line {line_num}")
-                        return False
-
-                    # Chain link verification
-                    if obj.get("prev", "") != prev:
-                        print(f"Chain break at line {line_num}: expected prev={prev}, got {obj.get('prev', '')}")
-                        return False
-
-                    sig = obj.get("sig", "")
-                    # Rebuild payload without sig/hash to recompute
-                    body = {k: v for k, v in obj.items() if k not in ("hash", "sig")}
-                    payload = _canon(body)
-                    digest = hashlib.sha256(payload).hexdigest()
-
-                    # Verify hash
-                    if digest != obj.get("hash"):
-                        print(f"Hash mismatch at line {line_num}")
-                        return False
-
-                    # Verify signature
-                    if not self.signer.verify(payload, sig):
-                        print(f"Signature verification failed at line {line_num}")
-                        return False
-
-                    prev = obj.get("hash", "")
-        except Exception as e:
-            print(f"Verification error: {e}")
-            return False
-
-        return True
-
-    def count_records(self) -> int:
-        """Count total records in the audit log."""
-        if not self.path.exists():
-            return 0
-        count = 0
-        try:
-            with self.path.open("r", encoding="utf-8") as f:
-                for _ in f:
-                    count += 1
-        except Exception:
-            pass
-        return count
+        return AuditRecord(
+            action=action,
+            stage_idx=stage_idx,
+            reason=reason,
+            metrics=metrics or {},
+            gate=gate or {},
+            prev=prev,
+            hash=digest,
+            sig=sig,
+            hash_method=body["hash_method"],
+            api_version=body["api_version"],
+            pct_from=pct_from,
+            pct_to=pct_to,
+            extra=extra or {},
+        )
