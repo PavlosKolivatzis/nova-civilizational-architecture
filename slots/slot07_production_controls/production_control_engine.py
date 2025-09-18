@@ -329,6 +329,11 @@ class ProductionControlEngine:
     def _core_processing(self, payload: dict, operation_id: str) -> dict:
         """Core business logic processing - can be extended by subclasses."""
         # Simulate processing logic that could fail
+        # Handle metrics action for observability
+        action = (payload or {}).get("action")
+        if action in {"get_metrics", "metrics"}:
+            return {"metrics": self.get_comprehensive_metrics()}
+
         if payload.get("simulate_failure"):
             raise ValueError(f"Simulated failure for operation {operation_id}")
         

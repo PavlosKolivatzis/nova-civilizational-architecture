@@ -32,6 +32,9 @@ def test_slot7_adapter_exposes_flag_metrics():
     elif "result" in result and isinstance(result["result"], dict):
         if "feature_flags" in result["result"]:
             feature_flags = result["result"]["feature_flags"]
+        elif "metrics" in result["result"] and isinstance(result["result"]["metrics"], dict):
+            if "feature_flags" in result["result"]["metrics"]:
+                feature_flags = result["result"]["metrics"]["feature_flags"]
     elif "metrics" in result and isinstance(result["metrics"], dict):
         if "feature_flags" in result["metrics"]:
             feature_flags = result["metrics"]["feature_flags"]
