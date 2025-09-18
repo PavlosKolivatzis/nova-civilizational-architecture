@@ -1,0 +1,20 @@
+name: Civilizational Deployment
+slug: slot10_civilizational_deployment
+version: "1.0.0"
+description: Deployment orchestration and MLS audit pipeline
+status: stable
+feature_flags: ["NOVA_USE_SHARED_HASH"]
+compat:
+  min_version: "3.1.0"
+  provides:
+    - "api.slot10.mls.audit.v1"
+  consumes:
+    - "api.slot09.hybrid.v1"
+contracts:
+  - name: audit.emit
+    stability: stable
+    inputs: [event, metrics, gate, previous_hash]
+    outputs: [hash, hash_method, sig, api_version]
+dependencies:
+  internal: []
+  external: []

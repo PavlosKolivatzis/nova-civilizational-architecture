@@ -1,0 +1,87 @@
+name: Phase 2 Feature Gates
+
+on:
+  push:
+    branches: [ main, 'feature/tri-engine-integration' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-feature-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false                # don't cancel other lanes if one fails
+      matrix:
+        include:
+          - name: "baseline"
+            env:
+              NOVA_ENABLE_TRI_LINK: "0"
+              NOVA_ENABLE_LIFESPAN: "0"
+              NOVA_USE_SHARED_HASH: "0"
+          - name: "phase2-tri-hash"
+            env:
+              NOVA_ENABLE_TRI_LINK: "1"
+              NOVA_ENABLE_LIFESPAN: "0"
+              NOVA_USE_SHARED_HASH: "1"
+          - name: "phase2-lifespan"
+            env:
+              NOVA_ENABLE_TRI_LINK: "0"
+              NOVA_ENABLE_LIFESPAN: "1"
+              NOVA_USE_SHARED_HASH: "0"
+    name: pytest (${{ matrix.name }})
+    env: ${{ matrix.env }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: "pip"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # Prefer editable install with test extras if available; falls back to requirements.txt
+        if [ -f setup.cfg ] || [ -f pyproject.toml ]; then
+          pip install -e .[test] || true
+        fi
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+        # Ensure FastAPI stack for lifespan tests (in case not included above)
+        python - <<'PY'
+import importlib, sys
+missing = [m for m in ("fastapi","starlette","httpx") if importlib.util.find_spec(m) is None]
+if missing:
+    print("Installing missing test deps:", missing)
+    import subprocess; subprocess.check_call([sys.executable,"-m","pip","install",*missing])
+PY
+
+    - name: Check environment flags
+      run: env | sort | grep -E '^NOVA_' || echo "No NOVA flags set"
+
+    - name: Run full test suite
+      run: pytest -q
+
+    # Prove flags actually trigger gated paths (only when enabled)
+    - name: Targeted TRI↔Constellation e2e (flagged lane)
+      if: ${{ matrix.env.NOVA_ENABLE_TRI_LINK == '1' }}
+      run: pytest -q tests/e2e/test_constellation_with_tri.py
+
+    - name: Targeted lifespan tests (flagged lane)
+      if: ${{ matrix.env.NOVA_ENABLE_LIFESPAN == '1' }}
+      run: pytest -q tests/web/test_lifespan.py
+
+    - name: Targeted shared-hash tests (flagged lane)
+      if: ${{ matrix.env.NOVA_USE_SHARED_HASH == '1' }}
+      run: pytest -q tests/test_slot09_shared_hash_coverage.py::test_audit_hash_chain_with_shared_hash_enabled
+
+    - name: Feature gate validation summary
+      run: |
+        echo "🎯 Phase 2 Feature Gate Validation (${{ matrix.name }})"
+        echo "============================================="
+        echo "TRI↔Constellation: ${{ matrix.env.NOVA_ENABLE_TRI_LINK }}"
+        echo "Lifespan Manager: ${{ matrix.env.NOVA_ENABLE_LIFESPAN }}"
+        echo "Shared Hash:      ${{ matrix.env.NOVA_USE_SHARED_HASH }}"

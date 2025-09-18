@@ -1,0 +1,56 @@
+name: TRI Engine
+slug: slot04_tri
+version: "1.0.0"
+description: Truth Resonance Index calculation engine for content evaluation
+
+status: beta
+feature_flags: ["NOVA_ENABLE_TRI_LINK"]
+
+compat:
+  min_version: "3.1.0"
+  provides:
+    - "api.slot04.tri.v1"
+  consumes: []
+
+contracts:
+  - name: tri.calculate
+    stability: beta
+    inputs:
+      - content: str
+    outputs:
+      - score: float
+      - layer_scores: dict
+      - metadata: dict
+  - name: tri.gated_calculate
+    stability: stable
+    inputs:
+      - content: str
+    outputs:
+      - score: float
+      - layer_scores: dict
+      - metadata: dict
+
+dependencies:
+  internal: []
+  external: []
+
+tests:
+  paths:
+    - "tests/e2e/test_constellation_with_tri.py"
+    - "slots/slot04_tri/tests/*"
+  expectations:
+    coverage_min: 0.70
+    fail_fast: true
+
+telemetry:
+  metrics:
+    - tri_calculation_ms
+    - tri_score_distribution
+    - tri_link_enabled_counter
+  logs:
+    - "slot04.tri:INFO"
+    - "slot04.tri:DEBUG"
+
+security:
+  pii_handling: "content_analysis"
+  audit_chain: "not_applicable"

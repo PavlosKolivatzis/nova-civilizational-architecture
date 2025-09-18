@@ -1,0 +1,61 @@
+name: Truth Anchor Engine
+slug: slot01_truth_anchor
+version: "1.2.0"
+description: Foundational truth anchoring and validation system
+
+status: moderate
+feature_flags: []
+
+compat:
+  min_version: "3.1.0"
+  provides:
+    - "api.slot01.anchor.v1"
+  consumes: []
+
+contracts:
+  - name: anchor.compute
+    stability: stable
+    inputs:
+      - claim: str
+      - context: dict
+    outputs:
+      - anchor_id: str
+      - confidence: float
+  - name: anchor.verify
+    stability: stable
+    inputs:
+      - claim: str
+      - anchor_id: str
+    outputs:
+      - verdict: bool
+      - score: float
+  - name: anchor.recover
+    stability: beta
+    inputs:
+      - anchor_id: str
+    outputs:
+      - anchor: dict
+
+dependencies:
+  internal: []
+  external: []
+
+tests:
+  paths:
+    - "tests/slot01*"
+  expectations:
+    coverage_min: 0.65
+    fail_fast: true
+
+telemetry:
+  metrics:
+    - anchor_latency_ms
+    - verify_true_positive_rate
+    - verify_false_positive_rate
+  logs:
+    - "slot01.anchor:INFO"
+    - "slot01.anchor:WARN"
+
+security:
+  pii_handling: "none"
+  audit_chain: "not_applicable"

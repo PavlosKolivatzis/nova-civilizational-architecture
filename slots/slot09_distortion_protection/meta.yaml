@@ -1,0 +1,60 @@
+name: Distortion Protection API
+slug: slot09_distortion_protection
+version: "3.1.0-hybrid"
+description: Hybrid distortion detection with shared audit hash integration
+
+status: stable
+feature_flags: ["NOVA_USE_SHARED_HASH"]
+
+compat:
+  min_version: "3.1.0"
+  provides:
+    - "api.slot09.distortion.v1"
+    - "api.slot09.audit.v1"
+  consumes:
+    - "api.common.hashutils.v1"
+
+contracts:
+  - name: distortion.detect
+    stability: stable
+    inputs:
+      - content: str
+      - context: dict
+    outputs:
+      - policy_decision: str
+      - decision_reason: str
+      - processing_time_ms: int
+  - name: audit.add_hash_chain
+    stability: stable
+    inputs:
+      - audit_trail: dict
+    outputs:
+      - hash_signature: str
+      - hash_method: str
+      - previous_event_hash: str
+      - retention_policy: str
+
+dependencies:
+  internal: ["common"]
+  external: []
+
+tests:
+  paths:
+    - "tests/test_slot09_shared_hash_coverage.py"
+    - "tests/*slot09*"
+  expectations:
+    coverage_min: 0.80
+    fail_fast: true
+
+telemetry:
+  metrics:
+    - audit_hash_method_counter
+    - shared_hash_enabled_counter
+    - hash_chain_generation_ms
+  logs:
+    - "slot09.distortion:INFO"
+    - "slot09.audit:INFO"
+
+security:
+  pii_handling: "audit_trail"
+  audit_chain: "blake2b_with_fallback"
