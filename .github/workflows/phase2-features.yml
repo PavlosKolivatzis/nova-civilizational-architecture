@@ -80,11 +80,7 @@ jobs:
       run: pytest -q tests/test_slot09_shared_hash_coverage.py::test_audit_hash_chain_with_shared_hash_enabled
 
     - name: Targeted Slot7 metrics smoke
-      run: |
-        python - <<'PY'
-        from orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter        ad = Slot7ProductionControlsAdapter()        out = ad.process({"action":"get_metrics"})        assert isinstance(out, dict)        # Navigate to nested feature_flags: result -> metrics -> feature_flags        result = out.get("result", {})        metrics = result.get("metrics", {})        ff = metrics.get("feature_flags", {})        assert isinstance(ff, dict) and "effective_hash_method" in ff        print("Slot7 metrics smoke test passed")
-        assert isinstance(ff, dict) and "effective_hash_method" in ff
-        PY
+      run: python -c "from orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter; ad=Slot7ProductionControlsAdapter(); out=ad.process({'action':'get_metrics'}); assert isinstance(out,dict); m=out.get('metrics') or out.get('result',{}).get('metrics',{}) or {}; ff=(m.get('feature_flags') or out.get('feature_flags') or out.get('result',{}).get('feature_flags',{})); assert isinstance(ff,dict) and 'effective_hash_method' in ff; print('Slot7 metrics smoke test passed')"
 
     - name: Feature gate validation summary
       run: |
