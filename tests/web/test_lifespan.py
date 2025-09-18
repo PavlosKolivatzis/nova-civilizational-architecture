@@ -1,6 +1,22 @@
+import os
+import asyncio
 import pytest
 import logging
+def _flag_enabled() -> bool:
+    v = os.getenv("NOVA_ENABLE_LIFESPAN", "").strip().lower()
+    return v in {"1", "true", "yes", "on"}
 
+@pytest.fixture(autouse=True)
+def ensure_event_loop():
+    """Guarantee an event loop exists for imports using asyncio primitives."""
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+    yield
+
+
+@pytest.mark.skipif(_flag_enabled(), reason="Flag enabled: disabled-by-default test not applicable")
 def test_lifespan_disabled_by_default(caplog):
     """Test that lifespan management is disabled by default."""
     pytest.importorskip("fastapi")
@@ -10,9 +26,9 @@ def test_lifespan_disabled_by_default(caplog):
     from lifespan import create_fastapi_lifespan
 
     caplog.set_level(logging.INFO)
-    app = FastAPI(lifespan=create_fastapi_lifespan(scoped=True))
+    app = FastAPI(lifespan=create_fastapi_lifespan())
 
-    with TestClient(app) as _:
+    with TestClient(app):
         pass
 
     # No example task logs expected when disabled
@@ -38,7 +54,7 @@ def test_lifespan_enabled_runs_tasks(monkeypatch, caplog):
 
     app = FastAPI(lifespan=mgr.lifespan_context)
 
-    with TestClient(app) as _:
+    with TestClient(app):
         pass
 
     assert "Starting lifespan management" in caplog.text
@@ -101,9 +117,9 @@ def test_lifespan_env_variants(monkeypatch, caplog):
         caplog.clear()
         monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", value)
 
-        app = FastAPI(lifespan=create_fastapi_lifespan(scoped=True))
+        app = FastAPI(lifespan=create_fastapi_lifespan())
 
-        with TestClient(app) as _:
+        with TestClient(app):
             pass
 
         assert "Starting lifespan management" in caplog.text
@@ -113,9 +129,9 @@ def test_lifespan_env_variants(monkeypatch, caplog):
         caplog.clear()
         monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", value)
 
-        app = FastAPI(lifespan=create_fastapi_lifespan(scoped=True))
+        app = FastAPI(lifespan=create_fastapi_lifespan())
 
-        with TestClient(app) as _:
+        with TestClient(app):
             pass
 
         assert "Lifespan management disabled" in caplog.text
