@@ -214,6 +214,26 @@ export NOVA_SLOTS="slot02,slot04,slot06,slot10"
 - `CONSTELLATION_STATE@1` (slot05 → slot09)
 
 Missing producers degrade gracefully via NullAdapters. Plugin status and contracts available at `/health/config`.
+n## Phase 2 Feature Flags
+
+| Flag                   | Default | Scope            | Effect when enabled                          |
+|------------------------|---------|------------------|----------------------------------------------|
+| `NOVA_ENABLE_TRI_LINK` | off     | Slots 4↔5        | TRI→Constellation integration active         |
+| `NOVA_ENABLE_LIFESPAN` | off     | Web (ASGI)       | Lifespan manager handles startup/shutdown    |
+| `NOVA_USE_SHARED_HASH` | off     | Slots 9 & 10     | Use shared blake2b audit hash if available   |
+
+**Observability:** Slot7 exposes current states under `metrics.feature_flags`:
+```json
+{
+  "tri_link_enabled": false,
+  "lifespan_enabled": true,
+  "shared_hash_enabled": true,
+  "shared_hash_available": true,
+  "effective_hash_method": "shared_blake2b"
+}
+```
+
+**CI lanes:** see `.github/workflows/phase2-features.yml` for per-flag validation.
 
 ### ✨ Previous Updates (2025-09-06)
 - **🎉 Resolved GitHub conflicts**: Successfully merged enhanced Slot 9 features
