@@ -2,7 +2,7 @@ import os
 import asyncio
 import pytest
 import logging
-ndef _flag_enabled() -> bool:
+def _flag_enabled() -> bool:
     v = os.getenv("NOVA_ENABLE_LIFESPAN", "").strip().lower()
     return v in {"1", "true", "yes", "on"}
 
