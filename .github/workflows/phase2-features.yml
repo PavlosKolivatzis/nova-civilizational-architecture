@@ -52,7 +52,7 @@ jobs:
         fi
         # Ensure FastAPI stack for lifespan tests (in case not included above)
         python - <<'PY'
-        import importlib, sys
+        import importlib.util, sys
         missing = [m for m in ("fastapi","starlette","httpx") if importlib.util.find_spec(m) is None]
         if missing:
             print("Installing missing test deps:", missing)
