@@ -4,7 +4,7 @@ version: "1.0.0"
 description: Thread-safe ASGI lifespan management with task deduplication
 
 status: stable
-feature_flags: ["NOVA_ENABLE_LIFESPAN"]
+feature_flags: ["NOVA_ENABLE_LIFESPAN", "NOVA_ENABLE_PROMETHEUS"]
 
 compat:
   min_version: "3.1.0"

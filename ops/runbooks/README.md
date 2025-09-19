@@ -1,0 +1,40 @@
+# NOVA Operational Runbooks
+
+This directory contains operational runbooks for NOVA Civilizational Architecture incidents and maintenance.
+
+## Available Runbooks
+
+### Core System
+- [Slot6 Cultural Synthesis Issues](slot6.md) - High residual risk, synthesis failures
+- [Slot1 Truth Anchor Problems](slot1.md) - Verification failures, recovery issues
+- [Feature Flag Drift](feature-flags.md) - Unexpected flag state changes
+- [Observability Issues](observability.md) - Prometheus export down, metrics missing
+
+### Phase-2 Features
+- [TRI Link Integration](tri-link.md) - Slot4 ↔ Slot5 coordination issues
+- [Lifespan Manager](lifespan.md) - FastAPI startup/shutdown problems
+- [Shared Hash](shared-hash.md) - Blake2b audit chain issues
+
+## Quick Reference
+
+### Immediate Actions
+1. Check `/metrics` endpoint for current system state
+2. Verify feature flag configuration matches expected state
+3. Review recent commits for flag changes or slot modifications
+4. Check Prometheus scrape health and alert manager
+
+### Escalation
+- **Critical (Slot6 p95 > 0.93)**: Immediate slot team notification
+- **Warning (Slot6 p95 > 0.85)**: Schedule slot team review
+- **Info (Flag drift)**: Verify deployment intent with ops team
+
+### Tools
+- **Dashboard**: `ops/dashboards/nova-phase2-observability.json`
+- **Alerts**: `ops/alerts/nova-phase2.rules.yml`
+- **Framework**: `agents/nova_ai_operating_framework.md`
+
+### Key Metrics
+- `nova_slot6_p95_residual_risk` - Cultural synthesis residual risk
+- `nova_slot1_anchors_total` - Truth anchor count
+- `nova_slot1_failures_total` - Verification failures
+- `nova_feature_flag_enabled` - Flag state visibility

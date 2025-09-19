@@ -59,7 +59,7 @@ def test_phase2_flag_mapping():
         "slots/slot04_tri/meta.yaml": ["NOVA_ENABLE_TRI_LINK"],
         "slots/slot05_constellation/meta.yaml": ["NOVA_ENABLE_TRI_LINK"],
         "slots/slot09_distortion_protection/meta.yaml": ["NOVA_USE_SHARED_HASH"],
-        "meta.yaml": ["NOVA_ENABLE_LIFESPAN"],
+        "meta.yaml": ["NOVA_ENABLE_LIFESPAN", "NOVA_ENABLE_PROMETHEUS"],
         "slots/slot10_civilizational_deployment/meta.yaml": ["NOVA_USE_SHARED_HASH"]
     }
 
