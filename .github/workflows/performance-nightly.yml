@@ -1,0 +1,62 @@
+name: Performance Baseline (Nightly)
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 03:00 UTC daily
+  workflow_dispatch: {}
+
+concurrency:
+  group: perf-nightly
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  performance-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Keep perf baseline comparable: flags OFF unless you intentionally test them
+      NOVA_ENABLE_TRI_LINK: "0"
+      NOVA_ENABLE_LIFESPAN: "0"
+      NOVA_USE_SHARED_HASH: "0"
+      JWT_SECRET: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f setup.cfg ] || [ -f pyproject.toml ]; then
+            pip install -e .[test] || true
+          fi
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run slow performance tests
+        run: |
+          set -e
+          pytest -v -m slow --tb=short --durations=20 | tee pytest-slow-report.txt
+
+      - name: Attach artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-slow-report
+          path: |
+            pytest-slow-report.txt
+            .pytest_cache/**
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "## Nightly Performance Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Flags: TRI_LINK=\`${{ env.NOVA_ENABLE_TRI_LINK }}\`, LIFESPAN=\`${{ env.NOVA_ENABLE_LIFESPAN }}\`, SHARED_HASH=\`${{ env.NOVA_USE_SHARED_HASH }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Report artifact: **pytest-slow-report**" >> "$GITHUB_STEP_SUMMARY"
