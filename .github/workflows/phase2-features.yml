@@ -29,6 +29,7 @@ jobs:
               NOVA_ENABLE_TRI_LINK: "0"
               NOVA_ENABLE_LIFESPAN: "1"
               NOVA_USE_SHARED_HASH: "0"
+          - name: "observability-prom"            env:              NOVA_ENABLE_TRI_LINK: "0"              NOVA_ENABLE_LIFESPAN: "0"              NOVA_USE_SHARED_HASH: "0"              NOVA_ENABLE_PROMETHEUS: "1"
     name: pytest (${{ matrix.name }})
     env: ${{ matrix.env }}
 
@@ -53,7 +54,7 @@ jobs:
         # Ensure FastAPI stack for lifespan tests (in case not included above)
         python - <<'PY'
         import importlib.util, sys
-        missing = [m for m in ("fastapi","starlette","httpx") if importlib.util.find_spec(m) is None]
+        missing = [m for m in ("fastapi","starlette","httpx","prometheus_client") if importlib.util.find_spec(m) is None]
         if missing:
             print("Installing missing test deps:", missing)
             import subprocess
@@ -78,6 +79,9 @@ jobs:
     - name: Targeted shared-hash tests (flagged lane)
       if: ${{ matrix.env.NOVA_USE_SHARED_HASH == '1' }}
       run: pytest -q tests/test_slot09_shared_hash_coverage.py::test_audit_hash_chain_with_shared_hash_enabled
+n    - name: Targeted Prometheus route (flagged lane)
+      if: ${{ matrix.env.NOVA_ENABLE_PROMETHEUS == '1' }}
+      run: pytest -q tests/web/test_prometheus_route.py
 
     - name: Targeted Slot7 metrics smoke
       run: python -c "from orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter; ad=Slot7ProductionControlsAdapter(); out=ad.process({'action':'get_metrics'}); assert isinstance(out,dict); m=out.get('metrics') or out.get('result',{}).get('metrics',{}) or {}; ff=(m.get('feature_flags') or out.get('feature_flags') or out.get('result',{}).get('feature_flags',{})); assert isinstance(ff,dict) and 'effective_hash_method' in ff; print('Slot7 metrics smoke test passed')"

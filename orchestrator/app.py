@@ -94,8 +94,22 @@ if FastAPI is not None:
     @app.get("/metrics")
     async def metrics() -> Response:
         """Prometheus-compatible metrics for all slots."""
-        data = prometheus_metrics(METRIC_SLOT_REGISTRY, monitor)
-        return Response(content=data, media_type="text/plain")
+        import os
+        flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "false").strip().lower()
+        if flag not in {"1", "true", "yes", "on"}:
+            # Explicit 404 when disabled so scanners don't scrape it by default
+            return Response(content=b"", status_code=404, media_type="text/plain")
+
+        try:
+            # New export path
+            from orchestrator.prometheus_metrics import get_metrics_response
+            data, content_type = get_metrics_response()
+            return Response(content=data, media_type=content_type)
+        except Exception:
+            # Fallback to legacy implementation if the new exporter isn't available
+            # Assumes these symbols already exist in this module's scope
+            data = prometheus_metrics(METRIC_SLOT_REGISTRY, monitor)
+            return Response(content=data, media_type="text/plain")
 else:  # pragma: no cover - FastAPI not installed
     app = None
 
