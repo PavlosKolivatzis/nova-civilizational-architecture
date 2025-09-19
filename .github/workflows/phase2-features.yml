@@ -29,7 +29,12 @@ jobs:
               NOVA_ENABLE_TRI_LINK: "0"
               NOVA_ENABLE_LIFESPAN: "1"
               NOVA_USE_SHARED_HASH: "0"
-          - name: "observability-prom"            env:              NOVA_ENABLE_TRI_LINK: "0"              NOVA_ENABLE_LIFESPAN: "0"              NOVA_USE_SHARED_HASH: "0"              NOVA_ENABLE_PROMETHEUS: "1"
+          - name: "observability-prom"
+            env:
+              NOVA_ENABLE_TRI_LINK: "0"
+              NOVA_ENABLE_LIFESPAN: "0"
+              NOVA_USE_SHARED_HASH: "0"
+              NOVA_ENABLE_PROMETHEUS: "1"
     name: pytest (${{ matrix.name }})
     env: ${{ matrix.env }}
 
@@ -79,7 +84,7 @@ jobs:
     - name: Targeted shared-hash tests (flagged lane)
       if: ${{ matrix.env.NOVA_USE_SHARED_HASH == '1' }}
       run: pytest -q tests/test_slot09_shared_hash_coverage.py::test_audit_hash_chain_with_shared_hash_enabled
-n    - name: Targeted Prometheus route (flagged lane)
+    - name: Targeted Prometheus route (flagged lane)
       if: ${{ matrix.env.NOVA_ENABLE_PROMETHEUS == '1' }}
       run: pytest -q tests/web/test_prometheus_route.py
 
@@ -92,4 +97,4 @@ n    - name: Targeted Prometheus route (flagged lane)
         echo "============================================="
         echo "TRI↔Constellation: ${{ matrix.env.NOVA_ENABLE_TRI_LINK }}"
         echo "Lifespan Manager: ${{ matrix.env.NOVA_ENABLE_LIFESPAN }}"
-        echo "Shared Hash:      ${{ matrix.env.NOVA_USE_SHARED_HASH }}"
+        echo "Shared Hash:      ${{ matrix.env.NOVA_USE_SHARED_HASH }}"          echo "Prometheus:        ${{ matrix.env.NOVA_ENABLE_PROMETHEUS }}"

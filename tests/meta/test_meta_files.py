@@ -13,7 +13,7 @@ VALID_STATUSES = {"alpha", "beta", "stable", "moderate", "deprecated"}
 KNOWN_FEATURE_FLAGS = {
     "NOVA_ENABLE_TRI_LINK",
     "NOVA_ENABLE_LIFESPAN",
-    "NOVA_USE_SHARED_HASH"
+    "NOVA_USE_SHARED_HASH",
     "NOVA_ENABLE_PROMETHEUS",
 }
 
