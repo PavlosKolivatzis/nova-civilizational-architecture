@@ -33,6 +33,31 @@ feature_flag_gauge = Gauge(
     registry=_REGISTRY,
 )
 
+# --- Slot1 Truth Anchor metrics ------------------------------------
+slot1_anchors_gauge = Gauge(
+    "nova_slot1_anchors_total",
+    "Total number of truth anchors registered",
+    registry=_REGISTRY,
+)
+
+slot1_lookups_counter = Gauge(
+    "nova_slot1_lookups_total",
+    "Total number of anchor lookups performed",
+    registry=_REGISTRY,
+)
+
+slot1_recoveries_counter = Gauge(
+    "nova_slot1_recoveries_total",
+    "Total number of successful anchor recoveries",
+    registry=_REGISTRY,
+)
+
+slot1_failures_counter = Gauge(
+    "nova_slot1_failures_total",
+    "Total number of anchor verification failures",
+    registry=_REGISTRY,
+)
+
 
 def update_slot6_metrics():
     """Update Slot6 metrics for Prometheus export."""
@@ -72,8 +97,35 @@ def update_flag_metrics() -> None:
     feature_flag_gauge.labels(flag="NOVA_ENABLE_PROMETHEUS").set(1 if prom_on else 0)
 
 
+def update_slot1_metrics() -> None:
+    """Update Slot1 truth anchor metrics for Prometheus export."""
+    try:
+        from orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
+        adapter = Slot1TruthAnchorAdapter()
+
+        if adapter.available:
+            snapshot = adapter.snapshot()
+            slot1_anchors_gauge.set(snapshot.get("anchors", 0))
+            slot1_lookups_counter.set(snapshot.get("lookups", 0))
+            slot1_recoveries_counter.set(snapshot.get("recoveries", 0))
+            slot1_failures_counter.set(snapshot.get("failures", 0))
+        else:
+            # Clear metrics if Slot1 not available
+            slot1_anchors_gauge.set(0)
+            slot1_lookups_counter.set(0)
+            slot1_recoveries_counter.set(0)
+            slot1_failures_counter.set(0)
+    except Exception:
+        # Fallback - set all to 0 if Slot1 unavailable
+        slot1_anchors_gauge.set(0)
+        slot1_lookups_counter.set(0)
+        slot1_recoveries_counter.set(0)
+        slot1_failures_counter.set(0)
+
+
 def get_metrics_response():
     """Get Prometheus metrics response."""
     update_slot6_metrics()
     update_flag_metrics()
+    update_slot1_metrics()
     return generate_latest(_REGISTRY), CONTENT_TYPE_LATEST

@@ -47,11 +47,32 @@ class TruthAnchorEngine:
         self,
         secret_key: Optional[bytes] = None,
         logger: Optional[logging.Logger] = None,
+        storage_path: Optional[str] = None,
     ) -> None:
         self._anchors: Dict[str, AnchorRecord] = {}
         self.metrics = EngineMetrics()
         self.anchor_metrics = AnchorMetrics()
         self.logger = logger or logging.getLogger("truth_anchor_engine")
+
+        # Initialize persistence layer
+        from .persistence import get_default_persistence
+        self._persistence = get_default_persistence(storage_path)
+
+        # Load existing anchors and metrics from persistence
+        persisted_data = self._persistence.load()
+        if persisted_data.get("anchors"):
+            self._anchors = persisted_data["anchors"]
+            # Update anchor counts based on loaded data
+            self.anchor_metrics.total_anchors = len(self._anchors)
+            self.anchor_metrics.active_anchors = len(self._anchors)
+            self.logger.debug(f"Loaded {len(self._anchors)} anchors from persistence")
+
+        if persisted_data.get("metrics"):
+            # Restore metrics if available
+            saved_metrics = persisted_data["metrics"]
+            self.metrics.lookups = saved_metrics.get("lookups", 0)
+            self.metrics.recoveries = saved_metrics.get("recoveries", 0)
+            self.metrics.failures = saved_metrics.get("failures", 0)
 
         # Handle secret key generation or assignment
         self._secret_key = secret_key or secrets.token_bytes(32)
@@ -72,8 +93,16 @@ class TruthAnchorEngine:
         if anchor_id not in self._anchors:
             self.anchor_metrics.total_anchors += 1
             self.anchor_metrics.active_anchors += 1
+
+        # Ensure backup metadata for recovery
+        if "backup" not in metadata:
+            metadata["backup"] = value
+
         self._anchors[anchor_id] = AnchorRecord(value=value, metadata=metadata)
         self.logger.debug("Anchor registered: %s", anchor_id)
+        
+        # Save to persistence
+        self._save_to_persistence()
 
     def _establish_core_anchor(self) -> None:
         """Ensure the core ``nova.core`` anchor exists without skewing metrics."""
@@ -118,9 +147,28 @@ class TruthAnchorEngine:
                 record.value = backup
             else:
                 self._anchors[anchor_id] = AnchorRecord(value=backup)
+            
+            # Save recovery to persistence
+            self._save_to_persistence()
             return backup
         self.logger.error("Failed to recover anchor: %s", anchor_id)
         return None
+
+    def _save_to_persistence(self) -> None:
+        """Save current anchors and metrics to persistent storage."""
+        try:
+            metrics_dict = {
+                "lookups": self.metrics.lookups,
+                "recoveries": self.metrics.recoveries,
+                "failures": self.metrics.failures,
+                "total_anchors": self.anchor_metrics.total_anchors,
+                "active_anchors": self.anchor_metrics.active_anchors,
+            }
+            success = self._persistence.save(self._anchors, metrics_dict)
+            if not success:
+                self.logger.warning("Failed to save anchors to persistence")
+        except Exception as exc:
+            self.logger.error(f"Persistence save error: {exc}")
 
     # ------------------------------------------------------------------
     # Metrics / Introspection
