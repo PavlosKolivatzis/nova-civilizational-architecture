@@ -1,0 +1,94 @@
+groups:
+  # 1) Slot6 risk signals
+  - name: nova-slot6-risk
+    interval: 30s
+    rules:
+      # smoothed view (reusable)
+      - record: nova:slot6:p95_residual_risk:max_over_5m
+        expr: max_over_time(nova_slot6_p95_residual_risk{slot="6"}[5m])
+
+      - alert: NovaSlot6ResidualRiskWarning
+        expr: nova:slot6:p95_residual_risk:max_over_5m > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: nova
+          slot: "6"
+        annotations:
+          summary: "Slot6 residual risk elevated (p95 > 0.85)"
+          description: "Slot6 rolling p95 residual risk = {{ $value | printf \"%.3f\" }} (threshold 0.85) for >5m."
+          runbook_url: "ops/runbooks/slot6.md#residual-risk"
+
+      - alert: NovaSlot6ResidualRiskCritical
+        expr: nova:slot6:p95_residual_risk:max_over_5m > 0.93
+        for: 5m
+        labels:
+          severity: critical
+          service: nova
+          slot: "6"
+        annotations:
+          summary: "Slot6 residual risk CRITICAL (p95 > 0.93)"
+          description: "Slot6 rolling p95 residual risk = {{ $value | printf \"%.3f\" }} (threshold 0.93) for >5m."
+          runbook_url: "ops/runbooks/slot6.md#residual-risk"
+
+      # exporter silent / metric missing
+      - alert: NovaMetricsMissing
+        expr: absent(nova_slot6_p95_residual_risk{slot="6"})
+        for: 10m
+        labels:
+          severity: critical
+          service: nova
+        annotations:
+          summary: "NOVA metrics missing"
+          description: "nova_slot6_p95_residual_risk not scraped for 10m. Check /metrics gating, app health, and Prometheus scrape config."
+          runbook_url: "ops/runbooks/observability.md#prometheus"
+
+  # 2) Feature-flag visibility (treat 0/1 as disabled/enabled)
+  - name: nova-feature-flags
+    interval: 30s
+    rules:
+      # Optional: define expected states per env by editing the vector() below
+      # Example: in prod you expect Prometheus + Shared Hash ON, TRI/Lifespan OFF:
+      - record: nova:expected_flags
+        labels:
+          NOVA_ENABLE_TRI_LINK: "0"
+          NOVA_ENABLE_LIFESPAN: "0"
+          NOVA_USE_SHARED_HASH: "1"
+          NOVA_ENABLE_PROMETHEUS: "1"
+        expr: vector(1)
+
+      - alert: NovaFlagUnexpected_TRI
+        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_ENABLE_TRI_LINK"}, "expected", "$1", "flag", "NOVA_ENABLE_TRI_LINK"))
+             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
+        for: 10m
+        labels: { severity: info, service: nova, flag: "NOVA_ENABLE_TRI_LINK" }
+        annotations:
+          summary: "Feature flag drift: TRI link"
+          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
+
+      - alert: NovaFlagUnexpected_Lifespan
+        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_ENABLE_LIFESPAN"}, "expected", "$1", "flag", "NOVA_ENABLE_LIFESPAN"))
+             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
+        for: 10m
+        labels: { severity: info, service: nova, flag: "NOVA_ENABLE_LIFESPAN" }
+        annotations:
+          summary: "Feature flag drift: Lifespan"
+          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
+
+      - alert: NovaFlagUnexpected_SharedHash
+        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_USE_SHARED_HASH"}, "expected", "$1", "flag", "NOVA_USE_SHARED_HASH"))
+             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
+        for: 10m
+        labels: { severity: info, service: nova, flag: "NOVA_USE_SHARED_HASH" }
+        annotations:
+          summary: "Feature flag drift: Shared Hash"
+          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
+
+      - alert: NovaFlagUnexpected_Prometheus
+        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_ENABLE_PROMETHEUS"}, "expected", "$1", "flag", "NOVA_ENABLE_PROMETHEUS"))
+             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
+        for: 10m
+        labels: { severity: info, service: nova, flag: "NOVA_ENABLE_PROMETHEUS" }
+        annotations:
+          summary: "Feature flag drift: Prometheus"
+          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
