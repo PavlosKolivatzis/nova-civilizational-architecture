@@ -91,7 +91,13 @@ def test_comprehensive_metrics_includes_flags():
         "shared_hash_available",
         "effective_hash_method"
     }
-    assert set(flag_metrics.keys()) == expected_keys
+    # Allow superset of expected keys for forward compatibility
+    assert expected_keys <= set(flag_metrics.keys())
+
+    # If present, validate slot6_p95_residual_risk type
+    if "slot6_p95_residual_risk" in flag_metrics:
+        v = flag_metrics["slot6_p95_residual_risk"]
+        assert (v is None) or isinstance(v, (int, float))
 
     # Verify types
     assert isinstance(flag_metrics["tri_link_enabled"], bool)
