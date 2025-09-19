@@ -72,3 +72,36 @@ def test_slot7_adapter_metrics_health_check():
         assert hasattr(adapter, "available")
     except Exception:
         pytest.skip("Slot7 adapter not available")
+
+
+@pytest.mark.health
+def test_slot7_adapter_includes_slot6_p95():
+    """Test that Slot7 adapter exposes Slot6 p95 residual risk."""
+    try:
+        from orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter
+    except Exception:
+        pytest.skip("Slot7 adapter not available")
+
+    # Prime Slot6 so p95 is not None
+    from orchestrator.metrics import get_slot6_metrics
+    m = get_slot6_metrics()
+    # ensure clean window (no cross-test residue)
+    m.reset()
+    for v in (0.1, 0.4, 0.7, 0.9):
+        m.record_decision("approved", 0.8, v)
+
+    ad = Slot7ProductionControlsAdapter()
+    out = ad.process({"action": "get_metrics"})
+
+    # Navigate to the metrics structure
+    result = out.get("result", {})
+    metrics = result.get("metrics", {})
+    feature_flags = metrics.get("feature_flags", {})
+
+    # Check that slot6_p95_residual_risk is present and valid
+    p95 = feature_flags.get("slot6_p95_residual_risk")
+    if p95 is None:
+        # accept nested location as well
+        p95 = (metrics.get("slot6") or {}).get("p95_residual_risk")
+    assert p95 is not None, "slot6_p95_residual_risk should be present in feature_flags"
+    assert 0.1 <= p95 <= 0.9, f"p95={p95} should be within expected range"
