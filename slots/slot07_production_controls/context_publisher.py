@@ -5,6 +5,7 @@ Publishes production control state to the Semantic Mirror for other slots
 to make context-aware decisions. Provides breaker state, pressure levels,
 and resource status information.
 """
+import os
 import time
 import logging
 from typing import Dict, Any, Optional
@@ -141,7 +142,21 @@ class ProductionControlContextPublisher:
                 "slot07_production_controls",
                 ContextScope.INTERNAL,
                 ttl_seconds=120.0
-            )
+            )            
+            # Light-Clock phase_lock integration (guarded by feature flag)
+            if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "1":
+                try:
+                    phase_lock_value = self.engine.compute_phase_lock()
+                    success &= self.semantic_mirror.publish_context(
+                        "slot07.phase_lock",
+                        phase_lock_value,
+                        "slot07_production_controls",
+                        ContextScope.INTERNAL,
+                        ttl_seconds=300.0  # Light-Clock temporal coherence window
+                    )
+                    logger.debug(f"Published phase_lock value: {phase_lock_value}")
+                except Exception as e:
+                    logger.warning(f"Failed to publish phase_lock: {e}")
             
             if success:
                 self.last_publish = current_time

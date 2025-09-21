@@ -1,6 +1,7 @@
 import time
 import threading
 import logging
+import os
 from collections import defaultdict, deque
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Callable
@@ -453,6 +454,7 @@ class ProductionControlEngine:
             "circuit_breaker": self.circuit_breaker.get_metrics(),
             "rate_limiter": self.rate_limiter.get_metrics(),
             "resource_protector": self.resource_protector.get_metrics(),
+            "phase_lock": self.compute_phase_lock(),
             "safeguards_active": self._get_active_safeguards(),
             "config": self.config,
             "feature_flags": get_flag_state_metrics(),
@@ -485,9 +487,34 @@ class ProductionControlEngine:
             "issues": health_issues,
             "timestamp": time.time(),
             "metrics": metrics,
-            "version": self.__version__
+            "version": self.__version__,
+            "phase_lock": metrics.get("phase_lock", 0.0),
         }
     
+
+    def compute_phase_lock(self) -> float:
+        """
+        Phase-lock ∈ [0,1] derived from existing stats for Light-Clock integration.
+        Formula: 0.7 * success_rate + 0.3 * (1.0 - pressure_level)
+        """
+        # Feature flag check
+        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+            return 1.0
+
+        with self._metrics_lock:
+            success_rate = (
+                self.metrics.successful_requests / max(1, self.metrics.total_requests)
+                if self.metrics.total_requests > 0 else 1.0
+            )
+
+        # Calculate pressure from circuit breaker
+        cb_metrics = self.circuit_breaker.get_metrics()
+        pressure_level = min(1.0, cb_metrics.get("failure_count", 0) / max(1, cb_metrics.get("failure_threshold", 10)))
+
+        # Phase lock formula
+        phase_lock = max(0.0, min(1.0, 0.7 * success_rate + 0.3 * (1.0 - pressure_level)))
+        return phase_lock
+
     def reset_circuit_breaker(self) -> bool:
         """Manually reset circuit breaker - use with caution."""
         try:

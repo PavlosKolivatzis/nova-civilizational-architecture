@@ -31,7 +31,11 @@ DOCUMENTED_KEYS = {
     "slot08.tamper_evidence",
     # Slot 4 TRI Engine health metrics for deployment gates
     "slot04.safe_mode_active",
-    "slot04.drift_z"
+    "slot04.drift_z",
+    "slot04.tri_score",
+    # Phase lock and policy metrics for Light-Clock deployment gates
+    "slot07.phase_lock",
+    "slot09.final_policy"
 }
 
 # Valid key pattern (no stray 'test.' matches)
