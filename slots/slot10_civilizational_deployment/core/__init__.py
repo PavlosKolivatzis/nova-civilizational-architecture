@@ -10,6 +10,9 @@ from .health_feed import (
 )
 from .audit import AuditLog, AuditRecord, AuditSigner
 from .metrics import CanaryMetrics, CanaryMetricsExporter
+from .lightclock_gatekeeper import LightClockGatekeeper, LightClockGateResult
+from .lightclock_canary import LightClockCanaryController, LightClockCanaryResult
+from .factory import build_canary_controller, get_lightclock_gate_summary
 
 __all__ = [
     "Slot10Policy",
@@ -20,4 +23,7 @@ __all__ = [
     "Slot8Health", "Slot4Health", "RuntimeMetrics",
     "AuditLog", "AuditRecord", "AuditSigner",
     "CanaryMetrics", "CanaryMetricsExporter",
+    "LightClockGatekeeper", "LightClockGateResult",
+    "LightClockCanaryController", "LightClockCanaryResult",
+    "build_canary_controller", "get_lightclock_gate_summary",
 ]

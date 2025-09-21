@@ -5,6 +5,7 @@ Integrates with Semantic Mirror to make context-aware cultural synthesis
 decisions based on system-wide state, particularly Slot 7 production control
 pressure and resource availability.
 """
+import os
 import time
 import logging
 from typing import Dict, Any, Optional, Tuple
@@ -24,6 +25,7 @@ class SystemContext:
     system_health: str  # "healthy", "degraded"
     context_available: bool
     timestamp: float
+    phase_lock: Optional[float] = None  # Light-Clock phase coherence (0.0-1.0)
 
 
 class ContextAwareCulturalSynthesis:
@@ -96,6 +98,16 @@ class ContextAwareCulturalSynthesis:
             resource_status = self.semantic_mirror.get_context("slot07.resource_status", "slot06_cultural_synthesis")
             health_summary = self.semantic_mirror.get_context("slot07.health_summary", "slot06_cultural_synthesis")
             
+            # Light-Clock phase_lock integration (guarded by feature flag)
+            phase_lock_value = None
+            if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "1":
+                try:
+                    phase_lock_value = self.semantic_mirror.get_context("slot07.phase_lock", "slot06_cultural_synthesis")
+                    if phase_lock_value is not None:
+                        logger.debug(f"Retrieved phase_lock value: {phase_lock_value:.3f}")
+                except Exception as e:
+                    logger.debug(f"Failed to retrieve phase_lock: {e}")
+            
             if breaker_state is not None and pressure_level is not None:
                 # Successfully retrieved context
                 resource_util = 0.0
@@ -113,7 +125,8 @@ class ContextAwareCulturalSynthesis:
                     resource_utilization=resource_util,
                     system_health=system_health,
                     context_available=True,
-                    timestamp=current_time
+                    timestamp=current_time,
+                    phase_lock=phase_lock_value
                 )
                 
                 logger.debug(f"Retrieved system context: pressure={pressure_level:.2f}, state={breaker_state}")
@@ -126,7 +139,8 @@ class ContextAwareCulturalSynthesis:
                     resource_utilization=0.0,
                     system_health="unknown",
                     context_available=False,
-                    timestamp=current_time
+                    timestamp=current_time,
+                    phase_lock=None
                 )
                 
                 logger.debug("System context not available, using fallback")
@@ -146,7 +160,8 @@ class ContextAwareCulturalSynthesis:
                 resource_utilization=0.0,
                 system_health="error",
                 context_available=False,
-                timestamp=current_time
+                timestamp=current_time,
+                phase_lock=None
             )
     
     def _apply_context_adaptations(self, base_results: Dict[str, Any], 
@@ -173,6 +188,10 @@ class ContextAwareCulturalSynthesis:
         # Apply resource-aware optimizations
         if system_context.resource_utilization > 0.7:
             adapted_results = self._apply_resource_optimizations(adapted_results, system_context)
+        
+        # Light-Clock phase_lock adaptive depth control
+        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "1" and system_context.phase_lock is not None:
+            adapted_results = self._apply_phase_lock_depth_control(adapted_results, system_context)
         
         return adapted_results
     
@@ -288,6 +307,80 @@ class ContextAwareCulturalSynthesis:
         logger.debug(f"Applied resource optimizations for {context.resource_utilization:.1%} utilization")
         return results
     
+    def _apply_phase_lock_depth_control(self, results: Dict[str, Any], 
+                                        context: SystemContext) -> Dict[str, Any]:
+        """Apply Light-Clock phase_lock adaptive depth control."""
+        phase_lock = context.phase_lock
+        if phase_lock is None:
+            return results
+        
+        # Adaptive depth based on phase_lock coherence
+        # High phase_lock (>0.8) = deeper analysis, low phase_lock (<0.4) = shallower
+        if phase_lock > 0.8:
+            # High coherence - enable deep cultural analysis
+            synthesis_depth = "deep"
+            cultural_layers = 5
+            claim_basis = "high_coherence_validated"
+            adaptation_confidence = min(1.0, phase_lock * 1.1)
+        elif phase_lock > 0.6:
+            # Medium coherence - standard depth
+            synthesis_depth = "standard"
+            cultural_layers = 3
+            claim_basis = "medium_coherence_validated"
+            adaptation_confidence = phase_lock
+        elif phase_lock > 0.4:
+            # Low coherence - reduced depth
+            synthesis_depth = "shallow"
+            cultural_layers = 2
+            claim_basis = "low_coherence_cautious"
+            adaptation_confidence = phase_lock * 0.8
+        else:
+            # Very low coherence - minimal depth
+            synthesis_depth = "minimal"
+            cultural_layers = 1
+            claim_basis = "minimal_coherence_conservative"
+            adaptation_confidence = max(0.1, phase_lock * 0.6)
+        
+        # Apply depth adaptations
+        results["synthesis_depth"] = synthesis_depth
+        results["cultural_layers"] = cultural_layers
+        results["claim_basis"] = claim_basis
+        results["adaptation_confidence"] = adaptation_confidence
+        
+        # Adjust existing metrics based on phase_lock
+        if "adaptation_effectiveness" in results:
+            # Scale adaptation effectiveness by phase coherence
+            results["adaptation_effectiveness"] *= (0.5 + 0.5 * phase_lock)
+        
+        if "principle_preservation" in results:
+            # Higher phase_lock improves principle preservation confidence
+            preservation_boost = phase_lock * 0.2
+            results["principle_preservation"] = min(1.0, 
+                results["principle_preservation"] + preservation_boost)
+        
+        # Add phase_lock metadata
+        results["_phase_lock_adaptations"] = {
+            "phase_lock_value": phase_lock,
+            "synthesis_depth": synthesis_depth,
+            "claim_basis": claim_basis,
+            "adaptation_confidence": adaptation_confidence,
+            "depth_reasoning": self._get_depth_reasoning(phase_lock)
+        }
+        
+        logger.debug(f"Applied phase_lock depth control: depth={synthesis_depth}, basis={claim_basis}, phase_lock={phase_lock:.3f}")
+        return results
+    
+    def _get_depth_reasoning(self, phase_lock: float) -> str:
+        """Get human-readable reasoning for depth selection."""
+        if phase_lock > 0.8:
+            return "High temporal coherence enables deep cultural analysis with strong claim validation"
+        elif phase_lock > 0.6:
+            return "Medium coherence supports standard depth analysis with reliable claim basis"
+        elif phase_lock > 0.4:
+            return "Low coherence suggests cautious shallow analysis to avoid overconfident claims"
+        else:
+            return "Minimal coherence requires conservative approach with basic claim validation"
+
     def _get_applied_adaptations(self, context: SystemContext) -> list:
         """Get list of adaptations that were applied."""
         adaptations = []
@@ -306,6 +399,18 @@ class ContextAwareCulturalSynthesis:
         
         if context.resource_utilization > 0.7:
             adaptations.append("resource_optimization")
+        
+        # Light-Clock phase_lock adaptations
+        if (os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "1" and 
+            context.phase_lock is not None):
+            if context.phase_lock > 0.8:
+                adaptations.append("phase_lock_deep_analysis")
+            elif context.phase_lock > 0.6:
+                adaptations.append("phase_lock_standard_analysis")
+            elif context.phase_lock > 0.4:
+                adaptations.append("phase_lock_shallow_analysis")
+            else:
+                adaptations.append("phase_lock_minimal_analysis")
         
         return adaptations
     
