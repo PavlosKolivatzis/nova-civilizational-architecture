@@ -367,7 +367,8 @@ def test_my_health_check():
 
 - **📖 [CLAUDE.md](CLAUDE.md)**: AI development standards and commands
 - **📊 [docs/maturity.yaml](docs/maturity.yaml)**: Detailed maturity assessment (v3.0 - All slots Processual)
-- **🎉 [docs/releases/2025-09-phase-3.md](docs/releases/2025-09-phase-3.md)**: Phase 3 completion release notes
+- **🎉 [docs/releases/2025-09-phase-3.md)**: Phase 3 completion release notes
+- **⚡ [docs/autonomy_artifact_v1_1.md](docs/autonomy_artifact_v1_1.md)**: Light-Clock Temporal Coherence System (ΔC-LIGHTCLOCK)
 - **👁️ [docs/ops/observability.md](docs/ops/observability.md)**: Comprehensive observability guide
 - **📝 [CHANGELOG.md](CHANGELOG.md)**: Version history and milestone tracking
 - **🔧 [package.json](package.json)**: NPM scripts for development workflow
