@@ -287,6 +287,8 @@ class LightClockCanaryController(CanaryController):
         slot04 = {
             "safe_mode_active": s4.safe_mode_active,
             "drift_z": s4.drift_z,
+            # NEW: forward TRI to gatekeeper if health feed has it
+            "tri_score": getattr(s4, "tri_score", None),
         }
         current = {
             "error_rate": rt.error_rate,

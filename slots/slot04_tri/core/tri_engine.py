@@ -88,8 +88,36 @@ class TriEngine:
 
         return {"score": score, "drift": evt, "surge": surge_evt}
 
+    def update_score(self, score: float) -> None:
+        """Convenience method for testing - directly update with a score."""
+        self.metrics.update(float(score))
+
+    def _compute_coherence_signals(self) -> tuple[float, float, float]:
+        """Compute Light-Clock coherence signals: tri_score, coherence, phase_jitter."""
+        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+            return None, None, None
+
+        # Tri score: baseline normalized score
+        tri_score = max(0.0, min(1.0, self.metrics.mean)) if self.metrics.n > 0 else 0.5
+
+        # Coherence: stability measure (higher = more stable)
+        if self.metrics.n < 2:
+            coherence = 1.0  # Assume perfect coherence with insufficient data
+        else:
+            # Inverse of coefficient of variation, capped at [0,1]
+            cv = self.metrics.std / max(0.001, abs(self.metrics.mean))
+            coherence = max(0.0, min(1.0, 1.0 / (1.0 + cv)))
+
+        # Phase jitter: drift magnitude (higher = more jitter)
+        phase_jitter = max(0.0, min(1.0, abs(self._last_drift_z) / 3.0))  # normalize z-score
+
+        return tri_score, coherence, phase_jitter
+
     def assess(self) -> Health:
-        return Health(
+        # Compute coherence signals
+        tri_score, coherence, phase_jitter = self._compute_coherence_signals()
+
+        health = Health(
             drift_z=self._last_drift_z,
             surge_events=self._surge_events_window,
             data_ok=True,
@@ -97,7 +125,24 @@ class TriEngine:
             tri_mean=self.metrics.mean,
             tri_std=self.metrics.std if self.metrics.n > 1 else self.policy.default_sigma,
             n_samples=self.metrics.n,
+            tri_score=tri_score,
+            coherence=coherence,
+            phase_jitter=phase_jitter,
         )
+
+        # Publish tri_score to the mirror for Slot10 gate (env-tunable)
+        try:
+            if (os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "1" and
+                health.tri_score is not None and
+                os.getenv("NOVA_PUBLISH_TRI", "1") == "1"):
+                from orchestrator.semantic_mirror import get_semantic_mirror
+                get_semantic_mirror().publish_context(
+                    "slot04.tri_score", health.tri_score, source="slot04_tri", ttl_s=300
+                )
+        except Exception:
+            pass
+
+        return health
 
     def confidence_interval(self, conf: float = 0.95) -> tuple[float,float]:
         # normal approx

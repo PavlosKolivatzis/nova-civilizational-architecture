@@ -28,6 +28,52 @@ class ConstellationEngine:
         # Ensure similarity caches start empty
         self._calculate_similarity.cache_clear()
         self._character_similarity.cache_clear()
+
+    def _get_tri_signals(self) -> Optional[Dict[str, float]]:
+        """Read TRI coherence signals for node weighting."""
+        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+            return None
+        try:
+            # TODO: Replace with actual TRI signal reader when available
+            # For now, stub with env vars for testing
+            coherence_str = os.getenv("TRI_COHERENCE")
+            phase_jitter_str = os.getenv("TRI_PHASE_JITTER")
+
+            signals = {}
+            if coherence_str:
+                signals["coherence"] = float(coherence_str)
+            if phase_jitter_str:
+                signals["phase_jitter"] = float(phase_jitter_str)
+
+            return signals if signals else None
+        except (ValueError, TypeError):
+            return None
+
+    def _apply_tri_weighting(self, base_weight: float, tri_signals: Optional[Dict[str, float]]) -> tuple[float, Dict[str, Any]]:
+        """Apply TRI coherence-aware weighting and annotations."""
+        if tri_signals is None:
+            return base_weight, {}
+
+        coherence = tri_signals.get("coherence", 1.0)
+        phase_jitter = tri_signals.get("phase_jitter", 0.0)
+
+        # Adjust weight: higher coherence = boost, higher jitter = dampen
+        weight_modifier = 0.9 + 0.1 * coherence  # [0.9, 1.0]
+        jitter_penalty = max(0.0, 1.0 - phase_jitter)  # [0.0, 1.0]
+
+        adjusted_weight = base_weight * weight_modifier * jitter_penalty
+
+        # Tunable threshold
+        JITTER_STABLE = float(os.getenv("TRI_JITTER_STABLE", "0.3"))
+
+        annotations = {
+            "tri_coherence": coherence,
+            "tri_phase_jitter": phase_jitter,
+            "weight_modifier": weight_modifier,
+            "stable": phase_jitter < JITTER_STABLE
+        }
+
+        return adjusted_weight, annotations
         
     def map(self, items: list[str]) -> dict:
         """Enhanced constellation mapping with computed links and stability metrics.
@@ -94,6 +140,10 @@ class ConstellationEngine:
                 "position": self._calculate_position(i, len(items)),
                 "properties": item_analysis["properties"]
             }
+
+            # Add annotations if present
+            if item_analysis.get("annotations"):
+                constellation_item["annotations"] = item_analysis["annotations"]
             constellation.append(constellation_item)
             
         return constellation
@@ -113,9 +163,13 @@ class ConstellationEngine:
         elif any(word in content for word in ["data", "metric", "value", "number"]):
             item_type = "data"
             
-        # Calculate weight based on content significance
-        weight = min(1.0, len(content) / 100.0)  # Longer content = higher weight
-        
+        # Calculate base weight based on content significance
+        base_weight = min(1.0, len(content) / 100.0)  # Longer content = higher weight
+
+        # Apply TRI coherence-aware weighting
+        tri_signals = self._get_tri_signals()
+        adjusted_weight, tri_annotations = self._apply_tri_weighting(base_weight, tri_signals)
+
         # Extract properties
         properties = {
             "length": len(item),
@@ -123,11 +177,15 @@ class ConstellationEngine:
             "has_numbers": any(char.isdigit() for char in item),
             "complexity": self._calculate_complexity(item)
         }
-        
+
+        # Merge annotations if any
+        annotations = tri_annotations.copy()
+
         return {
             "type": item_type,
-            "weight": weight,
-            "properties": properties
+            "weight": adjusted_weight,
+            "properties": properties,
+            "annotations": annotations
         }
 
     def _calculate_complexity(self, item: str) -> float:

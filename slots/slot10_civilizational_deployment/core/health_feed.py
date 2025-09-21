@@ -21,6 +21,7 @@ class Slot4Health:
     """Slot 4 TRI Engine health signals."""
     safe_mode_active: bool
     drift_z: float
+    tri_score: Optional[float] = None
 
 
 @dataclass
@@ -64,7 +65,8 @@ class MockHealthFeed(HealthFeedAdapter):
         )
         self._slot4 = slot4_health or Slot4Health(
             safe_mode_active=False,
-            drift_z=0.5
+            drift_z=0.5,
+            tri_score=0.75  # Mock value for testing
         )
         self._runtime = runtime_metrics or RuntimeMetrics(
             error_rate=0.01,
@@ -140,17 +142,36 @@ class LiveHealthFeed(HealthFeedAdapter):
     def get_slot4_health(self) -> Slot4Health:
         """Pull live Slot 4 health from TRI engine."""
         if not self.slot4_adapter:
-            return Slot4Health(safe_mode_active=False, drift_z=0.5)
+            return Slot4Health(safe_mode_active=False, drift_z=0.5, tri_score=None)
 
         try:
             metrics = self.slot4_adapter.get_health_metrics()
+
+            # Get tri_score: prefer direct TRI engine, fall back to mirror, else None
+            tri_score = None
+            if hasattr(self.slot4_adapter, 'tri_engine') and self.slot4_adapter.tri_engine is not None:
+                try:
+                    health = self.slot4_adapter.tri_engine.assess()
+                    tri_score = getattr(health, "tri_score", None)
+                except Exception:
+                    tri_score = None
+
+            if tri_score is None and hasattr(self, 'mirror') and self.mirror is not None:
+                try:
+                    tri_score = self.mirror.read("slot04.tri_score", None)
+                    if tri_score is not None:
+                        tri_score = float(tri_score)
+                except Exception:
+                    tri_score = None
+
             return Slot4Health(
                 safe_mode_active=metrics.get("safe_mode_active", False),
-                drift_z=metrics.get("drift_z", 0.5)
+                drift_z=metrics.get("drift_z", 0.5),
+                tri_score=tri_score
             )
         except Exception:
             # Safe defaults on error
-            return Slot4Health(safe_mode_active=True, drift_z=999.0)
+            return Slot4Health(safe_mode_active=True, drift_z=999.0, tri_score=None)
 
     def get_runtime_metrics(self) -> RuntimeMetrics:
         """Pull live runtime performance metrics."""

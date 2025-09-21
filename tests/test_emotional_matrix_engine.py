@@ -97,3 +97,46 @@ def test_booster_with_negation() -> None:
     res = engine.analyze("not very good")
     assert res["score"] <= 0
     assert res["emotional_tone"] in {"negative", "neutral"}
+
+
+def test_phase_lock_dampens_score(monkeypatch) -> None:
+    """Test that low phase_lock dampens emotional intensity."""
+    import os
+    monkeypatch.setenv("SLOT07_PHASE_LOCK", "0.4")
+    monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
+
+    engine = EmotionalMatrixEngine()
+    res = engine.analyze("This is very fantastic and awesome!")
+
+    # Score should be dampened (20% reduction) and positive
+    assert res["score"] > 0  # Should be positive
+    assert res["score"] <= 0.8  # But dampened
+    assert "annotations" in res
+    assert res["annotations"]["phase_lock"] == 0.4
+    assert res["annotations"]["lightclock_adjustment"] == "dampened_20pct"
+
+
+def test_phase_lock_no_effect_when_high(monkeypatch) -> None:
+    """Test that high phase_lock doesn't dampen emotions."""
+    import os
+    monkeypatch.setenv("SLOT07_PHASE_LOCK", "0.8")
+    monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
+
+    engine = EmotionalMatrixEngine()
+    res = engine.analyze("This is very fantastic and awesome!")
+
+    # No dampening should occur
+    assert "annotations" not in res or "lightclock_adjustment" not in res.get("annotations", {})
+
+
+def test_phase_lock_disabled_by_flag(monkeypatch) -> None:
+    """Test that NOVA_LIGHTCLOCK_DEEP=0 disables phase_lock."""
+    import os
+    monkeypatch.setenv("SLOT07_PHASE_LOCK", "0.3")
+    monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "0")
+
+    engine = EmotionalMatrixEngine()
+    res = engine.analyze("This is VERY EXCITING!!!")
+
+    # No dampening should occur when disabled
+    assert "annotations" not in res or "lightclock_adjustment" not in res.get("annotations", {})

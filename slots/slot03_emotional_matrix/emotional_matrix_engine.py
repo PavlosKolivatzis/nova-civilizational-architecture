@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unicodedata
 from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Optional
@@ -80,6 +81,28 @@ class EmotionalMatrixEngine:
     def _tokenize(cls, s: str) -> List[str]:
         # Faster than regex: lowercase, translate punctuation, split
         return cls._normalize(s).lower().translate(cls._PUNCT_TABLE).split()
+
+    def _get_phase_lock(self) -> Optional[float]:
+        """Read phase_lock from mirror/context for coherence-aware scaling."""
+        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+            return None
+        try:
+            # TODO: Replace with actual mirror/context reader when available
+            # For now, stub with env var for testing
+            phase_lock_str = os.getenv("SLOT07_PHASE_LOCK")
+            return float(phase_lock_str) if phase_lock_str else None
+        except (ValueError, TypeError):
+            return None
+
+    def _apply_phase_lock_scaling(self, score: float, phase_lock: Optional[float]) -> float:
+        """Apply coherence-aware affect scaling when phase_lock < threshold."""
+        thresh = float(os.getenv("NOVA_EMO_PHASE_LOCK_THRESH", "0.6"))
+        if phase_lock is None or phase_lock >= thresh:
+            return score
+
+        # Low coherence: dampen strong emotions, preserve neutral
+        damping_factor = 0.8  # Reduce emotional intensity by 20%
+        return score * damping_factor
 
     # ---------- public API ----------
     def analyze(self, content: str, *, policy_hook: Optional[Callable[[Dict], None]] = None) -> Dict:
@@ -187,6 +210,14 @@ class EmotionalMatrixEngine:
             },
             "version": self.__version__,
         }
+
+        # Light-Clock coherence-aware scaling
+        phase_lock = self._get_phase_lock()
+        scaled_score = self._apply_phase_lock_scaling(metrics["score"], phase_lock)
+        if scaled_score != metrics["score"]:
+            metrics["score"] = scaled_score
+            metrics.setdefault("annotations", {})["phase_lock"] = phase_lock
+            metrics["annotations"]["lightclock_adjustment"] = "dampened_20pct"
 
         self._apply_policy_hooks(metrics, policy_hook)
 

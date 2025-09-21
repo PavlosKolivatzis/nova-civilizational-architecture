@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Dict, Any, Literal
+from typing import Dict, Any, Literal, Optional
 
 RepairAction = Literal["RESTORE_PREV_MODEL","REWEIGHT_CALIBRATION","SEMANTIC_PATCH","SAFE_MODE_BLOCK","NOOP"]
 
@@ -13,6 +13,10 @@ class Health:
     tri_mean: float
     tri_std: float
     n_samples: int
+    # Light-Clock coherence signals (optional for TRI_REPORT.signal)
+    tri_score: Optional[float] = None
+    coherence: Optional[float] = None
+    phase_jitter: Optional[float] = None
 
 @dataclass
 class RepairDecision:

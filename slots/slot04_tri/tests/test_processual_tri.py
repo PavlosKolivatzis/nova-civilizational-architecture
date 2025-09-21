@@ -95,3 +95,46 @@ def test_core_imports():
     from slots.slot04_tri.core import TriEngine, TriPolicy  # should import cleanly
     assert TriEngine is not None
     assert TriPolicy is not None
+
+
+def test_coherence_signals_generation(tmp_path: Path, monkeypatch):
+    """Test that TRI Engine produces coherence signals for Light-Clock."""
+    import os
+    model_dir, snaps = setup_env(tmp_path)
+
+    monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
+    tri = TriEngine(model_dir, snaps)
+
+    # Add some data points to establish metrics
+    tri.update_score(0.8)
+    tri.update_score(0.7)
+    tri.update_score(0.9)
+
+    health = tri.assess()
+
+    # Verify coherence signals are populated
+    assert health.tri_score is not None
+    assert health.coherence is not None
+    assert health.phase_jitter is not None
+
+    # Verify reasonable ranges
+    assert 0.0 <= health.tri_score <= 1.0
+    assert 0.0 <= health.coherence <= 1.0
+    assert 0.0 <= health.phase_jitter <= 1.0
+
+
+def test_coherence_signals_disabled_by_flag(tmp_path: Path, monkeypatch):
+    """Test that NOVA_LIGHTCLOCK_DEEP=0 disables coherence signals."""
+    import os
+    model_dir, snaps = setup_env(tmp_path)
+
+    monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "0")
+    tri = TriEngine(model_dir, snaps)
+
+    tri.update_score(0.8)
+    health = tri.assess()
+
+    # Signals should be None when disabled
+    assert health.tri_score is None
+    assert health.coherence is None
+    assert health.phase_jitter is None

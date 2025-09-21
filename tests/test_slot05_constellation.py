@@ -485,5 +485,67 @@ class TestIntegrationScenarios:
         assert 0 <= result["stability"]["score"] <= 1
 
 
+class TestTriWeighting:
+    """Test TRI coherence signal integration in constellation weighting."""
+
+    def test_tri_weighting_boosts_with_coherence(self, monkeypatch):
+        """Test that high coherence and low jitter boost node weights."""
+        monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
+        monkeypatch.setenv("TRI_COHERENCE", "0.9")
+        monkeypatch.setenv("TRI_PHASE_JITTER", "0.05")
+
+        engine = ConstellationEngine()
+        result = engine.map(["test item with reasonable length"])
+
+        # Check that constellation nodes have TRI annotations
+        assert len(result["constellation"]) > 0
+        node = result["constellation"][0]
+
+        # Verify TRI annotations exist
+        assert "annotations" in node
+        annotations = node["annotations"]
+        assert annotations.get("tri_coherence") == 0.9
+        assert annotations.get("tri_phase_jitter") == 0.05
+        assert annotations.get("stable") is True
+
+        # Weight should be boosted due to high coherence and low jitter
+        assert node["weight"] > 0.2  # Base weight ~0.4 * boosted
+
+    def test_tri_weighting_dampens_with_jitter(self, monkeypatch):
+        """Test that high jitter dampens node weights."""
+        monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
+        monkeypatch.setenv("TRI_COHERENCE", "0.6")
+        monkeypatch.setenv("TRI_PHASE_JITTER", "0.9")
+
+        engine = ConstellationEngine()
+        result = engine.map(["test item with reasonable length"])
+
+        node = result["constellation"][0]
+        annotations = node["annotations"]
+
+        # High jitter should mark as unstable
+        assert annotations.get("stable") is False
+        assert annotations.get("tri_phase_jitter") == 0.9
+
+        # Weight should be dampened due to high jitter
+        assert node["weight"] < 0.3  # Significantly reduced
+
+    def test_tri_weighting_disabled_by_flag(self, monkeypatch):
+        """Test that NOVA_LIGHTCLOCK_DEEP=0 disables TRI weighting."""
+        monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "0")
+        monkeypatch.setenv("TRI_COHERENCE", "0.9")
+        monkeypatch.setenv("TRI_PHASE_JITTER", "0.1")
+
+        engine = ConstellationEngine()
+        result = engine.map(["test item"])
+
+        node = result["constellation"][0]
+
+        # No TRI annotations should be present when disabled
+        annotations = node.get("annotations", {})
+        assert "tri_coherence" not in annotations
+        assert "tri_phase_jitter" not in annotations
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

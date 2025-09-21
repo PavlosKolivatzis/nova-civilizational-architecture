@@ -1,5 +1,6 @@
 """Intelligent repair planning for autonomous memory recovery."""
 
+import os
 import time
 import logging
 from typing import Dict, Any, List, Optional, Tuple
@@ -32,6 +33,18 @@ class RepairPlanner:
         # Adaptive decision parameters
         self.confidence_threshold = 0.7
         self.learning_rate = 0.1
+
+    def _get_phase_lock(self) -> Optional[float]:
+        """Read current phase_lock value for coherence-aware repair planning."""
+        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+            return None
+        try:
+            # TODO: Replace with actual mirror/context reader when available
+            # For now, stub with env var for testing
+            phase_lock_str = os.getenv("SLOT07_PHASE_LOCK")
+            return float(phase_lock_str) if phase_lock_str else None
+        except (ValueError, TypeError):
+            return None
 
     def decide_repair_strategy(self, health_metrics: HealthMetrics,
                              available_snapshots: List[SnapshotMeta],
@@ -240,6 +253,9 @@ class RepairPlanner:
                            context: Dict[str, Any]) -> float:
         """Score a repair option based on success probability, risk, and time."""
 
+        # Ensure option has details dict
+        option.setdefault("details", {})
+
         # Base score from success probability
         score = option.get("success_probability", 0.0) * 40
 
@@ -266,6 +282,25 @@ class RepairPlanner:
         # Consider historical success rates
         historical_success = self.success_rates.get(action, 0.7)  # Default 70%
         score *= historical_success
+
+        # Phase-lock coherence-aware repair strategy adjustment
+        phase_lock = self._get_phase_lock()
+        if phase_lock is not None:
+            phase_lock_threshold = float(os.getenv("SLOT08_PHASE_LOCK_THRESHOLD", "0.5"))
+            if phase_lock < phase_lock_threshold:
+                # Low coherence: prefer conservative approaches
+                if action in [RepairAction.RESTORE_LAST_GOOD, RepairAction.BLOCK]:
+                    score += 10  # Boost conservative options
+                elif action in [RepairAction.SEMANTIC_PATCH]:
+                    score -= 5   # Reduce risky options
+
+                # Add annotation for observability
+                option["details"].setdefault("annotations", {})["phase_lock_adjustment"] = "conservative_preference"
+                option["details"]["annotations"]["phase_lock_value"] = phase_lock
+            else:
+                # High coherence: allow more aggressive repair strategies
+                option["details"].setdefault("annotations", {})["phase_lock_adjustment"] = "normal_operation"
+                option["details"]["annotations"]["phase_lock_value"] = phase_lock
 
         # Critical severity might require more conservative approaches
         if corruption_analysis.get("severity") == "critical":
