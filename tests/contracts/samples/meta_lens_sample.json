@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "source_slot": "S2",
+  "input_reference": "sha256:abc123def456789",
+  "meta_lens_analysis": {
+    "cognitive_level": "synthesis",
+    "lenses_applied": [
+      "Bloom_Critical",
+      "DeltaC_Systemic",
+      "Cultural_Historical",
+      "Manipulation_Audit",
+      "Evidence_Independence"
+    ],
+    "state_vector": [0.75, 0.82, 0.15, 0.91, 0.25, 0.18],
+    "manipulative_patterns": {
+      "detected": [
+        {
+          "id": "pattern-001",
+          "name": "confirmation_bias",
+          "severity": 0.3,
+          "confidence": 0.85
+        }
+      ],
+      "confidence": 0.85,
+      "cross_validation_source": "INF-o-INITY"
+    },
+    "cultural_overlay": {
+      "historical_context": "Analysis conducted during high-volatility information environment",
+      "cultural_bias_markers": ["western_centric", "temporal_bias"],
+      "synthesis_confidence": 0.91
+    }
+  },
+  "iteration": {
+    "epoch": 3,
+    "max_iters": 3,
+    "alpha": 0.5,
+    "epsilon": 0.02,
+    "converged": true,
+    "residual": 0.008,
+    "frozen_inputs": {
+      "padel_ref": "padel_abc123de",
+      "infinity_ref": "inf_abc123de"
+    },
+    "watchdog": {
+      "distortion_overall": 0.15,
+      "emotional_volatility": 0.18,
+      "abort_triggered": false
+    }
+  },
+  "risk_assessment": {
+    "level": "medium",
+    "vectors": ["information_asymmetry", "cultural_context"],
+    "mitigation_suggestions": ["cross_reference_sources", "cultural_validation"]
+  },
+  "notes": [
+    "Processed 247 chars with 3 iterations",
+    "Convergence achieved within tolerance"
+  ],
+  "snapshots_count": 3,
+  "timestamp": "2023-12-01T14:30:00Z",
+  "lightclock_tick": 2047,
+  "integrity": {
+    "hash": "sha256:def789abc123456def789abc123456def789abc123456def789abc123456def7",
+    "signed_by": "slot01_truth_anchor",
+    "timestamp": "2023-12-01T14:30:00Z"
+  }
+}

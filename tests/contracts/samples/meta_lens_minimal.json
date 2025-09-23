@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0.0",
+  "source_slot": "S2",
+  "input_reference": "sha256:minimal123",
+  "meta_lens_analysis": {
+    "cognitive_level": "analysis",
+    "lenses_applied": ["Bloom_Critical"],
+    "state_vector": [0.5, 0.5, 0.5, 0.5, 0.0, 0.5],
+    "manipulative_patterns": {
+      "detected": [],
+      "confidence": 0.0,
+      "cross_validation_source": "INF-o-INITY"
+    },
+    "cultural_overlay": {
+      "historical_context": "",
+      "cultural_bias_markers": [],
+      "synthesis_confidence": 0.0
+    }
+  },
+  "iteration": {
+    "epoch": 1,
+    "max_iters": 3,
+    "alpha": 0.5,
+    "epsilon": 0.02,
+    "converged": true,
+    "residual": 0.0,
+    "frozen_inputs": {
+      "padel_ref": "",
+      "infinity_ref": ""
+    }
+  },
+  "risk_assessment": {
+    "level": "low",
+    "vectors": [],
+    "mitigation_suggestions": []
+  },
+  "notes": [],
+  "snapshots_count": 1,
+  "timestamp": "2023-12-01T14:30:00Z",
+  "lightclock_tick": 1000,
+  "integrity": {
+    "hash": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    "signed_by": "slot01_truth_anchor",
+    "timestamp": "2023-12-01T14:30:00Z"
+  }
+}

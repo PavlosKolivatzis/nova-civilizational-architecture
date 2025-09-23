@@ -70,7 +70,7 @@ def _get_slot6_metrics() -> Dict[str, Any]:
         except (ImportError, AttributeError):
             # Legacy module blocked or not available
             legacy_calls = None
-        
+
         return {
             "version": "v7.4.1",
             "legacy_calls_total": legacy_calls,
@@ -78,6 +78,52 @@ def _get_slot6_metrics() -> Dict[str, Any]:
             "p95_residual_risk": None,
             "decisions_total": None,
             "decisions": {"approved": None, "transform": None, "blocked": None}
+        }
+
+def _get_meta_lens_metrics() -> Dict[str, Any]:
+    """Get META_LENS_REPORT@1 observability metrics."""
+    try:
+        import os
+        enabled = os.getenv("NOVA_ENABLE_META_LENS", "0") in ("1", "true", "TRUE")
+
+        if not enabled:
+            return {
+                "enabled": False,
+                "status": "disabled",
+                "reason": "NOVA_ENABLE_META_LENS not enabled"
+            }
+
+        # Try to import META_LENS modules
+        try:
+            import slots.slot02_deltathresh.meta_lens_processor as mlp
+            import slots.slot02_deltathresh.plugin_meta_lens_addition
+
+            # Get runtime metrics if available
+            last_epoch = getattr(mlp, "last_epoch", 0)
+            last_residual = getattr(mlp, "last_residual", None)
+
+            return {
+                "enabled": True,
+                "status": "operational",
+                "contract": "META_LENS_REPORT@1",
+                "last_epoch": last_epoch,
+                "last_residual": last_residual,
+                "max_iters": getattr(mlp, "MAX_ITERS", 3),
+                "alpha": getattr(mlp, "ALPHA", 0.5),
+                "epsilon": getattr(mlp, "EPSILON", 0.02),
+                "convergence_model": "Damped fixed-point iteration"
+            }
+        except ImportError as e:
+            return {
+                "enabled": True,
+                "status": "error",
+                "error": str(e)
+            }
+    except Exception as e:
+        return {
+            "enabled": False,
+            "status": "error",
+            "error": str(e)
         }
 
 @router.get("/health/config", tags=["health"])
@@ -102,7 +148,10 @@ async def health_config() -> Dict[str, Any]:
 
     # Get Slot 6 specific metrics
     slot6_metrics = _get_slot6_metrics()
-    
+
+    # Get META_LENS metrics
+    meta_lens_metrics = _get_meta_lens_metrics()
+
     # Get plugin system information
     plugin_info = _get_plugin_info()
 
@@ -113,6 +162,7 @@ async def health_config() -> Dict[str, Any]:
         "slots_loaded": len(slots),
         "slots": slots,
         "slot6": slot6_metrics,  # Slot 6 observability
+        "meta_lens": meta_lens_metrics,  # META_LENS_REPORT@1 status
         "plugins": plugin_info["plugins"],  # Plugin system status
         "contracts_available": plugin_info["contracts_available"],
         "slots_enabled": plugin_info["slots_enabled"],

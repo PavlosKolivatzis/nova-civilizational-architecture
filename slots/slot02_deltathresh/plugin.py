@@ -38,17 +38,17 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
             "processor_loaded": bool(self._processor),
             "components": ["pattern_detector", "threshold_manager"]
         }
-    
+
     def adapters(self) -> Mapping[str, Callable[[Any], Any]]:
         """Return ΔTHRESH contract adapters."""
-        
+
         def _detect_patterns(payload: Any) -> Dict[str, Any]:
             """Generate detection report for content."""
             try:
                 if not self._processor:
                     from slots.slot02_deltathresh.processor import DeltaThreshProcessor
                     self._processor = DeltaThreshProcessor()
-                
+
                 # Extract content
                 if isinstance(payload, dict):
                     content = payload.get("content", "")
@@ -56,10 +56,10 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
                 else:
                     content = str(payload)
                     context = {}
-                
+
                 # Process with ΔTHRESH
                 result = self._processor.process(content, context)
-                
+
                 return {
                     "patterns_detected": result.get("patterns", []),
                     "threshold_breaches": result.get("breaches", []),
@@ -67,7 +67,7 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
                     "layer_analysis": result.get("layers", {}),
                     "version": self.version
                 }
-                
+
             except Exception as e:
                 return {
                     "patterns_detected": [],
@@ -77,6 +77,9 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
                     "error": str(e)
                 }
         
+        from .plugin_meta_lens_addition import _meta_lens_analyze
+
         return {
-            "DETECTION_REPORT@1": _detect_patterns
+            "DETECTION_REPORT@1": _detect_patterns,
+            "META_LENS_REPORT@1": _meta_lens_analyze
         }

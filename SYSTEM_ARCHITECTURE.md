@@ -157,7 +157,7 @@
 │                                                                                     │
 │  Contract Definitions (orchestrator/contracts/)                                   │
 │  ├─ provenance.py - Schema tracking and versioning                               │
-│  ├─ SLOT3_SCHEMA_ID, SLOT6_SCHEMA_ID, SLOT7_SCHEMA_ID                           │
+│  ├─ SLOT3_SCHEMA_ID, SLOT6_SCHEMA_ID, SLOT7_SCHEMA_ID, META_LENS_REPORT@1       │
 │  └─ Schema version management (SCHEMA_VERSION = "1")                              │
 │                                                                                     │
 │  Active Contract Flows:                                                           │
@@ -167,6 +167,7 @@
 │  │ TRI_REPORT@1          │ Slot4 → Slot2, Slot5                              │ │
 │  │ DETECTION_REPORT@1    │ Slot2 → Slot5, Slot9                              │ │
 │  │ CONSTELLATION_STATE@1 │ Slot5 → Slot9                                     │ │
+│  │ META_LENS_REPORT@1    │ Slot2 → Slots 4,5,6,9,1,10                        │ │
 │  │ Multi-Input Hub       │ Slots 3,8,9 → Slot7                               │ │
 │  └─────────────────────────────────────────────────────────────────────────────┘ │
 │                                                                                     │
@@ -178,6 +179,50 @@
 │                                                                                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### **META_LENS Integration Architecture**
+
+The META_LENS_REPORT@1 system represents Nova's structured epistemological analysis layer, providing mathematical convergence-based meta-cognition that integrates seamlessly with existing architecture:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                        META_LENS EPISTEMOLOGICAL LAYER                            │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  Fixed-Point Iteration Engine (slots/slot02_deltathresh/meta_lens_processor.py)  │
+│  ├─ Damped convergence: R^(k+1) = (1-α)·R^(k) + α·F(R^(k))                      │
+│  ├─ State vector: [independence, resonance, invisibility, synthesis, risk, volatility] │
+│  ├─ Watchdog abort: distortion>0.75 OR volatility>0.8                            │
+│  └─ L1 norm residual testing with ε=0.02 convergence threshold                   │
+│                                                                                     │
+│  Contract Integration (META_LENS_REPORT@1)                                       │
+│  ├─ Producer: Slot2 (ΔThreshold Manager)                                         │
+│  ├─ Consumers: TRI_REPORT@1, CONSTELLATION_REPORT@1, CULTURAL_PROFILE@1         │
+│  ├─ Cross-validation: DETECTION_REPORT@1 (INF-o-INITY), EMOTION_REPORT@1        │
+│  └─ Integrity chain: Slot1 signing with SHA-256 attestation                      │
+│                                                                                     │
+│  Operational Integration                                                          │
+│  ├─ Flag-gated deployment: NOVA_ENABLE_META_LENS (default: disabled)            │
+│  ├─ Health monitoring: /health/pulse + /health/config endpoints                  │
+│  ├─ CI validation: contracts-nightly.yml with sample validation                  │
+│  ├─ Graceful degradation: Mock fallbacks when adapter registry unavailable      │
+│  └─ Observability: Convergence metrics, epoch tracking, residual monitoring     │
+│                                                                                     │
+│  Architectural Alignment                                                          │
+│  ├─ Contract system: Native JSON Schema validation with fastjsonschema          │
+│  ├─ Adapter registry: Standard orchestrator pattern with NullAdapter fallbacks  │
+│  ├─ Governance model: ACL registry + canary rollout + immediate rollback        │
+│  ├─ Fault tolerance: Circuit breaker patterns + conservative error defaults     │
+│  └─ Privacy preservation: Hash-based input references, no raw text storage      │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Integration Points:**
+- **Tether to System Map**: Slot2 native extension consuming existing contract flows
+- **Tether to README**: Uses documented adapter registry + contract backbone exactly as specified
+- **Tether to Governance**: Inherits ACL controls, CI/CD pipelines, and health monitoring
+- **Tether to Operations**: Follows established fault tolerance patterns and rollback safety
 
 ### **Layer 5: Support Infrastructure**
 

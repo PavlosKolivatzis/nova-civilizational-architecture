@@ -28,7 +28,8 @@ jobs:
           from jsonschema import Draft7Validator
           schemas = [
             'contracts/slot3_health_schema.json',
-            'contracts/slot6_cultural_profile_schema.json'
+            'contracts/slot6_cultural_profile_schema.json',
+            'contracts/meta_lens_report@1.json'
           ]
           for schema_path in schemas:
             schema = json.loads(pathlib.Path(schema_path).read_text(encoding='utf-8'))
@@ -49,8 +50,12 @@ jobs:
               'tests/contracts/samples/slot3_health_minimal.json'
             ]),
             ('contracts/slot6_cultural_profile_schema.json', [
-              'tests/contracts/samples/slot6_profile_sample.json', 
+              'tests/contracts/samples/slot6_profile_sample.json',
               'tests/contracts/samples/slot6_profile_minimal.json'
+            ]),
+            ('contracts/meta_lens_report@1.json', [
+              'tests/contracts/samples/meta_lens_sample.json',
+              'tests/contracts/samples/meta_lens_minimal.json'
             ])
           ]
           
@@ -72,6 +77,6 @@ jobs:
       - name: Report drift sentinel status
         run: |
           echo "🌙 Nightly drift sentinel completed successfully"
-          echo "📋 Schemas validated: Slot 3 Health + Slot 6 Cultural Profile" 
+          echo "📋 Schemas validated: Slot 3 Health + Slot 6 Cultural Profile + META_LENS_REPORT@1"
           echo "🧪 Sample payloads: All conformant to current contracts"
           echo "⏰ Next run: Tomorrow 2 AM UTC"

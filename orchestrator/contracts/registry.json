@@ -1,0 +1,9 @@
+[
+  {
+    "id": "META_LENS_REPORT@1",
+    "schema": "contracts/meta_lens_report@1.json",
+    "owner": "S2",
+    "enabled": true,
+    "description": "Structured meta-lens analysis with fixed-point iteration and cultural overlay"
+  }
+]

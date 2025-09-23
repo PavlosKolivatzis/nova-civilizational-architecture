@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "contracts/meta_lens_report@1.json",
+  "title": "META_LENS_REPORT@1",
+  "description": "Structured meta-lens analysis with fixed-point iteration, cultural overlay, manipulation cross-validation, and integrity seal.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "timestamp",
+    "source_slot",
+    "input_reference",
+    "meta_lens_analysis",
+    "iteration",
+    "risk_assessment",
+    "integrity"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "lightclock_tick": { "type": "integer", "minimum": 0, "description": "ΔC-LIGHTCLOCK tick at emission time." },
+    "source_slot": { "type": "string", "enum": ["S2"], "description": "Slot emitting the report (currently Slot-2 ΔTHRESH)." },
+    "input_reference": { "type": "string", "description": "Hash/ID of analyzed input (e.g., SHA-256 of prompt/corpus)." },
+
+    "meta_lens_analysis": {
+      "type": "object",
+      "required": ["cognitive_level", "lenses_applied", "state_vector"],
+      "properties": {
+        "cognitive_level": {
+          "type": "string",
+          "enum": ["analysis", "synthesis", "evaluation", "creation"]
+        },
+        "lenses_applied": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["Bloom_Critical", "DeltaC_Systemic", "Cultural_Historical", "Manipulation_Audit", "Evidence_Independence"] },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "state_vector": {
+          "type": "array",
+          "description": "[independence_score, cross_family_resonance, narrative_invisibility, cultural_synthesis_confidence, risk_overall, emotional_volatility]",
+          "items": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "manipulative_patterns": {
+          "type": "object",
+          "required": ["detected", "confidence", "cross_validation_source"],
+          "properties": {
+            "detected": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "name", "severity", "confidence"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "severity": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+                  "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+                },
+                "additionalProperties": false
+              },
+              "uniqueItems": true
+            },
+            "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "cross_validation_source": { "type": "string", "enum": ["INF-o-INITY"] }
+          },
+          "additionalProperties": false
+        },
+        "cultural_overlay": {
+          "type": "object",
+          "properties": {
+            "historical_context": { "type": "string", "maxLength": 2000 },
+            "cultural_bias_markers": {
+              "type": "array",
+              "items": { "type": "string" },
+              "uniqueItems": true
+            },
+            "synthesis_confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "iteration": {
+      "type": "object",
+      "required": ["epoch", "max_iters", "alpha", "epsilon", "converged", "residual"],
+      "properties": {
+        "epoch": { "type": "integer", "minimum": 0 },
+        "max_iters": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "alpha": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.5 },
+        "epsilon": { "type": "number", "minimum": 0.0, "maximum": 0.1, "default": 0.02 },
+        "converged": { "type": "boolean" },
+        "residual": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "frozen_inputs": {
+          "type": "object",
+          "required": ["padel_ref", "infinity_ref"],
+          "properties": {
+            "padel_ref": { "type": "string" },
+            "infinity_ref": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "watchdog": {
+          "type": "object",
+          "properties": {
+            "distortion_overall": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "emotional_volatility": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "abort_triggered": { "type": "boolean", "default": false }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "risk_assessment": {
+      "type": "object",
+      "required": ["level", "vectors"],
+      "properties": {
+        "level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "vectors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "mitigation_suggestions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "notes": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 500 },
+      "uniqueItems": false
+    },
+
+    "snapshots_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of epoch snapshots captured during iteration"
+    },
+
+    "ux_banner": {
+      "type": "object",
+      "description": "Optional UX banner for instability warnings",
+      "properties": {
+        "type": { "type": "string", "enum": ["instability_warning"] },
+        "message": { "type": "string", "maxLength": 200 },
+        "technical_details": {
+          "type": "object",
+          "properties": {
+            "converged": { "type": "boolean" },
+            "residual": { "type": "number", "minimum": 0.0 },
+            "abort_triggered": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["type", "message"],
+      "additionalProperties": false
+    },
+
+    "integrity": {
+      "type": "object",
+      "required": ["hash", "signed_by", "timestamp"],
+      "properties": {
+        "hash": { "type": "string", "pattern": "^(sha256:)[A-Fa-f0-9]{64}$" },
+        "signed_by": { "type": "string", "enum": ["slot01_truth_anchor"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,5 +1,6 @@
 """Nova morning health pulse - comprehensive system health check."""
 
+import os
 import time
 import json
 from typing import Dict, Any, List
@@ -47,6 +48,45 @@ def check_slot10_health() -> Dict[str, Any]:
             "components": ["CanaryController", "Gatekeeper", "SnapshotBackout", "MetricsExporter", "AuditLog"],
             "deployment_strategy": "Progressive canary with autonomous rollback",
             "observability": "Prometheus metrics + hash-chained audit"
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+def check_meta_lens_health() -> Dict[str, Any]:
+    """Check META_LENS_REPORT@1 health and configuration."""
+    try:
+        enabled = os.getenv("NOVA_ENABLE_META_LENS", "0") in ("1", "true", "TRUE")
+
+        if not enabled:
+            return {
+                "status": "disabled",
+                "meta_lens_enabled": False,
+                "reason": "NOVA_ENABLE_META_LENS not enabled"
+            }
+
+        # Check if core modules can be imported
+        import slots.slot02_deltathresh.meta_lens_processor
+        import slots.slot02_deltathresh.plugin_meta_lens_addition
+
+        # Try to get global state if available
+        last_epoch = 0
+        last_residual = None
+        try:
+            # This would be set by actual META_LENS operations
+            import slots.slot02_deltathresh.meta_lens_processor as mlp
+            last_epoch = getattr(mlp, "last_epoch", 0)
+            last_residual = getattr(mlp, "last_residual", None)
+        except AttributeError:
+            pass
+
+        return {
+            "status": "healthy",
+            "meta_lens_enabled": True,
+            "components": ["FixedPointProcessor", "AdapterIntegration", "SchemaValidator"],
+            "last_epoch": last_epoch,
+            "last_residual": last_residual,
+            "convergence_model": "Damped fixed-point iteration",
+            "contract": "META_LENS_REPORT@1"
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
@@ -140,6 +180,16 @@ def run_morning_routine() -> None:
         print(f"    Components: {', '.join(slot10['components'])}")
         print(f"    Strategy: {slot10['deployment_strategy']}")
 
+    meta_lens = check_meta_lens_health()
+    print(f"  META_LENS_REPORT@1: {meta_lens['status'].upper()}")
+    if meta_lens['status'] == 'healthy':
+        print(f"    Components: {', '.join(meta_lens['components'])}")
+        print(f"    Model: {meta_lens['convergence_model']}")
+        if meta_lens.get('last_epoch', 0) > 0:
+            print(f"    Last Epoch: {meta_lens['last_epoch']}, Residual: {meta_lens.get('last_residual', 'N/A')}")
+    elif meta_lens['status'] == 'disabled':
+        print(f"    Reason: {meta_lens['reason']}")
+
     print()
 
     # ACL Governance
@@ -175,7 +225,8 @@ def run_morning_routine() -> None:
         slot8['status'] == 'healthy',
         slot4['status'] == 'healthy',
         slot10['status'] == 'healthy',
-        acl['status'] == 'healthy'
+        acl['status'] == 'healthy',
+        meta_lens['status'] in ('healthy', 'disabled')  # disabled is acceptable
     ])
 
     if all_healthy:
