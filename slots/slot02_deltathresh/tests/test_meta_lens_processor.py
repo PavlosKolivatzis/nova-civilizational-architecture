@@ -249,15 +249,16 @@ def test_environment_variable_configuration():
     os.environ["NOVA_META_LENS_EPSILON"] = "0.01"
 
     try:
-        # Import module again to pick up new env vars
-        import importlib
-        from slots.slot02_deltathresh import meta_lens_processor
-        importlib.reload(meta_lens_processor)
+        # Re-import with a clean module object so env vars are read at import time
+        import sys, importlib
+        full = "slots.slot02_deltathresh.meta_lens_processor"
+        sys.modules.pop(full, None)                     # ensure fresh import
+        mlp = importlib.import_module(full)
 
         # Should use environment values
-        assert meta_lens_processor.MAX_ITERS == 5
-        assert meta_lens_processor.ALPHA == 0.7
-        assert meta_lens_processor.EPSILON == 0.01
+        assert mlp.MAX_ITERS == 5
+        assert mlp.ALPHA == 0.7
+        assert mlp.EPSILON == 0.01
 
     finally:
         # Clean up
