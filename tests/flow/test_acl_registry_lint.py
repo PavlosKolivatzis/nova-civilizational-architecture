@@ -24,6 +24,7 @@ DOCUMENTED_KEYS = {
     "slot06.synthesis_complexity",
     "slot03.confidence_level",
     "slot03.emotional_state",
+    "slot03.phase_lock",
     "slot10.deployer",
     "slot05.adaptation_event",
     "slot05.constellation_mapped",

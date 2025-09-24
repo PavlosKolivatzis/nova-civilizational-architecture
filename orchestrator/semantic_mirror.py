@@ -338,6 +338,9 @@ def _configure_default_access_rules(mirror: SemanticMirror) -> None:
         "slot04.phase_coherence": ["slot02_deltathresh", "slot03_emotional_matrix", "slot05_constellation", "slot07_production_controls", "slot08_memory_lock", "slot10_civilizational_deployment"],
         "slot04.phase_jitter": ["slot02_deltathresh", "slot05_constellation", "slot07_production_controls", "slot10_civilizational_deployment"],
 
+        # Slot 3 LightClock phase lock accessible by deployment gates
+        "slot03.phase_lock": ["slot02_deltathresh", "slot07_production_controls", "slot10_civilizational_deployment"],
+
         # Slot 7 contexts accessible by other slots
         "slot07.breaker_state": ["slot06_cultural_synthesis", "slot03_emotional_matrix"],
         "slot07.pressure_level": ["slot06_cultural_synthesis", "slot03_emotional_matrix"],
