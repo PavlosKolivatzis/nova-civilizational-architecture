@@ -15,6 +15,10 @@ DOCUMENTED_KEYS = {
     "slot07.context_published",
     "slot07.internal_state",
     "slot06.synthesis_results",
+    # Slot04 TRI coherence signals (ADR-012)
+    "slot04.coherence",
+    "slot04.phase_coherence",
+    "slot04.phase_jitter",
     "slot06.cultural_profile",
     "slot06.adaptation_rate",
     "slot06.synthesis_complexity",

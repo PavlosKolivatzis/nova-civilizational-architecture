@@ -30,21 +30,53 @@ class ConstellationEngine:
         self._character_similarity.cache_clear()
 
     def _get_tri_signals(self) -> Optional[Dict[str, float]]:
-        """Read TRI coherence signals for node weighting."""
+        """Read TRI coherence signals with compatibility fallbacks."""
+        import os
+        from typing import Dict, Optional
+        
         if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
             return None
+
+        # Helper for mirror API compatibility
+        def _mirror_get(m, key, default=None):
+            try:
+                return m.get_context(key, default=default)
+            except TypeError:
+                try:
+                    return m.get_context(key, "slot05_constellation")
+                except TypeError:
+                    return default
+
+        # Try semantic mirror first
         try:
-            # TODO: Replace with actual TRI signal reader when available
-            # For now, stub with env vars for testing
+            from orchestrator.semantic_mirror import get_semantic_mirror
+            mirror = get_semantic_mirror()
+            
+            coherence = _mirror_get(mirror, "slot04.coherence", default=None)
+            phase_jitter = _mirror_get(mirror, "slot04.phase_jitter", default=None)
+            
+            signals = {}
+            if coherence is not None:
+                signals["coherence"] = float(coherence)
+            if phase_jitter is not None:
+                signals["phase_jitter"] = float(phase_jitter)
+                
+            if signals:
+                return signals
+        except Exception:
+            pass
+            
+        # Fallback to env vars
+        try:
+            signals = {}
             coherence_str = os.getenv("TRI_COHERENCE")
             phase_jitter_str = os.getenv("TRI_PHASE_JITTER")
-
-            signals = {}
+            
             if coherence_str:
                 signals["coherence"] = float(coherence_str)
             if phase_jitter_str:
                 signals["phase_jitter"] = float(phase_jitter_str)
-
+                
             return signals if signals else None
         except (ValueError, TypeError):
             return None

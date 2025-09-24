@@ -83,16 +83,61 @@ class EmotionalMatrixEngine:
         return cls._normalize(s).lower().translate(cls._PUNCT_TABLE).split()
 
     def _get_phase_lock(self) -> Optional[float]:
-        """Read phase_lock from mirror/context for coherence-aware scaling."""
+        """
+        Compute phase_lock from Semantic Mirror:
+        1) If NOVA_LIGHTCLOCK_DEEP=0 → disable (None)
+        2) Prefer TRI phase coherence from mirror
+        3) Else map Slot7 pressure to [0.45..0.60]
+        4) Fallback to env SLOT07_PHASE_LOCK, else 0.5
+        """
+        import os
         if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
             return None
+
+        # Helper to support both mirror APIs:
+        #   get_context(key, requester)  (older)
+        #   get_context(key, default=...) (newer)
+        def _mirror_get(m, key, default=None):
+            try:
+                # newer signature
+                return m.get_context(key, default=default)
+            except TypeError:
+                try:
+                    # older signature: positional requester id
+                    return m.get_context(key, "slot03_emotional_matrix")
+                except TypeError:
+                    return default
+
+        # Try mirror import and access
         try:
-            # TODO: Replace with actual mirror/context reader when available
-            # For now, stub with env var for testing
-            phase_lock_str = os.getenv("SLOT07_PHASE_LOCK")
-            return float(phase_lock_str) if phase_lock_str else None
-        except (ValueError, TypeError):
-            return None
+            from orchestrator.semantic_mirror import get_semantic_mirror
+            try:
+                mirror = get_semantic_mirror()
+            except Exception:
+                mirror = None
+        except Exception:
+            mirror = None
+
+        # 2) TRI phase coherence wins if present
+        if mirror is not None:
+            phase = _mirror_get(mirror, "slot04.phase_coherence", default=None)
+            if phase is not None:
+                return float(phase)
+
+            # 3) Else map Slot7 pressure → phase_lock
+            pressure = _mirror_get(mirror, "slot07.pressure_level", default=None)
+            if pressure is not None:
+                p = max(0.0, min(1.0, float(pressure)))
+                return float(0.60 - 0.15 * p)
+
+        # 4) Fallback chain: env → hard default
+        try:
+            env_phase = os.getenv("SLOT07_PHASE_LOCK", None)
+            if env_phase is not None:
+                return float(env_phase)
+        except Exception:
+            pass
+        return 0.5
 
     def _apply_phase_lock_scaling(self, score: float, phase_lock: Optional[float]) -> float:
         """Apply coherence-aware affect scaling when phase_lock < threshold."""

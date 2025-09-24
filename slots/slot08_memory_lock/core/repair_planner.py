@@ -35,16 +35,50 @@ class RepairPlanner:
         self.learning_rate = 0.1
 
     def _get_phase_lock(self) -> Optional[float]:
-        """Read current phase_lock value for coherence-aware repair planning."""
+        """Read phase_lock with adaptive repair sensitivity from Semantic Mirror."""
+        import os
+        
         if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
             return None
+
+        # Helper for mirror API compatibility
+        def _mirror_get(m, key, default=None):
+            try:
+                return m.get_context(key, default=default)
+            except TypeError:
+                try:
+                    return m.get_context(key, "slot08_memory_lock")
+                except TypeError:
+                    return default
+
+        # Try semantic mirror
         try:
-            # TODO: Replace with actual mirror/context reader when available
-            # For now, stub with env var for testing
+            from orchestrator.semantic_mirror import get_semantic_mirror
+            mirror = get_semantic_mirror()
+            
+            # Prefer TRI phase coherence if available
+            phase_lock = _mirror_get(mirror, "slot04.phase_coherence", default=None)
+            if phase_lock is not None:
+                return float(phase_lock)
+                
+            # Use system pressure to modulate repair sensitivity
+            pressure = _mirror_get(mirror, "slot07.pressure_level", default=None)
+            if pressure is not None:
+                # Under high pressure, be more conservative with repairs (lower phase lock)
+                pressure_val = max(0.0, min(1.0, float(pressure)))
+                return float(0.60 - 0.20 * pressure_val)  # [0.4..0.6] range
+        except Exception:
+            pass
+            
+        # Fallback to env var
+        try:
             phase_lock_str = os.getenv("SLOT07_PHASE_LOCK")
-            return float(phase_lock_str) if phase_lock_str else None
+            if phase_lock_str:
+                return float(phase_lock_str)
         except (ValueError, TypeError):
-            return None
+            pass
+            
+        return 0.5  # Conservative default
 
     def decide_repair_strategy(self, health_metrics: HealthMetrics,
                              available_snapshots: List[SnapshotMeta],
