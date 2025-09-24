@@ -333,6 +333,11 @@ def get_semantic_mirror() -> SemanticMirror:
 def _configure_default_access_rules(mirror: SemanticMirror) -> None:
     """Configure default access rules for slot context sharing."""
     default_rules = {
+        # Slot 4 TRI contexts accessible by consuming slots
+        "slot04.coherence": ["slot02_deltathresh", "slot03_emotional_matrix", "slot05_constellation", "slot07_production_controls", "slot08_memory_lock", "slot10_civilizational_deployment"],
+        "slot04.phase_coherence": ["slot02_deltathresh", "slot03_emotional_matrix", "slot05_constellation", "slot07_production_controls", "slot08_memory_lock", "slot10_civilizational_deployment"],
+        "slot04.phase_jitter": ["slot02_deltathresh", "slot05_constellation", "slot07_production_controls", "slot10_civilizational_deployment"],
+
         # Slot 7 contexts accessible by other slots
         "slot07.breaker_state": ["slot06_cultural_synthesis", "slot03_emotional_matrix"],
         "slot07.pressure_level": ["slot06_cultural_synthesis", "slot03_emotional_matrix"],

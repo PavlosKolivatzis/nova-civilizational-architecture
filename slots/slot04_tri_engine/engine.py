@@ -169,8 +169,16 @@ class TRIEngine:
         # Determine patterns detected
         patterns = self._detect_patterns(vector, content)
 
-        return {
+        # Prepare report with TRI metrics
+        coherence = status.estimate  # Main TRI coherence score
+        phase_coherence = min(1.0, status.estimate + 0.1)  # Slightly optimistic phase coherence
+        phase_jitter = max(0.0, 1.0 - status.estimate)  # Inverse relationship with coherence
+
+        report = {
             "tri_score": status.estimate,
+            "coherence": coherence,
+            "phase_coherence": phase_coherence,
+            "phase_jitter": phase_jitter,
             "layer_scores": layer_scores,
             "confidence": self._calculate_confidence(status),
             "patterns": patterns,
@@ -178,6 +186,15 @@ class TRIEngine:
             "iterations": status.iterations,
             "confidence_interval": status.confidence_interval
         }
+
+        # Publish TRI signals to Semantic Mirror (best-effort)
+        try:
+            from .publish import publish_tri_to_mirror
+            publish_tri_to_mirror(coherence, phase_coherence, phase_jitter)
+        except Exception:
+            pass  # Never let mirror publishing break TRI processing
+
+        return report
 
     def _extract_features(self, content: str, context: Dict) -> List[float]:
         """Extract numerical feature vector from content."""
