@@ -4,13 +4,18 @@ from typing import Optional
 
 from .canary import CanaryController
 from .lightclock_canary import LightClockCanaryController
-from .lightclock_gatekeeper import LightClockGatekeeper, MirrorReader
+from .lightclock_gatekeeper import LightClockGatekeeper
 from .gatekeeper import Gatekeeper
 from .policy import Slot10Policy
 from .health_feed import HealthFeedAdapter, MockHealthFeed
 from .audit import AuditLog
 from .metrics import CanaryMetricsExporter
 
+
+class MirrorReader:
+    """Minimal interface for reading mirror data."""
+    def read(self, key: str, default=None):
+        return default
 
 class SemanticMirrorAdapter(MirrorReader):
     """Adapter to connect Semantic Mirror to LightClockGatekeeper."""

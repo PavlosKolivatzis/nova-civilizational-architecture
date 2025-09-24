@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Optional
 
 from .safety_policy import basic_safety_policy
+from .publish import publish_phase_lock_to_mirror
 
 
 @dataclass(frozen=True)
@@ -258,6 +259,8 @@ class EmotionalMatrixEngine:
 
         # Light-Clock coherence-aware scaling
         phase_lock = self._get_phase_lock()
+        # Publish for Slot10/Slot7 gate logic (best-effort; advisory)
+        publish_phase_lock_to_mirror(phase_lock)
         scaled_score = self._apply_phase_lock_scaling(metrics["score"], phase_lock)
         if scaled_score != metrics["score"]:
             metrics["score"] = scaled_score

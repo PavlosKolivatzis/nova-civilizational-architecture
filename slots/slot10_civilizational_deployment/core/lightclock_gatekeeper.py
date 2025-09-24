@@ -3,6 +3,15 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional, Set
 
+# Real semantic mirror integration (optional)
+try:
+    from orchestrator.semantic_mirror import get_semantic_mirror
+    from orchestrator.mirror_utils import mirror_get
+    _global_mirror = get_semantic_mirror()
+except Exception:
+    _global_mirror = None
+    mirror_get = None
+
 # Minimal interface to read signals; you can swap for your real adapters
 class MirrorReader:
     def read(self, key: str, default=None):
@@ -33,14 +42,80 @@ class LightClockGatekeeper:
             os.getenv("NOVA_SLOT9_ALLOWED", "ALLOW_FASTPATH,STANDARD_PROCESSING").split(",")
         )
 
+    def _read_epistemic_signals(self):
+        """Read TRI, phase-lock, and pressure signals with new + legacy key support."""
+        coherence = None
+        phase_lock = None
+        pressure = 0.0
+        jitter = None
+        
+        # Try local mirror first (backward compatibility)
+        if hasattr(self._mirror, "read"):
+            phase_lock = self._mirror.read("slot07.phase_lock", None)  # Legacy key
+            if phase_lock is None:
+                phase_lock = self._mirror.read("slot03.phase_lock", None)  # New key
+            coherence = self._mirror.read("slot04.tri_score", None)  # Legacy key
+            if coherence is None:
+                coherence = self._mirror.read("slot04.coherence", None)  # New key
+            jitter = self._mirror.read("slot04.phase_jitter", None)
+            pressure = self._mirror.read("slot07.pressure_level", 0.0) or 0.0
+        
+        # Global mirror fallback (for new integrations)
+        if (coherence is None or phase_lock is None) and _global_mirror and mirror_get:
+            if phase_lock is None:
+                phase_lock = mirror_get(_global_mirror, "slot03.phase_lock", default=None, requester="slot10_deploy")
+            if coherence is None:
+                coherence = mirror_get(_global_mirror, "slot04.coherence", default=None, requester="slot10_deploy")
+            if jitter is None:
+                jitter = mirror_get(_global_mirror, "slot04.phase_jitter", default=None, requester="slot10_deploy")
+            if pressure == 0.0:
+                pressure = mirror_get(_global_mirror, "slot07.pressure_level", default=0.0, requester="slot10_deploy") or 0.0
+        
+        # TRI adapter fallback
+        if coherence is None:
+            try:
+                from orchestrator.adapters.slot4_tri import Slot4TRIAdapter
+                rep = (Slot4TRIAdapter().get_latest_report() or {})
+                coherence = rep.get("coherence", 0.7)
+                if jitter is None:
+                    jitter = rep.get("phase_jitter", None)
+            except Exception:
+                coherence = 0.7
+        
+        if phase_lock is None:
+            phase_lock = 0.5
+            
+        return float(coherence), float(phase_lock), (float(jitter) if jitter is not None else None), float(pressure)
+
+    def should_open_gate(self) -> bool:
+        """Check if deployment gate should open based on epistemic signals."""
+        coh, pl, jit, p = self._read_epistemic_signals()
+        
+        # Tighten threshold under jitter/pressure
+        base = self._tri_gate
+        if jit is not None and jit >= 0.25:
+            base += 0.05
+        base += 0.05 * max(0.0, min(1.0, p))
+        
+        return coh >= base and 0.45 <= pl <= 0.60
+
     def evaluate_deploy_gate(self, slot08: dict, slot04: dict) -> LightClockGateResult:
-        # Get signals
+        # Get signals with backward compatibility
         tri_score = slot04.get("tri_score")
         if tri_score is None:
-            # optional: try mirror if you publish there
+            # Try local mirror
             tri_score = self._mirror.read("slot04.tri_score", None)
+            if tri_score is None:
+                # Use coherence from _read_epistemic_signals
+                coh, _, _, _ = self._read_epistemic_signals()
+                tri_score = coh
 
         phase_lock = self._mirror.read("slot07.phase_lock", None)
+        if phase_lock is None:
+            # Use phase_lock from _read_epistemic_signals
+            _, pl, _, _ = self._read_epistemic_signals()
+            phase_lock = pl
+            
         slot9_policy = self._mirror.read("slot09.final_policy", None)
 
         failed: list[str] = []
@@ -51,7 +126,7 @@ class LightClockGatekeeper:
         if phase_lock is None or phase_lock < self._phase_gate:
             failed.append(f"phase_lock<{self._phase_gate}")
 
-        if slot9_policy is None or slot9_policy not in self._allowed_policies:
+        if slot9_policy is not None and slot9_policy not in self._allowed_policies:
             failed.append(f"slot9_policy_not_allowed({slot9_policy})")
 
         coherence_level = (
