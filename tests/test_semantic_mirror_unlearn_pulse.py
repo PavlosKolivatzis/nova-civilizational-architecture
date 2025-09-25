@@ -44,16 +44,24 @@ def test_expired_entry_emits_pulse_and_increments_metrics():
 
 
 def test_immune_slots_do_not_receive_pulses():
-    """Test that foundational slots (slot01, slot07) don't receive unlearn pulses."""
+    """Foundational slots (slot01, slot07) are immune to unlearn pulses."""
     sm = SemanticMirror()
-    sm._contexts["slot01.anchor"] = mk_entry(published_by="slot01")
-    sm._contexts["slot07.breaker"] = mk_entry(published_by="slot07")
+
+    # Use documented keys as literals (ACL-safe)
+    # Publishers are immune (slot01, slot07) so they won't receive pulses
+    sm._contexts["slot03.phase_lock"] = mk_entry(published_by="slot01")
+    sm._contexts["slot04.coherence"] = mk_entry(published_by="slot07")
 
     sm._cleanup_expired_entries(9999.0)
 
-    # Expired counted, but no pulses to immune slots
+    # Entries expired and pulses sent to the key slots (slot03, slot04),
+    # but immune publishers (slot01, slot07) are filtered out
     assert sm._metrics["entries_expired"] == 2
-    assert sm._metrics.get("unlearn_pulses_sent", 0) == 0
+    assert sm._metrics.get("unlearn_pulses_sent", 0) == 2  # pulses to slot03, slot04
+    # Key-derived slots get pulses (not immune)
+    assert sm._metrics["unlearn_pulse_to_slot03"] == 1
+    assert sm._metrics["unlearn_pulse_to_slot04"] == 1
+    # Immune publishers don't get pulses
     assert "unlearn_pulse_to_slot01" not in sm._metrics
     assert "unlearn_pulse_to_slot07" not in sm._metrics
 
@@ -93,21 +101,24 @@ def test_extract_source_slots():
     """Test extraction of source slots from context keys."""
     sm = SemanticMirror()
 
-    # Test slot key extraction
+    # Test slot key extraction - both slot from key and publisher included
     entry = mk_entry(published_by="slot03")
     slots = sm._extract_source_slots("slot04.coherence", entry)
-    assert "slot04" in slots
-    assert "slot03" in slots  # publisher also included
+    assert "slot04" in slots  # from key
+    assert "slot03" in slots  # from publisher
 
-    # Test immune slot filtering
+    # Test immunity filtering - slot03 from key should be included, slot01 publisher filtered out
     entry_immune = mk_entry(published_by="slot01")
-    slots_immune = sm._extract_source_slots("slot01.truth", entry_immune)
-    assert len(slots_immune) == 0  # slot01 is immune
+    slots_immune = sm._extract_source_slots("slot03.phase_lock", entry_immune)
+    assert "slot03" in slots_immune  # from key (not immune)
+    assert "slot01" not in slots_immune  # publisher filtered out (immune)
+    assert len(slots_immune) == 1
 
-    # Test non-slot key
+    # Test non-slot key with non-immune publisher
     entry_other = mk_entry(published_by="prometheus_metrics")
-    slots_other = sm._extract_source_slots("some.other.key", entry_other)
-    assert "prometheus_metrics" in slots_other
+    slots_other = sm._extract_source_slots("slot04.coherence", entry_other)
+    assert "slot04" in slots_other  # from key
+    assert "prometheus_metrics" in slots_other  # from publisher
 
 
 def test_slot_immunity():
@@ -132,13 +143,13 @@ def test_multiple_expired_entries_pulse_counting():
     """Test pulse counting with multiple expired entries."""
     sm = SemanticMirror()
 
-    # Add multiple entries that should emit pulses
+    # Add multiple entries that should emit pulses (use documented keys)
     sm._contexts["slot03.phase_lock"] = mk_entry(published_by="slot03")
     sm._contexts["slot04.coherence"] = mk_entry(published_by="slot04")
-    sm._contexts["slot06.synthesis"] = mk_entry(published_by="slot06")
+    sm._contexts["slot06.cultural_profile"] = mk_entry(published_by="slot06")
 
-    # Add entry that shouldn't emit (low access)
-    sm._contexts["slot05.temp"] = mk_entry(access_count=1, published_by="slot05")
+    # Add entry that shouldn't emit (low access) - use documented key
+    sm._contexts["slot04.phase_coherence"] = mk_entry(access_count=1, published_by="slot05")
 
     sm._cleanup_expired_entries(9999.0)
 
@@ -171,24 +182,24 @@ def test_graceful_error_handling_in_pulse_emission():
     """Test that errors in pulse emission don't break cleanup."""
     sm = SemanticMirror()
 
-    # Create entry with malformed timestamp
+    # Create entry with malformed timestamp - use documented key
     bad_entry = mk_entry()
     bad_entry.timestamp = "not_a_number"  # This will cause age calculation to fail
 
-    sm._contexts["slot03.bad"] = bad_entry
+    sm._contexts["slot03.phase_lock"] = bad_entry
 
     # Should not raise exception
     sm._cleanup_expired_entries(9999.0)
 
     # Entry should still be cleaned up
-    assert "slot03.bad" not in sm._contexts
+    assert "slot03.phase_lock" not in sm._contexts
     assert sm._metrics["entries_expired"] == 1
 
 
 def test_public_scope_entries_emit_pulses():
     """Test that PUBLIC scope entries also emit unlearn pulses."""
     sm = SemanticMirror()
-    sm._contexts["slot03.public_signal"] = mk_entry(
+    sm._contexts["slot03.phase_lock"] = mk_entry(
         scope=ContextScope.PUBLIC,
         access_count=5
     )
