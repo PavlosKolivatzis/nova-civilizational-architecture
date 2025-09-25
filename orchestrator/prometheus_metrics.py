@@ -65,6 +65,26 @@ semantic_mirror_ops_counter = Gauge(
     registry=_REGISTRY,
 )
 
+# Reciprocal Contextual Unlearning metrics
+unlearn_pulses_sent_gauge = Gauge(
+    "nova_unlearn_pulses_sent_total",
+    "Total unlearn pulses sent on context expiration",
+    registry=_REGISTRY,
+)
+
+entries_expired_gauge = Gauge(
+    "nova_entries_expired_total",
+    "Total context entries expired from semantic mirror",
+    registry=_REGISTRY,
+)
+
+unlearn_pulse_destinations_gauge = Gauge(
+    "nova_unlearn_pulse_to_slot_total",
+    "Unlearn pulses sent to specific slots",
+    ["slot"],
+    registry=_REGISTRY,
+)
+
 # --- Slot1 Truth Anchor metrics ------------------------------------
 slot1_anchors_gauge = Gauge(
     "nova_slot1_anchors_total",
@@ -152,6 +172,30 @@ def update_lightclock_metrics() -> None:
         lightclock_phase_lock_gauge.set(0.5)  # Conservative default
 
 
+def update_semantic_mirror_metrics() -> None:
+    """Update semantic mirror and unlearn pulse metrics."""
+    try:
+        from orchestrator.semantic_mirror import get_semantic_mirror
+        mirror = get_semantic_mirror()
+
+        if mirror and hasattr(mirror, '_metrics'):
+            # Update unlearn pulse metrics
+            unlearn_sent = mirror._metrics.get("unlearn_pulses_sent", 0)
+            unlearn_pulses_sent_gauge.set(unlearn_sent)
+
+            expired = mirror._metrics.get("entries_expired", 0)
+            entries_expired_gauge.set(expired)
+
+            # Update per-slot pulse metrics
+            for key, value in mirror._metrics.items():
+                if key.startswith("unlearn_pulse_to_"):
+                    slot = key.replace("unlearn_pulse_to_", "")
+                    unlearn_pulse_destinations_gauge.labels(slot=slot).set(value)
+
+    except Exception:
+        pass  # Safe fallback - metrics remain unchanged
+
+
 def update_system_health_metrics() -> None:
     """Update system pressure, TRI coherence, and deployment gate status."""
     from os import getenv
@@ -225,4 +269,5 @@ def get_metrics_response():
     update_slot1_metrics()
     update_lightclock_metrics()
     update_system_health_metrics()
+    update_semantic_mirror_metrics()
     return generate_latest(_REGISTRY), CONTENT_TYPE_LATEST
