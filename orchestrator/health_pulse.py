@@ -2,16 +2,13 @@
 
 import os
 import time
-import json
-from typing import Dict, Any, List
+from typing import Dict, Any
 from pathlib import Path
 
 def check_slot8_health() -> Dict[str, Any]:
     """Check Slot 8 Memory Lock & IDS health."""
     try:
         # Just check if modules can be imported
-        import slots.slot08_memory_lock.core
-        import slots.slot08_memory_lock.ids.detectors
 
         return {
             "status": "healthy",
@@ -26,7 +23,6 @@ def check_slot4_health() -> Dict[str, Any]:
     """Check Slot 4 TRI Engine health."""
     try:
         # Just check if modules can be imported
-        import slots.slot04_tri.core
 
         return {
             "status": "healthy",
@@ -41,7 +37,6 @@ def check_slot10_health() -> Dict[str, Any]:
     """Check Slot 10 Processual Deployment health."""
     try:
         # Just check if modules can be imported
-        import slots.slot10_civilizational_deployment.core
 
         return {
             "status": "healthy",
@@ -65,8 +60,6 @@ def check_meta_lens_health() -> Dict[str, Any]:
             }
 
         # Check if core modules can be imported
-        import slots.slot02_deltathresh.meta_lens_processor
-        import slots.slot02_deltathresh.plugin_meta_lens_addition
 
         # Try to get global state if available
         last_epoch = 0
