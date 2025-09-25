@@ -13,6 +13,7 @@ Key Principles:
 from __future__ import annotations
 import time
 import threading
+import os
 from collections import defaultdict, deque
 from typing import Dict, Any, Optional, Set, List
 from dataclasses import dataclass
@@ -301,20 +302,101 @@ class SemanticMirror:
         return True
     
     def _cleanup_expired_entries(self, current_time: float) -> None:
-        """Remove expired context entries."""
-        expired_keys = [
-            key for key, entry in self._contexts.items()
-            if entry.is_expired(current_time)
+        """Remove expired context entries and emit unlearn pulses (observable-only)."""
+        expired_entries = [
+            (key, entry) for key, entry in self._contexts.items()
+            if self._entry_is_expired(entry, current_time)
         ]
-        
-        for key in expired_keys:
+
+        delivered_total = 0
+        for key, entry in expired_entries:
+            delivered_total += self._emit_unlearn_pulse(key, entry)
             del self._contexts[key]
-        
-        self._metrics["entries_expired"] += len(expired_keys)
+
+        # Safe counter updates
+        self._metrics.setdefault("entries_expired", 0)
+        self._metrics["entries_expired"] += len(expired_entries)
+
+        self._metrics.setdefault("unlearn_pulses_sent", 0)
+        self._metrics["unlearn_pulses_sent"] += delivered_total
+
         self.last_cleanup = current_time
-        
-        if expired_keys:
-            logger.debug(f"Cleaned up {len(expired_keys)} expired context entries")
+
+        if expired_entries:
+            logger.debug(f"Cleaned up {len(expired_entries)} expired context entries")
+            logger.info(f"Emitted {delivered_total} unlearn pulses")
+
+    # ---------- expiry helper (robust to malformed entries) ----------
+    def _entry_is_expired(self, entry: ContextEntry, current_time: float) -> bool:
+        """Return True if entry is expired, handling missing attrs and bad types."""
+        try:
+            if hasattr(entry, "is_expired") and callable(entry.is_expired):
+                return bool(entry.is_expired(current_time))
+            ts = float(getattr(entry, "timestamp", 0.0))
+            ttl = float(getattr(entry, "ttl_seconds", 0.0))
+            return (current_time - ts) > ttl
+        except Exception:
+            # Defensive: treat malformed entries as expired so they don't linger forever
+            return True
+
+    # ---------- Observable Pulse helpers ----------
+    def _should_emit_unlearn_pulse(self, entry: ContextEntry) -> bool:
+        """Should we emit an unlearn pulse for this expiring context?"""
+        return (
+            getattr(entry, "access_count", 0) > 1          # actually used
+            and getattr(entry, "scope", None) in [ContextScope.INTERNAL, ContextScope.PUBLIC]
+            and float(getattr(entry, "ttl_seconds", 0.0)) >= 60.0  # not transient
+        )
+
+    def _emit_unlearn_pulse(self, key: str, entry: ContextEntry) -> int:
+        """Log a reciprocal unlearn pulse (prototype; no weight decay).
+        Returns number of destinations actually notified (after immunity filter)."""
+        if not self._should_emit_unlearn_pulse(entry):
+            return 0
+
+        source_slots = self._extract_source_slots(key, entry)  # already immunity-filtered
+        delivered = len(source_slots)
+        if delivered == 0:
+            return 0
+
+        # Gate noisy logs with env flag (default ON for prototype)
+        if os.getenv("NOVA_UNLEARN_PULSE_LOG", "1") == "1":
+            try:
+                age = time.time() - float(getattr(entry, "timestamp", time.time()))
+            except Exception:
+                age = 0.0
+            logger.info(
+                f"UNLEARN_PULSE key={key} → {source_slots} "
+                f"(ttl={getattr(entry,'ttl_seconds',None)}s, "
+                f"accessed={getattr(entry,'access_count',0)}x, age={age:.1f}s)"
+            )
+
+        # Phase 2: emit UNLEARN_PULSE@1 contract to source slots
+        # Phase 3: implement exponential weight decay in receivers
+
+        # Per-destination pulse counters
+        for s in source_slots:
+            k = f"unlearn_pulse_to_{s}"
+            self._metrics.setdefault(k, 0)
+            self._metrics[k] += 1
+        self._metrics.setdefault("unlearn_pulse_total_contexts", 0)
+        self._metrics["unlearn_pulse_total_contexts"] += 1
+        return delivered
+
+    def _extract_source_slots(self, key: str, entry: ContextEntry) -> List[str]:
+        """Infer slots to notify; core truth/production are immune."""
+        slots: List[str] = []
+        if key.startswith("slot") and "." in key:
+            slots.append(key.split(".")[0])  # e.g., "slot03"
+        pub = getattr(entry, "published_by", None)
+        if pub and pub not in slots:
+            slots.append(pub)
+        return [s for s in slots if self._slot_should_receive_unlearn_pulse(s)]
+
+    def _slot_should_receive_unlearn_pulse(self, slot: str) -> bool:
+        """Protect foundational engines from unlearning pulses."""
+        immune = {"slot01", "slot07", "slot1_truth_anchor", "slot7_production_controls"}
+        return slot not in immune
 
 
 # Global semantic mirror instance
