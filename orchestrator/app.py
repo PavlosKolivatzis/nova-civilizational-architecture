@@ -65,6 +65,25 @@ if FastAPI is not None:
         from slots.config import get_config_manager
         await get_config_manager()
 
+        # --- UNLEARN_PULSE emitter wiring ---
+        import os, json
+        from orchestrator.contracts.emitter import set_contract_emitter, NoOpEmitter
+
+        class JsonlEmitter:
+            """Append each UNLEARN_PULSE@1 as newline-delimited JSON for audit/ingest."""
+            def __init__(self, path=None):
+                if path is None:
+                    path = os.getenv("NOVA_UNLEARN_PULSE_PATH", "logs/unlearn_pulses.ndjson")
+                self.path = path
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+            def emit(self, contract):
+                with open(self.path, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(contract.model_dump()) + "\n")
+
+        # Flip this to NoOpEmitter() to instantly disable delivery without redeploying logic
+        set_contract_emitter(JsonlEmitter())
+        # set_contract_emitter(NoOpEmitter())  # <-- Rollback: uncomment this line
+
     async def _shutdown() -> None:
         from slots.config import get_config_manager
         mgr = await get_config_manager()
