@@ -20,6 +20,9 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 
+from orchestrator.contracts.emitter import get_contract_emitter
+from orchestrator.contracts.unlearn_pulse import UnlearnPulseV1
+
 logger = logging.getLogger(__name__)
 
 
@@ -359,12 +362,14 @@ class SemanticMirror:
         if delivered == 0:
             return 0
 
+        # Calculate age for both logging and contract emission
+        try:
+            age = time.time() - float(getattr(entry, "timestamp", time.time()))
+        except Exception:
+            age = 0.0
+
         # Gate noisy logs with env flag (default ON for prototype)
         if os.getenv("NOVA_UNLEARN_PULSE_LOG", "1") == "1":
-            try:
-                age = time.time() - float(getattr(entry, "timestamp", time.time()))
-            except Exception:
-                age = 0.0
             logger.info(
                 f"UNLEARN_PULSE key={key} → {source_slots} "
                 f"(ttl={getattr(entry,'ttl_seconds',None)}s, "
@@ -372,6 +377,21 @@ class SemanticMirror:
             )
 
         # Phase 2: emit UNLEARN_PULSE@1 contract to source slots
+        emitter = get_contract_emitter()
+        for s in source_slots:
+            try:
+                contract = UnlearnPulseV1(
+                    key=key,
+                    target_slot=s,
+                    published_by=getattr(entry, "published_by", None),
+                    ttl_seconds=float(getattr(entry, "ttl_seconds", 0.0)) if getattr(entry, "ttl_seconds", None) is not None else None,
+                    access_count=int(getattr(entry, "access_count", 0)) if getattr(entry, "access_count", None) is not None else None,
+                    age_seconds=age,
+                    scope=getattr(entry, "scope", None),
+                )
+                emitter.emit(contract)
+            except Exception as e:
+                logger.exception(f"UNLEARN_PULSE emission failed for {s}: {e}")
         # Phase 3: implement exponential weight decay in receivers
 
         # Per-destination pulse counters
