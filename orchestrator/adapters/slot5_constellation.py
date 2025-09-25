@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 try:
     from slots.slot05_constellation.constellation_engine import ConstellationEngine

@@ -14,8 +14,8 @@ from __future__ import annotations
 import time
 import threading
 from collections import defaultdict, deque
-from typing import Dict, Any, Optional, Set, List, Callable
-from dataclasses import dataclass, field
+from typing import Dict, Any, Optional, Set, List
+from dataclasses import dataclass
 from enum import Enum
 import logging
 

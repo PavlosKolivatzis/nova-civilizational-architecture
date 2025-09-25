@@ -1,7 +1,7 @@
 """Contract-based adapter registry with null adapter fallbacks."""
 
 from __future__ import annotations
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 
 class AdapterRegistry:

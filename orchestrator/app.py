@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
 
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.core.event_bus import EventBus, Event
-from orchestrator.core import create_router, DEFAULT_FALLBACK_MAP
+from orchestrator.core import create_router
 from logging_config import configure_logging
 from orchestrator.adapters import (
     Slot2DeltaThreshAdapter,

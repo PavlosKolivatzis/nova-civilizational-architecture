@@ -5,7 +5,7 @@ Provides setup functions for Flow Fabric Phase 3 deployment.
 Handles initialization, configuration, and integration wiring.
 """
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from orchestrator.semantic_mirror import get_semantic_mirror
 from orchestrator.config import config
