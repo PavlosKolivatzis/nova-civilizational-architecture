@@ -65,8 +65,20 @@ if FastAPI is not None:
         from slots.config import get_config_manager
         await get_config_manager()
 
+        # --- Singleton metrics guard ---
+        import os, logging
+        logger = logging.getLogger(__name__)
+
+        workers = int(os.getenv("UVICORN_WORKERS") or os.getenv("WEB_CONCURRENCY") or "1")
+        require_singleton = os.getenv("NOVA_REQUIRE_SINGLETON_METRICS", "1") == "1"
+        if require_singleton and workers != 1:
+            raise RuntimeError(
+                f"SemanticMirror metrics require single-process mode; workers={workers}. "
+                f"Set UVICORN_WORKERS=1 or disable with NOVA_REQUIRE_SINGLETON_METRICS=0."
+            )
+
         # --- UNLEARN_PULSE emitter wiring ---
-        import os, json
+        import json
         from orchestrator.contracts.emitter import set_contract_emitter, NoOpEmitter
 
         class JsonlEmitter:
@@ -109,6 +121,18 @@ if FastAPI is not None:
         )
         payload["status"] = "ok"
         return payload
+
+    @app.get("/health/semantic-mirror")
+    async def semantic_mirror_health():
+        """Return semantic mirror metrics health check."""
+        from orchestrator.semantic_mirror import get_semantic_mirror
+        m = get_semantic_mirror()._metrics
+        return {
+            "entries_expired": m.get("entries_expired", 0),
+            "unlearn_pulses_sent": m.get("unlearn_pulses_sent", 0),
+            "pulse_destinations": {k: v for k, v in m.items() if k.startswith("unlearn_pulse_to_")},
+            "status": "ok"
+        }
 
     @app.get("/metrics")
     async def metrics() -> Response:
