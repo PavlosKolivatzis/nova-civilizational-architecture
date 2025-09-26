@@ -1,0 +1,213 @@
+{
+  "id": null,
+  "uid": "nova-phase2-observability",
+  "title": "NOVA • Phase 2 Observability",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "tags": ["nova", "phase2", "observability"],
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["15s","30s","1m","5m"] },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" }
+      },
+      {
+        "name": "window",
+        "label": "Smoothing Window",
+        "type": "custom",
+        "query": "1m,5m,15m,1h",
+        "current": { "text": "5m", "value": "5m" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "TRI Link",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_feature_flag_enabled{flag=\"NOVA_ENABLE_TRI_LINK\"}[$window])" }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "Enabled" }, "0": { "text": "Disabled" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 0.5 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Lifespan",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_feature_flag_enabled{flag=\"NOVA_ENABLE_LIFESPAN\"}[$window])" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "justifyMode": "center" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "Enabled" }, "0": { "text": "Disabled" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red" }, { "color": "green", "value": 0.5 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Shared Hash",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_feature_flag_enabled{flag=\"NOVA_USE_SHARED_HASH\"}[$window])" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "justifyMode": "center" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "Enabled" }, "0": { "text": "Disabled" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red" }, { "color": "green", "value": 0.5 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Prometheus Export",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_feature_flag_enabled{flag=\"NOVA_ENABLE_PROMETHEUS\"}[$window])" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "justifyMode": "center" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "Enabled" }, "0": { "text": "Disabled" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red" }, { "color": "green", "value": 0.5 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Slot6 p95 Residual Risk (Gauge)",
+      "type": "gauge",
+      "gridPos": { "h": 10, "w": 8, "x": 0, "y": 8 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_slot6_p95_residual_risk{slot=\"6\"}[$window])" }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.85 },
+              { "color": "red", "value": 0.93 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Slot6 p95 Residual Risk (Timeseries)",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 16, "x": 8, "y": 8 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "nova_slot6_p95_residual_risk{slot=\"6\"}" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.85 },
+              { "color": "red", "value": 0.93 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Feature Flag Changes Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 18 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "nova_feature_flag_enabled{flag=\"NOVA_ENABLE_TRI_LINK\"}", "legendFormat": "TRI Link" },
+        { "expr": "nova_feature_flag_enabled{flag=\"NOVA_ENABLE_LIFESPAN\"}", "legendFormat": "Lifespan" },
+        { "expr": "nova_feature_flag_enabled{flag=\"NOVA_USE_SHARED_HASH\"}", "legendFormat": "Shared Hash" },
+        { "expr": "nova_feature_flag_enabled{flag=\"NOVA_ENABLE_PROMETHEUS\"}", "legendFormat": "Prometheus" }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "Enabled" }, "0": { "text": "Disabled" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red" }, { "color": "green", "value": 0.5 }] }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

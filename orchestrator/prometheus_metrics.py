@@ -179,21 +179,33 @@ def update_semantic_mirror_metrics() -> None:
         mirror = get_semantic_mirror()
 
         if mirror and hasattr(mirror, '_metrics'):
+            m = mirror._metrics
+
+            # ensure keys exist so 0-samples are emitted on cold start
+            m.setdefault("entries_expired", 0)
+            m.setdefault("unlearn_pulses_sent", 0)
+
             # Update unlearn pulse metrics
-            unlearn_sent = mirror._metrics.get("unlearn_pulses_sent", 0)
+            unlearn_sent = m.get("unlearn_pulses_sent", 0)
             unlearn_pulses_sent_gauge.set(unlearn_sent)
 
-            expired = mirror._metrics.get("entries_expired", 0)
+            expired = m.get("entries_expired", 0)
             entries_expired_gauge.set(expired)
 
             # Update per-slot pulse metrics
-            for key, value in mirror._metrics.items():
+            for key, value in m.items():
                 if key.startswith("unlearn_pulse_to_"):
                     slot = key.replace("unlearn_pulse_to_", "")
                     unlearn_pulse_destinations_gauge.labels(slot=slot).set(value)
+        else:
+            # No mirror yet - set baseline zeros
+            unlearn_pulses_sent_gauge.set(0)
+            entries_expired_gauge.set(0)
 
     except Exception:
-        pass  # Safe fallback - metrics remain unchanged
+        # Safe fallback - set baseline zeros
+        unlearn_pulses_sent_gauge.set(0)
+        entries_expired_gauge.set(0)
 
 
 def update_system_health_metrics() -> None:

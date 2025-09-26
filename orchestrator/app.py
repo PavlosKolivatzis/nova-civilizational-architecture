@@ -17,6 +17,13 @@ except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
     FastAPI = None  # type: ignore
     health_router = None  # type: ignore
 
+import asyncio
+import time
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.core.event_bus import EventBus, Event
 from orchestrator.core import create_router
@@ -61,6 +68,25 @@ except Exception:  # pragma: no cover - orchestrator runner not available
     orch = None
 
 if FastAPI is not None:
+    async def _sm_sweeper():
+        interval = int(os.getenv("NOVA_SMEEP_INTERVAL", "15"))  # seconds
+        logger.info("SemanticMirror sweeper starting (interval=%ss)", interval)
+        while True:
+            try:
+                from orchestrator.semantic_mirror import get_semantic_mirror
+                from orchestrator.prometheus_metrics import update_semantic_mirror_metrics
+                sm = get_semantic_mirror()
+                before = sm._metrics.get("entries_expired", 0)
+                sm._cleanup_expired_entries(time.time())
+                after = sm._metrics.get("entries_expired", 0)
+                delta = after - before
+                if delta:
+                    logger.info("SemanticMirror sweeper tick: expired=%s", delta)
+                update_semantic_mirror_metrics()  # keep /metrics in sync
+            except Exception:
+                logger.exception("SemanticMirror sweeper failed")
+            await asyncio.sleep(interval)
+
     async def _startup() -> None:
         from slots.config import get_config_manager
         await get_config_manager()
@@ -83,6 +109,12 @@ if FastAPI is not None:
         # Flip this to NoOpEmitter() to instantly disable delivery without redeploying logic
         set_contract_emitter(JsonlEmitter())
         # set_contract_emitter(NoOpEmitter())  # <-- Rollback: uncomment this line
+
+        # initialize zeros so series exist immediately
+        from orchestrator.prometheus_metrics import update_semantic_mirror_metrics
+        update_semantic_mirror_metrics()
+        # start periodic expiry in *this* process (the one Prometheus scrapes)
+        asyncio.create_task(_sm_sweeper())
 
     async def _shutdown() -> None:
         from slots.config import get_config_manager
@@ -129,6 +161,54 @@ if FastAPI is not None:
             # Assumes these symbols already exist in this module's scope
             data = prometheus_metrics(METRIC_SLOT_REGISTRY, monitor)
             return Response(content=data, media_type="text/plain")
+
+    @app.post("/ops/expire-now")
+    async def force_expire():
+        """Force semantic mirror cleanup for testing."""
+        try:
+            from types import SimpleNamespace
+            from orchestrator.semantic_mirror import ContextScope, get_semantic_mirror
+            from orchestrator.prometheus_metrics import update_semantic_mirror_metrics
+            sm = get_semantic_mirror()
+            if sm:
+                # Optionally seed a pulse-eligible context (validation only)
+                if os.getenv("NOVA_ALLOW_EXPIRE_TEST", "1") == "1":
+                    key = "slot06.cultural_profile"  # documented, non-immune
+                    if key not in sm._contexts:
+                        sm._contexts[key] = SimpleNamespace(
+                            timestamp=0.0,                  # expired
+                            ttl_seconds=120.0,              # >= 60
+                            access_count=3,                 # > 1
+                            scope=ContextScope.PUBLIC,      # INTERNAL|PUBLIC
+                            published_by="slot05"           # non-immune
+                        )
+                        logger.info("Created test context for pulse verification: %s", key)
+
+                before_expired  = sm._metrics.get("entries_expired", 0)
+                before_pulses   = sm._metrics.get("unlearn_pulses_sent", 0)
+                before_contexts = len(sm._contexts)
+                sm._cleanup_expired_entries(time.time() + 3600)  # force as "now"
+                after_expired   = sm._metrics.get("entries_expired", 0)
+                after_pulses    = sm._metrics.get("unlearn_pulses_sent", 0)
+                after_contexts  = len(sm._contexts)
+                update_semantic_mirror_metrics()
+
+                return {
+                    "status": "ok",
+                    "expired_count": after_expired - before_expired,
+                    "pulses_delta":  after_pulses  - before_pulses,
+                    "contexts_before": before_contexts,
+                    "contexts_after":  after_contexts,
+                    "metrics": {
+                        "entries_expired": after_expired,
+                        "unlearn_pulses_sent": sm._metrics.get("unlearn_pulses_sent", 0),
+                    },
+                }
+            else:
+                return {"status": "no_mirror", "expired_count": 0}
+        except Exception as e:
+            logger.exception("expire-now failed")
+            return {"status": "error", "error": str(e)}
 else:  # pragma: no cover - FastAPI not installed
     app = None
 

@@ -1,0 +1,58 @@
+groups:
+- name: nova-unlearn-pulse-invariants
+  rules:
+  # 0) Missing metrics = hard failure
+  - alert: UnlearnMetricsMissing
+    expr: absent(nova_unlearn_pulses_sent_total) OR absent(nova_entries_expired_total) OR absent(nova_unlearn_pulse_to_slot_total)
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Unlearn metrics series missing"
+      description: "Prometheus isn't scraping unlearn metrics or exporter is down."
+
+  # 1) Pulses accounted for (per-slot deltas sum to total delta)
+  - alert: UnlearnPulseAccounting
+    expr: |
+      (sum(clamp_min(delta(nova_unlearn_pulse_to_slot_total[10m]), 0))
+       - clamp_min(delta(nova_unlearn_pulses_sent_total[10m]), 0)) != 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Unlearn pulse accounting mismatch"
+      description: "Per-slot delta doesn't match total delta. Δ={{ $value }}"
+      runbook_url: "docs/ops/PRODUCTION_VALIDATION.md#unlearn-pulse-accounting"
+
+  # 2) Pulses should be ≥ expirations (using deltas)
+  - alert: UnlearnPulseUnderflow
+    expr: |
+      clamp_min(delta(nova_unlearn_pulses_sent_total[10m]), 0)
+      - clamp_min(delta(nova_entries_expired_total[10m]), 0) < 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Unlearn pulses fewer than expirations"
+      description: "Sent {{ $value }} fewer pulses than contexts expired (last 10m)."
+
+  # 3) Silence detector (no pulses recently)
+  - alert: UnlearnPulseSilence
+    expr: clamp_min(delta(nova_unlearn_pulses_sent_total[30m]), 0) == 0
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "No unlearn pulses for 30 minutes"
+      description: "Sweeper may be stalled or no contexts are expiring."
+
+  # 4) Deployment gate warning
+  - alert: DeploymentGateOpen
+    expr: max_over_time(nova_deployment_gate_open[2m]) == 1
+    for: 5m
+    labels:
+      severity: info
+    annotations:
+      summary: "Deployment gate is open"
+      description: "Slot10 deployment gate has been open for ≥5 minutes."
+      dashboard: "Nova Metrics"
