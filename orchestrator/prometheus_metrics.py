@@ -85,6 +85,18 @@ unlearn_pulse_destinations_gauge = Gauge(
     registry=_REGISTRY,
 )
 
+unlearn_pulse_emit_errors_gauge = Gauge(
+    "nova_unlearn_pulse_emit_errors_total",
+    "Total errors during contract emission",
+    registry=_REGISTRY,
+)
+
+unlearn_pulse_dropped_immune_gauge = Gauge(
+    "nova_unlearn_pulse_dropped_immune_total",
+    "Total pulses dropped due to immunity filtering",
+    registry=_REGISTRY,
+)
+
 # --- Slot1 Truth Anchor metrics ------------------------------------
 slot1_anchors_gauge = Gauge(
     "nova_slot1_anchors_total",
@@ -185,6 +197,13 @@ def update_semantic_mirror_metrics() -> None:
 
             expired = mirror._metrics.get("entries_expired", 0)
             entries_expired_gauge.set(expired)
+
+            # Update error and immunity metrics
+            emit_errors = mirror._metrics.get("unlearn_pulse_emit_errors", 0)
+            unlearn_pulse_emit_errors_gauge.set(emit_errors)
+
+            dropped_immune = mirror._metrics.get("unlearn_pulse_dropped_immune", 0)
+            unlearn_pulse_dropped_immune_gauge.set(dropped_immune)
 
             # Update per-slot pulse metrics
             for key, value in mirror._metrics.items():

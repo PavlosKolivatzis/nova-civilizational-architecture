@@ -392,15 +392,26 @@ class SemanticMirror:
                 emitter.emit(contract)
             except Exception as e:
                 logger.exception(f"UNLEARN_PULSE emission failed for {s}: {e}")
+                self._metrics.setdefault("unlearn_pulse_emit_errors", 0)
+                self._metrics["unlearn_pulse_emit_errors"] += 1
         # Phase 3: implement exponential weight decay in receivers
 
         # Per-destination pulse counters
+        delivered = 0
         for s in source_slots:
             k = f"unlearn_pulse_to_{s}"
             self._metrics.setdefault(k, 0)
             self._metrics[k] += 1
+            delivered += 1
         self._metrics.setdefault("unlearn_pulse_total_contexts", 0)
         self._metrics["unlearn_pulse_total_contexts"] += 1
+
+        # Track pulses that were eligible but filtered by immunity
+        attempted = len(source_slots)
+        if attempted == 0 and self._should_emit_unlearn_pulse(entry):
+            self._metrics.setdefault("unlearn_pulse_dropped_immune", 0)
+            self._metrics["unlearn_pulse_dropped_immune"] += 1
+
         return delivered
 
     def _extract_source_slots(self, key: str, entry: ContextEntry) -> List[str]:
