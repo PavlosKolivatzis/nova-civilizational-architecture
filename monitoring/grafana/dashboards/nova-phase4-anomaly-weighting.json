@@ -1,0 +1,287 @@
+{
+  "id": null,
+  "uid": "nova-phase4-anomaly-weighting",
+  "title": "NOVA • Phase 4 Anomaly-Aware Unlearning",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "tags": ["nova", "phase4", "anomaly", "unlearning"],
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["10s","15s","30s","1m","5m"] },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Anomaly Score (EWMA)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "nova_unlearn_anomaly_score",
+          "legendFormat": "Anomaly Score"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 3,
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "pointSize": 5
+          },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1.0 },
+              { "color": "red", "value": 1.2 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Pulse Weight Multiplier",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "nova_unlearn_anomaly_multiplier",
+          "legendFormat": "Weight Multiplier"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 1,
+          "max": 3,
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "spanNulls": false,
+            "pointSize": 5
+          },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1.5 },
+              { "color": "red", "value": 2.0 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Engagement State",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "nova_unlearn_anomaly_engaged",
+          "legendFormat": "Engaged"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "unit": "short",
+          "mappings": [
+            { "options": { "0": { "text": "DISENGAGED" } }, "type": "value" },
+            { "options": { "1": { "text": "ENGAGED" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": { "titleSize": 16, "valueSize": 24 }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Unlearn Pulses (Rate)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "rate(nova_unlearn_pulses_sent_total[1m])",
+          "legendFormat": "Pulses/sec"
+        },
+        {
+          "expr": "rate(nova_entries_expired_total[1m])",
+          "legendFormat": "Entries Expired/sec"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "pointSize": 3
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Slot6 Decay Events (Rate)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "rate(nova_slot6_decay_events_total[1m])",
+          "legendFormat": "Decay Events/sec"
+        },
+        {
+          "expr": "rate(nova_slot6_decay_amount_total[1m])",
+          "legendFormat": "Decay Amount/sec"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "pointSize": 3
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Fanout Health",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "rate(nova_fanout_delivered_total[1m])",
+          "legendFormat": "Delivered/sec"
+        },
+        {
+          "expr": "rate(nova_fanout_errors_total[1m])",
+          "legendFormat": "Errors/sec"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "pointSize": 3
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Canary Health",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "nova_unlearn_canary_enabled",
+          "legendFormat": "Canary Enabled"
+        },
+        {
+          "expr": "rate(nova_unlearn_canary_seeded_total[5m])",
+          "legendFormat": "Seeds/5min"
+        },
+        {
+          "expr": "rate(nova_unlearn_canary_errors_total[5m])",
+          "legendFormat": "Errors/5min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "pointSize": 3
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    }
+  ]
+}
