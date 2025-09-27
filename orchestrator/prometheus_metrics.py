@@ -2,10 +2,12 @@
 
 from prometheus_client import (
     Gauge,
+    Counter,
     generate_latest,
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
 )
+from collections import defaultdict
 from orchestrator.metrics import get_slot6_metrics
 from os import getenv
 
@@ -65,38 +67,57 @@ semantic_mirror_ops_counter = Gauge(
     registry=_REGISTRY,
 )
 
-# Reciprocal Contextual Unlearning metrics
-unlearn_pulses_sent_gauge = Gauge(
+# Reciprocal Contextual Unlearning metrics (counters)
+unlearn_pulses_sent_counter = Counter(
     "nova_unlearn_pulses_sent_total",
     "Total unlearn pulses sent on context expiration",
     registry=_REGISTRY,
 )
 
-entries_expired_gauge = Gauge(
+entries_expired_counter = Counter(
     "nova_entries_expired_total",
     "Total context entries expired from semantic mirror",
     registry=_REGISTRY,
 )
 
-unlearn_pulse_destinations_gauge = Gauge(
+unlearn_pulse_destinations_counter = Counter(
     "nova_unlearn_pulse_to_slot_total",
     "Unlearn pulses sent to specific slots",
     ["slot"],
     registry=_REGISTRY,
 )
 
-# Contract fanout metrics
-fanout_delivered_gauge = Gauge(
+# Contract fanout metrics (counters)
+fanout_delivered_counter = Counter(
     "nova_fanout_delivered_total",
     "Total local contract fanout deliveries",
     registry=_REGISTRY,
 )
 
-fanout_errors_gauge = Gauge(
+fanout_errors_counter = Counter(
     "nova_fanout_errors_total",
     "Total local contract fanout errors",
     registry=_REGISTRY,
 )
+
+# Slot6 decay metrics
+slot6_decay_events_counter = Counter(
+    "nova_slot6_decay_events_total",
+    "Total number of decay events processed by Slot6",
+    registry=_REGISTRY,
+)
+
+slot6_decay_amount_counter = Counter(
+    "nova_slot6_decay_amount_total",
+    "Total decay amount processed by Slot6 (sum of old_weight - new_weight)",
+    registry=_REGISTRY,
+)
+
+# --- local last-seen snapshots so we can turn gauges-in-memory into monotonic counters
+_last_sm_totals = {"unlearn_pulses_sent": 0, "entries_expired": 0}
+_last_slot_totals: dict[str, int] = defaultdict(int)
+_last_fanout = {"fanout_delivered": 0, "fanout_errors": 0}
+_last_slot6_metrics = {"decay_events": 0, "decay_amount": 0.0}
 
 # --- Slot1 Truth Anchor metrics ------------------------------------
 slot1_anchors_gauge = Gauge(
@@ -186,7 +207,10 @@ def update_lightclock_metrics() -> None:
 
 
 def update_semantic_mirror_metrics() -> None:
-    """Update semantic mirror and unlearn pulse metrics."""
+    """
+    Export SemanticMirror metrics into Prometheus counters by incrementing
+    with the delta since the last observation. Safe to call on every scrape.
+    """
     try:
         from orchestrator.semantic_mirror import get_semantic_mirror
         mirror = get_semantic_mirror()
@@ -194,39 +218,71 @@ def update_semantic_mirror_metrics() -> None:
         if mirror and hasattr(mirror, '_metrics'):
             m = mirror._metrics
 
-            # ensure keys exist so 0-samples are emitted on cold start
-            m.setdefault("entries_expired", 0)
-            m.setdefault("unlearn_pulses_sent", 0)
+            # --- global totals
+            for key, counter in (
+                ("unlearn_pulses_sent", unlearn_pulses_sent_counter),
+                ("entries_expired", entries_expired_counter),
+            ):
+                cur = int(m.get(key, 0))
+                prev = int(_last_sm_totals.get(key, 0))
+                delta = cur - prev
+                if delta > 0:
+                    counter.inc(delta)
+                _last_sm_totals[key] = cur
 
-            # Update unlearn pulse metrics
-            unlearn_sent = m.get("unlearn_pulses_sent", 0)
-            unlearn_pulses_sent_gauge.set(unlearn_sent)
-
-            expired = m.get("entries_expired", 0)
-            entries_expired_gauge.set(expired)
-
-            # Update per-slot pulse metrics
-            for key, value in m.items():
-                if key.startswith("unlearn_pulse_to_"):
-                    slot = key.replace("unlearn_pulse_to_", "")
-                    unlearn_pulse_destinations_gauge.labels(slot=slot).set(value)
+            # --- per-slot totals
+            for k, v in m.items():
+                if not k.startswith("unlearn_pulse_to_"):
+                    continue
+                slot = k.split("unlearn_pulse_to_", 1)[1]
+                cur = int(v)
+                prev = int(_last_slot_totals.get(slot, 0))
+                delta = cur - prev
+                if delta > 0:
+                    unlearn_pulse_destinations_counter.labels(slot=slot).inc(delta)
+                _last_slot_totals[slot] = cur
         else:
-            # No mirror yet - set baseline zeros
-            unlearn_pulses_sent_gauge.set(0)
-            entries_expired_gauge.set(0)
+            # No mirror present: counters remain unchanged (correct for Prometheus)
+            pass
 
-        # --- fanout metrics ---
+        # --- fanout metrics (increment by delta) ---
         from orchestrator.contracts.emitter import get_fanout_metrics
         em = get_fanout_metrics()
-        fanout_delivered_gauge.set(float(em.get("fanout_delivered", 0)))
-        fanout_errors_gauge.set(float(em.get("fanout_errors", 0)))
+        for key, counter in (
+            ("fanout_delivered", fanout_delivered_counter),
+            ("fanout_errors", fanout_errors_counter),
+        ):
+            cur = int(em.get(key, 0))
+            prev = int(_last_fanout.get(key, 0))
+            delta = cur - prev
+            if delta > 0:
+                counter.inc(delta)
+            _last_fanout[key] = cur
 
+        # --- Slot6 decay metrics (increment by delta) ---
+        try:
+            from slots.slot06_cultural_synthesis.receiver import get_slot6_decay_metrics
+            s6 = get_slot6_decay_metrics()
+            # events
+            cur_e = int(s6.get("decay_events", 0))
+            prev_e = int(_last_slot6_metrics.get("decay_events", 0))
+            de = cur_e - prev_e
+            if de > 0:
+                slot6_decay_events_counter.inc(de)
+            _last_slot6_metrics["decay_events"] = cur_e
+            # amount (float; clamp to non-negative)
+            cur_a = float(s6.get("decay_amount", 0.0))
+            prev_a = float(_last_slot6_metrics.get("decay_amount", 0.0))
+            da = cur_a - prev_a
+            if da > 0:
+                slot6_decay_amount_counter.inc(da)
+            _last_slot6_metrics["decay_amount"] = cur_a
+        except Exception:
+            # don't increment on exporter errors
+            pass
     except Exception:
-        # Safe fallback - set baseline zeros
-        unlearn_pulses_sent_gauge.set(0)
-        entries_expired_gauge.set(0)
-        fanout_delivered_gauge.set(0)
-        fanout_errors_gauge.set(0)
+        # Safe fallback: with counters we do nothing on failure (no false increments)
+        pass
 
 
 def update_system_health_metrics() -> None:

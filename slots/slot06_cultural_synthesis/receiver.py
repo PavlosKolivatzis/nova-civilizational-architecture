@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 _last_pulse_time = 0
 _pulse_count = 0
+_metrics = {"decay_events": 0, "decay_amount": 0.0}  # events, sum(old-new)
 
 
 def handle_unlearn_pulse(contract: Any) -> None:
@@ -33,6 +34,14 @@ def handle_unlearn_pulse(contract: Any) -> None:
         age_seconds=contract_age,
         half_life=300.0  # 5-minute half-life
     )
+
+    # record metrics (amount is strictly non-negative)
+    try:
+        decay_amount = max(0.0, float(base_weight) - float(effective_weight))
+    except Exception:
+        decay_amount = 0.0
+    _metrics["decay_events"] += 1
+    _metrics["decay_amount"] += decay_amount
 
     _pulse_count += 1
     _last_pulse_time = current_time
@@ -61,4 +70,9 @@ def get_pulse_metrics() -> dict:
     }
 
 
-__all__ = ["handle_unlearn_pulse", "register_slot06_receiver", "get_pulse_metrics"]
+def get_slot6_decay_metrics() -> dict:
+    """Snapshot of Slot6 decay metrics for Prometheus exporter."""
+    return dict(_metrics)
+
+
+__all__ = ["handle_unlearn_pulse", "register_slot06_receiver", "get_pulse_metrics", "get_slot6_decay_metrics"]
