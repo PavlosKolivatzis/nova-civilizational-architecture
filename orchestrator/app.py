@@ -87,6 +87,61 @@ if FastAPI is not None:
                 logger.exception("SemanticMirror sweeper failed")
             await asyncio.sleep(interval)
 
+    async def _canary_loop():
+        """Periodically seed an expired, pulse-eligible context to verify the pipeline."""
+        period = int(os.getenv("NOVA_UNLEARN_CANARY_PERIOD", "3600"))  # 1h
+        if os.getenv("NOVA_UNLEARN_CANARY", "0") != "1":
+            logger.info("Unlearn canary disabled")
+            return
+
+        key        = os.getenv("NOVA_UNLEARN_CANARY_KEY",        "slot06.cultural_profile")
+        publisher  = os.getenv("NOVA_UNLEARN_CANARY_PUBLISHER",  "slot05")
+        ttl        = float(os.getenv("NOVA_UNLEARN_CANARY_TTL",   "60"))   # >=60s to be eligible
+        age_after  = float(os.getenv("NOVA_UNLEARN_CANARY_AGE",   "120"))  # age since expiry
+
+        logger.info("Unlearn canary enabled (period=%ss, key=%s, ttl=%ss, age=%ss)",
+                    period, key, ttl, age_after)
+
+        while True:
+            try:
+                from orchestrator.semantic_mirror import get_semantic_mirror, ContextScope
+                from types import SimpleNamespace
+                sm = get_semantic_mirror()
+                if not sm:
+                    await asyncio.sleep(period)
+                    continue
+
+                now = time.time()
+                created_ts = now - ttl - age_after  # so it's already expired by `age_after` seconds
+                sm._contexts[key] = SimpleNamespace(
+                    timestamp=created_ts,
+                    ttl_seconds=ttl,
+                    access_count=3,
+                    scope=ContextScope.PUBLIC,
+                    published_by=publisher,
+                )
+                # Track canary seeds for observability
+                sm._metrics["canary_seeded"] = sm._metrics.get("canary_seeded", 0) + 1
+
+                logger.info("Canary seeded: %s (ttl=%ss, age=%ss)", key, ttl, age_after)
+
+                # Optionally trigger an immediate cleanup to produce a pulse now
+                try:
+                    sm._cleanup_expired_entries(time.time())
+                except Exception:
+                    logger.exception("Canary forced cleanup failed")
+                    sm._metrics["canary_errors"] = sm._metrics.get("canary_errors", 0) + 1
+            except Exception:
+                logger.exception("Canary seeding failed")
+                try:
+                    from orchestrator.semantic_mirror import get_semantic_mirror
+                    sm = get_semantic_mirror()
+                    if sm:
+                        sm._metrics["canary_errors"] = sm._metrics.get("canary_errors", 0) + 1
+                except Exception:
+                    pass
+            await asyncio.sleep(period)
+
     async def _startup() -> None:
         from slots.config import get_config_manager
         await get_config_manager()
@@ -96,18 +151,41 @@ if FastAPI is not None:
         from orchestrator.contracts.emitter import set_contract_emitter, NoOpEmitter
 
         class JsonlEmitter:
-            """Append each UNLEARN_PULSE@1 as newline-delimited JSON for audit/ingest."""
-            def __init__(self, path=None):
-                if path is None:
-                    path = os.getenv("NOVA_UNLEARN_PULSE_PATH", "logs/unlearn_pulses.ndjson")
+            """Append each UNLEARN_PULSE@1 as newline-delimited JSON with size-based rotation."""
+            def __init__(self, path="logs/unlearn_pulses.ndjson", max_bytes=None, backups=None):
                 self.path = path
                 os.makedirs(os.path.dirname(path), exist_ok=True)
+                self.max_bytes = int(os.getenv("NOVA_UNLEARN_LOG_MAX_BYTES", str(max_bytes or 10 * 1024 * 1024)))  # 10MB
+                self.backups   = int(os.getenv("NOVA_UNLEARN_LOG_BACKUPS",  str(backups or 5)))
+
+            def _rotate(self):
+                if self.backups <= 0:
+                    return
+                # shift .N → .N+1
+                for i in range(self.backups - 1, 0, -1):
+                    src = f"{self.path}.{i}"
+                    dst = f"{self.path}.{i+1}"
+                    if os.path.exists(src):
+                        os.replace(src, dst)
+                # current → .1
+                if os.path.exists(self.path):
+                    os.replace(self.path, f"{self.path}.1")
+
             def emit(self, contract):
-                with open(self.path, "a", encoding="utf-8") as f:
-                    f.write(json.dumps(contract.model_dump()) + "\n")
+                try:
+                    line = json.dumps(contract.model_dump()) + "\n"
+                    # rotate if needed
+                    if self.max_bytes and os.path.exists(self.path):
+                        if os.path.getsize(self.path) + len(line.encode("utf-8")) > self.max_bytes:
+                            self._rotate()
+                    with open(self.path, "a", encoding="utf-8") as f:
+                        f.write(line)
+                except Exception:
+                    logger.exception("JsonlEmitter failed")
 
         # Flip this to NoOpEmitter() to instantly disable delivery without redeploying logic
-        set_contract_emitter(JsonlEmitter())
+        path = os.getenv("NOVA_UNLEARN_PULSE_PATH", "logs/unlearn_pulses.ndjson")
+        set_contract_emitter(JsonlEmitter(path))
         # set_contract_emitter(NoOpEmitter())  # <-- Rollback: uncomment this line
 
         # initialize zeros so series exist immediately
@@ -120,6 +198,9 @@ if FastAPI is not None:
 
         # start periodic expiry in *this* process (the one Prometheus scrapes)
         asyncio.create_task(_sm_sweeper())
+
+        # start canary loop (off by default)
+        asyncio.create_task(_canary_loop())
 
     async def _shutdown() -> None:
         from slots.config import get_config_manager

@@ -113,11 +113,31 @@ slot6_decay_amount_counter = Counter(
     registry=_REGISTRY,
 )
 
+# Canary metrics
+canary_enabled_gauge = Gauge(
+    "nova_unlearn_canary_enabled",
+    "1 when canary is enabled",
+    registry=_REGISTRY,
+)
+
+canary_seeded_counter = Counter(
+    "nova_unlearn_canary_seeded_total",
+    "Total canary contexts seeded",
+    registry=_REGISTRY,
+)
+
+canary_errors_counter = Counter(
+    "nova_unlearn_canary_errors_total",
+    "Total canary errors",
+    registry=_REGISTRY,
+)
+
 # --- local last-seen snapshots so we can turn gauges-in-memory into monotonic counters
 _last_sm_totals = {"unlearn_pulses_sent": 0, "entries_expired": 0}
 _last_slot_totals: dict[str, int] = defaultdict(int)
 _last_fanout = {"fanout_delivered": 0, "fanout_errors": 0}
 _last_slot6_metrics = {"decay_events": 0, "decay_amount": 0.0}
+_last_canary = {"seeded": 0, "errors": 0}
 
 # --- Slot1 Truth Anchor metrics ------------------------------------
 slot1_anchors_gauge = Gauge(
@@ -280,6 +300,25 @@ def update_semantic_mirror_metrics() -> None:
         except Exception:
             # don't increment on exporter errors
             pass
+
+        # --- Canary metrics ---
+        import os as _os
+        canary_enabled_gauge.set(1.0 if _os.getenv("NOVA_UNLEARN_CANARY", "0") == "1" else 0.0)
+
+        # canary deltas from sm._metrics
+        if mirror and hasattr(mirror, '_metrics'):
+            m = mirror._metrics
+            cur_seeded = int(m.get("canary_seeded", 0))
+            delta_seeded = cur_seeded - int(_last_canary.get("seeded", 0))
+            if delta_seeded > 0:
+                canary_seeded_counter.inc(delta_seeded)
+            _last_canary["seeded"] = cur_seeded
+
+            cur_err = int(m.get("canary_errors", 0))
+            delta_err = cur_err - int(_last_canary.get("errors", 0))
+            if delta_err > 0:
+                canary_errors_counter.inc(delta_err)
+            _last_canary["errors"] = cur_err
     except Exception:
         # Safe fallback: with counters we do nothing on failure (no false increments)
         pass
