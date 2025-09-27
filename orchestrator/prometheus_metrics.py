@@ -85,6 +85,19 @@ unlearn_pulse_destinations_gauge = Gauge(
     registry=_REGISTRY,
 )
 
+# Contract fanout metrics
+fanout_delivered_gauge = Gauge(
+    "nova_fanout_delivered_total",
+    "Total local contract fanout deliveries",
+    registry=_REGISTRY,
+)
+
+fanout_errors_gauge = Gauge(
+    "nova_fanout_errors_total",
+    "Total local contract fanout errors",
+    registry=_REGISTRY,
+)
+
 # --- Slot1 Truth Anchor metrics ------------------------------------
 slot1_anchors_gauge = Gauge(
     "nova_slot1_anchors_total",
@@ -202,10 +215,18 @@ def update_semantic_mirror_metrics() -> None:
             unlearn_pulses_sent_gauge.set(0)
             entries_expired_gauge.set(0)
 
+        # --- fanout metrics ---
+        from orchestrator.contracts.emitter import get_fanout_metrics
+        em = get_fanout_metrics()
+        fanout_delivered_gauge.set(float(em.get("fanout_delivered", 0)))
+        fanout_errors_gauge.set(float(em.get("fanout_errors", 0)))
+
     except Exception:
         # Safe fallback - set baseline zeros
         unlearn_pulses_sent_gauge.set(0)
         entries_expired_gauge.set(0)
+        fanout_delivered_gauge.set(0)
+        fanout_errors_gauge.set(0)
 
 
 def update_system_health_metrics() -> None:

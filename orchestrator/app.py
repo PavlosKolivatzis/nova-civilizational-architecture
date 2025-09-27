@@ -113,6 +113,11 @@ if FastAPI is not None:
         # initialize zeros so series exist immediately
         from orchestrator.prometheus_metrics import update_semantic_mirror_metrics
         update_semantic_mirror_metrics()
+
+        # register slot06 for unlearn pulse fanout
+        from slots.slot06_cultural_synthesis.receiver import register_slot06_receiver
+        register_slot06_receiver()
+
         # start periodic expiry in *this* process (the one Prometheus scrapes)
         asyncio.create_task(_sm_sweeper())
 
@@ -175,14 +180,16 @@ if FastAPI is not None:
                 if os.getenv("NOVA_ALLOW_EXPIRE_TEST", "1") == "1":
                     key = "slot06.cultural_profile"  # documented, non-immune
                     if key not in sm._contexts:
+                        now = time.time()
+                        desired_age = float(os.getenv("NOVA_EXPIRE_TEST_AGE", "120"))  # seconds
                         sm._contexts[key] = SimpleNamespace(
-                            timestamp=0.0,                  # expired
-                            ttl_seconds=120.0,              # >= 60
+                            timestamp=now - desired_age,    # created N seconds ago
+                            ttl_seconds=60.0,               # >= 60 to qualify
                             access_count=3,                 # > 1
                             scope=ContextScope.PUBLIC,      # INTERNAL|PUBLIC
                             published_by="slot05"           # non-immune
                         )
-                        logger.info("Created test context for pulse verification: %s", key)
+                        logger.info("Created test context for pulse verification: %s (age=%ss)", key, desired_age)
 
                 before_expired  = sm._metrics.get("entries_expired", 0)
                 before_pulses   = sm._metrics.get("unlearn_pulses_sent", 0)

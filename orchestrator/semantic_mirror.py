@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 
-from orchestrator.contracts.emitter import get_contract_emitter
+from orchestrator.contracts.emitter import get_contract_emitter, fanout
 from orchestrator.contracts.unlearn_pulse import UnlearnPulseV1
 
 logger = logging.getLogger(__name__)
@@ -390,6 +390,7 @@ class SemanticMirror:
                     scope=getattr(entry, "scope", None),
                 )
                 emitter.emit(contract)
+                fanout(contract)  # local receivers react immediately
             except Exception as e:
                 logger.exception(f"UNLEARN_PULSE emission failed for {s}: {e}")
         # Phase 3: implement exponential weight decay in receivers
