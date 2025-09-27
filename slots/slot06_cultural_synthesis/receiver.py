@@ -4,6 +4,7 @@ import logging
 from typing import Any
 from orchestrator.contracts.emitter import subscribe
 from orchestrator.contracts.decay import pulse_weight_decay
+from orchestrator.unlearn_weighting import get_anomaly_multiplier
 import time
 
 logger = logging.getLogger(__name__)
@@ -27,8 +28,8 @@ def handle_unlearn_pulse(contract: Any) -> None:
     # Extract age from contract (age since context creation/expiry)
     contract_age = float(getattr(contract, "age_seconds", 0.0))
 
-    # Apply exponential decay based on contract age
-    base_weight = 1.0
+    # Apply anomaly multiplier then exponential decay based on contract age
+    base_weight = 1.0 * get_anomaly_multiplier(slot="slot06")
     effective_weight = pulse_weight_decay(
         pulse_strength=base_weight,
         age_seconds=contract_age,

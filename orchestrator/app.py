@@ -71,11 +71,59 @@ if FastAPI is not None:
     async def _sm_sweeper():
         interval = int(os.getenv("NOVA_SMEEP_INTERVAL", "15"))  # seconds
         logger.info("SemanticMirror sweeper starting (interval=%ss)", interval)
+
+        # Lazy import to avoid hard dependency when flag is off
+        try:
+            from orchestrator.unlearn_weighting import update_anomaly_inputs
+        except Exception:
+            update_anomaly_inputs = None
+
+        sweep_count = 0
         while True:
             try:
                 from orchestrator.semantic_mirror import get_semantic_mirror
                 from orchestrator.prometheus_metrics import update_semantic_mirror_metrics
                 sm = get_semantic_mirror()
+
+                # --- Feed anomaly inputs (flag-gated) ---
+                if update_anomaly_inputs and os.getenv("NOVA_UNLEARN_ANOMALY", "0") == "1":
+                    tri = {}
+                    try:
+                        # Best-effort TRI drift/jitter collection via ACL-respecting get_context
+                        tri_drift = sm.get_context("slot04.tri_drift_z", "anomaly_detector")
+                        phase_jitter = sm.get_context("slot04.phase_jitter", "anomaly_detector")
+                        if tri_drift is not None:
+                            tri["drift_z"] = float(tri_drift)
+                        if phase_jitter is not None:
+                            tri["phase_jitter"] = float(phase_jitter)
+                    except Exception:
+                        tri = {}
+
+                    # System pressure (best-effort; fallback to 0.0)
+                    system = {}
+                    try:
+                        pressure = sm.get_context("slot07.pressure_level", "anomaly_detector")
+                        if pressure is not None:
+                            system["system_pressure_level"] = float(pressure)
+                        else:
+                            system["system_pressure_level"] = 0.0
+                    except Exception:
+                        system = {"system_pressure_level": 0.0}
+
+                    update_anomaly_inputs(tri, system)
+
+                    # Optional low-frequency debug logging for ops correlation
+                    sweep_count += 1
+                    if sweep_count % 10 == 0:  # every 10th sweep
+                        try:
+                            from orchestrator.unlearn_weighting import get_anomaly_observability
+                            ao = get_anomaly_observability()
+                            logger.debug("Anomaly state: score=%.3f multiplier=%.2f engaged=%s",
+                                       ao.get("score", 0.0), ao.get("multiplier", 1.0),
+                                       bool(ao.get("engaged", 0.0)))
+                        except Exception:
+                            pass
+
                 before = sm._metrics.get("entries_expired", 0)
                 sm._cleanup_expired_entries(time.time())
                 after = sm._metrics.get("entries_expired", 0)

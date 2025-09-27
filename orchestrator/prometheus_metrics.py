@@ -132,6 +132,25 @@ canary_errors_counter = Counter(
     registry=_REGISTRY,
 )
 
+# Anomaly weighting metrics
+anomaly_score_gauge = Gauge(
+    "nova_unlearn_anomaly_score",
+    "Current EWMA anomaly score for pulse weighting",
+    registry=_REGISTRY,
+)
+
+anomaly_multiplier_gauge = Gauge(
+    "nova_unlearn_anomaly_multiplier",
+    "Current anomaly pulse weight multiplier",
+    registry=_REGISTRY,
+)
+
+anomaly_engaged_gauge = Gauge(
+    "nova_unlearn_anomaly_engaged",
+    "Anomaly engagement state (0=disengaged, 1=engaged)",
+    registry=_REGISTRY,
+)
+
 # --- local last-seen snapshots so we can turn gauges-in-memory into monotonic counters
 _last_sm_totals = {"unlearn_pulses_sent": 0, "entries_expired": 0}
 _last_slot_totals: dict[str, int] = defaultdict(int)
@@ -319,6 +338,17 @@ def update_semantic_mirror_metrics() -> None:
             if delta_err > 0:
                 canary_errors_counter.inc(delta_err)
             _last_canary["errors"] = cur_err
+
+        # --- Anomaly weighting metrics (best-effort; no counters here) ---
+        try:
+            from orchestrator.unlearn_weighting import get_anomaly_observability
+            ao = get_anomaly_observability()
+            anomaly_score_gauge.set(float(ao.get("score", 0.0)))
+            anomaly_multiplier_gauge.set(float(ao.get("multiplier", 1.0)))
+            anomaly_engaged_gauge.set(float(ao.get("engaged", 0.0)))
+        except Exception:
+            # Leave last values on failure; safe for gauges
+            pass
     except Exception:
         # Safe fallback: with counters we do nothing on failure (no false increments)
         pass
