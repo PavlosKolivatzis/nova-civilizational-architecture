@@ -41,7 +41,10 @@ DOCUMENTED_KEYS = {
     "slot04.tri_score",
     # Phase lock and policy metrics for Light-Clock deployment gates
     "slot07.phase_lock",
-    "slot09.final_policy"
+    "slot09.final_policy",
+    # Phase 4.1 inter-slot coordination keys
+    "slot07.backpressure",
+    "slot10.deployment_feedback"
 }
 
 # Valid key pattern (no stray 'test.' matches)
