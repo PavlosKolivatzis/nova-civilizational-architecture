@@ -18,6 +18,9 @@ dist/
 .hypothesis/
 .pytest_cache/
 .coverage
+
+# ANR bandit state (local learning data)
+state/
 .coverage.*
 htmlcov/
 .cache/

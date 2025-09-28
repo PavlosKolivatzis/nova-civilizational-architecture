@@ -131,6 +131,17 @@ class AdaptiveNeuralRouter:
             s = sum(probs.values())
             for k in probs:
                 probs[k] /= s
+        # Enforce fast-cap if anomaly engaged
+        if self._anomaly_engaged() and "R3" in probs:
+            cap = float(os.getenv("NOVA_ANR_MAX_FAST_PROB", "0.15"))
+            if probs["R3"] > cap:
+                delta = probs["R3"] - cap
+                probs["R3"] = cap
+                # re-distribute delta proportionally among non-R3
+                rest = [k for k in probs if k != "R3"]
+                s = sum(probs[k] for k in rest) or 1.0
+                for k in rest:
+                    probs[k] += delta * (probs[k] / s)
         return probs
 
     # ---------- Route sampling ----------
@@ -147,13 +158,21 @@ class AdaptiveNeuralRouter:
     def decide(self, ctx: Dict[str, Any], shadow: bool = True) -> RouteDecision:
         """Make routing decision with safety mask and anomaly coordination."""
         masked, reasons = self._mask(ctx)
-        probs = self._policy(masked, ctx)
 
-        # Route selection: argmax for shadow, sample for pilot
-        if shadow or not self.enabled:
+        # Kill-switch: hard stop to R4
+        if os.getenv("NOVA_ANR_KILL", "0") == "1":
+            probs = {"R4": 1.0}
+        else:
+            probs = self._policy(masked, ctx)
+
+        # Pilot gating: only act live on a small slice
+        live_take = self.enabled and (random.random() < self.pilot)
+
+        # Route selection: argmax for shadow, sample for live pilot
+        if shadow or not live_take:
             route = max(probs, key=probs.get)
         else:
-            route = self._sample(probs) if random.random() < self.pilot else max(probs, key=probs.get)
+            route = self._sample(probs)
 
         decision = RouteDecision(
             id=str(uuid.uuid4()),
@@ -161,7 +180,7 @@ class AdaptiveNeuralRouter:
             probs=probs,
             masked_out=masked,
             reasons=reasons,
-            shadow=shadow or not self.enabled,
+            shadow=shadow or not live_take,
             ts=time.time()
         )
 
