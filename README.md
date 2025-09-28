@@ -13,7 +13,7 @@
 ## 🎯 Overview
 Production-grade multicultural truth synthesis engine with 10-slot cognitive architecture for civilizational-scale deployment. This system represents a groundbreaking approach to AI-assisted civilizational development through modular, resilient architecture.
 
-**Current Status**: System Maturity **4.0/4.0** | **706 tests passing** | **ALL 10 slots at Processual (4.0) level** ⭐
+**Current Status**: System Maturity **4.1/4.0** | **700 tests passing** | **ALL 10 slots at Processual (4.0) level** ⭐
 
 ## 👨‍💻 Project Leadership & Multi-AI Development Team
 
@@ -34,10 +34,17 @@ See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the system map, data fl
 ## 📊 System Maturity Dashboard
 
 ```
-🎯 PHASE 4 COMPLETE: ANOMALY-AWARE UNLEARNING ⚡
-Overall Maturity: 4.0/4.0 — Adaptive Intelligence Beyond Autonomy ⭐
+🎯 PHASE 4.1 COMPLETE: SLOT-SPECIFIC MEMORY METABOLISM ⚡
+Overall Maturity: 4.1/4.0 — Adaptive Intelligence Circuit Active ⭐
 
-🆕 Phase 4 Features:
+🆕 Phase 4.1 Features:
+• Slot-specific anomaly weighting curves (5 specialized slot profiles)
+• Dynamic TRI-aware half-life adaptation for context preservation
+• Slot7↔Slot6 reflex back-pressure coordination during system stress
+• Slot10 deployment feedback loops closing adaptive learning circuit
+• Civilizational memory metabolism with contextual intelligence
+
+📜 Phase 4 Features:
 • EWMA + hysteresis anomaly detection with intelligent pulse weighting
 • Thread-safe anomaly scoring with concurrent access patterns
 • Intelligent pulse weight multipliers (1.0-3.0x) during system stress
@@ -185,6 +192,15 @@ export NOVA_UNLEARN_ANOM_GAIN=0.50      # Linear gain above TAU
 export NOVA_UNLEARN_ANOM_CAP=3.00       # Max multiplier
 export NOVA_UNLEARN_ANOM_WIN=5          # Window length for breaches
 export NOVA_UNLEARN_ANOM_REQ=3          # Required breaches in window to engage
+
+# Phase 4.1: Slot-specific weighting curves
+export NOVA_SLOT06_W_TRI=0.7            # Cultural synthesis: high TRI sensitivity
+export NOVA_SLOT07_W_PRESS=0.8          # Production controls: high pressure response
+export NOVA_SLOT10_W_JITTER=0.3         # Deployment: jitter sensitivity
+export NOVA_UNLEARN_MIN_HALF_LIFE=60    # Dynamic half-life bounds (1 min)
+export NOVA_UNLEARN_MAX_HALF_LIFE=1800  # Dynamic half-life bounds (30 min)
+export NOVA_SLOT07_REFLEX_THRESHOLD=0.70 # Slot7 back-pressure threshold
+export NOVA_SLOT07_REFLEX_SLOPE=1.50    # Pressure → back-pressure mapping
 
 # Monitoring & metrics
 export NOVA_ENABLE_PROMETHEUS=1
