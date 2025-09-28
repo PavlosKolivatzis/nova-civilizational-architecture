@@ -8,12 +8,12 @@
 > **Multi-AI Collaborative Project** created and coordinated by **Pavlos Kolivatzis**
 > Built through cooperation between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot
 
-> **🎉 MILESTONE:** As of Phase 3, all ten cognitive slots have reached **Processual (4.0)**. System maturity: **4.0/4.0** — the first fully autonomous Nova system.
+> **🎉 MILESTONE:** **Phase 4** complete! Beyond autonomous operation, Nova now features **anomaly-aware unlearning** with intelligent pulse weighting during system stress. System maturity: **4.0/4.0** with adaptive intelligence ⚡
 
 ## 🎯 Overview
 Production-grade multicultural truth synthesis engine with 10-slot cognitive architecture for civilizational-scale deployment. This system represents a groundbreaking approach to AI-assisted civilizational development through modular, resilient architecture.
 
-**Current Status**: System Maturity **4.0/4.0** | **506 tests passing** | **ALL 10 slots at Processual (4.0) level** ⭐
+**Current Status**: System Maturity **4.0/4.0** | **706 tests passing** | **ALL 10 slots at Processual (4.0) level** ⭐
 
 ## 👨‍💻 Project Leadership & Multi-AI Development Team
 
@@ -34,8 +34,15 @@ See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the system map, data fl
 ## 📊 System Maturity Dashboard
 
 ```
-🎯 PHASE 3 COMPLETE: ALL SLOTS PROCESSUAL (4.0)
-Overall Maturity: 4.0/4.0 — Full Autonomous Operation ⭐
+🎯 PHASE 4 COMPLETE: ANOMALY-AWARE UNLEARNING ⚡
+Overall Maturity: 4.0/4.0 — Adaptive Intelligence Beyond Autonomy ⭐
+
+🆕 Phase 4 Features:
+• EWMA + hysteresis anomaly detection with intelligent pulse weighting
+• Thread-safe anomaly scoring with concurrent access patterns
+• Intelligent pulse weight multipliers (1.0-3.0x) during system stress
+• TRI inputs sourced via semantic mirror contexts (e.g., `slot04.tri_drift_z`, `slot04.phase_jitter`)
+• Real-time Grafana monitoring dashboard (7 panels)
 
 Core Anchors (Slots 1-5):     4.0/4.0  ⭐
 ├─ Slot 1: Truth Anchor       4.0/4.0  ⭐ Processual
@@ -57,7 +64,7 @@ Phase 2-3 Achievements:
 • Slot 4: Drift/surge detection, safe-mode, Bayesian learning (7 tests)
 • Slot 8: MTTR ≤5s, quarantine ≤1s, adaptive entropy (23 tests)
 • Slot 10: Canary deployment, cross-slot coordination (9 tests)
-• Total: 39 new Processual tests across 506 total system tests
+• Total: 200+ new Phase 4 tests across 706 total system tests
 ```
 
 ## 🚀 Quick Start
@@ -88,9 +95,124 @@ npm run maturity
 python -c "from slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api; print('✅ System ready')"
 ```
 
+### One-liner: run Nova with Phase 4 enabled
+```bash
+# Production metrics correctness (singleton required for counter accuracy)
+export NOVA_ENABLE_PROMETHEUS=1 \
+  NOVA_UNLEARN_ANOMALY=1 \
+  NOVA_SMEEP_INTERVAL=15
+# uvicorn must run single-worker for accurate counter metrics
+python -m uvicorn orchestrator.app:app --host 0.0.0.0 --port 8000 --workers 1
+```
+
+**Cross-platform variants:**
+```powershell
+# PowerShell
+$env:NOVA_ENABLE_PROMETHEUS=1; $env:NOVA_UNLEARN_ANOMALY=1; $env:NOVA_SMEEP_INTERVAL=15
+uvicorn orchestrator.app:app --host 0.0.0.0 --port 8000 --workers 1
+```
+
+```bat
+# Windows cmd
+set NOVA_ENABLE_PROMETHEUS=1 && set NOVA_UNLEARN_ANOMALY=1 && set NOVA_SMEEP_INTERVAL=15
+uvicorn orchestrator.app:app --host 0.0.0.0 --port 8000 --workers 1
+```
+
+### 📊 Phase 4 Monitoring Setup
+
+Enable real-time monitoring and anomaly-aware unlearning:
+
+```bash
+# Enable Prometheus metrics and anomaly detection
+export NOVA_ENABLE_PROMETHEUS=1
+export NOVA_UNLEARN_ANOMALY=1
+
+# Start Nova with monitoring enabled
+python -m uvicorn orchestrator.app:app --host 0.0.0.0 --port 8000
+
+# In another terminal, start standalone Prometheus
+cd monitoring && python standalone-prometheus.py
+
+# Verify metrics endpoint
+curl http://localhost:8000/metrics | grep nova_unlearn_anomaly
+```
+
+**PromQL tips (post-counter migration):**
+- Use `increase()` or `rate()` for:
+  - `nova_unlearn_pulses_sent_total`
+  - `nova_entries_expired_total`
+  - `nova_unlearn_pulse_to_slot_total`
+  - `nova_slot6_decay_events_total`
+  - `nova_slot6_decay_amount_total`
+  - `nova_fanout_delivered_total`
+  - `nova_fanout_errors_total`
+- Use raw gauges for anomaly state:
+  - `nova_unlearn_anomaly_score`
+  - `nova_unlearn_anomaly_multiplier`
+  - `nova_unlearn_anomaly_engaged`
+
+**Operational SLO checks**
+```promql
+# Accounting invariant (5m):
+sum(increase(nova_unlearn_pulse_to_slot_total[5m]))
+  == increase(nova_unlearn_pulses_sent_total[5m])
+
+# Fanout errors should be zero (5m):
+increase(nova_fanout_errors_total[5m]) == 0
+
+# Decay activity should be present during active periods (5m):
+increase(nova_slot6_decay_events_total[5m]) > 0
+
+# Anomaly engaged for sustained period (≥ 3 of last 5 minutes):
+avg_over_time(nova_unlearn_anomaly_engaged[5m]) >= 0.6
+```
+
+**Dashboard Setup:**
+- Import `monitoring/grafana/dashboards/nova-phase4-anomaly-weighting.json` into Grafana
+- View 7 real-time panels: anomaly score, weight multiplier, engagement state, pulse rates, decay events
+- Monitor intelligent pulse weighting during system stress (1.0-3.0x multipliers)
+
+**Environment Variables (Phase 4 — Anomaly Detection):**
+```bash
+# Master switch
+export NOVA_UNLEARN_ANOMALY=1
+
+# EWMA + hysteresis controls (defaults shown)
+export NOVA_UNLEARN_ANOM_ALPHA=0.30     # EWMA smoothing factor
+export NOVA_UNLEARN_ANOM_TAU=1.00       # Engage threshold (score > TAU)
+export NOVA_UNLEARN_ANOM_MARGIN=0.20    # Disengage margin (below TAU-MARGIN)
+export NOVA_UNLEARN_ANOM_GAIN=0.50      # Linear gain above TAU
+export NOVA_UNLEARN_ANOM_CAP=3.00       # Max multiplier
+export NOVA_UNLEARN_ANOM_WIN=5          # Window length for breaches
+export NOVA_UNLEARN_ANOM_REQ=3          # Required breaches in window to engage
+
+# Monitoring & metrics
+export NOVA_ENABLE_PROMETHEUS=1
+export NOVA_SMEEP_INTERVAL=15   # Semantic mirror sweeper interval (seconds)
+
+# Testing & Development
+export NOVA_ALLOW_EXPIRE_TEST=1
+export NOVA_EXPIRE_TEST_AGE=120
+export NOVA_UNLEARN_CANARY=0    # Off by default in prod
+# NDJSON rotation (if enabled)
+export NOVA_UNLEARN_LOG_MAX_BYTES=10485760
+export NOVA_UNLEARN_LOG_BACKUPS=5
+```
+
+> Note: The variable is intentionally `NOVA_SMEEP_INTERVAL` (matches code), not "SWEEP".
+
+### 🚨 Phase 4 Troubleshooting
+
+**Common Issues:**
+- **No anomaly gauges?** Ensure `NOVA_UNLEARN_ANOMALY=1` is set
+- **No unlearn pulses?** Ensure TTL ≥ 60s and access_count > 1 on contexts
+- **Counters look doubled?** Confirm single worker (`--workers 1`), see singleton guard above
+- **Dashboard shows no data?** Verify Prometheus scraping `http://localhost:8000/metrics`
+- **Engaged state stuck?** Check `nova_unlearn_anomaly_score` - may need time to decay below threshold
+
 ## Process Scope Note
 
-The Semantic Mirror operates **in-process** - each CLI invocation starts with an empty mirror state. This is by design for security and isolation.
+The Semantic Mirror operates **in-process** - each CLI invocation starts with an empty mirror state. This is by design for security and isolation. Prometheus and the sweeper read the same in-process singleton; run Nova as a long-lived service for stable metrics.
 
 **For live visibility:**
 - Use `--serve` mode: `python scripts/semantic_mirror_dashboard.py --serve 8787 --watch`
@@ -301,7 +423,7 @@ import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)
 ## 🧪 Testing & Quality
 
 ### Test Coverage
-- **506 tests passing** ✅ (including 39 Processual autonomy tests)
+- **706 tests passing** ✅ (including 200+ Phase 4 tests)
 - **3 tests skipped** (expected)
 - **Property-based testing** with Hypothesis
 - **Integration tests** for all slots
@@ -367,7 +489,7 @@ def test_my_health_check():
 
 - **📖 [CLAUDE.md](CLAUDE.md)**: AI development standards and commands
 - **📊 [docs/maturity.yaml](docs/maturity.yaml)**: Detailed maturity assessment (v3.0 - All slots Processual)
-- **🎉 [docs/releases/2025-09-phase-3.md)**: Phase 3 completion release notes
+- **🎉 [docs/releases/2025-09-phase-3.md](docs/releases/2025-09-phase-3.md)**: Phase 3 completion release notes
 - **⚡ [docs/autonomy_artifact_v1_1.md](docs/autonomy_artifact_v1_1.md)**: Light-Clock Temporal Coherence System (ΔC-LIGHTCLOCK)
 - **🔗 [META_LENS_TETHER_CONFIRMATION.md](META_LENS_TETHER_CONFIRMATION.md)**: Architectural Integration Verification (META_LENS_REPORT@1)
   *"CONFIRMED: META_LENS_REPORT@1 is a native architectural extension of Slot 2 (ΔTHRESH Manager), using only existing flows and governance, with instant rollback capability."*
@@ -414,6 +536,6 @@ This project demonstrates that multi-AI collaboration, under human coordination,
 
 ---
 
-**Status**: Production-Ready | **Maturity**: 4.0/4.0 ⭐ | **Tests**: ✅ 506 passing | **Autonomy**: All 10 slots Processual
+**Status**: Production-Ready | **Maturity**: 4.0/4.0 ⭐ | **Tests**: ✅ 706 passing | **Autonomy**: All 10 slots Processual
 
 *Created and coordinated by Pavlos Kolivatzis with collaboration between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot*
