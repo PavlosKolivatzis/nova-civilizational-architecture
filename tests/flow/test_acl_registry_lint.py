@@ -44,11 +44,17 @@ DOCUMENTED_KEYS = {
     "slot09.final_policy",
     # Phase 4.1 inter-slot coordination keys
     "slot07.backpressure",
-    "slot10.deployment_feedback"
+    "slot10.deployment_feedback",
+    # Phase 5.0 Adaptive Neural Routing keys
+    "router.anr_shadow_decision",
+    "router.anr_live_decision",
+    "router.current_decision_id",
+    "router.anr_reward_immediate",
+    "router.anr_reward_deployment"
 }
 
 # Valid key pattern (no stray 'test.' matches)
-VALID_KEY_RE = re.compile(r"\bslot\d{2}\.[a-z0-9_]+(?:\.[a-z0-9_]+)*", re.I)
+VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router)\.[a-z0-9_]+(?:\.[a-z0-9_]+)*", re.I)
 
 # Allowlisted test-only keys/prefixes
 ALLOWED_TEST_KEYS = {"slot07.test_data", "slot07.rate_test", "slot07.test", "slot04.get", "slot08.get"}

@@ -20,7 +20,8 @@ def publish_deployment_feedback(
     slo_ok: bool,
     transform_rate: float,
     rollback: bool = False,
-    error_rate: Optional[float] = None
+    error_rate: Optional[float] = None,
+    decision_id: Optional[str] = None
 ) -> None:
     """Emit deployment feedback for adaptive cognition upstream.
 
@@ -46,6 +47,18 @@ def publish_deployment_feedback(
             "error_rate": error_rate,
             "timestamp": time.time(),
         }
+
+        # Phase 5.0: Include decision_id for ANR correlation
+        if decision_id is None:
+            try:
+                from orchestrator.semantic_mirror import get_context
+                ctx = get_context("router.current_decision_id") or {}
+                decision_id = ctx.get("id")
+            except Exception:
+                pass
+
+        if decision_id:
+            feedback_data["decision_id"] = decision_id
 
         # Publish feedback with 5-minute TTL for upstream adaptation
         publish(

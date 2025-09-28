@@ -484,3 +484,8 @@ def query(key: str, requester: str) -> Optional[Any]:
 def list_available(prefix: str, requester: str) -> List[str]:
     """List available context keys with prefix."""
     return get_semantic_mirror().query_context_keys(prefix, requester)
+
+
+def get_context(key: str, requester: str = "anr") -> Optional[Any]:
+    """Get context data by key (alias for query for ANR compatibility)."""
+    return query(key, requester)
