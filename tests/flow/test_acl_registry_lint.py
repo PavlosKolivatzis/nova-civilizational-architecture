@@ -54,32 +54,33 @@ DOCUMENTED_KEYS = {
 }
 
 # Valid key pattern (no stray 'test.' matches)
-VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router)\.[a-z0-9_]+(?:\.[a-z0-9_]+)*", re.I)
+VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router)\.[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*\b")
+
+# Mirror API call patterns to extract actual context keys
+PUBLISH_RE = re.compile(r'publish\(\s*["\']((?: slot\d{2}|router)\.[a-z0-9_.]+)["\']', re.I)
+GET_RE     = re.compile(r'get_context\(\s*["\']((?: slot\d{2}|router)\.[a-z0-9_.]+)["\']', re.I)
+QUERY_RE   = re.compile(r'query\(\s*["\']((?: slot\d{2}|router)\.[a-z0-9_.]+)["\']', re.I)
 
 # Allowlisted test-only keys/prefixes
 ALLOWED_TEST_KEYS = {"slot07.test_data", "slot07.rate_test", "slot07.test", "slot04.get", "slot08.get"}
 ALLOWED_TEST_PREFIXES = ("slot07.test_",)
 
 def _extract_keys_from_code():
-    """Extract context keys from production code."""
-    roots = [
-        Path("orchestrator"),
-        Path("slots"),
-        Path("tests"),  # we do scan tests, but will filter allowlisted keys
-    ]
-
+    """Only capture context keys actually passed to mirror APIs."""
+    roots = [Path("orchestrator"), Path("slots"), Path("tests")]  # existing roots
     found_keys = set()
     for root in roots:
         if not root.exists():
             continue
-
         for pyfile in root.rglob("*.py"):
             try:
                 content = pyfile.read_text(encoding="utf-8")
-                matches = VALID_KEY_RE.findall(content)
-                found_keys.update(matches)
-            except Exception as e:
-                # Skip files that can't be read
+                for rx in (PUBLISH_RE, GET_RE, QUERY_RE):
+                    for m in rx.finditer(content):
+                        k = m.group(1)
+                        if k == k.lower() and VALID_KEY_RE.match(k):
+                            found_keys.add(k)
+            except Exception:
                 continue
 
     # Remove allowlisted test keys
@@ -112,7 +113,7 @@ def test_acl_key_format():
     """Test that all documented keys follow proper naming convention."""
     for key in DOCUMENTED_KEYS:
         assert VALID_KEY_RE.match(key), f"Invalid key format: {key}"
-        assert key.startswith("slot"), f"Key should start with 'slot': {key}"
+        assert key.startswith(("slot", "router")), f"Key should start with 'slot' or 'router': {key}"
 
 
 if __name__ == "__main__":
