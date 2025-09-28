@@ -1,9 +1,9 @@
 # Slot 6: Cultural Synthesis Engine
 
-## Status: Production Ready ✅ (v7.4.1)
-**Maturity Level**: 85% - Flow mesh consumer with system context awareness
+## Status: Production Ready ✅ (v7.5.0 - Phase 4)
+**Maturity Level**: 90% - Flow mesh consumer with anomaly-aware unlearning
 
-Cultural adaptation and guardrail validation engine with TRI integration and system context awareness. **Downstream consumer of Nova's flow mesh architecture.**
+Cultural adaptation and guardrail validation engine with TRI integration, system context awareness, and **Phase 4 anomaly-aware pulse weighting**. **Downstream consumer of Nova's flow mesh architecture.**
 
 ---
 
@@ -14,6 +14,7 @@ Cultural adaptation and guardrail validation engine with TRI integration and sys
 - **Context Awareness**: System-wide context integration via Semantic Mirror
 - **Principle Preservation**: Core value protection during cultural adaptation
 - **Risk Assessment**: Residual risk calculation and mitigation
+- **🆕 Anomaly-Aware Unlearning**: Phase 4 intelligent pulse weight decay with anomaly multipliers
 
 ---
 
@@ -24,6 +25,7 @@ Cultural adaptation and guardrail validation engine with TRI integration and sys
 - **`ContextAwareCulturalSynthesis`**: System context integration (367 lines)
 - **`CulturalSynthesisAdapter`**: Slot integration and validation (194 lines)
 - **`MulticulturalTruthSynthesis`**: Legacy synthesis implementation (125 lines)
+- **🆕 `receiver.py`**: Phase 4 unlearn pulse processing with anomaly weighting (79 lines)
 - **Health Monitoring**: System health and metrics collection (77 lines)
 
 ### **Files Overview**
@@ -33,6 +35,7 @@ context_aware_synthesis.py      (367 lines) - System context awareness
 adapter.py                      (194 lines) - Slot integration adapter
 legacy_engine.py                (595 lines) - Legacy implementation
 multicultural_truth_synthesis.py (125 lines) - Legacy wrapper
+receiver.py                     (79 lines)  - Phase 4 unlearn pulse receiver
 health/__init__.py              (77 lines)  - Health monitoring
 plugin.py                       (98 lines)  - Plugin interface
 shadow_delta.py                 (70 lines)  - Shadow analysis
@@ -41,7 +44,7 @@ usage_example.py                (23 lines)  - Usage examples
 __init__.py                     (20 lines)  - Module exports
 ```
 
-**Total**: 11 Python files, 1,807 lines of cultural synthesis logic
+**Total**: 12 Python files, 1,886 lines of cultural synthesis logic
 
 ---
 
@@ -97,6 +100,7 @@ if system_context.production_pressure > 0.8:
 - **Decision Tracking**: Approval/transformation/blocking metrics
 - **Performance Metrics**: Synthesis timing and throughput
 - **Risk Assessment**: Residual risk and principle preservation tracking
+- **🆕 Phase 4 Unlearn Metrics**: Decay events, decay amounts, pulse processing
 
 ---
 
@@ -171,6 +175,19 @@ elif validation.result == DeploymentGuardrailResult.BLOCKED_PRINCIPLE_VIOLATION:
     print("❌ Content blocked - principle violation")
 ```
 
+### **Phase 4 Unlearn Pulse Receiver**
+```python
+from slots.slot06_cultural_synthesis.receiver import register_slot06_receiver, get_pulse_metrics
+
+# Register Slot06 as unlearn pulse receiver
+register_slot06_receiver()
+
+# Monitor unlearn pulse processing
+metrics = get_pulse_metrics()
+print(f"Pulse count: {metrics['pulse_count']}")
+print(f"Time since last pulse: {metrics['time_since_last']:.1f}s")
+```
+
 ### **Health Monitoring**
 ```python
 # Cultural synthesis health check
@@ -180,7 +197,9 @@ elif validation.result == DeploymentGuardrailResult.BLOCKED_PRINCIPLE_VIOLATION:
     "adaptation_effectiveness": 0.80,
     "engine_status": "operational",
     "context_awareness": "active",
-    "system_pressure": 0.3
+    "system_pressure": 0.3,
+    "unlearn_decay_events": 42,
+    "unlearn_decay_amount": 12.34
 }
 ```
 
