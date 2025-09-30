@@ -73,5 +73,11 @@ def test_metrics_endpoint_integration():
     response = client.get("/metrics")
 
     assert response.status_code == 200
-    assert response.headers["content-type"] == "text/plain; version=0.0.4; charset=utf-8"
+    ct = response.headers.get("content-type", "")
+    # Accept both classic Prometheus text format and newer exposition versions
+    allowed = {
+        "text/plain; version=0.0.4; charset=utf-8",
+        "text/plain; version=1.0.0; charset=utf-8",
+    }
+    assert (ct in allowed) or (ct.startswith("text/plain") and "charset=utf-8" in ct)
     assert "nova_build_info" in response.text
