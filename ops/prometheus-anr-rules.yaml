@@ -1,0 +1,148 @@
+# Nova ANR Prometheus Alerting Rules
+# Add to your Prometheus rules configuration
+
+groups:
+- name: nova-anr-promotion-gates
+  interval: 30s
+  rules:
+
+  # Derived metrics for ANR decision quality
+  - record: nova_anr_rsi_ratio
+    expr: |
+      sum(rate(nova_anr_live_decisions_agree_total[24h])) /
+      sum(rate(nova_anr_live_decisions_total[24h]))
+    labels:
+      component: anr
+      metric_type: derived
+
+  - record: nova_anr_live_rate_24h
+    expr: |
+      sum(rate(nova_anr_live_decisions_total[24h])) /
+      sum(rate(nova_anr_total_decisions_total[24h]))
+    labels:
+      component: anr
+      metric_type: derived
+
+  - record: nova_anr_rollback_rate_24h
+    expr: |
+      sum(increase(nova_anr_rollbacks_total[24h])) /
+      (sum(increase(nova_anr_live_decisions_total[24h])) / 1000)
+    labels:
+      component: anr
+      metric_type: derived
+
+- name: nova-anr-promotion-alerts
+  rules:
+
+  # Critical: RSI below promotion gate (0.85)
+  - alert: ANR_RSI_Below_Promotion_Gate
+    expr: nova_anr_rsi_ratio < 0.85
+    for: 1h
+    labels:
+      severity: critical
+      component: anr
+      runbook: ops/runbooks/anr-rsi-low.md
+    annotations:
+      summary: "ANR RSI below promotion gate (0.85)"
+      description: |
+        ANR Route Selection Index is {{ $value | printf "%.3f" }} over 24h window.
+        Promotion gate requires RSI ≥ 0.85. Review shadow vs live decision agreement.
+        Current live decisions may be suboptimal.
+
+  # Critical: Rollback rate too high (>0.1 per 1k decisions)
+  - alert: ANR_Rollback_Rate_Too_High
+    expr: nova_anr_rollback_rate_24h > 0.1
+    for: 30m
+    labels:
+      severity: critical
+      component: anr
+      runbook: ops/runbooks/anr-rollbacks-high.md
+    annotations:
+      summary: "ANR rollback rate exceeds 0.1 per 1k decisions"
+      description: |
+        ANR rollback rate is {{ $value | printf "%.3f" }} per 1k decisions over 24h.
+        Promotion gate requires ≤0.1 per 1k. Investigate deployment quality issues.
+
+  # Critical: Fast-cap breached under anomaly
+  - alert: ANR_FastCap_Breached_Under_Anomaly
+    expr: max_over_time(nova_anr_r3_prob_under_anomaly[1h]) > 0.15
+    for: 10m
+    labels:
+      severity: critical
+      component: anr
+      runbook: ops/runbooks/anr-fastcap-breach.md
+    annotations:
+      summary: "ANR fast-cap exceeded 0.15 under anomaly"
+      description: |
+        ANR R3 (fast route) probability reached {{ $value | printf "%.3f" }} under anomaly.
+        Safety limit is 0.15. Fast-cap mechanism may be compromised.
+
+  # Warning: TRI delta median negative
+  - alert: ANR_TRI_Delta_Negative
+    expr: |
+      quantile(0.5,
+        increase(nova_anr_tri_delta_sum[24h]) /
+        increase(nova_anr_tri_delta_count[24h])
+      ) < 0
+    for: 2h
+    labels:
+      severity: warning
+      component: anr
+      runbook: ops/runbooks/anr-tri-negative.md
+    annotations:
+      summary: "ANR median TRI delta is negative"
+      description: |
+        Median TRI delta over 24h is {{ $value | printf "%.3f" }}.
+        Promotion gate requires ≥0. ANR decisions may be degrading truth coherence.
+
+  # Info: ANR pilot stage change
+  - alert: ANR_Pilot_Stage_Changed
+    expr: changes(nova_anr_pilot_fraction[5m]) > 0
+    for: 0m
+    labels:
+      severity: info
+      component: anr
+    annotations:
+      summary: "ANR pilot stage changed"
+      description: |
+        ANR pilot fraction changed to {{ $value | printf "%.2f" }}.
+        Monitor metrics for 24h before next promotion.
+
+- name: nova-anr-health-monitoring
+  rules:
+
+  # ANR system health checks
+  - alert: ANR_System_Unavailable
+    expr: up{job="nova-orchestrator"} == 0
+    for: 5m
+    labels:
+      severity: critical
+      component: anr
+    annotations:
+      summary: "ANR system unavailable"
+      description: "Nova orchestrator is down. ANR unavailable."
+
+  - alert: ANR_Bandit_State_Stale
+    expr: time() - nova_anr_bandit_last_update > 3600
+    for: 15m
+    labels:
+      severity: warning
+      component: anr
+    annotations:
+      summary: "ANR bandit state hasn't updated in 1h"
+      description: "Learning may be disabled or state persistence failing."
+
+  # Decision volume anomalies
+  - alert: ANR_Decision_Volume_Low
+    expr: |
+      rate(nova_anr_total_decisions_total[1h]) <
+      0.5 * rate(nova_anr_total_decisions_total[24h] offset 24h)
+    for: 30m
+    labels:
+      severity: warning
+      component: anr
+    annotations:
+      summary: "ANR decision volume significantly reduced"
+      description: |
+        Current decision rate is {{ $value | printf "%.1f" }}/h,
+        significantly below historical average.

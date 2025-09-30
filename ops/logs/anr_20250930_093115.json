@@ -1,0 +1,24 @@
+﻿{
+    "action":  "promote",
+    "ts":  "2025-09-30T09:31:15.1463614+03:00",
+    "stage":  "10",
+    "app_url":  "http://127.0.0.1:8000",
+    "pilot":  0.1,
+    "summary":  {
+                    "source":  "none",
+                    "lookback_min":  1440,
+                    "count":  0,
+                    "live_rate":  null,
+                    "rsi":  null,
+                    "rollbacks":  null,
+                    "tri_median":  null
+                },
+    "env":  {
+                "NOVA_ANR_MAX_FAST_PROB":  "0.15",
+                "NOVA_ANR_ENABLED":  "1",
+                "NOVA_ANR_LEARN_SHADOW":  "1",
+                "NOVA_ANR_STRICT_ON_ANOMALY":  "1",
+                "NOVA_ANR_STATE_PATH":  "\\..\\run\\anr_state.json",
+                "NOVA_ANR_PILOT":  "0.10"
+            }
+}

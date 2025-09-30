@@ -1,0 +1,27 @@
+﻿{
+    "summary":  {
+                    "source":  "none",
+                    "lookback_min":  1440,
+                    "count":  0,
+                    "live_rate":  null,
+                    "rsi":  null,
+                    "rollbacks":  null,
+                    "tri_median":  null
+                },
+    "app_url":  "http://127.0.0.1:8000",
+    "action":  "promote",
+    "stage":  "10",
+    "env_snapshot_path":  "C:\\code\\nova-civilizational-architecture\\ops\\logs\\env_20250930_104652.txt",
+    "runbook_url":  "https://github.com/your-org/nova-civilizational-architecture/blob/main/ops/runbook/anr-operations.md",
+    "build_sha":  "4b1ea8e",
+    "pilot":  0.1,
+    "ts":  "2025-09-30T10:46:52.7470713+03:00",
+    "env":  {
+                "NOVA_ANR_MAX_FAST_PROB":  "0.15",
+                "NOVA_ANR_ENABLED":  "1",
+                "NOVA_ANR_LEARN_SHADOW":  "1",
+                "NOVA_ANR_STRICT_ON_ANOMALY":  "1",
+                "NOVA_ANR_STATE_PATH":  "\\..\\run\\anr_state.json",
+                "NOVA_ANR_PILOT":  "0.10"
+            }
+}

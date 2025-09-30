@@ -1,0 +1,39 @@
+﻿feat(anr): Phase 5.1 — production-grade Adaptive Neural Routing
+
+Implements complete Adaptive Neural Routing system with enterprise-grade
+operational excellence and bulletproof multi-process safety.
+
+## Core Implementation
+- LinUCB contextual bandit with shadow learning
+- Routes: R1 (deterministic), R2 (consensus), R3 (fast), R4 (guardrail)
+- Cross-platform file locking (Windows msvcrt + Unix fcntl)
+- Atomic writes with crash safety and state persistence
+
+## Production Tooling
+- Zero-touch daily auto-promotion with comprehensive gates
+- PowerShell 5.1 compatible orchestration scripts
+- Automated ledger rotation with compression (100MB/30 days)
+- State backup with retention management (7 days)
+
+## Monitoring & Observability
+- Prometheus metrics with build provenance (git SHA + timestamp)
+- Health gate validation for critical slots (04/08_lock/09/10)
+- Complete audit trails with environment snapshots
+- NDJSON decision ledger for analysis and reporting
+
+## Safety & Recovery
+- Progressive rollout stages: 10% -> 25% -> 50% -> 75% -> 100%
+- Promotion gates: RSI >= 0.85, rollbacks <= 0.1/1k, TRI >= 0
+- One-command rollback with immediate R4 guardrail
+- Disaster recovery procedures with automated state restoration
+
+## Operational Excellence
+- Complete runbooks with emergency procedures
+- Weekly DR drills and chaos testing protocols
+- Build traceability with git commits in all receipts
+- Professional on-call documentation with one-click SOPs
+
+Ready for production deployment with zero-touch automation.
+
+Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>

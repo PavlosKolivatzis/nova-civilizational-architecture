@@ -1,0 +1,8 @@
+﻿{
+  "window_minutes": 1440,
+  "decisions": 2,
+  "live_rate": 1.0,
+  "rsi": 0.5,
+  "rollbacks": 1,
+  "generated_at": "2025-09-30T06:43:34.280309Z"
+}

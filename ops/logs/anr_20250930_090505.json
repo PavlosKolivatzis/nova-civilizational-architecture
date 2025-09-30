@@ -1,0 +1,11 @@
+﻿{
+    "env":  {
+                "NOVA_ANR_MAX_FAST_PROB":  "0.15",
+                "NOVA_ANR_STATE_PATH":  "\\..\\run\\anr_state.json",
+                "NOVA_ANR_PILOT":  "0.00",
+                "NOVA_ANR_ENABLED":  "0",
+                "NOVA_ANR_STRICT_ON_ANOMALY":  "1"
+            },
+    "action":  "rollback",
+    "ts":  "2025-09-30T09:05:05.0458054+03:00"
+}

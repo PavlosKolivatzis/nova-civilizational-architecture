@@ -3,16 +3,59 @@
 from prometheus_client import (
     Gauge,
     Counter,
+    Info,
     generate_latest,
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
+    ProcessCollector,
+    PlatformCollector,
+    GCCollector,
 )
 from collections import defaultdict
 from orchestrator.metrics import get_slot6_metrics
 from os import getenv
+import subprocess
+from time import strftime, gmtime
 
 # Dedicated registry (avoids duplicate registration across tests/imports)
 _REGISTRY = CollectorRegistry()
+
+# Register default collectors onto the dedicated registry
+ProcessCollector(registry=_REGISTRY)
+PlatformCollector(registry=_REGISTRY)
+GCCollector(registry=_REGISTRY)
+
+# --- Build provenance metric ------------------------------------
+def _get_git_sha_short():
+    """Get current git commit SHA (short form) for build traceability."""
+    try:
+        result = subprocess.run(
+            ['git', 'rev-parse', '--short', 'HEAD'],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd='.'
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return getenv('NOVA_BUILD_SHA', 'unknown')
+
+# Build info metric (constant labels for deployment traceability)
+build_info = Info(
+    'nova_build',
+    'Nova build information for deployment traceability',
+    registry=_REGISTRY,
+)
+
+# Initialize build info at module load
+build_info.info({
+    'sha': _get_git_sha_short(),
+    'component': 'orchestrator',
+    'version': '5.1',
+    'built_at': strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
+})
 
 # Prometheus gauges
 slot6_p95_residual_risk_gauge = Gauge(

@@ -449,16 +449,23 @@ def _configure_default_access_rules(mirror: SemanticMirror) -> None:
         "slot07.pressure_level": ["slot06_cultural_synthesis", "slot03_emotional_matrix"],
         "slot07.resource_status": ["slot06_cultural_synthesis"],
         "slot07.public_metrics": ["slot06_cultural_synthesis"],  # For test compatibility
-        
-        # Slot 6 contexts accessible by other slots  
+
+        # Slot 6 contexts accessible by other slots
         "slot06.cultural_profile": ["slot03_emotional_matrix", "slot07_production_controls"],
         "slot06.adaptation_rate": ["slot03_emotional_matrix", "slot07_production_controls"],
         "slot06.synthesis_complexity": ["slot07_production_controls"],
         "slot06.synthesis_results": ["slot07_production_controls"],  # For test compatibility
-        
+
         # Slot 3 contexts (more restricted)
         "slot03.emotional_state": ["slot06_cultural_synthesis"],
-        "slot03.confidence_level": ["slot06_cultural_synthesis", "slot07_production_controls"]
+        "slot03.confidence_level": ["slot06_cultural_synthesis", "slot07_production_controls"],
+
+        # Router contexts accessible by monitoring and deployment slots
+        "router.current_decision_id": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
+        "router.anr_shadow_decision": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
+        "router.anr_live_decision": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
+        "router.anr_reward_immediate": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
+        "router.anr_reward_deployment": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"]
     }
     
     mirror.configure_access_rules(default_rules)
