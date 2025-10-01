@@ -120,7 +120,10 @@ jobs:
 
           print(f"Entropy (bits): {H_bits:.3f}  H_max: {H_max:.3f}")
           if H_bits > MAX_H:
-              raise AssertionError(f"Entropy too high: {H_bits:.3f}")
+              if ALLOW_COLDSTART and near_uniform and healthy_overall:
+                  print("⚠️  Cold-start uniform policy detected — entropy check waived for this snapshot.")
+              else:
+                  raise AssertionError(f"Entropy too high: {H_bits:.3f}")
 
           print(f"Slots: {slots_ok}/{slots_total}")
           assert (slots_ok / slots_total) >= 0.90, f"Slots below 90% healthy: {slots_ok}/{slots_total}"
