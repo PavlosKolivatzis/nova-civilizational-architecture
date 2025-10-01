@@ -12,10 +12,12 @@ when FastAPI is available.
 try:  # pragma: no cover - absence of FastAPI is acceptable
     from fastapi import FastAPI, Response
     from api.health_config import router as health_router
+    from orchestrator.reflection import router as reflection_router
     from contextlib import asynccontextmanager
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
     FastAPI = None  # type: ignore
     health_router = None  # type: ignore
+    reflection_router = None  # type: ignore
 
 import asyncio
 import time
@@ -273,6 +275,8 @@ if FastAPI is not None:
     app = FastAPI(lifespan=lifespan)
     if health_router is not None:
         app.include_router(health_router)
+    if reflection_router is not None:
+        app.include_router(reflection_router)
 
     @app.get("/health")
     async def health():
