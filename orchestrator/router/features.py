@@ -1,5 +1,6 @@
 """Phase 5.1 LinUCB feature extraction for contextual routing decisions."""
 
+import math
 from typing import Dict, Any, List
 
 
@@ -14,9 +15,19 @@ FEATURES = [
 FEATURE_DIM = len(FEATURES) + 1  # +1 for bias term
 
 
+def _safe_float(x, default: float = 0.0) -> float:
+    """Safely convert input to float with fallback to default."""
+    try:
+        v = float(x)
+        return v if math.isfinite(v) else default
+    except (ValueError, TypeError, OverflowError):
+        return default
+
+
 def _clip(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
     """Clip value to [lo, hi] range for bounded features."""
-    return max(lo, min(hi, float(x)))
+    safe_x = _safe_float(x, lo if lo >= 0 else 0.0)
+    return max(lo, min(hi, safe_x))
 
 
 def build_feature_vector(ctx: Dict[str, Any]) -> List[float]:

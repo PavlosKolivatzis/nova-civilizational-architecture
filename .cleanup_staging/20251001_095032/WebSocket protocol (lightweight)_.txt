@@ -1,0 +1,402 @@
+﻿WebSocket protocol (lightweight)
+Connect: wss://<host>/nova/reflex
+* Server sends periodic system.heartbeat (keepalive).
+* Client may optionally send a subscribe with topic filters; otherwise receives all.
+Client → Server
+{ "action": "subscribe",
+  "topics": ["reflex.*","tri.*","culture.*","pedigree.*","consensus.*"],
+  "filters": { "region": "EMEA", "min_severity": "info" }
+}
+
+
+Server → Client: events use the unified envelope below.
+Unified event envelope (all messages)
+{
+  "v": "1.0",
+  "event": "tri.update",
+  "id": "evt_01HZX6P8C8S2QW3Y0R4N6H",
+  "at": "2025-08-11T12:34:56.789Z",
+  "source": "slot4",
+  "severity": "info",
+  "region": "GLOBAL",
+  "trace_id": "trc_ab12cd34",
+  "cycle_id": "rc_2025-08-11T12:34:55.600Z_7c91",
+  "payload": { /* typed by event */ }
+}
+
+
+JSON Schemas (Draft 2020-12)
+1) Envelope (imports specific payload schemas by event)
+{
+  "$id": "https://schemas.nova/reflex/envelope-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["v","event","id","at","source","severity","payload"],
+  "properties": {
+    "v": { "const": "1.0" },
+    "event": {
+      "type": "string",
+      "enum": [
+        "system.heartbeat",
+        "reflex.cycle.started",
+        "reflex.cycle.completed",
+        "slot.metrics",
+        "tri.update",
+        "deltathresh.layers",
+        "culture.delta",
+        "pedigree.append",
+        "consensus.health"
+      ]
+    },
+    "id": { "type": "string" },
+    "at": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "string",
+      "enum": ["slot1","slot2","slot3","slot4","slot5","slot6","slot7","slot8","slot9","slot10","orchestrator","system"]
+    },
+    "severity": { "type": "string", "enum": ["info","warn","error","fatal"] },
+    "region": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "cycle_id": { "type": "string" },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}
+
+
+2) Reflex cycle boundaries
+{
+  "$id": "https://schemas.nova/reflex/cycle-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "title": "reflex.cycle.started",
+      "type": "object",
+      "required": ["event","payload"],
+      "properties": {
+        "event": { "const": "reflex.cycle.started" },
+        "payload": {
+          "type": "object",
+          "required": ["cycle_id","scenario","participants"],
+          "properties": {
+            "cycle_id": { "type": "string" },
+            "scenario": { "type": "string" },
+            "participants": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            },
+            "baseline": {
+              "type": "object",
+              "properties": {
+                "tri_mean": { "type": "number" },
+                "tri_ci": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "reflex.cycle.completed",
+      "type": "object",
+      "required": ["event","payload"],
+      "properties": {
+        "event": { "const": "reflex.cycle.completed" },
+        "payload": {
+          "type": "object",
+          "required": ["cycle_id","duration_ms","outcome","tri_final"],
+          "properties": {
+            "cycle_id": { "type": "string" },
+            "duration_ms": { "type": "number" },
+            "outcome": { "type": "string", "enum": ["stabilized","degraded","aborted"] },
+            "tri_final": {
+              "type": "object",
+              "required": ["mean","ci"],
+              "properties": {
+                "mean": { "type": "number" },
+                "ci": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+
+
+3) Slot metrics (for the grid)
+{
+  "$id": "https://schemas.nova/reflex/slot-metrics-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["event","payload"],
+  "properties": {
+    "event": { "const": "slot.metrics" },
+    "payload": {
+      "type": "object",
+      "required": ["slot","status","latency_ms","last_action"],
+      "properties": {
+        "slot": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "status": { "type": "string", "enum": ["active","idle","blocked","cooldown"] },
+        "latency_ms": { "type": "number" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "last_action": { "type": "string" },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "TRI_BELOW_MIN",
+              "DELTA_SELF_LEGITIMATION",
+              "SIGMA_ENTROPY_DRIFT",
+              "THETA_CIRCULAR_VALIDATION",
+              "OMEGA_SOCIAL_PROOF",
+              "ADV_HIGH_ENTROPY",
+              "ADV_TOKEN_ANOMALY",
+              "POLICY_MANUAL_QUARANTINE"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
+
+
+4) TRI update (gauge + per-layer)
+{
+  "$id": "https://schemas.nova/reflex/tri-update-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["event","payload"],
+  "properties": {
+    "event": { "const": "tri.update" },
+    "payload": {
+      "type": "object",
+      "required": ["tri","layers","mode"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["strict","adaptive","cultural_weighted","batch_optimized","gpu_accelerated"] },
+        "tri": {
+          "type": "object",
+          "required": ["score","ci","entropy","coherence"],
+          "properties": {
+            "score": { "type": "number", "minimum": 0, "maximum": 1 },
+            "ci": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+            "entropy": { "type": "number" },
+            "coherence": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "layers": {
+          "type": "object",
+          "required": ["delta","sigma","theta","omega"],
+          "properties": {
+            "delta": { "type": "number", "minimum": 0, "maximum": 1 },
+            "sigma": { "type": "number", "minimum": 0, "maximum": 1 },
+            "theta": { "type": "number", "minimum": 0, "maximum": 1 },
+            "omega": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
+
+
+5) ΔTHRESH layer snapshot (for the distortion panel)
+{
+  "$id": "https://schemas.nova/reflex/deltathresh-layers-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["event","payload"],
+  "properties": {
+    "event": { "const": "deltathresh.layers" },
+    "payload": {
+      "type": "object",
+      "required": ["density","tags"],
+      "properties": {
+        "density": {
+          "type": "object",
+          "required": ["Δ","Σ","Θ","Ω"],
+          "properties": {
+            "Δ": { "type": "number", "minimum": 0 },
+            "Σ": { "type": "number", "minimum": 0 },
+            "Θ": { "type": "number", "minimum": 0 },
+            "Ω": { "type": "number", "minimum": 0 }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+
+
+6) Cultural adaptation delta (gains/losses + vector)
+{
+  "$id": "https://schemas.nova/reflex/culture-delta-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["event","payload"],
+  "properties": {
+    "event": { "const": "culture.delta" },
+    "payload": {
+      "type": "object",
+      "required": ["context","gain","vector","clamp_active"],
+      "properties": {
+        "context": { "type": "string", "enum": ["individualist","collectivist","balanced"] },
+        "gain": { "type": "number" },
+        "vector": {
+          "type": "object",
+          "required": ["individualism","context_level","power_distance"],
+          "properties": {
+            "individualism": { "type": "number", "minimum": -1, "maximum": 1 },
+            "context_level": { "type": "number", "minimum": -1, "maximum": 1 },
+            "power_distance": { "type": "number", "minimum": -1, "maximum": 1 }
+          }
+        },
+        "clamp_active": { "type": "boolean" }
+      }
+    }
+  }
+}
+
+
+7) Pedigree append (provenance timeline)
+{
+  "$id": "https://schemas.nova/reflex/pedigree-append-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["event","payload"],
+  "properties": {
+    "event": { "const": "pedigree.append" },
+    "payload": {
+      "type": "object",
+      "required": ["entry_id","kind","actor","summary"],
+      "properties": {
+        "entry_id": { "type": "string" },
+        "kind": { "type": "string", "enum": ["proposal","edit","merge","authority_invocation","audit","decision"] },
+        "actor": {
+          "type": "object",
+          "required": ["id","cultural_class"],
+          "properties": {
+            "id": { "type": "string" },
+            "cultural_class": { "type": "string", "enum": ["democratic","hierarchical","neutral"] }
+          }
+        },
+        "summary": { "type": "string" },
+        "adapters": { "type": "array", "items": { "type": "string" } },
+        "link": { "type": "string" }
+      }
+    }
+  }
+}
+
+
+8) Consensus health (top-level dashboard health)
+{
+  "$id": "https://schemas.nova/reflex/consensus-health-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["event","payload"],
+  "properties": {
+    "event": { "const": "consensus.health" },
+    "payload": {
+      "type": "object",
+      "required": ["trust_delta","latency_ms","oscillation_index","escalation_rate"],
+      "properties": {
+        "trust_delta": { "type": "number", "minimum": -1, "maximum": 1 },
+        "latency_ms": { "type": "number" },
+        "oscillation_index": { "type": "number", "minimum": 0 },
+        "escalation_rate": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}
+
+
+9) Heartbeat
+{
+  "$id": "https://schemas.nova/reflex/heartbeat-1.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["event","payload"],
+  "properties": {
+    "event": { "const": "system.heartbeat" },
+    "payload": {
+      "type": "object",
+      "required": ["uptime_s","commit","avg_latency_ms"],
+      "properties": {
+        "uptime_s": { "type": "number" },
+        "commit": { "type": "string" },
+        "avg_latency_ms": { "type": "number" }
+      }
+    }
+  }
+}
+
+
+Minimal examples (ready to stream)
+TRI update
+{
+  "v":"1.0","event":"tri.update","id":"evt_1","at":"2025-08-11T12:34:56.789Z",
+  "source":"slot4","severity":"info","trace_id":"trc_x1","cycle_id":"rc_abc",
+  "payload":{
+    "mode":"adaptive",
+    "tri":{"score":0.78,"ci":[0.75,0.81],"entropy":0.62,"coherence":0.84},
+    "layers":{"delta":0.92,"sigma":0.88,"theta":0.90,"omega":0.91},
+    "notes":"bi-modal governance candidate increased coherence"
+  }
+}
+
+
+Cultural delta
+{
+  "v":"1.0","event":"culture.delta","id":"evt_2","at":"2025-08-11T12:34:57.000Z",
+  "source":"slot6","severity":"info","cycle_id":"rc_abc",
+  "payload":{
+    "context":"balanced",
+    "gain":0.06,
+    "vector":{"individualism":0.18,"context_level":0.05,"power_distance":-0.12},
+    "clamp_active":true
+  }
+}
+
+
+Pedigree append
+{
+  "v":"1.0","event":"pedigree.append","id":"evt_3","at":"2025-08-11T12:34:57.200Z",
+  "source":"slot8","severity":"info","cycle_id":"rc_abc",
+  "payload":{
+    "entry_id":"ped_77f2",
+    "kind":"merge",
+    "actor":{"id":"node_democratic_c1","cultural_class":"democratic"},
+    "summary":"Merged rotating leadership (A) with appointed execution (B)",
+    "adapters":["bridge_bimodal_v1","authority_pedigree_lock"],
+    "link":"ledger://rc_abc/ped_77f2"
+  }
+}
+
+
+Consensus health
+{
+  "v":"1.0","event":"consensus.health","id":"evt_4","at":"2025-08-11T12:34:58.800Z",
+  "source":"orchestrator","severity":"info","cycle_id":"rc_abc",
+  "payload":{"trust_delta":0.22,"latency_ms":860,"oscillation_index":0.59,"escalation_rate":0.81}
+}
+
+
+Versioning & replay
+* Add since=<timestamp|event_id> query param when connecting to backfill missed events.
+* Envelope fields trace_id + cycle_id support per-cycle replay in the dashboard.
+* Any breaking change bumps v to 1.x and adds a new $id path; keep old schemas available for clients running older dashboards.
+________________
+
+
+If you want, I can also bundle these into a tiny OpenAPI + JSON Schema package and a mock WebSocket server so your front-end can start rendering gauges today.

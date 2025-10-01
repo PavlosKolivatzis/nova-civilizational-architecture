@@ -240,6 +240,13 @@ if FastAPI is not None:
         from orchestrator.prometheus_metrics import update_semantic_mirror_metrics
         update_semantic_mirror_metrics()
 
+        # initialize flow fabric with known contract links
+        try:
+            from orchestrator.flow_fabric_init import initialize_flow_fabric
+            initialize_flow_fabric()
+        except Exception as e:
+            logger.warning(f"Flow fabric initialization failed: {e}")
+
         # register slot06 for unlearn pulse fanout
         from slots.slot06_cultural_synthesis.receiver import register_slot06_receiver
         register_slot06_receiver()

@@ -7,11 +7,20 @@ Maintains contract payload immutability while enabling adaptive routing intellig
 from __future__ import annotations
 import time
 import logging
+import os
 from collections import deque
 from typing import Dict, Any, Callable, Optional, List
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "AdaptiveLinkConfig",
+    "AdaptiveLink",
+    "AdaptiveLinkRegistry",
+    "adaptive_link_registry",
+    "get_flow_health_summary",
+]
 
 
 @dataclass
@@ -231,3 +240,34 @@ class AdaptiveLinkRegistry:
 
 # Global registry instance
 adaptive_link_registry = AdaptiveLinkRegistry()
+
+
+def get_flow_health_summary() -> dict:
+    """
+    Return a compact health summary of adaptive connections suitable for health payloads.
+    """
+    try:
+        metrics = adaptive_link_registry.get_all_metrics()
+    except Exception:
+        metrics = []
+
+    links_count = len(metrics)
+    adaptation_enabled_links = sum(1 for m in metrics if m.get("adaptation_enabled"))
+    total_sends = sum(int(m.get("total_sends", 0) or 0) for m in metrics)
+    total_throttled = sum(int(m.get("total_throttled", 0) or 0) for m in metrics)
+    throttle_rate = (total_throttled / total_sends) if total_sends else 0.0
+    status = (
+        "no_links" if links_count == 0
+        else ("healthy" if total_throttled == 0 else "degraded")
+    )
+
+    return {
+        "adaptive_connections_active": os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", "false").lower() == "true",
+        "links_count": links_count,
+        "adaptation_enabled_links": adaptation_enabled_links,
+        "total_sends": total_sends,
+        "total_throttled": total_throttled,
+        "throttle_rate": round(throttle_rate, 6),
+        "status": status,
+        "contracts_tracked": len({m.get("contract_name") for m in metrics if "contract_name" in m}),
+    }

@@ -2,7 +2,7 @@
 # Controls Flow Fabric adaptive connection behavior
 
 # Global feature flags
-adaptive_connections_enabled: false  # Master switch for adaptive behavior
+adaptive_connections_enabled: true   # Master switch for adaptive behavior
 flow_metrics_enabled: true          # Always collect metrics even when adaptation disabled
 
 # Default adaptive link configuration
