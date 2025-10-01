@@ -1,0 +1,99 @@
+name: Reflection Attestation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"  # nightly sanity
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  reflect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      NOVA_REFLECTION_SECRET: ${{ secrets.NOVA_REFLECTION_SECRET }}
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Reflection snapshot (no server needed)
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import json, os, hmac, hashlib
+          from orchestrator.reflection import nova_reflect
+          snap = nova_reflect()
+          # Verify HMAC over payload excluding 'provenance'
+          payload = dict(snap); payload.pop("provenance", None)
+          blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+          secret = os.environ.get("NOVA_REFLECTION_SECRET", "nova-reflection-default-key").encode()
+          expected = hmac.new(secret, blob, hashlib.sha256).hexdigest()
+          got = snap["provenance"]["hmac_sha256"]
+          ok = hmac.compare_digest(expected, got)
+          if not ok:
+              raise SystemExit("HMAC attestation failed")
+          # Basic guardrails
+          anr = snap["observation"]["anr_probe"]
+          decisiveness = anr.get("decisiveness", 0.0)
+          entropy_bits = anr.get("entropy_bits", anr.get("entropy", 0.0))
+          slots_ok = snap["observation"]["slots_ok"]
+          slots_total = max(1, snap["observation"]["slots_total"])
+          flow_status = snap["observation"]["flow_fabric"]["status"]
+          # Thresholds (tune as needed / env-scale)
+          assert decisiveness >= 0.55, f"Decisiveness too low: {decisiveness:.3f}"
+          assert entropy_bits <= 1.50, f"Entropy too high: {entropy_bits:.3f}"
+          assert slots_ok / slots_total >= 0.90, f"Slots below 90% healthy: {slots_ok}/{slots_total}"
+          assert flow_status in ("healthy", "unknown"), f"Flow fabric status: {flow_status}"
+          # Emit summary
+          print(json.dumps({
+              "snapshot_id": snap["snapshot_id"],
+              "decisiveness": decisiveness,
+              "entropy_bits": entropy_bits,
+              "slots_ok": slots_ok,
+              "slots_total": slots_total,
+              "flow_status": flow_status,
+            }, indent=2))
+          PY
+
+      - name: Upload reflection artifact
+        if: always()
+        run: |
+          mkdir -p artifacts
+          PYTHONPATH=. python - <<'PY' > artifacts/reflection.json
+          import json
+          from orchestrator.reflection import nova_reflect
+          print(json.dumps(nova_reflect(), ensure_ascii=False, indent=2))
+          PY
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reflection-snapshot
+          path: artifacts/reflection.json
