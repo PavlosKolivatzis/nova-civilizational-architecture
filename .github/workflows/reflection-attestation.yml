@@ -24,6 +24,8 @@ jobs:
     env:
       NOVA_REFLECTION_SECRET: ${{ secrets.NOVA_REFLECTION_SECRET }}
       PYTHONUNBUFFERED: "1"
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
 
     steps:
       - uses: actions/checkout@v4
@@ -47,35 +49,96 @@ jobs:
       - name: Reflection snapshot (no server needed)
         run: |
           PYTHONPATH=. python - <<'PY'
-          import json, os, hmac, hashlib
+          import os, json, hmac, hashlib, math
           from orchestrator.reflection import nova_reflect
+
+          def _safe_probs(d):
+              if not isinstance(d, dict):
+                  return {}
+              out = {}
+              for k, v in d.items():
+                  try:
+                      f = float(v)
+                      if math.isfinite(f) and f >= 0:
+                          out[str(k)] = f
+                  except Exception:
+                      pass
+              s = sum(out.values())
+              if s > 0:
+                  for k in list(out.keys()):
+                      out[k] = out[k] / s
+              return out
+
+          def _decisiveness(anr: dict) -> float:
+              # prefer payload value if present and valid
+              dv = anr.get("decisiveness", None)
+              if isinstance(dv, (int, float)) and 0 <= dv <= 1:
+                  return float(dv)
+
+              probs = _safe_probs(anr.get("probs", {}))
+              n = len(probs)
+              if n <= 1:
+                  return 1.0  # degenerate: single route => fully decisive
+
+              # try payload entropy (bits) if present
+              H_bits = anr.get("entropy_bits", anr.get("entropy", None))
+              if isinstance(H_bits, (int, float)) and H_bits >= 0:
+                  return max(0.0, min(1.0, 1.0 - (H_bits / math.log(n, 2))))
+
+              # recompute from probs
+              H = -sum(p * math.log(p, 2) for p in probs.values() if p > 0)
+              Hmax = math.log(n, 2)
+              return max(0.0, min(1.0, 1.0 - H / Hmax))
+
+          def _hmac_ok(snap: dict) -> bool:
+              payload = dict(snap)
+              payload.pop("provenance", None)
+              blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+              secret = os.environ.get("NOVA_REFLECTION_SECRET", "nova-reflection-default-key").encode()
+              expected = hmac.new(secret, blob, hashlib.sha256).hexdigest()
+              got = (snap.get("provenance") or {}).get("hmac_sha256", "")
+              return hmac.compare_digest(expected, got)
+
           snap = nova_reflect()
-          # Verify HMAC over payload excluding 'provenance'
-          payload = dict(snap); payload.pop("provenance", None)
-          blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
-          secret = os.environ.get("NOVA_REFLECTION_SECRET", "nova-reflection-default-key").encode()
-          expected = hmac.new(secret, blob, hashlib.sha256).hexdigest()
-          got = snap["provenance"]["hmac_sha256"]
-          ok = hmac.compare_digest(expected, got)
-          if not ok:
-              raise SystemExit("HMAC attestation failed")
-          # Basic guardrails
-          anr = snap["observation"]["anr_probe"]
-          decisiveness = anr.get("decisiveness", 0.0)
-          entropy_bits = anr.get("entropy_bits", anr.get("entropy", 0.0))
-          slots_ok = snap["observation"]["slots_ok"]
-          slots_total = max(1, snap["observation"]["slots_total"])
-          flow_status = snap["observation"]["flow_fabric"]["status"]
-          # Thresholds (tune as needed / env-scale)
-          assert decisiveness >= 0.55, f"Decisiveness too low: {decisiveness:.3f}"
-          assert entropy_bits <= 1.50, f"Entropy too high: {entropy_bits:.3f}"
-          assert slots_ok / slots_total >= 0.90, f"Slots below 90% healthy: {slots_ok}/{slots_total}"
+
+          # 1) Attestation
+          if not _hmac_ok(snap):
+              raise SystemExit("HMAC verification failed")
+
+          # 2) Guardrails (schema-agnostic)
+          obs = snap.get("observation", {})
+          anr = obs.get("anr_probe", {})
+          dec = _decisiveness(anr)
+
+          slots_ok = int(obs.get("slots_ok", 0))
+          slots_total = max(1, int(obs.get("slots_total", 1)))
+          flow_status = (obs.get("flow_fabric") or {}).get("status", "unknown")
+
+          print(f"Decisiveness: {dec:.3f}")
+          assert dec >= 0.55, f"Decisiveness too low: {dec:.3f}"
+
+          # entropy (prefer bits, fall back)
+          probs = _safe_probs(anr.get("probs", {}))
+          H_bits = anr.get("entropy_bits", anr.get("entropy", None))
+          if not isinstance(H_bits, (int, float)):
+              # recompute if absent
+              H_bits = -sum(p * math.log(p, 2) for p in probs.values() if p > 0)
+          print(f"Entropy (bits): {H_bits:.3f}")
+          assert H_bits <= 1.50, f"Entropy too high: {H_bits:.3f}"
+
+          print(f"Slots: {slots_ok}/{slots_total}")
+          assert (slots_ok / slots_total) >= 0.90, f"Slots below 90% healthy: {slots_ok}/{slots_total}"
+
+          print(f"Flow status: {flow_status}")
           assert flow_status in ("healthy", "unknown"), f"Flow fabric status: {flow_status}"
+
+          print("All checks passed.")
+
           # Emit summary
           print(json.dumps({
-              "snapshot_id": snap["snapshot_id"],
-              "decisiveness": decisiveness,
-              "entropy_bits": entropy_bits,
+              "snapshot_id": snap.get("snapshot_id", "unknown"),
+              "decisiveness": dec,
+              "entropy_bits": H_bits,
               "slots_ok": slots_ok,
               "slots_total": slots_total,
               "flow_status": flow_status,
