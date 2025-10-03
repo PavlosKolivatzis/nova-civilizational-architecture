@@ -54,6 +54,9 @@ Thumbs.db
 cutover_*.txt
 scripts/*.py.bak
 daily_snapshots.txt
+
+# Experimental artifacts (creativity parameter sweeps, bakeoffs)
+artifacts/
 __pycache__/
 *.py[cod]
 *.pyo
