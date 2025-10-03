@@ -8,6 +8,13 @@ minimal environments, the import is guarded and the web routes are only created
 when FastAPI is available.
 """
 
+# Load environment variables from .env file (Phase 2: production hardening)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # Must be called before any config/module imports
+except ImportError:
+    pass  # python-dotenv not installed; env must be set externally
+
 # Optional web framework (avoid import errors in environments without FastAPI)
 try:  # pragma: no cover - absence of FastAPI is acceptable
     from fastapi import FastAPI, Response
@@ -252,6 +259,17 @@ if FastAPI is not None:
         # register slot06 for unlearn pulse fanout
         from slots.slot06_cultural_synthesis.receiver import register_slot06_receiver
         register_slot06_receiver()
+
+        # Phase 2: Initialize creativity governor and log config
+        try:
+            from orchestrator.semantic_creativity import get_creativity_governor
+            governor = get_creativity_governor()
+            logger.info(f"CreativityGovernor initialized at startup")
+            logger.info(f"Config: early_stop={governor.config.early_stop_enabled}, "
+                       f"two_phase={governor.config.two_phase_depth_enabled}, "
+                       f"bnb={governor.config.bnb_enabled}")
+        except Exception as e:
+            logger.warning(f"CreativityGovernor initialization failed: {e}")
 
         # start periodic expiry in *this* process (the one Prometheus scrapes)
         asyncio.create_task(_sm_sweeper())

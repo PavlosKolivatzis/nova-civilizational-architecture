@@ -14,7 +14,10 @@ import uuid
 import hmac
 import hashlib
 import json
+import logging
 from typing import Dict, Any
+
+logger = logging.getLogger(__name__)
 
 try:
     from fastapi import APIRouter
@@ -26,6 +29,7 @@ from orchestrator.core import create_router
 from orchestrator.health import health_payload, collect_slot_selfchecks
 from orchestrator.flow_fabric_init import get_flow_fabric_status
 from orchestrator.router.anr import AdaptiveNeuralRouter
+from orchestrator.semantic_creativity import get_creativity_governor
 
 # Only create router if FastAPI is available
 if APIRouter is not None:
@@ -195,6 +199,21 @@ def _get_system_reflection() -> Dict[str, Any]:
         "attestation_method": "hmac_sha256",
         "generated_by": "nova.reflection.v1.1",
     }
+
+    # Add creativity governance metrics if enabled
+    if os.getenv("NOVA_ENABLE_CREATIVITY_METRICS", "1") == "1":
+        try:
+            creativity_governor = get_creativity_governor()
+            creativity_metrics = creativity_governor.get_creativity_metrics()
+            reflection_data["creativity"] = creativity_metrics
+        except Exception as e:
+            logger.exception("Creativity metrics collection failed")
+            reflection_data["creativity"] = {
+                "error": "unavailable",
+                "type": type(e).__name__
+            }
+            if os.getenv("NOVA_CREATIVITY_DEBUG", "0") == "1":
+                reflection_data["creativity"]["hint"] = str(e)[:120]
 
     return reflection_data
 
