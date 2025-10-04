@@ -1,0 +1,520 @@
+# Nova Defects Register
+# Generated from Phase 1-3 audit findings
+# Branch: audit/system-cleanup-v1
+# Generated: 2025-10-04
+
+metadata:
+  baseline_commit: b4d1793
+  audit_branch: audit/system-cleanup-v1
+  total_defects: 28
+  p0_count: 4
+  p1_count: 8
+  p2_count: 10
+  p3_count: 6
+
+defects:
+  # ============================================================================
+  # P0 - CRITICAL (System Broken, Immediate Fix Required)
+  # ============================================================================
+
+  - id: DEF-001
+    priority: P0
+    severity: CRITICAL
+    title: "Contract metadata gap: 6 out of 10 flow fabric contracts undocumented"
+    description: |
+      Flow fabric has 10 registered contracts in orchestrator/flow_fabric_init.py:18-29
+      but only 4 have metadata declarations in slot meta.yaml files.
+      Missing: EMOTION_REPORT@1, DELTA_THREAT@1, PRODUCTION_CONTROL@1, META_LENS_REPORT@1,
+      CONSTELLATION_REPORT@1, SIGNALS@1
+    impact: "Contract versioning and lifecycle management impossible without metadata"
+    evidence:
+      - "DRIFT_REPORT.md:141-153"
+      - "orchestrator/flow_fabric_init.py:18-29"
+      - "grep -r 'produces:' slots --include='*.yaml'"
+    root_cause: "Missing meta.yaml files for slot03, slot07, slot08 OR incomplete metadata in slot02, slot05"
+    reproduction: |
+      python -c "import yaml; from pathlib import Path;
+      files = list(Path('slots').rglob('*.yaml'));
+      print([f for f in files if 'produces' in open(f).read()])"
+    remediation: "Create/update meta.yaml files with produces/consumes declarations for all 10 contracts"
+    test_gap: "No test verifies contract metadata completeness"
+
+  - id: DEF-002
+    priority: P0
+    severity: CRITICAL
+    title: "slot04_tri_engine README contains false integration claims"
+    description: |
+      slots/slot04_tri_engine/README.md:17 claims:
+      - "Cultural effectiveness weighting (Slot 6)" - FALSE
+      - "Performance metrics for Slot 7 monitoring" - FALSE
+      grep verification proves ZERO imports in slot06 and slot07
+    impact: "Misleading documentation, developers waste time on non-existent integrations"
+    evidence:
+      - "DRIFT_REPORT.md:37-49"
+      - "grep -r 'slot04_tri_engine' slots/slot06_cultural_synthesis/ → 0 results"
+      - "grep -r 'slot04_tri_engine' slots/slot07_production_controls/ → 0 results"
+    root_cause: "README reflects intended architecture never implemented, or deprecated integration not cleaned up"
+    reproduction: |
+      grep -r "slot04_tri_engine" slots/slot06_cultural_synthesis/
+      grep -r "slot04_tri_engine" slots/slot07_production_controls/
+    remediation: "Update README.md to reflect actual integration status OR implement missing integrations"
+    test_gap: "No integration tests for Slot 4 → Slot 6/7 (because integration doesn't exist)"
+
+  - id: DEF-003
+    priority: P0
+    severity: CRITICAL
+    title: "Duplicate Slot 4 implementations with unclear ownership"
+    description: |
+      Two Slot 4 implementations exist:
+      - slots/slot04_tri/ (operational, 828 lines, flow mesh connected)
+      - slots/slot04_tri_engine/ (content analysis, 637 lines, zombie state)
+      orchestrator/adapters/slot4_tri.py routes to BOTH but ownership unclear
+    impact: "Unclear which implementation to maintain, test, or deprecate"
+    evidence:
+      - "DRIFT_REPORT.md:21-62"
+      - "REPO_MAP.md:47-48"
+      - "orchestrator/adapters/slot4_tri.py:31"
+    root_cause: "Incomplete cleanup after refactoring (git commit 5671335 deleted README only, not implementation)"
+    reproduction: |
+      ls -la slots/slot04_tri slots/slot04_tri_engine
+      grep -A5 "def.*route" orchestrator/adapters/slot4_tri.py
+    remediation: "Either: (1) Complete deletion of slot04_tri_engine OR (2) Document dual-engine architecture with ownership"
+    test_gap: "No test validates single source of truth for TRI calculation"
+
+  - id: DEF-004
+    priority: P0
+    severity: CRITICAL
+    title: "Duplicate Slot 8 implementations with unclear ownership"
+    description: |
+      Two Slot 8 implementations exist:
+      - slots/slot08_memory_ethics/ (README 48 days stale)
+      - slots/slot08_memory_lock/ (README 11 days lag)
+      Unclear which is canonical
+    impact: "Unclear which implementation to maintain, test, or deprecate"
+    evidence:
+      - "DRIFT_REPORT.md:65-77"
+      - "REPO_MAP.md:52-53"
+      - "git log -1 --format='%ci' slots/slot08_memory_ethics/README.md → 2025-08-13"
+    root_cause: "Staleness suggests slot08_memory_ethics may be deprecated but not removed"
+    reproduction: |
+      git log -1 --format='%ci' slots/slot08_memory_ethics/README.md
+      git log -1 --format='%ci' slots/slot08_memory_lock/README.md
+    remediation: "Determine canonical implementation and archive/delete the other"
+    test_gap: "No test validates single source of truth for memory ethics"
+
+  # ============================================================================
+  # P1 - HIGH (Major Impact, Fix ASAP)
+  # ============================================================================
+
+  - id: DEF-005
+    priority: P1
+    severity: HIGH
+    title: "94% of environment variables undocumented"
+    description: |
+      143 env vars discovered in code, only 8 documented in .env.example
+      135 undocumented vars across 10 categories: feature flags, unlearn system, ANR, creativity, etc.
+    impact: "Impossible to configure system without reading source code"
+    evidence:
+      - "DRIFT_REPORT.md:228-238"
+      - ".env.example:1-9"
+      - "grep -r 'os.getenv' orchestrator slots api --include='*.py' | wc -l"
+    root_cause: ".env.example not updated as features added"
+    reproduction: |
+      python -c "import re; from pathlib import Path;
+      vars = set();
+      for f in Path('.').rglob('*.py'):
+        if '.venv' not in str(f):
+          vars.update(re.findall(r'os\.getenv\([\"'']([^\"'']+)', open(f).read()));
+      print(len(vars))"
+    remediation: "Expand .env.example from 8 to 143 variables with defaults and descriptions"
+    test_gap: "No test validates .env.example completeness"
+
+  - id: DEF-006
+    priority: P1
+    severity: HIGH
+    title: "Test coverage 5% below target (80% vs 85%)"
+    description: |
+      Overall coverage: 80% (23,496 statements, 4,657 missed)
+      Target: ≥85%
+      Low coverage areas: fuzzy_loader.py (84%), test_health_perf.py (81%), test_slot07_adapter_metrics.py (81%)
+    impact: "Insufficient test coverage risks regressions"
+    evidence:
+      - "phase1_summary.txt"
+      - "pytest --cov --cov-report=term-missing"
+    root_cause: "Tests not written for newer code paths"
+    reproduction: "pytest --cov --cov-report=term-missing | grep -E '(TOTAL|fuzzy_loader)'"
+    remediation: "Add tests to reach 85% coverage, prioritize critical paths"
+    test_gap: "Documented in phase1_summary.txt low coverage sections"
+
+  - id: DEF-007
+    priority: P1
+    severity: HIGH
+    title: "249 linting issues (ruff)"
+    description: |
+      Ruff found 249 linting violations:
+      - F401 (unused imports)
+      - E402 (import not at top of file)
+      - Others TBD from phase2_summary.txt
+    impact: "Code quality issues, potential bugs hiding in violations"
+    evidence:
+      - "phase2_summary.txt"
+      - "ruff check . --output-format=json"
+    root_cause: "Linting not enforced in pre-commit hooks"
+    reproduction: "ruff check . | wc -l"
+    remediation: "Fix violations, add ruff to pre-commit hooks"
+    test_gap: "No CI gate enforces ruff clean"
+
+  - id: DEF-008
+    priority: P1
+    severity: HIGH
+    title: "23 type errors (mypy)"
+    description: |
+      MyPy found 23 type errors
+      Missing stubs: types-PyYAML, types-requests, types-jsonschema
+    impact: "Type safety compromised, runtime errors possible"
+    evidence:
+      - "phase2_summary.txt"
+      - "mypy orchestrator slots --ignore-missing-imports"
+    root_cause: "Type hints incomplete, missing type stubs"
+    reproduction: "mypy orchestrator slots | grep 'error:' | wc -l"
+    remediation: "Install type stubs, add type hints, fix errors"
+    test_gap: "No CI gate enforces mypy clean"
+
+  - id: DEF-009
+    priority: P1
+    severity: HIGH
+    title: "1 HIGH severity security issue (bandit)"
+    description: |
+      Bandit found 1 HIGH severity issue (details unavailable due to encoding error)
+      Also: 6 MEDIUM, 2580 LOW
+    impact: "Potential security vulnerability"
+    evidence:
+      - "phase2_summary.txt"
+      - "phase2_bandit.json"
+    root_cause: "Security scan identified unsafe pattern"
+    reproduction: "bandit -r orchestrator slots --format=json -o bandit.json"
+    remediation: "Investigate HIGH finding in bandit.json, remediate"
+    test_gap: "No CI gate blocks HIGH security findings"
+
+  - id: DEF-010
+    priority: P1
+    severity: HIGH
+    title: "pip vulnerability CVE in pip 25.2"
+    description: |
+      pip-audit found 1 vulnerability: pip 25.2 (GHSA-4xh5-x5gv-qwph tarfile extraction flaw)
+    impact: "Tarfile extraction vulnerability"
+    evidence:
+      - "phase2_summary.txt"
+      - "pip-audit --format=json"
+    root_cause: "pip version outdated"
+    reproduction: "pip-audit | grep GHSA"
+    remediation: "Upgrade pip to patched version"
+    test_gap: "No dependency vulnerability scanning in CI"
+
+  - id: DEF-011
+    priority: P1
+    severity: HIGH
+    title: "Duplicate /metrics endpoint definition"
+    description: |
+      /metrics endpoint defined TWICE:
+      - orchestrator/app.py (direct @app.get)
+      - orchestrator/http_metrics.py (router)
+      Unclear which is active (depends on router inclusion order)
+    impact: "Unpredictable metrics endpoint behavior"
+    evidence:
+      - "DRIFT_REPORT.md:196"
+      - "grep -r '@app.get.*metrics' orchestrator"
+      - "grep -r '@router.get.*metrics' orchestrator"
+    root_cause: "Refactoring left both implementations"
+    reproduction: |
+      grep -r "@app.get.*metrics" orchestrator
+      grep -r "@router.get.*metrics" orchestrator
+    remediation: "Remove duplicate, document canonical implementation"
+    test_gap: "No test validates single /metrics endpoint"
+
+  - id: DEF-012
+    priority: P1
+    severity: HIGH
+    title: "9 broken documentation links"
+    description: |
+      5 missing runbooks, 3 invalid git commit links, 1 missing contract doc
+      Details: ops/runbooks/README.md references non-existent files
+    impact: "Documentation navigation broken"
+    evidence:
+      - "DRIFT_REPORT.md:318-335"
+      - "python link_checker.py"
+    root_cause: "Links added before target files created"
+    reproduction: |
+      python -c "import re; from pathlib import Path;
+      for f in Path('.').rglob('*.md'):
+        for link in re.findall(r'\[.*?\]\(([^)]+)\)', open(f).read()):
+          if not link.startswith('http') and not (f.parent / link.split('#')[0]).exists():
+            print(f, link)"
+    remediation: "Create missing runbooks OR remove broken links"
+    test_gap: "No CI link checker"
+
+  # ============================================================================
+  # P2 - MEDIUM (Moderate Impact, Fix Soon)
+  # ============================================================================
+
+  - id: DEF-013
+    priority: P2
+    severity: MEDIUM
+    title: "2 stale READMEs (>30 days lag)"
+    description: |
+      slot04_tri_engine/README.md: 49 days stale
+      slot08_memory_ethics/README.md: 48 days stale
+      Both are duplicate slot implementations
+    impact: "Documentation doesn't reflect current code"
+    evidence:
+      - "DRIFT_REPORT.md:318-331"
+      - "git log -1 --format='%ci' slots/slot04_tri_engine/README.md"
+    root_cause: "READMEs not updated with code changes"
+    reproduction: |
+      git log -1 --format='%ci' slots/slot04_tri_engine/README.md
+      git log -1 --format='%ci' slots/slot04_tri_engine/
+    remediation: "Update stale READMEs or archive if implementations are legacy"
+    test_gap: "No automated staleness detection"
+
+  - id: DEF-014
+    priority: P2
+    severity: MEDIUM
+    title: "Version inconsistencies within Slot 2"
+    description: |
+      Slot 2 has multiple version strings:
+      - 1.0.0 (core)
+      - 2.0.0 (enhanced)
+      - 6.5 (config)
+      Unclear which is canonical
+    impact: "Version tracking confused"
+    evidence:
+      - "DRIFT_REPORT.md:151"
+    root_cause: "Multiple VERSION constants in same slot"
+    reproduction: "grep -r 'VERSION.*=' slots/slot02_deltathresh/"
+    remediation: "Standardize to single version string"
+    test_gap: "No test validates version consistency"
+
+  - id: DEF-015
+    priority: P2
+    severity: MEDIUM
+    title: "325 files need formatting (ruff format)"
+    description: |
+      Ruff format check shows 325 files out of compliance
+    impact: "Inconsistent code style"
+    evidence:
+      - "phase2_summary.txt"
+      - "ruff format --check ."
+    root_cause: "Formatting not enforced"
+    reproduction: "ruff format --check . | grep 'would reformat' | wc -l"
+    remediation: "Run ruff format, add to pre-commit"
+    test_gap: "No CI formatting gate"
+
+  - id: DEF-016
+    priority: P2
+    severity: MEDIUM
+    title: "113 TODO/FIXME audit tags"
+    description: |
+      113 audit tags across 45 files
+    impact: "Untracked technical debt"
+    evidence:
+      - "phase2_summary.txt"
+      - "grep -r 'TODO\\|FIXME' orchestrator slots"
+    root_cause: "TODOs added but not tracked"
+    reproduction: "grep -r 'TODO\\|FIXME' orchestrator slots | wc -l"
+    remediation: "Convert TODOs to tracked issues"
+    test_gap: "No TODO inventory process"
+
+  - id: DEF-017
+    priority: P2
+    severity: MEDIUM
+    title: "3 risky subprocess/eval patterns"
+    description: |
+      Found 3 uses of subprocess or eval
+    impact: "Potential code injection risk"
+    evidence:
+      - "phase2_summary.txt"
+      - "grep -r 'subprocess\\|eval' orchestrator slots"
+    root_cause: "Unsafe patterns not reviewed"
+    reproduction: "grep -r 'subprocess\\|eval' orchestrator slots"
+    remediation: "Review and sanitize subprocess calls"
+    test_gap: "No security review process"
+
+  - id: DEF-018
+    priority: P2
+    severity: MEDIUM
+    title: "166 potential secrets references"
+    description: |
+      Found 166 references to api_key, secret, token, password
+    impact: "Potential secret leakage"
+    evidence:
+      - "phase2_summary.txt"
+      - "grep -ri 'api_key\\|secret\\|token\\|password' orchestrator slots"
+    root_cause: "No secret scanning"
+    reproduction: "grep -ri 'api_key\\|secret\\|token\\|password' orchestrator slots | wc -l"
+    remediation: "Manual review, implement secret scanning"
+    test_gap: "No automated secret detection"
+
+  - id: DEF-019
+    priority: P2
+    severity: MEDIUM
+    title: "Slot 2 missing 3 flow fabric contracts in metadata"
+    description: |
+      flow_fabric_init.py declares DELTA_THREAT@1, META_LENS_REPORT@1, DETECTION_REPORT@1 from Slot 2
+      but slot02_deltathresh.meta.yaml only declares DETECTION_REPORT@1
+    impact: "Incomplete contract metadata for Slot 2"
+    evidence:
+      - "DRIFT_REPORT.md:145-147"
+      - "slots/slot02_deltathresh/slot02_deltathresh.meta.yaml"
+    root_cause: "meta.yaml not updated when contracts added"
+    reproduction: |
+      grep -A5 "produces:" slots/slot02_deltathresh/*.yaml
+      grep "DELTA_THREAT\\|META_LENS" orchestrator/flow_fabric_init.py
+    remediation: "Add missing contracts to slot02 meta.yaml produces section"
+    test_gap: "No test validates metadata completeness per slot"
+
+  - id: DEF-020
+    priority: P2
+    severity: MEDIUM
+    title: "Slot 5 missing CONSTELLATION_REPORT@1 in metadata"
+    description: |
+      flow_fabric_init.py declares CONSTELLATION_REPORT@1 from Slot 5
+      but slot05 meta.yaml only declares CONSTELLATION_STATE@1
+    impact: "Incomplete contract metadata for Slot 5"
+    evidence:
+      - "DRIFT_REPORT.md:148"
+      - "slots/slot05_constellation/*.yaml"
+    root_cause: "meta.yaml not updated when contract added"
+    reproduction: |
+      grep -A5 "produces:" slots/slot05_constellation/*.yaml
+      grep "CONSTELLATION_REPORT" orchestrator/flow_fabric_init.py
+    remediation: "Add CONSTELLATION_REPORT@1 to slot05 meta.yaml or remove from flow fabric"
+    test_gap: "No test validates contract registration matches metadata"
+
+  - id: DEF-021
+    priority: P2
+    severity: MEDIUM
+    title: "No meta.yaml for Slot 3 (EMOTION_REPORT@1 undocumented)"
+    description: |
+      flow_fabric_init.py declares EMOTION_REPORT@1, PRODUCTION_CONTROL@1 from Slot 3
+      but no slot03*.meta.yaml file exists
+    impact: "Zero metadata for Slot 3 contracts"
+    evidence:
+      - "DRIFT_REPORT.md:144"
+      - "find slots/slot03_emotional_matrix -name '*.yaml'"
+    root_cause: "meta.yaml never created for Slot 3"
+    reproduction: "ls slots/slot03_emotional_matrix/*.yaml"
+    remediation: "Create slot03_emotional_matrix.meta.yaml with produces/consumes"
+    test_gap: "No test enforces meta.yaml existence for all slots"
+
+  - id: DEF-022
+    priority: P2
+    severity: MEDIUM
+    title: "No meta.yaml for Slot 7 (PRODUCTION_CONTROL@1 undocumented)"
+    description: |
+      flow_fabric_init.py declares PRODUCTION_CONTROL@1 consumed by Slot 7
+      but no slot07*.meta.yaml file exists
+    impact: "Zero metadata for Slot 7 contracts"
+    evidence:
+      - "DRIFT_REPORT.md:146"
+      - "find slots/slot07_production_controls -name '*.yaml'"
+    root_cause: "meta.yaml never created for Slot 7"
+    reproduction: "ls slots/slot07_production_controls/*.yaml"
+    remediation: "Create slot07_production_controls.meta.yaml with consumes declaration"
+    test_gap: "No test enforces meta.yaml existence for all slots"
+
+  # ============================================================================
+  # P3 - LOW (Minor Impact, Fix When Convenient)
+  # ============================================================================
+
+  - id: DEF-023
+    priority: P3
+    severity: LOW
+    title: "6 missing runbooks referenced in ops/runbooks/README.md"
+    description: |
+      ops/runbooks/README.md references 5 non-existent runbooks:
+      feature-flags.md, lifespan.md, shared-hash.md, slot1.md, tri-link.md
+      Plus docs/runbooks/contract_violation.md
+    impact: "Broken internal documentation links"
+    evidence:
+      - "DRIFT_REPORT.md:318-323"
+    root_cause: "README updated with planned runbooks never written"
+    reproduction: "cat ops/runbooks/README.md | grep -o '[a-z-]*.md' | xargs -I{} ls ops/runbooks/{}"
+    remediation: "Create missing runbooks OR remove links from README"
+    test_gap: "No link validation in CI"
+
+  - id: DEF-024
+    priority: P3
+    severity: LOW
+    title: "3 invalid git commit links in attestations"
+    description: |
+      docs/attestations/2025-09-30-anr-5_1.md contains broken relative git commit links:
+      ../../../commit/66e0a5f, ../../../commit/78c67e0, ../../../commit/cad9d66
+    impact: "Broken attestation references"
+    evidence:
+      - "DRIFT_REPORT.md:329-331"
+    root_cause: "Git commit links using incorrect path format"
+    reproduction: "grep -o '../../../commit/[a-f0-9]*' docs/attestations/*.md"
+    remediation: "Fix commit link format or use full GitHub URLs"
+    test_gap: "No link format validation"
+
+  - id: DEF-025
+    priority: P3
+    severity: LOW
+    title: "Root README.md 5 days stale (minor)"
+    description: |
+      Root README last updated 2025-09-28, code updated 2025-10-04 (5 day lag)
+    impact: "Minor documentation staleness"
+    evidence:
+      - "DRIFT_REPORT.md:313"
+    root_cause: "README not updated with recent changes"
+    reproduction: "git log -1 --format='%ci' README.md; git log -1 --format='%ci' ."
+    remediation: "Update root README with recent changes"
+    test_gap: "No staleness alerting"
+
+  - id: DEF-026
+    priority: P3
+    severity: LOW
+    title: "6 MEDIUM severity security issues (bandit)"
+    description: |
+      Bandit found 6 MEDIUM severity issues
+    impact: "Potential security concerns"
+    evidence:
+      - "phase2_summary.txt"
+      - "phase2_bandit.json"
+    root_cause: "Security patterns flagged"
+    reproduction: "bandit -r orchestrator slots --severity-level=medium"
+    remediation: "Review and remediate MEDIUM findings"
+    test_gap: "No MEDIUM severity gate"
+
+  - id: DEF-027
+    priority: P3
+    severity: LOW
+    title: "Dual contract naming conventions"
+    description: |
+      Flow fabric uses @1 notation (TRI_REPORT@1)
+      Operation contracts use dot notation (tri.calculate)
+      No documentation explaining dual system
+    impact: "Developer confusion about contract naming"
+    evidence:
+      - "DRIFT_REPORT.md:105-139"
+    root_cause: "Two systems evolved independently"
+    reproduction: |
+      grep "KNOWN_CONTRACTS" orchestrator/flow_fabric_init.py
+      grep -A5 "contracts:" slots/slot04_tri/meta.yaml
+    remediation: "Document dual contract system in INTERSLOT_CONTRACTS.md"
+    test_gap: "No validation of naming conventions"
+
+  - id: DEF-028
+    priority: P3
+    severity: LOW
+    title: "SIGNALS@1 contract has no metadata"
+    description: |
+      flow_fabric_init.py declares SIGNALS@1 contract
+      but no slot meta.yaml claims to produce or consume it
+    impact: "Orphaned contract registration"
+    evidence:
+      - "DRIFT_REPORT.md:149"
+    root_cause: "SIGNALS@1 may be legacy or general-purpose contract"
+    reproduction: "grep 'SIGNALS@1' orchestrator/flow_fabric_init.py; grep -r 'SIGNALS@1' slots"
+    remediation: "Document SIGNALS@1 purpose or remove if unused"
+    test_gap: "No test validates all contracts have producers/consumers"
