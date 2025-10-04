@@ -12,7 +12,7 @@ This report documents discrepancies between documentation claims and actual code
 
 **Total Documentation Files:** 87 markdown files
 **Slot README Files:** 12 (includes 2 duplicates: slot04, slot08)
-**Drift Instances Found:** TBD (analysis in progress)
+**Drift Instances Found:** 22 (see Findings Summary)
 
 ---
 
@@ -67,12 +67,14 @@ This report documents discrepancies between documentation claims and actual code
 **Status:** 🟡 MODERATE DRIFT - Two implementations, unclear ownership
 
 **Directories:**
-- `slots/slot08_memory_ethics/`
-- `slots/slot08_memory_lock/`
+- `slots/slot08_memory_ethics/` - README last updated 2025-08-13 (STALE: 48 days lag)
+- `slots/slot08_memory_lock/` - README last updated 2025-09-20 (11 days lag)
 
-**Analysis:** PENDING - requires deep inspection (deferred to detailed slot evaluation)
+**Documentation Staleness Evidence:**
+- slot08_memory_ethics/README.md: 48 days stale (git log -1 --format=%ci)
+- slot08_memory_lock/README.md: 11 days lag
 
-**Action Required:** Determine if both are active or one is legacy
+**Action Required:** Determine if both are active or one is legacy. Staleness suggests slot08_memory_ethics may be deprecated.
 
 ---
 
@@ -226,11 +228,16 @@ Nova uses TWO distinct contract systems:
     - SLOT2_ENV, TEST_FLAG
 
 **Documentation Gap:**
-- ❌ NO .env.example file found
-- ❌ NO environment variable documentation found
-- 143 env vars discovered in code, ZERO documented
+- ⚠️ .env.example EXISTS with 8 documented variables (.env.example:1-9)
+- 143 env vars discovered in code
+- **135 undocumented (94% coverage gap)**
 
-**Recommendation:** Create .env.example with all 143 variables, defaults, and descriptions
+**Documented in .env.example (8):**
+NOVA_TRUTH_THRESHOLD, NOVA_ROUTER_LATENCY_MS, NOVA_ROUTER_ERROR_THRESHOLD, NOVA_ROUTER_TIMEOUT_MULTIPLIER, NOVA_ROUTER_TIMEOUT_CAP_S, NOVA_MEMORY_ETHICS_ENABLED, NOVA_DISTORTION_DETECTION_SENSITIVITY, JWT_SECRET
+
+**Undocumented (135):** All feature flags (NOVA_ENABLE_*), unlearn system (18 vars), ANR (12 vars), creativity (17 vars), slot weights (18 vars), Meta Lens (7 vars), platform detection (11 vars), etc.
+
+**Recommendation:** Expand .env.example from 8 to 143 variables with defaults and descriptions
 
 ### Feature Flags
 
@@ -368,7 +375,7 @@ Nova uses TWO distinct contract systems:
 | README False Claims | 2 | 🔴 HIGH |
 | Duplicate Implementations | 2 | 🔴 HIGH |
 | Contract Registration Gaps | 6/10 | 🔴 HIGH |
-| Undocumented Env Vars | 143 | 🔴 HIGH |
+| Undocumented Env Vars | 135/143 | 🔴 HIGH |
 | Broken Documentation Links | 9 | 🟡 MEDIUM |
 | Stale Documentation | 2 | 🟡 MEDIUM |
 | Version Inconsistencies | 1+ | 🟡 MEDIUM |
@@ -378,7 +385,7 @@ Nova uses TWO distinct contract systems:
 **Critical Issues Requiring Immediate Action:**
 
 1. **Contract Metadata Gap (6 out of 10):** Flow fabric has 10 registered contracts, but only 4 have metadata declarations
-2. **Zero Env Var Documentation:** 143 env vars in code, no .env.example or documentation
+2. **Massive Env Var Gap:** 135 out of 143 env vars undocumented (94% gap, .env.example has only 8)
 3. **Duplicate Slot Implementations:** slot04_tri vs slot04_tri_engine, slot08_memory_ethics vs slot08_memory_lock - unclear ownership
 4. **README False Claims:** slot04_tri_engine claims Slot 6/7 integration, grep proves FALSE (0 imports)
 
