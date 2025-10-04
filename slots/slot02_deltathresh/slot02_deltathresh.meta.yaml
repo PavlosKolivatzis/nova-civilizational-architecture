@@ -2,6 +2,6 @@ id: slot02_deltathresh
 name: ΔTHRESH Manager
 version: "1.0.0"
 optional: false
-produces: ["DETECTION_REPORT@1"]
+produces: ["DETECTION_REPORT@1", "DELTA_THREAT@1", "META_LENS_REPORT@1"]
 consumes: []
 description: "Advanced pattern detection and threshold management"

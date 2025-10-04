@@ -1,0 +1,7 @@
+id: slot07_production_controls
+name: Production Controls
+version: "1.0.0"
+optional: false
+produces: []
+consumes: ["PRODUCTION_CONTROL@1"]
+description: "Production safety controls and circuit breaking"
