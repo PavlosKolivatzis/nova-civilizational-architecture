@@ -8,9 +8,12 @@ metadata:
   audit_branch: audit/system-cleanup-v1
   total_defects: 28
   p0_count: 4
+  p0_resolved: 4
   p1_count: 8
+  p1_resolved: 1
   p2_count: 10
   p3_count: 6
+  last_updated: 2025-10-04
 
 defects:
   # ============================================================================
@@ -20,6 +23,8 @@ defects:
   - id: DEF-001
     priority: P0
     severity: CRITICAL
+    status: RESOLVED
+    resolution_commit: fc68de1
     title: "Contract metadata gap: 6 out of 10 flow fabric contracts undocumented"
     description: |
       Flow fabric has 10 registered contracts in orchestrator/flow_fabric_init.py:18-29
@@ -31,17 +36,22 @@ defects:
       - "DRIFT_REPORT.md:141-153"
       - "orchestrator/flow_fabric_init.py:18-29"
       - "grep -r 'produces:' slots --include='*.yaml'"
-    root_cause: "Missing meta.yaml files for slot03, slot07, slot08 OR incomplete metadata in slot02, slot05"
-    reproduction: |
-      python -c "import yaml; from pathlib import Path;
-      files = list(Path('slots').rglob('*.yaml'));
-      print([f for f in files if 'produces' in open(f).read()])"
-    remediation: "Create/update meta.yaml files with produces/consumes declarations for all 10 contracts"
-    test_gap: "No test verifies contract metadata completeness"
+    root_cause: "Missing meta.yaml files for slot03, slot07 + incomplete metadata in slot02, slot05 + legacy SIGNALS@1"
+    resolution: |
+      - Created slot03_emotional_matrix.meta.yaml (produces EMOTION_REPORT@1, PRODUCTION_CONTROL@1)
+      - Created slot07_production_controls.meta.yaml (consumes PRODUCTION_CONTROL@1)
+      - Updated slot02_deltathresh.meta.yaml (added DELTA_THREAT@1, META_LENS_REPORT@1)
+      - Updated slot05_constellation.meta.yaml (added CONSTELLATION_REPORT@1)
+      - Removed legacy SIGNALS@1 from KNOWN_CONTRACTS
+      - Added tests/meta/test_contract_metadata.py validation suite (4 tests)
+      - Result: 9/9 contracts (100% coverage, up from 4/10)
+    test_coverage: "tests/meta/test_contract_metadata.py - 4/4 passing"
 
   - id: DEF-002
     priority: P0
     severity: CRITICAL
+    status: RESOLVED
+    resolution_commit: eaa15ba
     title: "slot04_tri_engine README contains false integration claims"
     description: |
       slots/slot04_tri_engine/README.md:17 claims:
@@ -53,16 +63,19 @@ defects:
       - "DRIFT_REPORT.md:37-49"
       - "grep -r 'slot04_tri_engine' slots/slot06_cultural_synthesis/ → 0 results"
       - "grep -r 'slot04_tri_engine' slots/slot07_production_controls/ → 0 results"
-    root_cause: "README reflects intended architecture never implemented, or deprecated integration not cleaned up"
-    reproduction: |
-      grep -r "slot04_tri_engine" slots/slot06_cultural_synthesis/
-      grep -r "slot04_tri_engine" slots/slot07_production_controls/
-    remediation: "Update README.md to reflect actual integration status OR implement missing integrations"
-    test_gap: "No integration tests for Slot 4 → Slot 6/7 (because integration doesn't exist)"
+    root_cause: "README stale 49 days, reflects intended architecture never implemented"
+    resolution: |
+      - Rewrote slot04_tri_engine/README.md with accurate dual-engine architecture
+      - Removed false Slot 6/7 direct integration claims
+      - Documented adapter-mediated routing via orchestrator/adapters/slot4_tri.py
+      - Clarified Engine 1 (operational) vs Engine 2 (content analysis) split
+      - Updated REPO_MAP.md with dual-engine architecture explanation
 
   - id: DEF-003
     priority: P0
     severity: CRITICAL
+    status: RESOLVED
+    resolution_commit: eaa15ba
     title: "Duplicate Slot 4 implementations with unclear ownership"
     description: |
       Two Slot 4 implementations exist:
@@ -74,16 +87,22 @@ defects:
       - "DRIFT_REPORT.md:21-62"
       - "REPO_MAP.md:47-48"
       - "orchestrator/adapters/slot4_tri.py:31"
-    root_cause: "Incomplete cleanup after refactoring (git commit 5671335 deleted README only, not implementation)"
-    reproduction: |
-      ls -la slots/slot04_tri slots/slot04_tri_engine
-      grep -A5 "def.*route" orchestrator/adapters/slot4_tri.py
+    root_cause: "Intentional dual-engine architecture, not duplicate - documentation gap only"
+    resolution: |
+      - Investigation proved NOT duplicates - intentional dual-engine architecture
+      - Engine 1 (slot04_tri): Operational monitoring, get_latest_report()
+      - Engine 2 (slot04_tri_engine): Content analysis, calculate(content, context)
+      - orchestrator/adapters/slot4_tri.py routes based on method called
+      - Updated REPO_MAP.md and README.md to document architecture
+      - Reclassified from "duplicate code" to "documentation drift"
     remediation: "Either: (1) Complete deletion of slot04_tri_engine OR (2) Document dual-engine architecture with ownership"
     test_gap: "No test validates single source of truth for TRI calculation"
 
   - id: DEF-004
     priority: P0
     severity: CRITICAL
+    status: RESOLVED
+    resolution_commit: 3ff904b
     title: "Duplicate Slot 8 implementations with unclear ownership"
     description: |
       Two Slot 8 implementations exist:
@@ -95,11 +114,16 @@ defects:
       - "DRIFT_REPORT.md:65-77"
       - "REPO_MAP.md:52-53"
       - "git log -1 --format='%ci' slots/slot08_memory_ethics/README.md → 2025-08-13"
-    root_cause: "Staleness suggests slot08_memory_ethics may be deprecated but not removed"
-    reproduction: |
-      git log -1 --format='%ci' slots/slot08_memory_ethics/README.md
-      git log -1 --format='%ci' slots/slot08_memory_lock/README.md
-    remediation: "Determine canonical implementation and archive/delete the other"
+      - "orchestrator/adapters/slot8_memory_ethics.py:6 - imports legacy only"
+      - "slot08_memory_lock/README.md:399-410 - documents dual architecture"
+    root_cause: "Migration-ready dual architecture - legacy (active) + Processual 4.0 (not yet integrated)"
+    resolution: |
+      - Investigation proved NOT duplicates - intentional migration path
+      - slot08_memory_ethics: Legacy ACL-based protection - CURRENTLY USED by orchestrator
+      - slot08_memory_lock: Processual 4.0 self-healing IDS - MIGRATION-READY (not integrated)
+      - orchestrator/adapters/slot8_memory_ethics.py imports legacy only (no routing to advanced)
+      - Updated REPO_MAP.md: removed "DUPLICATE" warnings, added migration-ready status
+      - Updated slot08_memory_ethics/README.md: added dual architecture context + migration path
     test_gap: "No test validates single source of truth for memory ethics"
 
   # ============================================================================
@@ -109,25 +133,26 @@ defects:
   - id: DEF-005
     priority: P1
     severity: HIGH
+    status: RESOLVED
+    resolution_commit: 5fa346f
     title: "94% of environment variables undocumented"
     description: |
-      143 env vars discovered in code, only 8 documented in .env.example
-      135 undocumented vars across 10 categories: feature flags, unlearn system, ANR, creativity, etc.
+      142 env vars discovered in code, only 8 documented in .env.example
+      134 undocumented vars across 18 categories: feature flags, unlearn system, ANR, creativity, etc.
     impact: "Impossible to configure system without reading source code"
     evidence:
       - "DRIFT_REPORT.md:228-238"
-      - ".env.example:1-9"
-      - "grep -r 'os.getenv' orchestrator slots api --include='*.py' | wc -l"
+      - ".env.example:1-9 (before fix)"
+      - "grep -roh 'os\.getenv' --include='*.py' | sed | sort -u | wc -l → 142"
     root_cause: ".env.example not updated as features added"
-    reproduction: |
-      python -c "import re; from pathlib import Path;
-      vars = set();
-      for f in Path('.').rglob('*.py'):
-        if '.venv' not in str(f):
-          vars.update(re.findall(r'os\.getenv\([\"'']([^\"'']+)', open(f).read()));
-      print(len(vars))"
-    remediation: "Expand .env.example from 8 to 143 variables with defaults and descriptions"
-    test_gap: "No test validates .env.example completeness"
+    resolution: |
+      - Expanded .env.example from 8 to 142 variables (100% coverage)
+      - Organized into 18 logical categories for developer discoverability
+      - Added inline comments explaining each variable's purpose
+      - Inferred sensible defaults from actual code usage patterns
+      - Preserved existing 8 vars with same values
+      - Verification: comm -23 check showed zero gaps, zero extras
+    test_coverage: "Validation test recommended (see TEST_GAPS.md)"
 
   - id: DEF-006
     priority: P1
