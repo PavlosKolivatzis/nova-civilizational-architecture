@@ -256,7 +256,7 @@ class TestFlowFabricIntegration:
         assert status["initialized"] is True
         assert status["total_links"] > 0
         assert len(status["contracts_registered"]) > 0
-        assert len(status["known_contracts"]) == 10  # Known Nova contracts
+        assert len(status["known_contracts"]) == 9  # Known Nova contracts (SIGNALS@1 removed DEF-028)
 
 
 class TestCrossComponentIntegration:

@@ -25,7 +25,7 @@ class TestFlowFabricInitialization:
 
         assert callable(initialize_flow_fabric)
         assert isinstance(KNOWN_CONTRACTS, list)
-        assert len(KNOWN_CONTRACTS) == 10
+        assert len(KNOWN_CONTRACTS) == 9  # SIGNALS@1 removed (DEF-028)
 
     def test_known_contracts_format(self):
         from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
@@ -40,7 +40,7 @@ class TestFlowFabricInitialization:
             "PRODUCTION_CONTROL@1",
             "META_LENS_REPORT@1",
             "CONSTELLATION_STATE@1",
-            "SIGNALS@1",
+            # SIGNALS@1 removed - legacy contract with no producer/consumer (DEF-028)
         ]
         assert KNOWN_CONTRACTS == expected_contracts
 
@@ -100,7 +100,7 @@ class TestFlowFabricInitialization:
             "PRODUCTION_CONTROL@1",
             "META_LENS_REPORT@1",
             "CONSTELLATION_STATE@1",
-            "SIGNALS@1",
+            # SIGNALS@1 removed - legacy contract with no producer/consumer (DEF-028)
         ]
 
 
