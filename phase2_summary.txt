@@ -1,0 +1,213 @@
+=== PHASE 2: STATIC + SEMANTIC ANALYSIS ===
+Execution Date: 2025-10-04 05:45-06:00 EET
+
+## Ruff Linting
+
+Command: python -m ruff check .
+Result: ⚠️ 249 issues found
+Output: phase2_ruff_check.txt (249 lines)
+
+Issue Categories:
+- F401: Unused imports (multiple files)
+- F541: f-string without placeholders
+- E401: Multiple imports on one line
+- E701: Multiple statements on one line (colon)
+- F841: Assigned but never used
+- E402: Module level import not at top of file
+
+Sample High-Priority Issues:
+1. api/health_config.py:99 - F401: imported but unused
+2. auth.py:5 - F401: jwt.PyJWTError imported but unused
+3. orchestrator/app.py:36-48 - E402: Imports not at top (after logger setup)
+4. orchestrator/adaptive_connections.py:99 - F841: routing_metadata unused
+5. ops/compact-decoder.py:15,22,24,25 - E701: Multiple statements on one line
+
+## Ruff Formatting
+
+Command: python -m ruff format --check .
+Result: ⚠️ 325 files need reformatting
+Already Formatted: 53 files
+Output: phase2_ruff_format.txt (326 lines)
+
+Files Needing Format:
+- tests/test_*.py (majority of test files)
+- tools/*.py
+- Multiple slot implementations
+
+## MyPy Type Checking
+
+Command: python -m mypy .
+Result: ⚠️ 23 errors across 13 files
+Note: No pyproject.toml config file found
+Output: phase2_mypy.txt
+
+Error Categories:
+1. Missing Library Stubs (install needed):
+   - yaml → types-PyYAML
+   - requests → types-requests  
+   - jsonschema → types-jsonschema
+   
+2. Missing Implementations:
+   - fastjsonschema (contracts/validators/meta_lens_validator.py:6)
+   - watchdog.observers, watchdog.events (slots/config/enhanced_manager.py:20-21)
+   - slots.slot01_truth_anchor.core (orchestrator_adapter.py:30)
+   - core.policy, core.snapshotter (scripts/slot8_*.py)
+
+3. Module Path Issues:
+   - contracts/validators/meta_lens_validator.py found twice under different names
+
+Files With Errors:
+- contracts/validators/meta_lens_validator.py
+- orchestrator/plugins/loader.py
+- orchestrator/flow_fabric_init.py
+- orchestrator/health_pulse.py
+- scripts/health_verification.py
+- scripts/slot8_chaos_simple.py
+- scripts/slot8_corruption_replay.py
+- scripts/validate-schemas.py
+- slots/config/enhanced_manager.py
+- slots/slot01_truth_anchor/orchestrator_adapter.py
+- slots/slot02_deltathresh/enhanced/config.py
+- slots/slot02_deltathresh/enhanced/config_manager.py
+- slots/slot02_deltathresh/tests/test_config_system.py
+
+## Bandit Security Scan
+
+Command: python -m bandit -r . -q
+Result: ⚠️ 2587 total issues
+Severity Breakdown:
+- HIGH: 1
+- MEDIUM: 6  
+- LOW: 2580
+
+Code Scanned:
+- Total lines: 39,571
+- Lines skipped (#nosec): 0
+
+Medium Severity Sample (High Confidence):
+- orchestrator/plugins/rest.py:30 - B310: urllib.urlopen without scheme validation
+  Issue: Allows file:/ or custom schemes unexpectedly
+  CWE: CWE-22 (Path Traversal)
+
+Note: High severity issue details not captured due to Unicode encoding error in bandit output
+
+## Dependency Vulnerability Scan
+
+Command: python -m pip_audit --desc
+Result: ⚠️ 1 known vulnerability
+
+Vulnerability Details:
+- Package: pip 25.2
+- ID: GHSA-4xh5-x5gv-qwph
+- Fix: Planned for pip 25.3
+- Severity: Not specified (tarfile extraction flaw)
+- Impact: Malicious sdist can overwrite arbitrary files during `pip install`
+- Exploitation: Symlink/hardlink escape from extraction directory
+- Mitigation: Upgrade to pip 25.3 when available
+
+## Audit Tag Search
+
+Command: Grep for TODO|FIXME|HACK|XXX|BUG|WAIVE|nocov|noqa
+Result: 113 occurrences across 45 files
+
+Top Files With Tags:
+- slots/slot06_cultural_synthesis/context_aware_synthesis.py: 10 occurrences
+- slots/slot02_deltathresh/core.py: 1
+- orchestrator/app.py: 2
+- orchestrator/semantic_mirror.py: 4
+- orchestrator/semantic_creativity.py: 4
+
+Tag Distribution (estimated):
+- TODO: ~60%
+- FIXME: ~20%  
+- HACK: ~10%
+- BUG: ~5%
+- Other: ~5%
+
+## Risky Pattern Search
+
+Command: Grep for eval(|exec(|subprocess.Popen(|os.system(
+Result: 3 occurrences across 3 files
+
+Files:
+- orchestrator/router/routes.py: 1
+- tests/test_slot05_processual_validation.py: 1
+- tests/flow/test_semantic_mirror_integration.py: 1
+
+Note: Need manual review to determine if usage is safe/necessary
+
+## Secrets/Credentials Search
+
+Command: Grep for password|secret|api[_-]?key|token|bearer (case-insensitive)
+Result: 166 occurrences across 32 files
+
+Context:
+- Majority in test files (conftest.py, test_*.py)
+- API security modules (api/security.py, auth.py)
+- Configuration/interfaces (interfaces/websocket_auth.py)
+- Slot implementations (slot01, slot03, slot07, etc.)
+
+Review Status: NOT YET REVIEWED
+Action Required: Manual inspection to differentiate:
+- Test fixtures vs actual secrets
+- Configuration templates vs hardcoded credentials
+- Documentation references vs sensitive data
+
+## Summary Statistics
+
+| Metric | Count | Status |
+|--------|-------|--------|
+| Ruff Issues | 249 | ⚠️ Fix Needed |
+| Files Need Format | 325 | ⚠️ Format Needed |
+| MyPy Errors | 23 | ⚠️ Stubs + Fixes |
+| Bandit HIGH | 1 | 🔴 CRITICAL |
+| Bandit MEDIUM | 6 | ⚠️ Review |
+| Bandit LOW | 2580 | 📋 Triage |
+| Pip Vulnerabilities | 1 | ⚠️ Upgrade pip |
+| Audit Tags | 113 | 📋 Cleanup |
+| Risky Calls | 3 | 🔍 Review |
+| Secret References | 166 | 🔍 Audit |
+
+## Quality Gate Assessment
+
+Target: ruff clean, mypy warnings triaged, bandit high=0
+Status: ❌ NOT MET
+
+Blockers:
+1. Bandit HIGH severity issue (1) - requires immediate investigation
+2. Ruff: 249 linting violations
+3. Format: 325 files not compliant
+4. MyPy: 23 type errors (mostly missing stubs)
+5. pip 25.2 vulnerability (requires upgrade)
+
+## Action Items (Priority Order)
+
+P0 (Blocker):
+1. Investigate Bandit HIGH severity finding
+2. Upgrade pip to 25.3+ when available
+3. Review urllib.urlopen usage in plugins/rest.py
+
+P1 (High):
+4. Install missing type stubs (types-PyYAML, types-requests, types-jsonschema)
+5. Fix E402 import ordering in orchestrator/app.py
+6. Remove unused imports (F401 violations)
+7. Fix module path issues in validators
+
+P2 (Medium):
+8. Run `ruff format .` to auto-format 325 files
+9. Resolve F841 unused variable warnings
+10. Manual review of 166 secret references
+11. Review 3 risky subprocess/eval calls
+
+P3 (Low):
+12. Triage 113 TODO/FIXME/HACK comments
+13. Address 2580 low-severity bandit findings
+14. Clean up f-string without placeholders (F541)
+
+## Evidence Files
+- phase2_ruff_check.txt (249 lines)
+- phase2_ruff_format.txt (326 lines)
+- phase2_mypy.txt (23 errors)
+- phase2_bandit.json (attempted - encoding error)
+- Grep results (embedded in AUDIT_LOG)
+
