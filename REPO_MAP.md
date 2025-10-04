@@ -49,8 +49,8 @@ nova-civilizational-architecture/
 | 05 | `slot05_constellation` | Constellation Mapping | 🔍 TO AUDIT |
 | 06 | `slot06_cultural_synthesis` | Cultural Synthesis | 🔍 TO AUDIT |
 | 07 | `slot07_production_controls` | Production Controls | 🔍 TO AUDIT |
-| 08a | `slot08_memory_ethics` | Memory Ethics | 🔍 TO AUDIT |
-| 08b | `slot08_memory_lock` | Memory Lock | ⚠️ **DUPLICATE - NEEDS INVESTIGATION** |
+| 08a | `slot08_memory_ethics` | Memory Ethics (Legacy) | ✅ MIGRATION-READY ARCHITECTURE |
+| 08b | `slot08_memory_lock` | Memory Lock (Processual 4.0) | ✅ MIGRATION-READY ARCHITECTURE |
 | 09 | `slot09_distortion_protection` | Distortion Protection | 🔍 TO AUDIT |
 | 10 | `slot10_civilizational_deployment` | Deployment Engine | 🔍 TO AUDIT |
 
@@ -62,8 +62,11 @@ nova-civilizational-architecture/
 - ✅ **SLOT 4 DUAL-ENGINE**: Intentional architecture - Engine 1 (operational monitoring) + Engine 2 (content analysis)
   - Routing via `orchestrator/adapters/slot4_tri.py` based on method called
   - Both engines active and tested (see `tests/test_orchestrator_slot4_tri_adapter.py`)
-- ⚠️ **DUPLICATE SLOT 8**: Both `slot08_memory_ethics` and `slot08_memory_lock` exist
-- 📋 **TODO**: Investigate Slot 8 ownership
+- ✅ **SLOT 8 MIGRATION-READY**: Two implementations for phased upgrade path
+  - **slot08_memory_ethics** (Legacy): Simple ACL-based protection - CURRENTLY USED by orchestrator
+  - **slot08_memory_lock** (Processual 4.0): Autonomous self-healing with IDS - NOT YET INTEGRATED
+  - Orchestrator uses `orchestrator/adapters/slot8_memory_ethics.py` (imports legacy only)
+  - Migration path documented in `slot08_memory_lock/README.md:399-410`
 
 ---
 
