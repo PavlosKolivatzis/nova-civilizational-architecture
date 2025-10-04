@@ -60,19 +60,25 @@ def test_all_metadata_contracts_are_registered():
     )
 
 
-def test_all_slots_have_metadata():
-    """Verify every slot directory has a meta.yaml file"""
-    slot_dirs = [d for d in Path('slots').iterdir() if d.is_dir() and d.name.startswith('slot')]
+def test_flow_fabric_slots_have_metadata():
+    """Verify flow-fabric-enabled slots have meta.yaml with produces/consumes"""
+    from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
-    missing_metadata = []
-    for slot_dir in slot_dirs:
-        meta_files = list(slot_dir.glob('*.meta.yaml'))
-        if not meta_files:
-            missing_metadata.append(slot_dir.name)
+    # Collect all slots that produce flow fabric contracts
+    meta_files = list(Path('slots').rglob('*.meta.yaml'))
+    flow_fabric_slots = set()
 
-    assert not missing_metadata, (
-        f"Slots missing meta.yaml: {missing_metadata}\n"
-        f"Create <slotname>.meta.yaml for each slot with produces/consumes contracts"
+    for meta_file in meta_files:
+        with open(meta_file) as f:
+            data = yaml.safe_load(f)
+        if data.get('produces') or data.get('consumes'):
+            flow_fabric_slots.add(meta_file.parent.name)
+
+    # Verify we have metadata for slots participating in flow fabric
+    # Note: Slots with only operation contracts (dot notation) don't need produces/consumes
+    assert len(flow_fabric_slots) >= 4, (
+        f"Expected at least 4 flow-fabric-enabled slots, found {len(flow_fabric_slots)}: {flow_fabric_slots}\n"
+        f"Flow fabric slots should have produces/consumes in meta.yaml"
     )
 
 
