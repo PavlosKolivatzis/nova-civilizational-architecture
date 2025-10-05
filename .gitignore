@@ -55,6 +55,11 @@ cutover_*.txt
 scripts/*.py.bak
 daily_snapshots.txt
 
+# Audit artifacts (phase reports, bandit scans)
+phase*.txt
+phase*.json
+bandit*.json
+
 # Experimental artifacts (creativity parameter sweeps, bakeoffs)
 artifacts/
 __pycache__/
