@@ -115,6 +115,10 @@ def validate_architecture():
 
 
 if __name__ == "__main__":
+    import os
+    debug_mode = os.getenv("FLASK_DEBUG", "0") == "1"
     print("🚀 Starting NOVA Slot 6 Live Testing Server...")
     print("🌍 Open your browser and navigate to http://127.0.0.1:5000")
-    app.run(debug=True)
+    if debug_mode:
+        print("⚠️  DEBUG MODE ENABLED (set FLASK_DEBUG=0 for production)")
+    app.run(debug=debug_mode)

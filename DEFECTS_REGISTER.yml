@@ -10,7 +10,7 @@ metadata:
   p0_count: 4
   p0_resolved: 4
   p1_count: 8
-  p1_resolved: 1
+  p1_resolved: 2
   p1_mitigated: 1
   p2_count: 10
   p3_count: 6
@@ -209,18 +209,28 @@ defects:
   - id: DEF-009
     priority: P1
     severity: HIGH
-    title: "1 HIGH severity security issue (bandit)"
+    status: RESOLVED
+    title: "Flask debug=True security vulnerability (bandit B201)"
     description: |
-      Bandit found 1 HIGH severity issue (details unavailable due to encoding error)
-      Also: 6 MEDIUM, 2580 LOW
-    impact: "Potential security vulnerability"
+      app.py:120 ran Flask with debug=True, exposing Werkzeug debugger
+      Enables arbitrary code execution via interactive debugger (CWE-94)
+    impact: "Arbitrary code execution in production if debug enabled"
     evidence:
-      - "phase2_summary.txt"
-      - "phase2_bandit.json"
-    root_cause: "Security scan identified unsafe pattern"
-    reproduction: "bandit -r orchestrator slots --format=json -o bandit.json"
-    remediation: "Investigate HIGH finding in bandit.json, remediate"
-    test_gap: "No CI gate blocks HIGH security findings"
+      - "phase2_bandit.json (B201, HIGH severity)"
+      - "app.py:120 (before fix)"
+    root_cause: "Hardcoded debug=True in Flask app.run()"
+    reproduction: "python -m bandit -r app.py --format=json | grep B201"
+    resolution_status: "RESOLVED"
+    resolution_date: "2025-10-05"
+    resolution_commit: "TBD (fix/def-009-flask-debug branch)"
+    resolution_strategy: |
+      Gated debug mode with FLASK_DEBUG env var (default off)
+      - app.py:119 reads os.getenv("FLASK_DEBUG", "0")
+      - Added .env.example documentation
+      - Bandit scan confirms 0 HIGH issues
+    verification: "python -m bandit -r app.py confirms 0 HIGH issues"
+    rollback: "git revert <commit> to restore debug=True"
+    test_gap: "No CI gate blocks HIGH security findings (tracked separately)"
 
   - id: DEF-010
     priority: P1
