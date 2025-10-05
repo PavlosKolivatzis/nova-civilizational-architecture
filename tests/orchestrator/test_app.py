@@ -100,3 +100,57 @@ def test_force_expire_now_uses_semantic_mirror(app_module, monkeypatch):
         assert data["status"] == "ok"
         assert data["expired_count"] >= 1
         assert data["pulses_delta"] >= 1
+import asyncio
+
+import pytest
+
+
+@pytest.mark.asyncio
+async def test_handle_request_invokes_orchestrator(monkeypatch):
+    import orchestrator.app as app_mod
+
+    monkeypatch.setattr(
+        app_mod.router,
+        "get_route",
+        lambda target_slot, original_timeout=2.0: ("slot02_deltathresh", 3.5),
+    )
+
+    captured = {}
+
+    async def fake_invoke(slot_fn, slot_name, payload, request_id, timeout=None):
+        captured.update(
+            {
+                "slot_fn": slot_fn,
+                "slot_name": slot_name,
+                "payload": payload,
+                "request_id": request_id,
+                "timeout": timeout,
+            }
+        )
+        return {"result": "ok"}
+
+    fake_orch = type("FakeOrchestrator", (), {"invoke_slot": staticmethod(fake_invoke)})
+    monkeypatch.setattr(app_mod, "orch", fake_orch)
+
+    result = await app_mod.handle_request("slot02_deltathresh", {"payload": True}, "req-123")
+
+    assert result == {"result": "ok"}
+    # ensure invoke_slot was used as expected
+    assert captured["slot_name"] == "slot02_deltathresh"
+    assert captured["payload"] == {"payload": True}
+    assert captured["request_id"] == "req-123"
+    assert captured["timeout"] == 3.5
+
+
+@pytest.mark.asyncio
+async def test_handle_request_no_orchestrator_returns_none(monkeypatch):
+    import orchestrator.app as app_mod
+
+    monkeypatch.setattr(
+        app_mod.router,
+        "get_route",
+        lambda target_slot, original_timeout=2.0: ("slot02_deltathresh", 2.0),
+    )
+    monkeypatch.setattr(app_mod, "orch", None)
+    result = await app_mod.handle_request("slot02_deltathresh", {"payload": False}, "req-999")
+    assert result is None
