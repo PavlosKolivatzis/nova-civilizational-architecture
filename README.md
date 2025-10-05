@@ -86,9 +86,14 @@ Node.js (for npm scripts)
 ```bash
 git clone <repository-url>
 cd nova-civilizational-architecture
-pip install -r requirements.txt
+
+# Install dependencies (wheel-only for CVE-2025-8869 mitigation)
+pip install --only-binary :all: -r requirements.txt
+
 export JWT_SECRET=dev  # For testing
 ```
+
+> **Security Note**: We enforce `--only-binary :all:` to mitigate [CVE-2025-8869](SECURITY.md#def-010-pip-252-tarfile-link-escape-cve-2025-8869) in pip 25.2. Remove flag after upgrading to pip 25.3+.
 
 ### Verification
 ```bash

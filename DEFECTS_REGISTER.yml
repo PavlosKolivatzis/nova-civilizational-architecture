@@ -11,9 +11,10 @@ metadata:
   p0_resolved: 4
   p1_count: 8
   p1_resolved: 1
+  p1_mitigated: 1
   p2_count: 10
   p3_count: 6
-  last_updated: 2025-10-04
+  last_updated: 2025-10-05
 
 defects:
   # ============================================================================
@@ -224,17 +225,32 @@ defects:
   - id: DEF-010
     priority: P1
     severity: HIGH
-    title: "pip vulnerability CVE in pip 25.2"
+    status: MITIGATED
+    title: "pip vulnerability CVE-2025-8869 in pip 25.2"
     description: |
-      pip-audit found 1 vulnerability: pip 25.2 (GHSA-4xh5-x5gv-qwph tarfile extraction flaw)
-    impact: "Tarfile extraction vulnerability"
+      pip 25.2 tarfile link escape vulnerability (GHSA-4xh5-x5gv-qwph / CVE-2025-8869)
+      Allows arbitrary file overwrite via malicious sdist symbolic/hard links
+    impact: "Arbitrary file overwrite during sdist installation"
     evidence:
-      - "phase2_summary.txt"
-      - "pip-audit --format=json"
-    root_cause: "pip version outdated"
-    reproduction: "pip-audit | grep GHSA"
-    remediation: "Upgrade pip to patched version"
-    test_gap: "No dependency vulnerability scanning in CI"
+      - "python -m pip_audit --format=json (2025-10-05)"
+      - "SECURITY.md:L6-L38"
+      - "README.md:L91,L96"
+    root_cause: "Upstream pip 25.2 vulnerability, fix planned for 25.3"
+    reproduction: "python -m pip_audit --format=json 2>&1 | grep GHSA-4xh5-x5gv-qwph"
+    mitigation_status: "ACTIVE"
+    mitigation_date: "2025-10-05"
+    mitigation_commit: "TBD (fix/def-010-pip-cve branch)"
+    mitigation_strategy: |
+      Enforce wheel-only installations via --only-binary :all: flag
+      - Updated README.md installation instructions
+      - Created SECURITY.md with CVE details and mitigation policy
+      - Monitor https://github.com/pypa/pip/releases for pip 25.3
+    remediation: "Upgrade pip to 25.3+ when released (tracked in SECURITY.md)"
+    rollback: "Remove --only-binary :all: flag after pip 25.3+ upgrade"
+    test_gap: "No dependency vulnerability scanning in CI (tracked separately)"
+    references:
+      - "https://github.com/pypa/pip/security/advisories/GHSA-4xh5-x5gv-qwph"
+      - "https://github.com/pypa/pip/pull/13550"
 
   - id: DEF-011
     priority: P1
