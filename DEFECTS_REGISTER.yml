@@ -10,7 +10,7 @@ metadata:
   p0_count: 4
   p0_resolved: 4
   p1_count: 8
-  p1_resolved: 2
+  p1_resolved: 3
   p1_mitigated: 1
   p2_count: 10
   p3_count: 6
@@ -265,23 +265,34 @@ defects:
   - id: DEF-011
     priority: P1
     severity: HIGH
-    title: "Duplicate /metrics endpoint definition"
+    status: RESOLVED
+    title: "Duplicate /metrics endpoint definition (clarified)"
     description: |
-      /metrics endpoint defined TWICE:
-      - orchestrator/app.py (direct @app.get)
-      - orchestrator/http_metrics.py (router)
-      Unclear which is active (depends on router inclusion order)
-    impact: "Unpredictable metrics endpoint behavior"
+      /metrics endpoint defined in TWO places:
+      - orchestrator/app.py:308 (active, flag-gated production endpoint)
+      - orchestrator/http_metrics.py:12 (test-only router, not included in app)
+      Investigation revealed http_metrics.py router never included in main app.
+      No actual duplication in runtime, but documentation gap caused confusion.
+    impact: "Documentation confusion (no runtime impact)"
     evidence:
-      - "DRIFT_REPORT.md:196"
-      - "grep -r '@app.get.*metrics' orchestrator"
-      - "grep -r '@router.get.*metrics' orchestrator"
-    root_cause: "Refactoring left both implementations"
-    reproduction: |
-      grep -r "@app.get.*metrics" orchestrator
-      grep -r "@router.get.*metrics" orchestrator
-    remediation: "Remove duplicate, document canonical implementation"
-    test_gap: "No test validates single /metrics endpoint"
+      - "orchestrator/app.py:308 (active endpoint)"
+      - "orchestrator/http_metrics.py:12 (standalone router)"
+      - "grep -n 'http_metrics' orchestrator/app.py → no matches"
+      - "tests/metrics/test_build_info.py:65 (test uses http_metrics router)"
+    root_cause: "Missing documentation explaining http_metrics.py is test-only"
+    reproduction: "grep -rn 'def metrics' orchestrator/ shows both definitions"
+    resolution_status: "RESOLVED"
+    resolution_date: "2025-10-05"
+    resolution_commit: "TBD (fix/def-011-metrics-duplicate branch)"
+    resolution_strategy: |
+      Clarified http_metrics.py purpose with module docstring:
+      - Added NOTE explaining router not included in main app
+      - Documents test-only and reference usage
+      - Points users to app.py:308 for production endpoint
+      - No code changes to app.py (production endpoint unchanged)
+    verification: "tests/metrics/test_build_info.py passes (4/4)"
+    rollback: "git revert to remove documentation"
+    test_gap: "No test validates single /metrics endpoint in production app"
 
   - id: DEF-012
     priority: P1
