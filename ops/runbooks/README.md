@@ -6,14 +6,20 @@ This directory contains operational runbooks for NOVA Civilizational Architectur
 
 ### Core System
 - [Slot6 Cultural Synthesis Issues](slot6.md) - High residual risk, synthesis failures
-- [Slot1 Truth Anchor Problems](slot1.md) - Verification failures, recovery issues
-- [Feature Flag Drift](feature-flags.md) - Unexpected flag state changes
 - [Observability Issues](observability.md) - Prometheus export down, metrics missing
 
-### Phase-2 Features
-- [TRI Link Integration](tri-link.md) - Slot4 ↔ Slot5 coordination issues
-- [Lifespan Manager](lifespan.md) - FastAPI startup/shutdown problems
-- [Shared Hash](shared-hash.md) - Blake2b audit chain issues
+### In Development
+The following runbooks are planned but not yet created (tracked as tech debt):
+- **Slot1 Truth Anchor Problems** - Verification failures, recovery issues
+- **Feature Flag Drift** - Unexpected flag state changes
+- **TRI Link Integration** - Slot4 ↔ Slot5 coordination issues
+- **Lifespan Manager** - FastAPI startup/shutdown problems
+- **Shared Hash** - Blake2b audit chain issues
+
+For these scenarios, consult:
+- `/metrics` endpoint for current system state
+- `agents/nova_ai_operating_framework.md` for general troubleshooting
+- Source code comments in relevant slot directories
 
 ## Quick Reference
 

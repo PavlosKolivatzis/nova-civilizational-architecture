@@ -67,6 +67,11 @@ curl /health/config | jq '.slot6 | {
 ```
 
 ## Runbook References
-- [Blocked Deployment Remediation](runbooks/blocked_deployment.md)
-- [Legacy Gate Remediation](runbooks/legacy_gate.md)
-- [Contract Violation Response](runbooks/contract_violation.md)
+See `ops/runbooks/README.md` for available runbooks.
+
+Planned runbooks (not yet created):
+- Blocked Deployment Remediation
+- Legacy Gate Remediation
+- Contract Violation Response
+
+For immediate assistance, consult `/metrics` endpoint and `agents/nova_ai_operating_framework.md`.
