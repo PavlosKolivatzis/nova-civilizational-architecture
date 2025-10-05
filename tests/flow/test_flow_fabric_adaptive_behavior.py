@@ -146,14 +146,14 @@ class TestFlowFabricPolishSprintIntegration:
             "PRODUCTION_CONTROL@1",   # slot07 → All slots
             "META_LENS_REPORT@1",     # slot08 → slot06
             "CONSTELLATION_STATE@1",  # slot05 → slot04
-            "SIGNALS@1",              # slot01 → slot03
+            # SIGNALS@1 removed - legacy contract with no producer/consumer (DEF-028)
         ]
 
         for contract in expected_contracts:
             assert contract in KNOWN_CONTRACTS
 
-        # Should have 10 known contracts
-        assert len(KNOWN_CONTRACTS) == 10
+        # Should have 9 known contracts (SIGNALS@1 removed in DEF-028)
+        assert len(KNOWN_CONTRACTS) == 9
 
     def test_flow_fabric_handles_polish_sprint_health_states(self):
         """Test flow fabric adaptation to polish sprint health states."""
@@ -250,8 +250,8 @@ class TestFlowFabricConfigurationValidation:
         status = get_flow_fabric_status()
 
         assert status["initialized"] is True
-        assert status["total_links"] >= 10  # Should have all known contracts
-        assert len(status["contracts_registered"]) >= 10
+        assert status["total_links"] >= 9  # Should have all known contracts (9 after SIGNALS@1 removal)
+        assert len(status["contracts_registered"]) >= 9  # 9 contracts after SIGNALS@1 removal
 
 
 class TestFlowFabricErrorHandling:

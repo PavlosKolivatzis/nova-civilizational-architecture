@@ -25,7 +25,7 @@ KNOWN_CONTRACTS = [
     "PRODUCTION_CONTROL@1",   # Slot 3 → Slot 7 (Circuit Breaking)
     "META_LENS_REPORT@1",     # Slot 2 → Various (Meta Analysis)
     "CONSTELLATION_STATE@1",  # Slot 5 internal state
-    "SIGNALS@1"               # General signal propagation
+    # SIGNALS@1 removed - legacy contract, no producer/consumer (DEF-028)
 ]
 
 def load_adaptive_links_config() -> Dict[str, Any]:

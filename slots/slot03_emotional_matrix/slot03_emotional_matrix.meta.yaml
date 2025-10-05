@@ -1,0 +1,7 @@
+id: slot03_emotional_matrix
+name: Emotional Matrix
+version: "0.3.0"
+optional: false
+produces: ["EMOTION_REPORT@1", "PRODUCTION_CONTROL@1"]
+consumes: ["DELTA_THREAT@1"]
+description: "Emotional analysis and production control circuit breaking"
