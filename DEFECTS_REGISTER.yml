@@ -10,7 +10,7 @@ metadata:
   p0_count: 4
   p0_resolved: 4
   p1_count: 8
-  p1_resolved: 3
+  p1_resolved: 4
   p1_mitigated: 1
   p2_count: 10
   p3_count: 6
@@ -297,23 +297,31 @@ defects:
   - id: DEF-012
     priority: P1
     severity: HIGH
+    status: RESOLVED
     title: "9 broken documentation links"
     description: |
-      5 missing runbooks, 3 invalid git commit links, 1 missing contract doc
-      Details: ops/runbooks/README.md references non-existent files
+      9 broken links found: 5 missing runbooks, 3 git commit links, 1 SLO runbook
+      - ops/runbooks/README.md: slot1.md, feature-flags.md, tri-link.md, lifespan.md, shared-hash.md
+      - docs/SLOs.md: 3x runbooks/*, not yet created
+      - docs/attestations/2025-09-30-anr-5_1.md: 3x ../../../commit/* (GitHub-relative paths)
     impact: "Documentation navigation broken"
     evidence:
-      - "DRIFT_REPORT.md:318-335"
-      - "python link_checker.py"
-    root_cause: "Links added before target files created"
-    reproduction: |
-      python -c "import re; from pathlib import Path;
-      for f in Path('.').rglob('*.md'):
-        for link in re.findall(r'\[.*?\]\(([^)]+)\)', open(f).read()):
-          if not link.startswith('http') and not (f.parent / link.split('#')[0]).exists():
-            print(f, link)"
-    remediation: "Create missing runbooks OR remove broken links"
-    test_gap: "No CI link checker"
+      - "Link checker script shows 13 total (4 false positives from regex patterns)"
+      - "ops/runbooks/ only contains slot6.md, observability.md"
+    root_cause: "Links added aspirationally before target files created"
+    reproduction: "python link_checker.py (after filtering regex patterns)"
+    resolution_status: "RESOLVED"
+    resolution_date: "2025-10-05"
+    resolution_commit: "TBD (fix/def-012-broken-links branch)"
+    resolution_strategy: |
+      Replaced broken links with plain text + tech debt tracking:
+      - ops/runbooks/README.md: Listed missing runbooks as "In Development"
+      - docs/SLOs.md: Replaced links with plain list + reference to ops/runbooks
+      - docs/attestations/*.md: Replaced GitHub commit links with plain SHAs
+      - All broken links now documented as planned work
+    verification: "Link checker shows 0 broken links (excluding regex patterns)"
+    rollback: "git revert to restore original links"
+    test_gap: "No CI link checker (tracked separately)"
 
   # ============================================================================
   # P2 - MEDIUM (Moderate Impact, Fix Soon)
