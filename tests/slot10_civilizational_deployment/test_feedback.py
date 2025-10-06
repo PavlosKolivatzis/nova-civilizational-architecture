@@ -15,8 +15,8 @@ def test_publish_deployment_feedback_success(monkeypatch):
     def fake_publish(key, payload, actor, ttl):
         published["args"] = (key, payload, actor, ttl)
 
-    monkeypatch.setattr(feedback, "publish", fake_publish)
-    monkeypatch.setattr(feedback, "get_context", lambda key=None: {"id": "decision-123"})
+    monkeypatch.setattr("orchestrator.semantic_mirror.publish", fake_publish, raising=False)
+    monkeypatch.setattr("orchestrator.semantic_mirror.get_context", lambda key=None, actor=None: {"id": "decision-123"}, raising=False)
     monkeypatch.setattr(feedback, "_update_feedback_metrics", lambda payload: published.setdefault("metrics", payload))
 
     feedback.publish_deployment_feedback(
@@ -38,12 +38,12 @@ def test_publish_deployment_feedback_success(monkeypatch):
 
 def test_get_deployment_feedback_success(monkeypatch):
     expected = {"status": "ok"}
-    monkeypatch.setattr(feedback, "get_context", lambda key: expected)
+    monkeypatch.setattr("orchestrator.semantic_mirror.get_context", lambda key, actor=None: expected, raising=False)
     assert feedback.get_deployment_feedback() is expected
 
 
 def test_get_deployment_feedback_handles_error(monkeypatch):
-    monkeypatch.setattr(feedback, "get_context", lambda key: (_ for _ in ()).throw(RuntimeError("fail")))
+    monkeypatch.setattr("orchestrator.semantic_mirror.get_context", lambda key, actor=None: (_ for _ in ()).throw(RuntimeError("fail")), raising=False)
     assert feedback.get_deployment_feedback() is None
 
 
@@ -64,7 +64,7 @@ def test_apply_tri_feedback_signal(monkeypatch):
     def fake_publish(key, payload, actor, ttl):
         captured["args"] = (key, payload, actor, ttl)
 
-    monkeypatch.setattr(feedback, "publish", fake_publish)
+    monkeypatch.setattr("orchestrator.semantic_mirror.publish", fake_publish, raising=False)
 
     feedback.apply_tri_feedback_signal(rollback=True, error_rate=0.2)
 
@@ -98,6 +98,6 @@ def test_on_deployment_success(monkeypatch):
 
 
 def test_publish_handles_exception(monkeypatch):
-    monkeypatch.setattr(feedback, "publish", lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr("orchestrator.semantic_mirror.publish", lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("boom")), raising=False)
     # Should not raise
     feedback.publish_deployment_feedback(phase="canary", slo_ok=True, transform_rate=0.1)

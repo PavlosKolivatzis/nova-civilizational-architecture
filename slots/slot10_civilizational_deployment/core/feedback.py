@@ -14,6 +14,17 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+def publish(*args, **kwargs):
+    """Proxy for orchestrator.semantic_mirror.publish."""
+    from orchestrator import semantic_mirror
+    return semantic_mirror.publish(*args, **kwargs)
+
+def get_context(*args, **kwargs):
+    """Proxy for orchestrator.semantic_mirror.get_context."""
+    from orchestrator import semantic_mirror
+    return semantic_mirror.get_context(*args, **kwargs)
+
+
 
 def publish_deployment_feedback(
     phase: str,
@@ -33,7 +44,6 @@ def publish_deployment_feedback(
         error_rate: Optional error rate ∈ [0,1] during deployment
     """
     try:
-        from orchestrator.semantic_mirror import publish
 
         # Normalize inputs
         transform_rate = max(0.0, min(1.0, float(transform_rate)))
@@ -51,7 +61,6 @@ def publish_deployment_feedback(
         # Phase 5.0: Include decision_id for ANR correlation
         if decision_id is None:
             try:
-                from orchestrator.semantic_mirror import get_context
                 ctx = get_context("router.current_decision_id") or {}
                 decision_id = ctx.get("id")
             except Exception:
@@ -88,7 +97,6 @@ def get_deployment_feedback() -> Optional[dict]:
         Dict with deployment feedback data or None if no recent feedback
     """
     try:
-        from orchestrator.semantic_mirror import get_context
         return get_context("slot10.deployment_feedback")
     except Exception as e:
         logger.debug(f"Failed to read deployment feedback: {e}")
@@ -138,7 +146,6 @@ def apply_tri_feedback_signal(rollback: bool, error_rate: float) -> None:
         error_rate: Error rate during deployment
     """
     try:
-        from orchestrator.semantic_mirror import publish
 
         # Compute TRI adjustment signal
         tri_signal = {
