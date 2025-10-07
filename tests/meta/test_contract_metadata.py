@@ -4,100 +4,145 @@ Test contract metadata completeness.
 Validates that all flow fabric contracts have metadata declarations.
 Prevents DEF-001 (contract metadata gap).
 """
-import yaml
+from __future__ import annotations
+
+from collections import defaultdict
 from pathlib import Path
+
 import pytest
+import yaml
+
+
+META_PATTERNS: tuple[str, ...] = ("*.meta.yaml", "*.meta.yml", "meta.yaml", "meta.yml")
+
+
+def _iter_slot_meta_files() -> list[Path]:
+    """Return every slot metadata file regardless of naming convention."""
+    slot_root = Path("slots")
+    if not slot_root.exists():
+        pytest.fail("slots directory missing; repository layout unexpected")
+
+    seen: set[Path] = set()
+    meta_files: list[Path] = []
+
+    for pattern in META_PATTERNS:
+        for meta_path in slot_root.rglob(pattern):
+            if not meta_path.is_file():
+                continue
+            resolved = meta_path.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            meta_files.append(meta_path)
+
+    meta_files.sort(key=lambda path: str(path))
+    return meta_files
+
+
+def _load_metadata(meta_path: Path) -> dict[str, object]:
+    """Load YAML metadata, guaranteeing a mapping result."""
+    with meta_path.open(encoding="utf-8") as handle:
+        data = yaml.safe_load(handle) or {}
+
+    if not isinstance(data, dict):
+        pytest.fail(f"Metadata file {meta_path} must contain a mapping, got {type(data).__name__}")
+
+    return data
+
+
+def _contract_list(meta_path: Path, data: dict[str, object], key: str) -> list[str]:
+    """Extract a list of contracts for the given key with robust validation."""
+    value = data.get(key, [])
+    if value in (None, ""):
+        return []
+    if isinstance(value, str):
+        pytest.fail(f"{meta_path} has '{key}' defined as a string; expected a list of contracts")
+    if not isinstance(value, list):
+        pytest.fail(f"{meta_path} has non-list '{key}' field: {value!r}")
+
+    non_strings = [item for item in value if not isinstance(item, str)]
+    if non_strings:
+        pytest.fail(f"{meta_path} '{key}' contains non-string entries: {non_strings}")
+
+    return value
 
 
 def test_all_flow_fabric_contracts_have_metadata():
-    """Verify every KNOWN_CONTRACTS entry has produces/consumes in meta.yaml"""
+    """Verify every KNOWN_CONTRACTS entry has produces/consumes in meta.yaml."""
     from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
-    # Collect all produces from metadata
-    all_produces = set()
-    meta_files = list(Path('slots').rglob('*.meta.yaml'))
+    meta_files = _iter_slot_meta_files()
+    assert meta_files, "No slot metadata files discovered under 'slots/'"
 
+    all_produces: set[str] = set()
     for meta_file in meta_files:
-        with open(meta_file) as f:
-            data = yaml.safe_load(f)
-        produces = data.get('produces', [])
-        all_produces.update(produces)
+        data = _load_metadata(meta_file)
+        all_produces.update(_contract_list(meta_file, data, "produces"))
 
-    # Verify each contract is documented
-    missing = []
-    for contract in KNOWN_CONTRACTS:
-        if contract not in all_produces:
-            missing.append(contract)
-
+    missing = [contract for contract in KNOWN_CONTRACTS if contract not in all_produces]
     assert not missing, (
-        f"Contracts in flow_fabric_init.py missing from metadata: {missing}\n"
-        f"Found {len(all_produces)} produces declarations: {sorted(all_produces)}\n"
-        f"Expected {len(KNOWN_CONTRACTS)} contracts: {sorted(KNOWN_CONTRACTS)}\n"
-        f"Add missing contracts to appropriate slot meta.yaml produces section"
+        "Contracts declared in orchestrator/flow_fabric_init.py but missing from slot"
+        " metadata: " + ", ".join(sorted(missing)) +
+        "\nAdd missing contracts to the appropriate slot meta.yaml 'produces' section."
     )
 
 
 def test_all_metadata_contracts_are_registered():
-    """Verify every produces/consumes contract is registered in flow fabric"""
+    """Verify every produces/consumes contract is registered in flow fabric."""
     from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
-    # Collect all produces/consumes from metadata
-    all_metadata_contracts = set()
-    meta_files = list(Path('slots').rglob('*.meta.yaml'))
+    registered = set(KNOWN_CONTRACTS)
+    referenced: set[str] = set()
 
-    for meta_file in meta_files:
-        with open(meta_file) as f:
-            data = yaml.safe_load(f)
-        all_metadata_contracts.update(data.get('produces', []))
-        all_metadata_contracts.update(data.get('consumes', []))
+    for meta_file in _iter_slot_meta_files():
+        data = _load_metadata(meta_file)
+        referenced.update(_contract_list(meta_file, data, "produces"))
+        referenced.update(_contract_list(meta_file, data, "consumes"))
 
-    # Verify each metadata contract is registered
-    unregistered = all_metadata_contracts - set(KNOWN_CONTRACTS)
-
+    unregistered = sorted(referenced - registered)
     assert not unregistered, (
-        f"Contracts in metadata not registered in flow_fabric_init.py: {unregistered}\n"
-        f"Add missing contracts to KNOWN_CONTRACTS in orchestrator/flow_fabric_init.py"
+        "Contracts referenced in slot metadata but missing from KNOWN_CONTRACTS: "
+        + ", ".join(unregistered)
     )
 
 
 def test_flow_fabric_slots_have_metadata():
-    """Verify flow-fabric-enabled slots have meta.yaml with produces/consumes"""
+    """Ensure each flow-fabric contract is linked to at least one slot metadata file."""
     from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
-    # Collect all slots that produce flow fabric contracts
-    meta_files = list(Path('slots').rglob('*.meta.yaml'))
-    flow_fabric_slots = set()
+    contract_to_slots: dict[str, set[str]] = defaultdict(set)
 
-    for meta_file in meta_files:
-        with open(meta_file) as f:
-            data = yaml.safe_load(f)
-        if data.get('produces') or data.get('consumes'):
-            flow_fabric_slots.add(meta_file.parent.name)
+    for meta_file in _iter_slot_meta_files():
+        slot_name = meta_file.parent.name
+        data = _load_metadata(meta_file)
+        produces = _contract_list(meta_file, data, "produces")
+        consumes = _contract_list(meta_file, data, "consumes")
 
-    # Verify we have metadata for slots participating in flow fabric
-    # Note: Slots with only operation contracts (dot notation) don't need produces/consumes
-    assert len(flow_fabric_slots) >= 4, (
-        f"Expected at least 4 flow-fabric-enabled slots, found {len(flow_fabric_slots)}: {flow_fabric_slots}\n"
-        f"Flow fabric slots should have produces/consumes in meta.yaml"
+        for contract in produces + consumes:
+            contract_to_slots[contract].add(slot_name)
+
+    missing_contracts = [contract for contract in KNOWN_CONTRACTS if contract not in contract_to_slots]
+    assert not missing_contracts, (
+        "Flow fabric contracts are missing slot metadata associations: "
+        + ", ".join(sorted(missing_contracts))
+        + "\nEnsure each contract appears in at least one slot meta.yaml 'produces' or 'consumes'."
     )
 
 
 def test_metadata_contract_format():
-    """Verify all contract names follow @VERSION format"""
-    meta_files = list(Path('slots').rglob('*.meta.yaml'))
+    """Verify all contract names follow CONTRACT@VERSION format."""
+    invalid_contracts: list[tuple[str, str]] = []
 
-    invalid_contracts = []
-    for meta_file in meta_files:
-        with open(meta_file) as f:
-            data = yaml.safe_load(f)
-
-        for contract in data.get('produces', []) + data.get('consumes', []):
-            if '@' not in contract:
-                invalid_contracts.append((meta_file.name, contract))
+    for meta_file in _iter_slot_meta_files():
+        data = _load_metadata(meta_file)
+        contracts = _contract_list(meta_file, data, "produces") + _contract_list(meta_file, data, "consumes")
+        for contract in contracts:
+            if "@" not in contract:
+                invalid_contracts.append((str(meta_file), contract))
 
     assert not invalid_contracts, (
-        f"Contracts not following @VERSION format: {invalid_contracts}\n"
-        f"Expected format: CONTRACT_NAME@VERSION (e.g., TRI_REPORT@1)"
+        "Contracts not following CONTRACT@VERSION format: "
+        + "; ".join(f"{path} -> {contract}" for path, contract in invalid_contracts)
     )
 
 
