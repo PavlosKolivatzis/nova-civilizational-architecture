@@ -11,8 +11,9 @@
 **Status:** ✅ **COMPLETE** - All P0 critical defects resolved, system stable
 
 **Test Results:**
-- **Before:** 858 passed (Phase 1 baseline)
-- **After:** 866 passed, 6 skipped, 0 failed (+8 new tests)
+- **Phase 1 Baseline:** 858 passed
+- **Phase 5 Completion (2025-10-04):** 866 passed, 6 skipped, 0 failed (+8 new tests)
+- **Current (2025-10-08):** 1042 passed, 6 skipped, 1 warning (full suite)
 - **Coverage:** 80% overall (target: 85%, tracked in DEF-006)
 
 **Defects Resolved:** 5 P0 defects (100% of critical issues)
@@ -127,6 +128,22 @@
 
 ---
 
+**DEF-007: Ruff Lint Violations (Resolved 2025-10-08)**
+**Commit:** 501692e
+**Impact:** 249 Ruff lint violations blocked lint gate and obscured defects
+
+**Resolution:**
+- Ran python -m ruff check --fix and manually cleaned remaining 90 issues across adapters, scripts, and slot modules
+- Normalized optional import guards, replaced lambda helpers with small functions, removed stale fallbacks
+- Slot 1 orchestrator adapter now instantiates metrics lock lazily to avoid event loop dependency in tests
+
+**Validation:**
+- python -m ruff check
+- python -m pytest tests/test_slot01_orchestrator_adapter.py -q
+- Full suite: python -m pytest -q --maxfail=1 --disable-warnings --tb=no (1042 passed, 6 skipped, 1 warning)
+
+---
+
 ## Test Suite Updates
 
 ### New Validation Tests (8 total)
@@ -223,7 +240,6 @@ git checkout b4d1793 -- .env.example
 | ID | Title | Effort | Risk |
 |----|-------|--------|------|
 | DEF-006 | Test coverage 5% below target (80% vs 85%) | HIGH | LOW |
-| DEF-007 | 249 linting issues (ruff) | MEDIUM | LOW |
 | DEF-008 | 23 type errors (mypy) | MEDIUM | LOW |
 | DEF-009 | 1 HIGH severity security issue (bandit) | LOW | MEDIUM |
 | DEF-010 | pip vulnerability CVE | LOW | MEDIUM |
@@ -234,7 +250,7 @@ git checkout b4d1793 -- .env.example
 
 ---
 
-## Commits (7 total)
+## Commits (9 total)
 
 1. **fc68de1** - feat(contracts): add metadata for 6 missing flow fabric contracts
 2. **eaa15ba** - docs(slot04): clarify dual-engine architecture, fix stale README
@@ -244,11 +260,12 @@ git checkout b4d1793 -- .env.example
 6. **f9f12eb** - chore(audit): update DEFECTS_REGISTER + add env validation test
 7. **aab4db9** - test: update flow fabric tests after SIGNALS@1 removal
 8. **933310b** - docs(audit): Phase 5 completion attestation
+9. **501692e** - lint: resolve Ruff violations, Slot 1 adapter fix
 
 **Total changes:**
 - 17 files modified
 - 5 files created
-- 866 tests passing
+- 866 tests passing (Phase 5 baseline)
 - 8 new validation tests
 
 ---
@@ -264,7 +281,11 @@ git checkout audit/system-cleanup-v1
 
 # Verify all tests pass
 python -m pytest -q --tb=no
-# Expected: 866 passed, 6 skipped
+# Expected: 1042 passed, 6 skipped, 1 warning
+
+# Verify lint status
+python -m ruff check
+# Expected: clean exit (0)
 
 # Verify contract metadata validation
 python -m pytest tests/meta/test_contract_metadata.py -v
@@ -273,6 +294,10 @@ python -m pytest tests/meta/test_contract_metadata.py -v
 # Verify env documentation validation
 python -m pytest tests/meta/test_env_documentation.py -v
 # Expected: 4/4 passing
+
+# Verify Slot 1 orchestrator adapter
+python -m pytest tests/test_slot01_orchestrator_adapter.py -q
+# Expected: 10 passed
 
 # Verify no undocumented contracts
 grep -roh "os\.getenv(['\"][^'\"]*['\"]" --include="*.py" | \
@@ -283,7 +308,7 @@ comm -23 /tmp/code_vars.txt /tmp/doc_vars.txt
 
 # Check commit history
 git log --oneline b4d1793..HEAD
-# Expected: 8 commits from fc68de1 to 933310b
+# Expected: 9 commits from fc68de1 to 501692e
 ```
 
 ---
@@ -316,17 +341,17 @@ git push origin v5.1.2-audit-p0-clean
 **Observed:** 5 P0 defects blocking system quality
 **Canonized:** Evidence documented in DEFECTS_REGISTER.yml with file:line:commit references
 **Attested:** AUDIT_LOG.md Phase 5 entry with reproduction commands
-**Published:** This summary + 866 passing tests + validation suite
+**Published:** This summary + 866 passing tests (Phase 5 baseline) + 1042 latest regression run + validation suite
 
 **Provenance:** All changes traceable to specific defect IDs with evidence trails
 **Immutability:** Commits signed, hash-linked, audit branch preserved
 **Reversibility:** Rollback plan documented, feature flags default-off
-**Observability:** 866 tests + 8 validation tests prevent regression
+**Observability:** 1042 tests + 8 validation tests (lint + contracts/env) prevent regression
 
 ---
 
 **Phase 5 Status:** ✅ COMPLETE
-**System Status:** STABLE (866/866 tests passing)
+**System Status:** STABLE (1042/1042 tests passing)
 **Recommendation:** READY FOR REVIEW AND MERGE
 
 ---
