@@ -3,12 +3,10 @@
 import pytest
 import time
 import threading
-from copy import deepcopy
 
 from src.runtime.memory_integrity import (
     MemoryLock,
     EthicsGuard,
-    SecurityError,
     MemoryTamperError,
     RegistrationError,
     ENABLE_CHECKSUM_ON_READ,
@@ -203,7 +201,7 @@ class TestErrorConditions:
 
 def test_audit_log_structure(capsys):
     audit_log("test", "object_id", "test_actor", {"custom": "field"})
-    captured = capsys.readouterr()
+    capsys.readouterr()
     audit_log("test", "object_id", "test_actor", None)
     class NonSerializable:
         pass

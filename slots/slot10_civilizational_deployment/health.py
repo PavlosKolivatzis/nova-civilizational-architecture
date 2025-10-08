@@ -54,13 +54,11 @@ def health() -> Dict[str, Any]:
     try:
         # Try to import core deployment components
         try:
-            from slots.slot10_civilizational_deployment.deployer import InstitutionalNodeDeployer
             from slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
             from slots.slot10_civilizational_deployment.phase_space import NovaPhaseSpaceSimulator
             from slots.slot10_civilizational_deployment.models import (
-                DeploymentPhase, ThreatLevel, MLSDecision, DeploymentResult, DeploymentMetrics
+                DeploymentPhase, ThreatLevel, MLSDecision, DeploymentMetrics
             )
-            core_available = True
         except Exception as ie:
             return minimal(
                 NAME,
@@ -81,7 +79,7 @@ def health() -> Dict[str, Any]:
             # Note: MLS requires slot6 adapter, so we'll test instantiation capability
             from orchestrator.adapters.slot6_cultural import Slot6Adapter
             slot6_adapter = Slot6Adapter()
-            mls = MetaLegitimacySeal(slot6_adapter)
+            MetaLegitimacySeal(slot6_adapter)
             metrics.update({
                 "mls_available": True,
                 "cultural_validation_ready": True,
@@ -97,7 +95,7 @@ def health() -> Dict[str, Any]:
 
         # Test phase space simulator
         try:
-            phase_space = NovaPhaseSpaceSimulator()
+            NovaPhaseSpaceSimulator()
             metrics.update({
                 "phase_space_available": True,
                 "simulation_ready": True,
@@ -127,7 +125,6 @@ def health() -> Dict[str, Any]:
         # Check adapter integrations
         adapters_available = 0
         try:
-            from orchestrator.adapters.slot4_tri import Slot4TRIAdapter
             from orchestrator.adapters.slot6_cultural import Slot6Adapter
             adapters_available = 2
             metrics.update({
@@ -144,7 +141,6 @@ def health() -> Dict[str, Any]:
 
         # Check optional geometric memory integration
         try:
-            from frameworks.geometric_memory import GeometricMemory
             metrics.update({
                 "geometric_memory_available": True,
                 "caching_optimization": "available",

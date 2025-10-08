@@ -1,7 +1,8 @@
 import pytest
-np = pytest.importorskip("numpy")
 
 from orchestrator.router.anr import AdaptiveNeuralRouter
+
+np = pytest.importorskip("numpy")
 
 def test_linucb_learns_in_shadow(tmp_path, monkeypatch):
     monkeypatch.setenv("NOVA_ANR_STATE_PATH", str(tmp_path / "linucb.json"))

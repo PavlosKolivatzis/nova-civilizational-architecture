@@ -5,31 +5,33 @@ allowing real-time observation of system consciousness and health state.
 """
 
 from __future__ import annotations
-import os
-import time
-import math
-import pkgutil
-import slots
-import uuid
-import hmac
+
 import hashlib
+import hmac
 import json
 import logging
-from typing import Dict, Any
+import math
+import os
+import pkgutil
+import time
+import uuid
+from typing import Any, Dict
 
-logger = logging.getLogger(__name__)
+import slots
+
+from orchestrator.core import create_router
+from orchestrator.core.performance_monitor import PerformanceMonitor
+from orchestrator.flow_fabric_init import get_flow_fabric_status
+from orchestrator.health import collect_slot_selfchecks, health_payload
+from orchestrator.router.anr import AdaptiveNeuralRouter
+from orchestrator.semantic_creativity import get_creativity_governor
 
 try:
     from fastapi import APIRouter
-except ImportError:
-    APIRouter = None  # type: ignore
+except ImportError:  # pragma: no cover - optional dependency
+    APIRouter = None  # type: ignore[assignment]
 
-from orchestrator.core.performance_monitor import PerformanceMonitor
-from orchestrator.core import create_router
-from orchestrator.health import health_payload, collect_slot_selfchecks
-from orchestrator.flow_fabric_init import get_flow_fabric_status
-from orchestrator.router.anr import AdaptiveNeuralRouter
-from orchestrator.semantic_creativity import get_creativity_governor
+logger = logging.getLogger(__name__)
 
 # Only create router if FastAPI is available
 if APIRouter is not None:
@@ -81,7 +83,7 @@ def _get_system_reflection() -> Dict[str, Any]:
     decision = anr.decide(probe_context, shadow=True)
 
     # Analyze health state
-    slot_data = health.get("slots", {})
+    health.get("slots", {})
     self_check_data = self_checks or {}
 
     slots_ok = sum(1 for s in self_check_data.values()

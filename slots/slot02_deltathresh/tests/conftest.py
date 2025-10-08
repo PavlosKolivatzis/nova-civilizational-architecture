@@ -1,5 +1,5 @@
 # slots/slot02_deltathresh/tests/conftest.py
-import os, sys, importlib
+import sys
 import pytest
 
 ENV_KEYS = {

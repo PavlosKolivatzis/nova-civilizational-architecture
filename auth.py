@@ -2,7 +2,6 @@ import os
 from typing import Dict, Any
 
 import jwt
-from jwt import PyJWTError
 
 JWT_SECRET = os.environ.get("JWT_SECRET", "testing-secret")
 JWT_ALGORITHM = "HS256"

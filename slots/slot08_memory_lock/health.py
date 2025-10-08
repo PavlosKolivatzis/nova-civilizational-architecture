@@ -59,7 +59,6 @@ def health() -> Dict[str, Any]:
             from slots.slot08_memory_lock.core.repair_planner import RepairPlanner
             from slots.slot08_memory_lock.core.entropy_monitor import EntropyMonitor
             from slots.slot08_memory_lock.core.types import ThreatLevel, RepairAction
-            core_available = True
         except Exception as ie:
             return minimal(
                 NAME,
@@ -96,7 +95,7 @@ def health() -> Dict[str, Any]:
 
         # Test quarantine system
         try:
-            quarantine = QuarantineSystem()
+            QuarantineSystem()
             metrics.update({
                 "quarantine_system_available": True,
                 "quarantine_ready": True,
@@ -110,7 +109,7 @@ def health() -> Dict[str, Any]:
 
         # Test repair planner
         try:
-            repair_planner = RepairPlanner()
+            RepairPlanner()
             metrics.update({
                 "repair_planner_available": True,
                 "self_healing_ready": True,
@@ -124,7 +123,7 @@ def health() -> Dict[str, Any]:
 
         # Test entropy monitor
         try:
-            entropy_monitor = EntropyMonitor()
+            EntropyMonitor()
             metrics.update({
                 "entropy_monitor_available": True,
                 "entropy_monitoring_active": True,
@@ -138,7 +137,6 @@ def health() -> Dict[str, Any]:
 
         # Check IDS integration
         try:
-            from slots.slot08_memory_lock.ids import integration
             metrics.update({
                 "ids_integration_available": True,
                 "threat_classification_ready": True,
@@ -152,8 +150,6 @@ def health() -> Dict[str, Any]:
 
         # Check cryptographic components
         try:
-            from slots.slot08_memory_lock.core.integrity_store import IntegrityStore
-            from slots.slot08_memory_lock.core.snapshotter import Snapshotter
             metrics.update({
                 "integrity_store_available": True,
                 "snapshotter_available": True,

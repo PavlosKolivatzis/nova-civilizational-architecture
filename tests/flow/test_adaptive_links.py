@@ -6,7 +6,7 @@ Ensures contract payload immutability and backward compatibility.
 """
 import pytest
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from orchestrator.adaptive_connections import AdaptiveLink, AdaptiveLinkConfig, adaptive_link_registry
 from orchestrator.flow_metrics import flow_metrics
 
@@ -26,7 +26,7 @@ class TestAdaptiveLink:
         assert self.link.contract_name == "EMOTION_REPORT@1"
         assert self.link.weight == 1.0
         assert self.link.frequency == 1.0
-        assert self.link.config.adaptation_enabled == True
+        assert self.link.config.adaptation_enabled
         assert self.link.metrics.sends_total == 0
         
     def test_basic_send_unchanged_behavior(self):
@@ -64,7 +64,7 @@ class TestAdaptiveLink:
         
         # Verify tracking recorded
         send_record = self.link.send_history[0]
-        assert send_record["success"] == True
+        assert send_record["success"]
         assert send_record["weight"] == 1.0
         assert send_record["frequency"] == 1.0
         
@@ -147,7 +147,7 @@ class TestAdaptiveLink:
         # Verify error tracked in history
         assert len(self.link.send_history) == 1
         error_record = self.link.send_history[0]
-        assert error_record["success"] == False
+        assert not error_record["success"]
         assert error_record["error"] == "Test error"
         assert self.link.metrics.sends_total == 1
         
@@ -210,13 +210,13 @@ class TestAdaptiveLinkRegistry:
         
         # Enable adaptation globally
         adaptive_link_registry.set_global_adaptation_enabled(True)
-        assert link1.config.adaptation_enabled == True
-        assert link2.config.adaptation_enabled == True
+        assert link1.config.adaptation_enabled
+        assert link2.config.adaptation_enabled
         
         # Disable adaptation globally
         adaptive_link_registry.set_global_adaptation_enabled(False)
-        assert link1.config.adaptation_enabled == False
-        assert link2.config.adaptation_enabled == False
+        assert not link1.config.adaptation_enabled
+        assert not link2.config.adaptation_enabled
         
     def test_registry_metrics_collection(self):
         """Test registry aggregates metrics from all links"""
@@ -272,7 +272,7 @@ class TestFlowMetrics:
         """Test flow health summary for /health endpoint"""
         # Test with no links
         health = flow_metrics.get_flow_health_summary()
-        assert health["adaptive_connections_active"] == False
+        assert not health["adaptive_connections_active"]
         assert health["links_count"] == 0
         assert health["status"] == "no_links"
         
@@ -283,7 +283,7 @@ class TestFlowMetrics:
         link.send({"test": "data"}, mock_send)
         
         health = flow_metrics.get_flow_health_summary()
-        assert health["adaptive_connections_active"] == True
+        assert health["adaptive_connections_active"]
         assert health["links_count"] == 1
         assert health["adaptation_enabled_links"] == 1
         assert health["total_sends"] == 1

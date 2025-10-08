@@ -6,7 +6,6 @@ Periodically scrapes Nova metrics and provides a simple web interface.
 
 import asyncio
 import aiohttp
-import json
 import time
 from datetime import datetime
 from typing import Dict, List, Any

@@ -4,7 +4,6 @@ WebSocket authentication utilities.
 import hmac
 import hashlib
 import time
-from typing import Optional
 
 
 def verify_token(token: str, secret: bytes, leeway_s: int = 60) -> bool:

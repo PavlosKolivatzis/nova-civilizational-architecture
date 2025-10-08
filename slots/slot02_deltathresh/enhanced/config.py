@@ -22,10 +22,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
-import json
 import logging
 import os
-import yaml
 
 # Optional .env loading (keeps runtime resilient if python-dotenv is absent)
 try:  # pragma: no cover - optional dependency

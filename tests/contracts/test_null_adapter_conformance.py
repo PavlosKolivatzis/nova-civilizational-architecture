@@ -1,7 +1,6 @@
 """Test NullAdapter fallback payloads conform to contract schemas."""
 
 import json
-import pytest
 from pathlib import Path
 from jsonschema import validate
 

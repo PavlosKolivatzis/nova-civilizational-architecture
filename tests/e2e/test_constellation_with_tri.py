@@ -1,4 +1,3 @@
-import pytest
 
 def test_constellation_updates_with_tri_layers(tmp_path, monkeypatch):
     # Enable TRI link for this test only

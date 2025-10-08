@@ -2,7 +2,6 @@
 Test build provenance metrics for deployment traceability.
 """
 
-import pytest
 from prometheus_client import generate_latest
 
 

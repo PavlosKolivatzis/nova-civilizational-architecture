@@ -1,6 +1,6 @@
 """Minimal tests for Phase 5.0 ANR shadow implementation."""
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from orchestrator.router.anr import AdaptiveNeuralRouter, RouteDecision
 from orchestrator.router.routes import build_plan_for_route

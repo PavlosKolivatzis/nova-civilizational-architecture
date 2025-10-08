@@ -1,6 +1,5 @@
 """Test Slot05 TRI production path without mocked mirror."""
 
-import pytest
 from unittest.mock import patch
 from slots.slot05_constellation.constellation_engine import ConstellationEngine
 

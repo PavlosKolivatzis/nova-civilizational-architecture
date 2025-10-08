@@ -1,7 +1,7 @@
 """Core types for Slot 8 Memory Lock & IDS self-healing system."""
 
 from dataclasses import dataclass
-from typing import Literal, Dict, Any, Optional
+from typing import Dict, Any, Optional
 from enum import Enum
 
 

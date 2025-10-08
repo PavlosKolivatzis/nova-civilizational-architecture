@@ -1,5 +1,6 @@
 """Health monitoring for Slot02 ΔTHRESH Advanced Content Processing System."""
 from typing import Dict, Any
+import importlib.util
 
 # --- import healthkit (with graceful fallback) --------------------------------
 try:
@@ -52,7 +53,6 @@ def health() -> Dict[str, Any]:
         try:
             from slots.slot02_deltathresh.core import DeltaThreshProcessor
             from slots.slot02_deltathresh.config import ProcessingConfig
-            core_available = True
         except Exception as ie:
             # Adapter-only fallback path
             adapter_ok = False
@@ -110,11 +110,10 @@ def health() -> Dict[str, Any]:
             })
 
         # Check enhanced processor availability
-        try:
-            from slots.slot02_deltathresh.enhanced.processor import EnhancedDeltaThreshProcessor
-            metrics["enhanced_processor_available"] = True
-        except ImportError:
-            metrics["enhanced_processor_available"] = False
+        spec = importlib.util.find_spec(
+            "slots.slot02_deltathresh.enhanced.processor"
+        )
+        metrics["enhanced_processor_available"] = spec is not None
 
         metrics.update({
             "processor_available": True,

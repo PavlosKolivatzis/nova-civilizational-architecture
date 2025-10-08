@@ -5,10 +5,9 @@ import logging
 import threading
 from contextlib import contextmanager
 from typing import Dict, Any, List, Optional, Callable
-from pathlib import Path
 from enum import Enum
 
-from .types import ThreatLevel, IDSEvent, QuarantineReason
+from .types import ThreatLevel, QuarantineReason
 from .policy import QuarantinePolicy
 
 logger = logging.getLogger(__name__)
@@ -435,7 +434,7 @@ class QuarantineSystem:
         # Policy effectiveness analysis
         if self.policy.auto_recovery_after_s > 0:
             auto_successes = len([d for d in deactivations
-                                if d["details"].get("manual_override", True) == False])
+                                if not d["details"].get("manual_override", True)])
             metrics["policy_effectiveness"]["auto_recovery_rate"] = auto_successes / max(1, total_activations)
 
         return metrics

@@ -1,7 +1,7 @@
 """Safety net tests to prevent critical regressions in Slot 6."""
 
 import pytest
-from slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter, DeploymentGuardrailResult
+from slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
 from frameworks.enums import DeploymentGuardrailResult as DGR
 
 

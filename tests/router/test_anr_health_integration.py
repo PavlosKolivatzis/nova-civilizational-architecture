@@ -6,7 +6,6 @@ Validates health-influenced routing decisions using actual ANR API.
 """
 
 import pytest
-from unittest.mock import patch, MagicMock
 
 
 class TestANRContextualRouting:

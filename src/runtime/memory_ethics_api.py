@@ -1,13 +1,10 @@
 """Minimal, robust API layer for Slot 8 integration."""
 
-import json
 from typing import Any, Dict, Optional
 
 from .memory_integrity import (
     EthicsGuard,
     SecurityError,
-    RegistrationError,
-    MemoryLock,
     audit_log,
 )
 

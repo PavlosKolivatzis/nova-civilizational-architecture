@@ -32,7 +32,7 @@ def _meta_lens_analyze(payload):
             VALIDATION_AVAILABLE = False
             def validate_meta_lens_report(report):
                 # Log warning in permissive mode
-                print(f"[WARN] META_LENS validation disabled - fastjsonschema not available (set META_LENS_STRICT_VALIDATION=0 to suppress)")
+                print("[WARN] META_LENS validation disabled - fastjsonschema not available (set META_LENS_STRICT_VALIDATION=0 to suppress)")
                 pass  # No-op validation
 
         # Extract content and prepare input

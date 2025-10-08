@@ -3,7 +3,7 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Tuple
 
 
 class MerkleIntegrityStore:

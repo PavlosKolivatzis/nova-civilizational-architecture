@@ -13,7 +13,6 @@ import statistics
 import tempfile
 import shutil
 import json
-import asyncio
 from pathlib import Path
 from typing import List, Dict, Any
 from dataclasses import dataclass
@@ -21,7 +20,6 @@ from contextlib import contextmanager
 
 from ..core.types import ThreatLevel, RepairAction, QuarantineReason, HealthMetrics
 from ..core.policy import Slot8Policy
-from ..core.integrity_store import MerkleIntegrityStore
 from ..core.snapshotter import IntegritySnapshotter
 from ..core.repair_planner import RepairPlanner
 from ..core.quarantine import QuarantineSystem
@@ -187,17 +185,17 @@ class PerformanceBenchmark:
 
         # Create test objects of varying complexity
         test_objects = [
-            {"simple": i, "data": f"test_{i}"},
-            {"complex": {"nested": {"deep": {"structure": list(range(i % 20))}}}, "id": i},
-            {"large_string": "x" * (1000 + i * 10), "metadata": {"size": 1000 + i * 10}},
-            {"array": list(range(i % 50)), "timestamp": time.time()}
+            {"simple": 0, "data": "test_static"},
+            {"complex": {"nested": {"deep": {"structure": list(range(20))}}}, "id": 1},
+            {"large_string": "x" * 1200, "metadata": {"size": 1200}},
+            {"array": list(range(50)), "timestamp": time.time()}
         ]
 
         for i in range(iterations):
             test_obj = test_objects[i % len(test_objects)]
 
             with self.timer():
-                entropy_score = entropy_monitor.update(test_obj, f"benchmark_{i}")
+                entropy_monitor.update(test_obj, f"benchmark_{i}")
             measurements.append(self.last_duration)
 
         return self._create_result(
@@ -291,7 +289,7 @@ class PerformanceBenchmark:
             scenario = test_scenarios[i % len(test_scenarios)]
 
             with self.timer():
-                result = scenario(i)
+                scenario(i)
             measurements.append(self.last_duration)
 
         return self._create_result(

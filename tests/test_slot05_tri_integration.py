@@ -1,7 +1,6 @@
 """Test Slot05 TRI signal integration."""
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from slots.slot05_constellation.constellation_engine import ConstellationEngine
 
 

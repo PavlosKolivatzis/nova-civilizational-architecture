@@ -172,7 +172,6 @@ class TestEntropyMonitorSmallSamples:
         monitor = EntropyMonitor(window_size=5)
 
         # Test threshold adaptation with minimal data
-        initial_threshold = monitor.adaptive_entropy_threshold
 
         # Single update
         monitor.update({"test": 1}, "op1")

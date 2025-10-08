@@ -1,6 +1,5 @@
 """Test Slot04 TRI signal publishing to Semantic Mirror."""
 
-import pytest
 from unittest.mock import Mock, patch
 from slots.slot04_tri_engine.publish import publish_tri_to_mirror
 

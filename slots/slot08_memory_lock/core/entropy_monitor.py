@@ -4,10 +4,9 @@ import hashlib
 import json
 import time
 from collections import deque, defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 from statistics import mean, stdev
 
-from .types import HealthMetrics
 from .policy import Slot8Policy
 
 
@@ -278,7 +277,7 @@ class EntropyMonitor:
 
         # Pattern stability (how consistent are the patterns)
         if len(self.schema_hashes) > 0:
-            total_patterns = len(self.schema_patterns)
+            len(self.schema_patterns)
             max_pattern_count = max(self.schema_patterns.values()) if self.schema_patterns else 0
             analysis["pattern_stability"] = max_pattern_count / max(1, len(self.schema_hashes))
 

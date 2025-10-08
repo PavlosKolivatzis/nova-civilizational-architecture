@@ -1,6 +1,5 @@
 """Test adapter integration with real and mock adapters."""
 
-import pytest
 from slots.slot02_deltathresh.adapter_integration_patch import create_real_adapter_functions, create_mock_functions
 
 
@@ -179,7 +178,7 @@ def test_real_adapter_functions_error_handling():
 
 def test_integration_with_meta_lens_plugin(monkeypatch):
     """Test integration with meta-lens plugin - stable epoch testing."""
-    import os, importlib, sys
+    import sys
 
     # Set test env BEFORE import
     monkeypatch.setenv("META_LENS_MAX_ITERS", "3")
@@ -241,7 +240,7 @@ def test_integration_with_meta_lens_plugin(monkeypatch):
 
 def test_integration_with_natural_convergence(monkeypatch):
     """Test integration with natural convergence (variable epoch count)."""
-    import os, importlib, sys
+    import sys
 
     # Set test env BEFORE import
     monkeypatch.setenv("NOVA_ENABLE_META_LENS", "1")

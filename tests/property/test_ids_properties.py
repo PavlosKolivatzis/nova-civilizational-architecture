@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
 from services.ids.core import InterpretiveDriftSynthesizer

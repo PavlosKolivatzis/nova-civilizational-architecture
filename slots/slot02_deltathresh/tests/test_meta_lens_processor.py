@@ -182,8 +182,8 @@ def test_run_fixed_point_watchdog_abort():
     )
 
     # Should abort due to high distortion
-    assert final_report["iteration"]["watchdog"]["abort_triggered"] == True
-    assert final_report["iteration"]["converged"] == False
+    assert final_report["iteration"]["watchdog"]["abort_triggered"]
+    assert not final_report["iteration"]["converged"]
     assert final_report["iteration"]["watchdog"]["distortion_overall"] == 0.9
 
 
@@ -205,8 +205,8 @@ def test_run_fixed_point_emotional_volatility_abort():
     )
 
     # Should abort due to high emotional volatility
-    assert final_report["iteration"]["watchdog"]["abort_triggered"] == True
-    assert final_report["iteration"]["converged"] == False
+    assert final_report["iteration"]["watchdog"]["abort_triggered"]
+    assert not final_report["iteration"]["converged"]
     assert final_report["iteration"]["watchdog"]["emotional_volatility"] == 0.9
 
 
@@ -250,7 +250,8 @@ def test_environment_variable_configuration():
 
     try:
         # Re-import with a clean module object so env vars are read at import time
-        import sys, importlib
+        import sys
+        import importlib
         full = "slots.slot02_deltathresh.meta_lens_processor"
         sys.modules.pop(full, None)                     # ensure fresh import
         mlp = importlib.import_module(full)

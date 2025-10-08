@@ -96,7 +96,7 @@ class AdaptiveLink:
         
         # Apply weight-based priority (future: affects orchestrator routing)
         # Note: payload remains immutable, weight affects routing metadata only
-        routing_metadata = self._build_routing_metadata()
+        self._build_routing_metadata()
         
         try:
             # Call original contract send function (unchanged semantics)

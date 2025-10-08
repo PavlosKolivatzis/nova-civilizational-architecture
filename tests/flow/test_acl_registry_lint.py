@@ -1,6 +1,5 @@
 """ACL registry linter - validates context keys against documentation."""
 import re
-import pytest
 from pathlib import Path
 
 # Known keys from docs/semantic_mirror_acl.md

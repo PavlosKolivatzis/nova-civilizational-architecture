@@ -1,7 +1,6 @@
 """
 Test for slot health self-check functionality.
 """
-import pytest
 from unittest.mock import patch, MagicMock
 from orchestrator.health import collect_slot_selfchecks
 

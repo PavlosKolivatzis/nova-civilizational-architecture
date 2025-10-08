@@ -8,9 +8,7 @@ from unittest.mock import patch
 def test_slot9_hybrid_api_imports():
     """Test that Slot 9 hybrid API imports without errors."""
     from slots.slot09_distortion_protection.hybrid_api import (
-        HybridDistortionDetectionAPI,
         create_hybrid_slot9_api,
-        create_production_config,
         create_development_config
     )
 

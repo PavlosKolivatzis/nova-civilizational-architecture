@@ -94,7 +94,7 @@ class TestSlotMetadataTolerance:
         # consumes should be mapped to inputs  
         assert meta.inputs == []
         # optional should be in extra
-        assert meta.extra.get("optional") == False
+        assert not meta.extra.get("optional")
 
     def test_empty_or_none_input(self):
         """SlotMetadata should handle empty/None input gracefully."""

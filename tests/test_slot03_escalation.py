@@ -1,7 +1,6 @@
 """Comprehensive test suite for Slot 3 escalation functionality."""
-import pytest
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from slots.slot03_emotional_matrix.escalation import (
     EmotionalEscalationManager, ThreatLevel, EscalationEvent

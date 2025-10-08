@@ -54,7 +54,6 @@ def health() -> Dict[str, Any]:
             from slots.slot04_tri.core.detectors import DriftDetector, SurgeDetector
             from slots.slot04_tri.core.repair_planner import RepairPlanner
             from slots.slot04_tri.core.safe_mode import SafeMode
-            core_available = True
         except Exception as ie:
             return minimal(
                 NAME,
@@ -71,9 +70,8 @@ def health() -> Dict[str, Any]:
         metrics: Dict[str, Any] = {}
 
         # Test engine instantiation
-        instance = None
         try:
-            instance = TriEngine()
+            TriEngine()
             metrics.update({
                 "engine_instantiated": True,
                 "detectors_available": True,
@@ -98,10 +96,10 @@ def health() -> Dict[str, Any]:
 
         # Check individual component availability
         try:
-            drift_detector = DriftDetector()
-            surge_detector = SurgeDetector()
-            repair_planner = RepairPlanner()
-            safe_mode = SafeMode()
+            DriftDetector()
+            SurgeDetector()
+            RepairPlanner()
+            SafeMode()
 
             metrics.update({
                 "drift_detector_ready": True,

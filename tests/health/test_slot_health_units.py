@@ -12,7 +12,6 @@ Tests specific internal logic and error handling for each health module:
 
 import pytest
 import time
-from unittest.mock import patch, MagicMock
 
 
 class TestSlot02DeltaThreshHealth:

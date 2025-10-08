@@ -1,6 +1,5 @@
 """Test phase_lock integration in repair planning."""
 
-import os
 from slots.slot08_memory_lock.core.repair_planner import RepairPlanner
 from slots.slot08_memory_lock.core.types import RepairAction, HealthMetrics, SnapshotMeta
 

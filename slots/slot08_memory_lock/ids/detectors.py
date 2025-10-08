@@ -3,7 +3,7 @@
 import time
 import re
 from collections import deque, defaultdict
-from typing import List, Dict, Any, Optional, Set, Callable
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 # Handle imports for both pytest and direct execution

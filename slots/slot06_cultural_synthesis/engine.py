@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Simplified cultural synthesis engine for Slot 6.
 
 This module exposes a small stateless engine focused on deriving three
@@ -12,6 +10,8 @@ core metrics from a cultural profile:
 The formulas were migrated from the previous adaptive synthesis engine
 and are clamped to the ``[0.0, 1.0]`` interval.
 """
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict, is_dataclass
 from typing import Any, Dict, Mapping, TypedDict

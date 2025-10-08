@@ -212,7 +212,7 @@ def test_event_bus_instance():
 
 def test_router_instance():
     """Test router is created from create_router."""
-    from orchestrator.app import router, monitor
+    from orchestrator.app import router
 
     assert router is not None
     # Verify router has monitor (if supported by implementation)

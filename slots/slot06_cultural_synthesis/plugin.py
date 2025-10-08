@@ -24,7 +24,7 @@ class Slot06CulturalPlugin(SlotPlugin):
             self._engine = CulturalSynthesisEngine()
             print(f"🎯 Cultural Synthesis started (v{self.version})")
         except ImportError:
-            print(f"⚠️ Cultural Synthesis engine not available")
+            print("⚠️ Cultural Synthesis engine not available")
     
     def stop(self) -> None:
         """Clean up cultural synthesis resources."""

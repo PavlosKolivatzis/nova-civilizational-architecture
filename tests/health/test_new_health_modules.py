@@ -4,9 +4,7 @@ Tests the health modules created for slots 2, 4 (both variants), 8 (both variant
 9, and 10 to ensure they follow healthkit standards and report correctly.
 """
 
-import pytest
 import asyncio
-from unittest.mock import patch, MagicMock
 
 
 class TestSlot02Health:

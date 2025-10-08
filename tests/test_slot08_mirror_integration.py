@@ -1,7 +1,6 @@
 """Test Slot08 semantic mirror integration."""
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from slots.slot08_memory_lock.core.repair_planner import RepairPlanner
 
 

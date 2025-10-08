@@ -2,9 +2,9 @@ import time
 import threading
 import logging
 import os
-from collections import defaultdict, deque
+from collections import deque
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
 from config.feature_flags import get_production_controls_config
@@ -545,7 +545,7 @@ class ProductionControlEngine:
             self.rate_limiter = RateLimiter(self.config)
             self.resource_protector = ResourceProtector(self.config)
             
-            logger.info(f"Configuration updated successfully")
+            logger.info("Configuration updated successfully")
             return True
             
         except Exception as e:

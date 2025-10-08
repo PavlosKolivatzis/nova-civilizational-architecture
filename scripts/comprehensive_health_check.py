@@ -5,7 +5,7 @@ import time
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, Tuple
 
 def check_slot_implementation(slot_name: str, slot_path: Path) -> Dict[str, Any]:
     """Check if slot has proper implementation structure."""
@@ -23,7 +23,7 @@ def check_slot_implementation(slot_name: str, slot_path: Path) -> Dict[str, Any]
         if has_core:
             try:
                 import importlib
-                module = importlib.import_module(f"slots.{slot_name}.core")
+                importlib.import_module(f"slots.{slot_name}.core")
                 import_status = "success"
             except Exception as e:
                 import_status = f"error: {str(e)[:100]}"
@@ -93,7 +93,7 @@ def assess_slot_maturity(slot_name: str, implementation: Dict, tests: Dict) -> T
 
     if tests["status"] == "pass":
         # Check for advanced features indicating higher maturity
-        has_autonomous_features = any([
+        any([
             "autonomous" in str(implementation.get("files", [])).lower(),
             "self_healing" in str(implementation.get("files", [])).lower(),
             "adaptive" in str(implementation.get("files", [])).lower(),
@@ -105,7 +105,7 @@ def assess_slot_maturity(slot_name: str, implementation: Dict, tests: Dict) -> T
         if "summary" in tests:
             try:
                 test_count = int(tests["summary"].split()[0])
-            except:
+            except Exception:
                 pass
 
         if test_count >= 20:  # High test coverage suggests maturity
@@ -165,7 +165,7 @@ def comprehensive_health_check():
             try:
                 test_count = int(tests["summary"].split()[0])
                 total_tests += test_count
-            except:
+            except Exception:
                 pass
 
     print()

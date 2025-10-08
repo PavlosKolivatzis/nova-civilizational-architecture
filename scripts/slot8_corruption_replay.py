@@ -12,7 +12,6 @@ import tempfile
 import shutil
 from pathlib import Path
 import sys
-import os
 
 # Add slot08 to path for imports
 script_dir = Path(__file__).parent
@@ -21,7 +20,6 @@ sys.path.insert(0, str(slot08_dir))
 
 try:
     from core.policy import Slot8Policy
-    from core.integrity_store import MerkleIntegrityStore
     from core.snapshotter import IntegritySnapshotter
     from core.repair_planner import RepairPlanner
     from core.quarantine import QuarantineSystem
@@ -237,7 +235,7 @@ class ChaosTestHarness:
         for scenario in scenarios:
             elapsed = time.time() - start_time
             if elapsed >= self.budget_seconds:
-                print(f"⏰ Time budget exceeded, stopping scenarios")
+                print("⏰ Time budget exceeded, stopping scenarios")
                 break
 
             if scenario == "bitflip":

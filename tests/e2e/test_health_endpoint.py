@@ -2,10 +2,11 @@
 Tests for health endpoint functionality.
 """
 import pytest
+from unittest.mock import MagicMock
+
+from orchestrator.health import collect_slot_health, health_payload
 
 pytestmark = pytest.mark.health
-from unittest.mock import MagicMock
-from orchestrator.health import health_payload, collect_slot_health
 
 
 @pytest.fixture

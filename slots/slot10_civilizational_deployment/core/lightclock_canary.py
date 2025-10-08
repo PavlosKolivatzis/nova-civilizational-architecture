@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from .canary import CanaryController, CanaryResult
 from .lightclock_gatekeeper import LightClockGatekeeper, LightClockGateResult
 from .policy import Slot10Policy
-from .health_feed import HealthFeedAdapter, MockHealthFeed, RuntimeMetrics
+from .health_feed import HealthFeedAdapter, RuntimeMetrics
 from .audit import AuditLog
 from .metrics import CanaryMetricsExporter
 
@@ -148,7 +148,6 @@ class LightClockCanaryController(CanaryController):
             return adjustments
 
         phase_lock = gate_result.phase_lock_value
-        coherence_level = gate_result.coherence_level
 
         # High coherence: allow faster promotion
         if phase_lock > self.coherence_thresholds["high_coherence_acceleration"]:

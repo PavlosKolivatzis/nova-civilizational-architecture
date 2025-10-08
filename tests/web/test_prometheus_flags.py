@@ -1,6 +1,5 @@
 """Tests for Prometheus feature flag gauges."""
 
-import os
 import pytest
 
 pytest.importorskip("fastapi")

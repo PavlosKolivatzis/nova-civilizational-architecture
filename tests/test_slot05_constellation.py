@@ -1,6 +1,6 @@
 """Comprehensive tests for Slot 5 Constellation Engine."""
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from slots.slot05_constellation.constellation_engine import ConstellationEngine
 from orchestrator.adapters.slot5_constellation import Slot5ConstellationAdapter

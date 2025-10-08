@@ -1,4 +1,3 @@
-import pytest
 
 from slots.slot08_memory_ethics import ids_protection as ip
 from services.ids.core import IDSState

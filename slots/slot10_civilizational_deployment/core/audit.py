@@ -3,7 +3,11 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
-import json, time, os, hmac, hashlib
+import json
+import time
+import os
+import hmac
+import hashlib
 from typing import Any, Dict, Optional, Union
 
 # Shared hash integration (Phase 2)

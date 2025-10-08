@@ -12,9 +12,9 @@ Key Features:
 
 import time
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any
 from collections import deque, defaultdict
-from statistics import mean, stdev
+from statistics import mean
 
 logger = logging.getLogger(__name__)
 

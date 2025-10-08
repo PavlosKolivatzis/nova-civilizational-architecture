@@ -101,7 +101,6 @@ def test_booster_with_negation() -> None:
 
 def test_phase_lock_dampens_score(monkeypatch) -> None:
     """Test that low phase_lock dampens emotional intensity."""
-    import os
     monkeypatch.setenv("SLOT07_PHASE_LOCK", "0.4")
     monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
 
@@ -118,7 +117,6 @@ def test_phase_lock_dampens_score(monkeypatch) -> None:
 
 def test_phase_lock_no_effect_when_high(monkeypatch) -> None:
     """Test that high phase_lock doesn't dampen emotions."""
-    import os
     monkeypatch.setenv("SLOT07_PHASE_LOCK", "0.8")
     monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
 
@@ -131,7 +129,6 @@ def test_phase_lock_no_effect_when_high(monkeypatch) -> None:
 
 def test_phase_lock_disabled_by_flag(monkeypatch) -> None:
     """Test that NOVA_LIGHTCLOCK_DEEP=0 disables phase_lock."""
-    import os
     monkeypatch.setenv("SLOT07_PHASE_LOCK", "0.3")
     monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "0")
 

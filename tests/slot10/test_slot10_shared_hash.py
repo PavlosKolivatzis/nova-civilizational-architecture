@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 import tempfile
 
-from slots.slot10_civilizational_deployment.core.audit import AuditLog, AuditSigner, _env_truthy
+from slots.slot10_civilizational_deployment.core.audit import AuditLog, _env_truthy
 
 
 class _DummySigner:
@@ -67,7 +67,6 @@ def test_shared_blake2b_when_flag_on_and_available(monkeypatch):
 
     # Import at runtime to check availability
     try:
-        from slots.common.hashutils import compute_audit_hash
         shared_available = True
     except Exception:
         shared_available = False

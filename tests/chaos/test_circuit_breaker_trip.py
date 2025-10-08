@@ -3,7 +3,6 @@ Chaos test for circuit breaker trip behavior.
 """
 import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
 from orchestrator.core.circuit_breaker import CircuitBreaker
 
 pytestmark = [pytest.mark.chaos, pytest.mark.asyncio]

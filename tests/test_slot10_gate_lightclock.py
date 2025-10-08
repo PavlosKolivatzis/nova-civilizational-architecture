@@ -1,6 +1,5 @@
 """Test Slot10 deployment gate with LightClock integration."""
 
-import pytest
 from unittest.mock import patch, Mock
 from slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper, MirrorReader
 

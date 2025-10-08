@@ -1,4 +1,3 @@
-import pytest
 
 from slots.slot06_cultural_synthesis.engine import (
     CulturalProfile,

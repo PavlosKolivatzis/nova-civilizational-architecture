@@ -12,17 +12,22 @@ Usage:
   python scripts/semantic_mirror_dashboard.py --compact --once | python ops/compact-decoder.py
 """
 
-import argparse, re, sys
+import argparse
+import re
+import sys
 
 def parse_pairs(s: str):
     pairs = dict(re.findall(r'(\w+)=([^\s]+)', s))
     return pairs
 
 def pct(text: str) -> float:
-    if not text: return 0.0
+    if not text:
+        return 0.0
     text = text.replace('%','').replace(',','.')
-    try: return float(text) / 100.0
-    except ValueError: return 0.0
+    try:
+        return float(text) / 100.0
+    except ValueError:
+        return 0.0
 
 def main():
     ap = argparse.ArgumentParser(add_help=True)

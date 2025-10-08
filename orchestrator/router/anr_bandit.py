@@ -8,6 +8,7 @@ Production-grade contextual bandit for Adaptive Neural Routing with:
 - Prometheus metrics integration
 """
 
+import json
 import os
 import time
 import logging
@@ -203,7 +204,7 @@ class LinUCBBandit:
 
             # Validate arms match
             if set(state["arms"]) != set(self.arms):
-                logger.warning(f"Arms mismatch in state file")
+                logger.warning("Arms mismatch in state file")
                 return False
 
             # Restore matrices and statistics
@@ -251,6 +252,3 @@ class LinUCBBandit:
             "save_counter": self.save_counter,
         }
 
-
-# Import json at module level for _load_state
-import json

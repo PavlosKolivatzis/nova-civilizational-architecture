@@ -182,7 +182,7 @@ class ProductionControlContextPublisher:
         """Gather current production control context data."""
         # Get comprehensive metrics from engine
         metrics = self.engine.get_comprehensive_metrics()
-        health_check = self.engine.health_check()
+        self.engine.health_check()
         
         # Calculate pressure level (similar to health.py logic)
         pressure_level = self._calculate_pressure_level(metrics)

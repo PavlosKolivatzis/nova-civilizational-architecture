@@ -5,7 +5,7 @@ Validates reflex emission, hysteresis, clamp bounds, and upstream link modulatio
 """
 import pytest
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from orchestrator.reflex_signals import ReflexBus, ReflexSignal, setup_slot7_reflex_integration
 from orchestrator.adaptive_connections import AdaptiveLink, AdaptiveLinkConfig, adaptive_link_registry
@@ -260,7 +260,7 @@ class TestFullReflexIntegration:
         setup_slot7_reflex_integration()
         
         # Create production engine
-        engine = ProductionControlEngine()
+        ProductionControlEngine()
         
         # Get reflex emitter (should be wired to bus now)
         reflex_emitter = get_reflex_emitter()

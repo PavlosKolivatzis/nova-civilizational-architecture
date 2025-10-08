@@ -1,7 +1,6 @@
 """
 Chaos engineering tests for router resilience.
 """
-import pytest
 from unittest.mock import MagicMock
 from orchestrator.core.router import AdaptiveRouter
 
