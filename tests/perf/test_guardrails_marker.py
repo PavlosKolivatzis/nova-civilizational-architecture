@@ -3,7 +3,7 @@ Performance guardrail tests for critical components.
 """
 import pytest
 import asyncio
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock
 
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.perf]

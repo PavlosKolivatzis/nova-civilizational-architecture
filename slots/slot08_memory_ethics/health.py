@@ -51,8 +51,7 @@ def health() -> Dict[str, Any]:
         # Try to import core memory ethics components
         try:
             from slots.slot08_memory_ethics.ids_protection import check_memory_write_eligibility
-            from slots.slot08_memory_ethics.lock_guard import MemoryLock, audit_log
-            core_available = True
+            from slots.slot08_memory_ethics.lock_guard import MemoryLock
         except Exception as ie:
             return minimal(
                 NAME,
@@ -71,7 +70,6 @@ def health() -> Dict[str, Any]:
         # Check IDS integration
         ids_available = False
         try:
-            import os
             from config.feature_flags import IDS_ENABLED
             ids_available = IDS_ENABLED
             metrics.update({
@@ -102,7 +100,7 @@ def health() -> Dict[str, Any]:
 
         # Check memory lock guard
         try:
-            lock = MemoryLock()
+            MemoryLock()
             metrics.update({
                 "memory_lock_available": True,
                 "audit_log_functional": True,

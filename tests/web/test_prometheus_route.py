@@ -1,6 +1,5 @@
 """Tests for Prometheus metrics endpoint with gating."""
 
-import os
 import pytest
 
 pytest.importorskip("fastapi")

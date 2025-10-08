@@ -2,8 +2,6 @@
 SLO validation tests for Slot-1 performance.
 """
 import pytest
-import statistics
-from unittest.mock import AsyncMock
 
 pytestmark = [pytest.mark.slo, pytest.mark.asyncio]
 

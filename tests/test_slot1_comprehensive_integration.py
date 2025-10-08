@@ -1,6 +1,5 @@
 """Comprehensive integration tests for all Slot1 enhancements."""
 
-import pytest
 import tempfile
 import os
 from orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter

@@ -53,7 +53,6 @@ async def test_startup_binds_jsonl_emitter_and_emits(tmp_path, monkeypatch):
 def test_emitter_configuration_and_emission(tmp_path, monkeypatch):
     """Test emitter configuration and actual emission functionality."""
     import json
-    import os
     from orchestrator.contracts.emitter import set_contract_emitter
     from orchestrator.contracts.unlearn_pulse import UnlearnPulseV1
 

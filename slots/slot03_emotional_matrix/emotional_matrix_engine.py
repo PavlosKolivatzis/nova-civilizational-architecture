@@ -176,7 +176,8 @@ class EmotionalMatrixEngine:
             t = tokens[i]
             # map common bigrams like "a bit" into single token handled by dampeners
             if i + 1 < len(tokens) and t == "a" and tokens[i + 1] == "bit":
-                t = "a_bit"; i += 1  # consume the next
+                t = "a_bit"
+                i += 1  # consume the next
             # intensifiers scale the very next sentiment token
             intens = 1.0
             if t in self.cfg.boosters:
@@ -204,8 +205,10 @@ class EmotionalMatrixEngine:
                         val = -val
                         window_left -= 1
                     val *= intens
-                    if val > 0: pos += val
-                    else: neg += -val
+                    if val > 0:
+                        pos += val
+                    else:
+                        neg += -val
                     matched += 1
                     applied = True
                     # Continue processing more tokens in negation window instead of breaking
@@ -216,13 +219,18 @@ class EmotionalMatrixEngine:
             # If current token itself is sentiment and we didn't treat it via lookahead
             if not applied:
                 val = 0.0
-                if t in self._POSITIVE: val = +1.0 * intens
-                elif t in self._NEGATIVE: val = -1.0 * intens
+                if t in self._POSITIVE:
+                    val = +1.0 * intens
+                elif t in self._NEGATIVE:
+                    val = -1.0 * intens
 
                 if val != 0.0:
-                    if neg_window: val = -val
-                    if val > 0: pos += val
-                    else: neg += -val
+                    if neg_window:
+                        val = -val
+                    if val > 0:
+                        pos += val
+                    else:
+                        neg += -val
                     matched += 1
 
             i += 1

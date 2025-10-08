@@ -1,7 +1,6 @@
 """Test Slot03 semantic mirror integration."""
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine
 
 

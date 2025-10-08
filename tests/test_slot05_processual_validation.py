@@ -5,7 +5,6 @@ for 4.0 Processual maturity level in the constellation navigation system.
 """
 
 import pytest
-import time
 from unittest.mock import MagicMock
 
 from slots.slot05_constellation.enhanced_constellation_engine import EnhancedConstellationEngine
@@ -166,7 +165,7 @@ class TestEnhancedConstellationEngine:
         items = ["test item one", "test item two", "related test item"]
 
         # Get initial thresholds
-        initial_thresholds = engine.adaptive_processor.get_current_thresholds()
+        engine.adaptive_processor.get_current_thresholds()
 
         # Map with context that should trigger adaptation
         context = {'item_count': 3, 'avg_complexity': 0.8}
@@ -198,7 +197,7 @@ class TestEnhancedConstellationEngine:
         """Test cross-slot coordination via semantic mirror."""
         items = ["coordination test", "semantic mirror integration"]
 
-        result = engine.map(items)
+        engine.map(items)
 
         # Should have attempted to publish constellation event
         engine.semantic_mirror.publish.assert_called()
@@ -325,7 +324,7 @@ class TestProcessualCapabilityIntegration:
             semantic_mirror.publish = MagicMock(return_value=True)
 
         # Create full enhanced system
-        engine = EnhancedConstellationEngine(semantic_mirror)
+        EnhancedConstellationEngine(semantic_mirror)
         adapter = EnhancedSlot5ConstellationAdapter()
 
         if not adapter.available or adapter.engine_type != 'enhanced':

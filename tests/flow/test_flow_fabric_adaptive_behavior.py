@@ -5,7 +5,6 @@ validating that flow fabric responds appropriately to health changes
 from the polish sprint health modules.
 """
 
-import pytest
 import time
 import os
 from unittest.mock import patch, MagicMock
@@ -37,7 +36,7 @@ class TestFlowFabricHealthResponsiveness:
         link.adjust_frequency(0.3, "health_degradation")
 
         # Fast subsequent sends should be throttled
-        start_time = time.time()
+        time.time()
         for _ in range(3):
             result = link.send(healthy_payload, mock_send)
             time.sleep(0.1)  # Brief pause
@@ -305,7 +304,7 @@ class TestFlowFabricErrorHandling:
         start_time = time.perf_counter()
 
         for i in range(100):
-            result = link.send(payload, mock_send)
+            link.send(payload, mock_send)
 
         end_time = time.perf_counter()
         total_time = end_time - start_time

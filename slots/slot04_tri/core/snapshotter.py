@@ -1,5 +1,7 @@
 from __future__ import annotations
-import json, time, hashlib
+import json
+import time
+import hashlib
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
@@ -79,9 +81,11 @@ class TriSnapshotter:
 
     def verify_current(self) -> bool:
         # Best effort: compare against last manifest if exists
-        if not self._last_good_id: return False
+        if not self._last_good_id:
+            return False
         path = self.snapshot_dir / f"{self._last_good_id}.json"
-        if not path.exists(): return False
+        if not path.exists():
+            return False
         meta = json.loads(path.read_text())
         return meta["merkle_root"] == _merkle_for_dir(self.model_dir)
 

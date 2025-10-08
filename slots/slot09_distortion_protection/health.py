@@ -57,10 +57,8 @@ def health() -> Dict[str, Any]:
             from slots.slot09_distortion_protection.hybrid_api import HybridDistortionDetectionAPI
             from slots.slot09_distortion_protection.ids_policy import (
                 get_phase_lock_context,
-                apply_ids_policy,
-                policy_check_with_ids
+                apply_ids_policy
             )
-            core_available = True
         except Exception as ie:
             return minimal(
                 NAME,
@@ -78,7 +76,7 @@ def health() -> Dict[str, Any]:
 
         # Test hybrid API instantiation
         try:
-            api = HybridDistortionDetectionAPI()
+            HybridDistortionDetectionAPI()
             metrics.update({
                 "hybrid_api_available": True,
                 "distortion_detection_ready": True,

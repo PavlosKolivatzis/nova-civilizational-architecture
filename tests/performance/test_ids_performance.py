@@ -1,6 +1,7 @@
-import os, sys, pytest
+import os
+import sys
+import pytest
 import time
-import numpy as np
 from services.ids.integration import ids_service
 
 # CI-only skip for flakey p99 on 3.12 runners; tracked during Phase 3 ops pack

@@ -14,7 +14,6 @@ Design principles:
 """
 
 from collections import deque
-import math
 import os
 import threading
 from typing import Optional
@@ -188,7 +187,6 @@ def get_dynamic_half_life(base_half_life: float = 300.0, slot: Optional[str] = N
         # Phase 4.1: Experiment with dynamic TRI weighting
         tri_component = _ewma["tri_drift_z"]
         pressure_component = _ewma["system_pressure"]
-        anomaly_score = _last_score
 
         # TRI-aware adjustment: high TRI drift → preserve memory longer
         tri_multiplier = 1.0 + (tri_component * 2.0)  # [1.0, 3.0] range

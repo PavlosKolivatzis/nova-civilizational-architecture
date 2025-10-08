@@ -1,9 +1,7 @@
 """Tests for plugin discovery and null adapter functionality."""
 
 import os
-import tempfile
 import pytest
-from pathlib import Path
 
 from orchestrator.plugins.loader import PluginLoader
 from orchestrator.adapters.registry import AdapterRegistry
@@ -47,7 +45,7 @@ def test_null_adapter_fallback():
     """Test that null adapters provide fallbacks when no providers available."""
     # Create loader with limited slots
     loader = PluginLoader(enabled=["slot04_tri_engine"])
-    loaded = loader.discover()
+    loader.discover()
     
     # Create registry with null adapters
     registry = AdapterRegistry(loader)
@@ -67,7 +65,7 @@ def test_null_adapter_fallback():
 def test_contract_provider_counting():
     """Test that registry correctly counts providers per contract."""
     loader = PluginLoader(enabled=["slot06_cultural_synthesis", "slot04_tri_engine"])
-    loaded = loader.discover()
+    loader.discover()
     registry = AdapterRegistry(loader)
     
     contracts = registry.get_contracts()
@@ -84,7 +82,7 @@ def test_contract_provider_counting():
 def test_plugin_health_collection():
     """Test that plugin health can be collected safely."""
     loader = PluginLoader(enabled=["slot06_cultural_synthesis"])
-    loaded = loader.discover()
+    loader.discover()
     
     health = loader.get_health()
     
@@ -116,7 +114,7 @@ def test_adapter_error_handling():
 def test_plugin_start_stop_lifecycle():
     """Test plugin lifecycle methods don't crash."""
     loader = PluginLoader(enabled=["slot06_cultural_synthesis"])
-    loaded = loader.discover()
+    loader.discover()
     
     # Mock event bus and config
     mock_bus = object()

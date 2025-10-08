@@ -6,6 +6,8 @@ should avoid raising exceptions.
 """
 from __future__ import annotations
 
+from typing import Dict
+
 ALLOWED_TONES = {"positive", "negative", "neutral", "unknown", "joy", "sadness", "anger", "fear", "surprise", "disgust"}
 
 def validate_metrics(metrics: dict) -> list[str]:
@@ -36,8 +38,6 @@ def validate_metrics(metrics: dict) -> list[str]:
             errors.append("score_out_of_bounds")
     
     return errors
-from typing import Dict
-
 _ALLOWED_TONES = {"positive", "negative", "neutral", "unknown"}
 
 

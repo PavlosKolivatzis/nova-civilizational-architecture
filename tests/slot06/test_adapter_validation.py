@@ -1,4 +1,3 @@
-from types import SimpleNamespace
 
 from slots.slot06_cultural_synthesis.adapter import (
     CulturalSynthesisAdapter,

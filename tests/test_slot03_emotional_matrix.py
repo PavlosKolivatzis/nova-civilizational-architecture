@@ -1,6 +1,5 @@
 """Comprehensive tests for Slot 3 Emotional Matrix Engine."""
 import pytest
-from unittest.mock import MagicMock
 
 from slots.slot03_emotional_matrix.emotional_matrix_engine import (
     EmotionalMatrixEngine, 

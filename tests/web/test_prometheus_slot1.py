@@ -1,6 +1,5 @@
 """Tests for Slot1 Truth Anchor metrics in Prometheus export."""
 
-import os
 import pytest
 
 pytest.importorskip("fastapi")

@@ -47,7 +47,7 @@ try:
     governor = get_creativity_governor()
     print(f"SUCCESS: Governor instance created: {id(governor)}")
 
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  early_stop_enabled: {governor.config.early_stop_enabled}")
     print(f"  two_phase_depth_enabled: {governor.config.two_phase_depth_enabled}")
     print(f"  bnb_enabled: {governor.config.bnb_enabled}")
@@ -55,15 +55,15 @@ try:
     print(f"  bnb_quality_threshold: {governor.config.bnb_quality_threshold}")
     print(f"  bnb_safety_margin: {governor.config.bnb_safety_margin}")
 
-    print(f"\nRetrieving Metrics...")
+    print("\nRetrieving Metrics...")
     metrics = governor.get_creativity_metrics()
 
-    print(f"\nSUCCESS - Config Snapshot:")
+    print("\nSUCCESS - Config Snapshot:")
     config_snapshot = metrics.get('config_snapshot', {})
     for key, value in config_snapshot.items():
         print(f"  {key}: {value}")
 
-    print(f"\nAll checks passed!")
+    print("\nAll checks passed!")
 
 except Exception as e:
     print(f"\nERROR: {type(e).__name__}: {e}")

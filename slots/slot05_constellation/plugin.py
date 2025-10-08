@@ -23,7 +23,7 @@ class Slot05ConstellationPlugin(SlotPlugin):
             # Try to import existing constellation logic
             print(f"🎯 Constellation Navigator started (v{self.version})")
         except ImportError:
-            print(f"⚠️ Constellation navigator not available")
+            print("⚠️ Constellation navigator not available")
     
     def stop(self) -> None:
         """Clean up constellation resources."""
@@ -47,11 +47,11 @@ class Slot05ConstellationPlugin(SlotPlugin):
                 if isinstance(payload, dict):
                     tri_score = payload.get("tri_score", 0.5)
                     patterns = payload.get("patterns_detected", [])
-                    content = payload.get("content", "")
+                    payload.get("content", "")
                 else:
                     tri_score = 0.5
                     patterns = []
-                    content = str(payload)
+                    str(payload)
                 
                 # Calculate stability index based on TRI and patterns
                 pattern_stability = 1.0 - (len(patterns) * 0.1)  # Simple heuristic

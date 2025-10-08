@@ -11,11 +11,10 @@ import hashlib
 import uuid
 import json
 import os
-from typing import Dict, Any, Optional, List, Tuple, Union
+from typing import Dict, Any, Optional, List, Tuple
 from enum import Enum
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from contextlib import asynccontextmanager
-from functools import wraps
 import threading
 from datetime import datetime, timezone
 
@@ -30,16 +29,17 @@ def _round3(value: float) -> float:
 # Optional dependencies with graceful fallback
 try:
     from pydantic import BaseModel, Field, field_validator
-    from pydantic_settings import BaseSettings
     PYDANTIC_AVAILABLE = True
 except ImportError:
     PYDANTIC_AVAILABLE = False
     from dataclasses import dataclass as BaseModel
-    Field = lambda default=None, **kw: default
+
+    def Field(default=None, **_kwargs):  # type: ignore[override]
+        return default
 
 # NOVA-specific imports (with fallbacks)
 try:
-    from .ids_policy import policy_check_with_ids, apply_ids_policy
+    from .ids_policy import policy_check_with_ids
     from services.ids.core import IDSState
     from config.feature_flags import IDS_ENABLED
     NOVA_INTEGRATION_AVAILABLE = True
@@ -1416,7 +1416,6 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
     """Enhanced FastAPI app with comprehensive endpoints."""
     try:
         from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
-        from fastapi.responses import JSONResponse
         from fastapi.middleware.cors import CORSMiddleware
         from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
         from auth import verify_jwt_token

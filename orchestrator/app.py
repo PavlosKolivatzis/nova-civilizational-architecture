@@ -2,51 +2,51 @@
 
 FastAPI is an optional dependency for this project.  The tests exercise the
 core request handling without requiring the web framework.  Importing FastAPI
-unconditionally would raise ``ModuleNotFoundError`` when the package is not
+unconditionally would raise `ModuleNotFoundError` when the package is not
 installed, causing pytest collection to fail.  To keep the module importable in
 minimal environments, the import is guarded and the web routes are only created
 when FastAPI is available.
 """
 
+import asyncio
+import logging
+import os
+import pkgutil
+import time
+from contextlib import asynccontextmanager
+
+import slots
+from logging_config import configure_logging
+from orchestrator.adapters import (
+    Slot10DeploymentAdapter,
+    Slot2DeltaThreshAdapter,
+    Slot8MemoryEthicsAdapter,
+    Slot9DistortionProtectionAdapter,
+)
+from orchestrator.core import create_router
+from orchestrator.core.event_bus import Event, EventBus
+from orchestrator.core.performance_monitor import PerformanceMonitor
+from orchestrator.health import health_payload, prometheus_metrics
+
+logger = logging.getLogger(__name__)
+
 # Load environment variables from .env file (Phase 2: production hardening)
 try:
     from dotenv import load_dotenv
-    load_dotenv()  # Must be called before any config/module imports
-except ImportError:
-    pass  # python-dotenv not installed; env must be set externally
+except ImportError:  # python-dotenv not installed; env must be set externally
+    load_dotenv = None  # type: ignore[assignment]
+else:
+    load_dotenv()
 
 # Optional web framework (avoid import errors in environments without FastAPI)
 try:  # pragma: no cover - absence of FastAPI is acceptable
     from fastapi import FastAPI, Response
     from api.health_config import router as health_router
     from orchestrator.reflection import router as reflection_router
-    from contextlib import asynccontextmanager
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
-    FastAPI = None  # type: ignore
-    health_router = None  # type: ignore
-    reflection_router = None  # type: ignore
-
-import asyncio
-import time
-import os
-import logging
-
-logger = logging.getLogger(__name__)
-
-from orchestrator.core.performance_monitor import PerformanceMonitor
-from orchestrator.core.event_bus import EventBus, Event
-from orchestrator.core import create_router
-from logging_config import configure_logging
-from orchestrator.adapters import (
-    Slot2DeltaThreshAdapter,
-    Slot8MemoryEthicsAdapter,
-    Slot9DistortionProtectionAdapter,
-    Slot10DeploymentAdapter,
-)
-from orchestrator.health import health_payload, prometheus_metrics
-import pkgutil
-import slots
-
+    FastAPI = None  # type: ignore[assignment]
+    health_router = None  # type: ignore[assignment]
+    reflection_router = None  # type: ignore[assignment]
 # Monitor, bus and router are created once and reused across requests
 monitor = PerformanceMonitor()
 bus = EventBus(monitor=monitor)
@@ -204,8 +204,9 @@ if FastAPI is not None:
         await get_config_manager()
 
         # --- UNLEARN_PULSE emitter wiring ---
-        import os, json
-        from orchestrator.contracts.emitter import set_contract_emitter, NoOpEmitter
+        import os
+        import json
+        from orchestrator.contracts.emitter import set_contract_emitter
 
         class JsonlEmitter:
             """Append each UNLEARN_PULSE@1 as newline-delimited JSON with size-based rotation."""
@@ -264,7 +265,7 @@ if FastAPI is not None:
         try:
             from orchestrator.semantic_creativity import get_creativity_governor
             governor = get_creativity_governor()
-            logger.info(f"CreativityGovernor initialized at startup")
+            logger.info("CreativityGovernor initialized at startup")
             logger.info(f"Config: early_stop={governor.config.early_stop_enabled}, "
                        f"two_phase={governor.config.two_phase_depth_enabled}, "
                        f"bnb={governor.config.bnb_enabled}")
@@ -387,3 +388,4 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
     if orch and slot_fn:
         return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
     return None
+

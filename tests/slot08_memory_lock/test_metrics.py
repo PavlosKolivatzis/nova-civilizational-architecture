@@ -1,6 +1,5 @@
 from collections import deque
 
-import pytest
 
 import slots.slot08_memory_lock.core.metrics as metrics
 

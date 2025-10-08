@@ -63,7 +63,7 @@ class Slot1Adapter:
         self._total_requests = 0
         self._failed_requests = 0
         self._avg_processing_time = 0.0
-        self._lock = asyncio.Lock()
+        self._lock: asyncio.Lock | None = None
         self._shutdown = False
 
         logger.info("Slot 1 adapter initialized")
@@ -133,6 +133,8 @@ class Slot1Adapter:
         """Update performance metrics safely."""
         elapsed = (time.perf_counter() - start) * 1000
         
+        if self._lock is None:
+            self._lock = asyncio.Lock()
         async with self._lock:
             self._total_requests += 1
             if not success:

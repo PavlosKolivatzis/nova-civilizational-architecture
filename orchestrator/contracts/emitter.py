@@ -60,9 +60,15 @@ def unsubscribe(handler: ContractHandler) -> None:
 
 class _subscription:
     """Context manager for temporary subscriptions in tests."""
-    def __init__(self, handler: ContractHandler): self.h = handler
-    def __enter__(self): subscribe(self.h); return self.h
-    def __exit__(self, *exc): unsubscribe(self.h)
+    def __init__(self, handler: ContractHandler):
+        self._handler = handler
+
+    def __enter__(self):
+        subscribe(self._handler)
+        return self._handler
+
+    def __exit__(self, *exc):
+        unsubscribe(self._handler)
 
 
 def fanout(contract: Any) -> int:

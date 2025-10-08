@@ -1,6 +1,5 @@
 """Test Slot03 phase-lock publishing to Semantic Mirror."""
 
-import pytest
 from unittest.mock import patch
 from slots.slot03_emotional_matrix.publish import publish_phase_lock_to_mirror
 

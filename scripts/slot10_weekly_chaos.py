@@ -5,7 +5,10 @@ Safe no-op for prod unless invoked manually/CI.
 """
 from __future__ import annotations
 from pathlib import Path
-import argparse, json, time, random
+import argparse
+import json
+import time
+import random
 from slots.slot10_civilizational_deployment.core import (
     Slot10Policy, Gatekeeper, CanaryController,
     MockHealthFeed, CanaryMetricsExporter, SnapshotBackout
@@ -19,7 +22,8 @@ def main():
     args = ap.parse_args()
     random.seed(args.seed)
 
-    export_dir = Path(args.export_dir); export_dir.mkdir(parents=True, exist_ok=True)
+    export_dir = Path(args.export_dir)
+    export_dir.mkdir(parents=True, exist_ok=True)
 
     # Production-ish policy but with fast stage time so CI completes quickly
     policy = Slot10Policy(min_stage_duration_s=0, rollback_timeout_s=10.0)

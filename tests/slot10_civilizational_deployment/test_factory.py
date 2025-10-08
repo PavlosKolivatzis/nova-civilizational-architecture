@@ -1,4 +1,3 @@
-import pytest
 
 import slots.slot10_civilizational_deployment.core.factory as factory
 

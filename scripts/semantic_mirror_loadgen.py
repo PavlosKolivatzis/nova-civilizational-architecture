@@ -117,7 +117,7 @@ def run_load_generation(cycles: int = 50, delay: float = 0.1, verbose: bool = Fa
     total_expected_publishes = cycles + (cycles // 5)  # cultural + occasional production
     total_expected_queries = cycles + (cycles // 3)    # cultural + occasional production
     
-    print(f"Load generation complete!")
+    print("Load generation complete!")
     print(f"Publications: {successful_publishes}/{total_expected_publishes} successful")
     print(f"Queries: {successful_queries}/{total_expected_queries} successful")
     print(f"Publish success rate: {successful_publishes/total_expected_publishes*100:.1f}%")

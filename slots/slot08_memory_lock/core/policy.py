@@ -1,7 +1,7 @@
 """Policy configuration for Slot 8 self-healing memory system."""
 
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List
 
 
 @dataclass

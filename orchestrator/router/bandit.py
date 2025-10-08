@@ -5,11 +5,13 @@
 """
 from __future__ import annotations
 from typing import Dict
-import json, os, threading
+import json
+import os
+import threading
 
 try:
     import numpy as np  # type: ignore
-except Exception as e:  # pragma: no cover
+except Exception:  # pragma: no cover
     np = None  # Allow router to degrade gracefully
 
 class LinUCB:

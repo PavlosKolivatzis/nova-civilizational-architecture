@@ -10,12 +10,23 @@ from __future__ import annotations
 
 import asyncio
 import time
-import threading
-from dataclasses import asdict
-from typing import Any, Dict
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+from slots.slot09_distortion_protection.hybrid_api import (
+    CircuitBreaker,
+    DistortionDetectionRequest,
+    HybridDistortionDetectionAPI,
+    InfrastructureLevel,
+    PolicyAction,
+    ResponseStatus,
+    SecureContentCache,
+    DistortionType,
+    create_development_config,
+    create_hybrid_slot9_api,
+    create_production_config,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -291,21 +302,5 @@ class TestEdgeCases:
             DistortionDetectionRequest(content=" ", trace_id="edge")
 
 
-# ---------------------------------------------------------------------------
-# Utility imports placed at end to avoid circular references in tests above
-# ---------------------------------------------------------------------------
 
-from slots.slot09_distortion_protection.hybrid_api import (
-    CircuitBreaker,
-    DistortionDetectionRequest,
-    HybridDistortionDetectionAPI,
-    PolicyAction,
-    ResponseStatus,
-    SecureContentCache,
-    DistortionType,
-    InfrastructureLevel,
-    create_development_config,
-    create_hybrid_slot9_api,
-    create_production_config,
-)
 

@@ -7,12 +7,10 @@ These tests validate that our implementation meets the Processual (4.0) maturity
 - Adaptive threat detection and response
 """
 
-import asyncio
 import time
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import MagicMock
 import pytest
 import sys
 
@@ -137,7 +135,7 @@ class ProcessualTestHarness:
 
     def measure_mttr(self, corruption_scenario: str) -> float:
         """Measure Mean Time To Recovery for a corruption scenario."""
-        start_time = time.time()
+        time.time()
 
         # Create baseline snapshot
         snapshot = self.snapshotter.take_snapshot()
@@ -273,14 +271,14 @@ class TestProcessualCapabilities:
         # Initialize with baseline data
         for i in range(20):
             test_obj = {"iteration": i, "data": f"baseline_{i}"}
-            entropy = harness.entropy_monitor.update(test_obj, "baseline")
+            harness.entropy_monitor.update(test_obj, "baseline")
 
         baseline_threshold = harness.entropy_monitor.adaptive_entropy_threshold
 
         # Introduce anomalous data
         for i in range(10):
             anomalous_obj = {"strange_field": i, "unexpected": {"nested": ["data"]}}
-            entropy = harness.entropy_monitor.update(anomalous_obj, "anomaly")
+            harness.entropy_monitor.update(anomalous_obj, "anomaly")
 
         adapted_threshold = harness.entropy_monitor.adaptive_entropy_threshold
 
@@ -288,7 +286,6 @@ class TestProcessualCapabilities:
         assert adapted_threshold != baseline_threshold, "Threshold should adapt to anomalous data"
 
         # Test repair planner learning
-        initial_confidence = 0.7
 
         # Simulate successful repair
         decision = harness.repair_planner.decide_repair_strategy(
@@ -372,7 +369,7 @@ class TestProcessualCapabilities:
         # Test entropy calculation time
         start_time = time.time()
         test_obj = {"large": "x" * 10000, "nested": {"deep": {"structure": list(range(100))}}}
-        entropy = harness.entropy_monitor.update(test_obj)
+        harness.entropy_monitor.update(test_obj)
         entropy_time = time.time() - start_time
 
         assert entropy_time <= 0.1, f"Entropy calculation {entropy_time:.3f}s exceeds budget"

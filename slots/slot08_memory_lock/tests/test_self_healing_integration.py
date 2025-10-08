@@ -10,7 +10,6 @@ import tempfile
 import shutil
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 import pytest
 import sys
 
@@ -93,11 +92,9 @@ class SelfHealingOrchestrator:
 
                 # 2. Threat Detection Phase
                 threats = []
-                incident = None
 
                 # Check for integrity issues
                 if health.checksum_mismatch or health.corruption_detected or health.tamper_evidence:
-                    incident = {"type": "integrity_breach", "health": health}
                     threats.append(IDSEvent(
                         event_type="integrity_breach",
                         threat_level=ThreatLevel.CRITICAL,
@@ -365,7 +362,7 @@ class TestSelfHealingIntegration:
         orchestrator = SelfHealingOrchestrator(store_dir, snapshot_dir, policy)
 
         # Create baseline snapshot
-        baseline_snapshot = orchestrator.snapshotter.take_snapshot(
+        orchestrator.snapshotter.take_snapshot(
             metadata={"purpose": "integration_test_baseline"}
         )
 
@@ -385,7 +382,7 @@ class TestSelfHealingIntegration:
         # Validate results
         metrics = orchestrator.get_recovery_metrics()
 
-        print(f"\n📊 Integration Test Results:")
+        print("\n📊 Integration Test Results:")
         print(f"  • Total test duration: {total_time:.2f}s")
         print(f"  • Threats detected: {metrics.get('total_threats', 0)}")
         print(f"  • Recoveries executed: {metrics.get('total_recoveries', 0)}")
@@ -421,7 +418,7 @@ class TestSelfHealingIntegration:
                     # Simulate read operation
                     test_file = store_dir / "data_000.json"
                     if test_file.exists():
-                        content = test_file.read_text()
+                        test_file.read_text()
                     read_operations_successful += 1
             except PermissionError:
                 pass
@@ -489,7 +486,7 @@ class TestSelfHealingIntegration:
         orchestrator = SelfHealingOrchestrator(store_dir, snapshot_dir, policy)
 
         # Create snapshot for repair testing
-        snapshot = orchestrator.snapshotter.take_snapshot()
+        orchestrator.snapshotter.take_snapshot()
 
         # Simulate multiple repair scenarios with outcomes
         scenarios = [
@@ -500,7 +497,7 @@ class TestSelfHealingIntegration:
             (RepairAction.SEMANTIC_PATCH, True, 3.9),
         ]
 
-        initial_success_rates = dict(orchestrator.repair_planner.success_rates)
+        dict(orchestrator.repair_planner.success_rates)
 
         for action, success, duration in scenarios:
             # Create mock decision

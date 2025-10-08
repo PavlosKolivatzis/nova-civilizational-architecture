@@ -1,5 +1,4 @@
 import json
-import tempfile
 import textwrap
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer

@@ -1,7 +1,5 @@
 """Contract tests for CULTURAL_PROFILE@1 schema stability."""
 
-import pytest
-from typing import Dict, Any
 
 
 def test_cultural_profile_schema_v1():

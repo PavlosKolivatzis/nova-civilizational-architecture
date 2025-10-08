@@ -7,7 +7,7 @@ contract system, with graceful fallback to mocks when adapters unavailable.
 
 import os
 import time
-from typing import Dict, Any, Callable
+from typing import Dict, Any
 
 # Adapter timeout and retry configuration
 ADAPTER_TIMEOUT_MS = int(os.getenv("META_LENS_ADAPTER_TIMEOUT_MS", "200"))

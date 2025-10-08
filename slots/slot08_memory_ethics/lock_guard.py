@@ -25,7 +25,10 @@ T = TypeVar('T')
 # ---------------------------------------------------------------------------
 
 ENABLE_CHECKSUM_ON_READ: bool = True  # Toggle for performance optimization
-DEFAULT_SERIALIZER: Callable[[Any], str] = lambda x: json.dumps(x, sort_keys=True, separators=(',', ':'))
+def _default_serializer(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(',', ':'))
+
+DEFAULT_SERIALIZER: Callable[[Any], str] = _default_serializer
 DEFAULT_DESERIALIZER: Callable[[str], Any] = json.loads
 
 # ---------------------------------------------------------------------------

@@ -50,7 +50,6 @@ def health() -> Dict[str, Any]:
         # Try to import the simple TRI engine
         try:
             from slots.slot04_tri_engine.engine import TRIStatus
-            engine_available = True
         except Exception as ie:
             return minimal(
                 NAME,
@@ -68,7 +67,7 @@ def health() -> Dict[str, Any]:
 
         # Test engine component instantiation
         try:
-            status = TRIStatus()
+            TRIStatus()
             metrics.update({
                 "tri_status_instantiated": True,
                 "bayesian_engine_ready": True,
@@ -83,8 +82,6 @@ def health() -> Dict[str, Any]:
 
         # Check for additional engine components
         try:
-            from slots.slot04_tri_engine import publish
-            from slots.slot04_tri_engine import plugin
             metrics.update({
                 "publish_module_available": True,
                 "plugin_module_available": True,
@@ -99,7 +96,6 @@ def health() -> Dict[str, Any]:
 
         # Check IDS integration if available
         try:
-            from slots.slot04_tri_engine import ids_integration
             metrics.update({
                 "ids_integration_available": True,
             })

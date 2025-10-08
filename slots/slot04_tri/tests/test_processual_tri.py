@@ -6,7 +6,8 @@ from slots.slot04_tri.core.policy import TriPolicy
 from slots.slot04_tri.core.tri_engine import TriEngine
 
 def setup_env(tmp_path: Path):
-    model_dir = tmp_path / "model"; model_dir.mkdir()
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
     (model_dir/"weights.json").write_text('{"w":1}')
     snaps = tmp_path / "snaps"
     return model_dir, snaps
@@ -57,7 +58,7 @@ def test_threshold_adapts_and_reverts(tmp_path: Path):
     # stabilize
     for _ in range(20):
         tri.observe({"n": 0.3, "m": 0.2}, writes_in_last_sec=4)
-    th0, base0 = tri.threshold, tri.baseline
+    th0, _base0 = tri.threshold, tri.baseline
     # anomaly
     tri.observe({"n": 3.0, "m": 2.0}, writes_in_last_sec=80)
     th1 = tri.threshold
@@ -99,7 +100,6 @@ def test_core_imports():
 
 def test_coherence_signals_generation(tmp_path: Path, monkeypatch):
     """Test that TRI Engine produces coherence signals for Light-Clock."""
-    import os
     model_dir, snaps = setup_env(tmp_path)
 
     monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "1")
@@ -125,7 +125,6 @@ def test_coherence_signals_generation(tmp_path: Path, monkeypatch):
 
 def test_coherence_signals_disabled_by_flag(tmp_path: Path, monkeypatch):
     """Test that NOVA_LIGHTCLOCK_DEEP=0 disables coherence signals."""
-    import os
     model_dir, snaps = setup_env(tmp_path)
 
     monkeypatch.setenv("NOVA_LIGHTCLOCK_DEEP", "0")

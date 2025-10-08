@@ -25,17 +25,17 @@ def _coalesce_slot2(slot2_result: Any) -> Dict[str, Any]:
             "tri_gap": 0.0,
             "slot2_patterns": [],
         }
-    get = (
-        lambda k, d=None: getattr(slot2_result, k, None)
-        if not isinstance(slot2_result, dict)
-        else slot2_result.get(k, d)
-    )
+    def get_value(key: str, default: Any = None) -> Any:
+        if isinstance(slot2_result, dict):
+            return slot2_result.get(key, default)
+        return getattr(slot2_result, key, default)
+
     return {
-        "tri_score": get("tri_score", 0.5),
-        "layer_scores": get("layer_scores", {}) or {},
-        "forbidden_hits": get("forbidden_hits", get("forbidden", [])) or [],
-        "tri_gap": get("tri_gap", 0.0),
-        "slot2_patterns": get("slot2_patterns", []),
+        "tri_score": get_value("tri_score", 0.5),
+        "layer_scores": get_value("layer_scores", {}) or {},
+        "forbidden_hits": get_value("forbidden_hits", get_value("forbidden", [])) or [],
+        "tri_gap": get_value("tri_gap", 0.0),
+        "slot2_patterns": get_value("slot2_patterns", []),
     }
 
 

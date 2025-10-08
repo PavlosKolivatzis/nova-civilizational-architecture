@@ -2,7 +2,7 @@
 import pytest
 import time
 import threading
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from slots.slot07_production_controls.production_control_engine import (
     ProductionControlEngine,
@@ -10,9 +10,7 @@ from slots.slot07_production_controls.production_control_engine import (
     RateLimiter,
     ResourceProtector,
     CircuitBreakerOpenError,
-    ResourceLimitExceededError,
-    RateLimitExceededError,
-    ProcessingMetrics
+    ResourceLimitExceededError
 )
 from config.feature_flags import get_production_controls_config
 

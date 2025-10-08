@@ -61,7 +61,6 @@ def test_plugin_meta_lens_disabled_smoke(monkeypatch):
 
 def test_plugin_meta_lens_different_payloads():
     """Test meta-lens plugin with different payload formats."""
-    import os
     os.environ["NOVA_ENABLE_META_LENS"] = "1"
 
     try:
@@ -93,7 +92,6 @@ def test_plugin_meta_lens_different_payloads():
 
 def test_plugin_meta_lens_convergence_behavior():
     """Test meta-lens convergence behavior."""
-    import os
     os.environ["NOVA_ENABLE_META_LENS"] = "1"
 
     try:
@@ -130,7 +128,6 @@ def test_plugin_meta_lens_convergence_behavior():
 
 def test_plugin_meta_lens_error_handling():
     """Test meta-lens plugin error handling."""
-    import os
     os.environ["NOVA_ENABLE_META_LENS"] = "1"
 
     try:
@@ -158,7 +155,6 @@ def test_plugin_meta_lens_error_handling():
 
 def test_plugin_meta_lens_schema_validation():
     """Test that plugin output matches META_LENS_REPORT@1 schema."""
-    import os
     os.environ["NOVA_ENABLE_META_LENS"] = "1"
 
     try:

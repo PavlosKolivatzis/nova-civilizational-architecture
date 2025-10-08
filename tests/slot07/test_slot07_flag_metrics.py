@@ -1,7 +1,5 @@
 """Tests for Slot7 Phase-2 feature flag metrics."""
 
-import os
-import pytest
 
 
 def test_flag_metrics_defaults_off(monkeypatch):

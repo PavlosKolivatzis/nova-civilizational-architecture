@@ -29,7 +29,7 @@ import time
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Union
 
 
 def _get_config_source():

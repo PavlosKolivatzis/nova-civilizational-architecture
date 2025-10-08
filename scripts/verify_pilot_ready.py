@@ -11,9 +11,8 @@ import os
 import sys
 import json
 import subprocess
-import tempfile
 import pathlib
-from typing import Dict, Any
+from typing import Dict
 
 def check_environment() -> Dict[str, str]:
     """Check and display ANR environment configuration."""

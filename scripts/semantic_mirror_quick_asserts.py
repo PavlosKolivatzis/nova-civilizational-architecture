@@ -12,7 +12,6 @@ Usage:
 import sys
 import time
 import uuid
-from typing import Dict, Any
 
 
 def safe_import():

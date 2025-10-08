@@ -42,7 +42,7 @@ def test_lifespan_enabled_runs_tasks(monkeypatch, caplog):
 
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
-    from lifespan import create_fastapi_lifespan, LifespanManager, example_startup_task, example_shutdown_task
+    from lifespan import LifespanManager, example_startup_task, example_shutdown_task
 
     caplog.set_level(logging.INFO)
     monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "true")

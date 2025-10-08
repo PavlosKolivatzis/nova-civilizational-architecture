@@ -63,7 +63,6 @@ def health() -> dict:
     try:
         from slots.slot03_emotional_matrix.escalation import EmotionalEscalationManager
         escalation_mgr = EmotionalEscalationManager()
-        from slots.slot03_emotional_matrix.escalation import ThreatLevel
         _ = escalation_mgr.classify_threat(analysis_result)
         result["escalation_test"] = "passed"
     except Exception:

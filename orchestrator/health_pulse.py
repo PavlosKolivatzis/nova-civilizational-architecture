@@ -208,7 +208,7 @@ def run_morning_routine() -> None:
             try:
                 passed_count = int(result['summary'].split()[0])
                 total_passed += passed_count
-            except:
+            except Exception:
                 pass
 
     print()

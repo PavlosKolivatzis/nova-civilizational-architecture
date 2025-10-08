@@ -3,7 +3,7 @@
 All Nova slots should use this library to ensure consistent health reporting
 format across the entire system. Supports normal, minimal, degraded, and error states.
 """
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from time import time
 
 _HEALTH_SCHEMA_VERSION = "1.0"

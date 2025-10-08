@@ -7,7 +7,6 @@ Usage: python scripts/journal_reflection.py >> /var/log/nova/consciousness.jsonl
 
 import json
 import sys
-import time
 from orchestrator.reflection import nova_reflect
 
 

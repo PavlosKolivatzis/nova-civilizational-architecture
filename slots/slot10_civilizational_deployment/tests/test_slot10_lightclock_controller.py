@@ -1,18 +1,20 @@
 from slots.slot10_civilizational_deployment.core.lightclock_canary import LightClockCanaryController
 from slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper
+from types import SimpleNamespace
 
 class DummyHealth:
     def __init__(self, mirror):
         self.mirror = mirror
     def get_slot8_health(self):
-        class S: integrity_score=1.0; quarantine_active=False; recent_recoveries=0
-        return S()
+        return SimpleNamespace(
+            integrity_score=1.0,
+            quarantine_active=False,
+            recent_recoveries=0,
+        )
     def get_slot4_health(self):
-        class S: safe_mode_active=False; drift_z=0.0
-        return S()
+        return SimpleNamespace(safe_mode_active=False, drift_z=0.0)
     def get_runtime_metrics(self):
-        class R: error_rate=0.0; latency_p95=100; saturation=0.3
-        return R()
+        return SimpleNamespace(error_rate=0.0, latency_p95=100, saturation=0.3)
 
 class DummyPolicy:
     min_promotion_gap_s=30

@@ -10,7 +10,7 @@ from .policy import Slot10Policy
 from .gatekeeper import Gatekeeper
 from .health_feed import HealthFeedAdapter, MockHealthFeed, RuntimeMetrics
 from .audit import AuditLog
-from .metrics import CanaryMetricsExporter, CanaryMetrics
+from .metrics import CanaryMetricsExporter
 
 logger = logging.getLogger(__name__)
 

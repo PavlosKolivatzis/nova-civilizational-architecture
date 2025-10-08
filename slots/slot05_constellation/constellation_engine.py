@@ -32,7 +32,6 @@ class ConstellationEngine:
     def _get_tri_signals(self) -> Optional[Dict[str, float]]:
         """Read TRI coherence signals with robust fallback chain."""
         import os
-        from typing import Dict, Optional
         
         if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
             return None

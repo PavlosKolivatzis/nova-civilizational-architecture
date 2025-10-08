@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
-from .types import RepairDecision, RepairAction, Health
+from .types import RepairDecision, Health
 
 class RepairPlanner:
     def __init__(self):
@@ -17,8 +17,10 @@ class RepairPlanner:
 
     def record_outcome(self, decision: RepairDecision, success: bool, duration_s: float):
         a = decision.action
-        if success: self._succ[a] += 1
-        else: self._fail[a] += 1
+        if success:
+            self._succ[a] += 1
+        else:
+            self._fail[a] += 1
         s, f = self._succ[a], self._fail[a]
         # Beta(1,1)
         self.success_rates[a] = (s + 1) / (s + f + 2)

@@ -7,7 +7,7 @@ Integrates with existing ProductionControlEngine metrics collection.
 from __future__ import annotations
 import time
 import threading
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from collections import defaultdict
 from .production_control_engine import ProductionControlEngine
 

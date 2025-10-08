@@ -1,5 +1,6 @@
 from __future__ import annotations
-import contextlib, time
+import contextlib
+import time
 from typing import Optional
 
 class SafeMode:

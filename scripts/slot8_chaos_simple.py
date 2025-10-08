@@ -2,20 +2,15 @@
 """Simple chaos testing for Slot 8 corruption scenarios."""
 
 import argparse
-import random
-import time
-import tempfile
 import shutil
-from pathlib import Path
 import sys
+import tempfile
+import time
+from pathlib import Path
 
-# Add slot08 to path
-script_dir = Path(__file__).parent
-slot08_dir = script_dir.parent / "slots" / "slot08_memory_lock"
-sys.path.insert(0, str(slot08_dir))
+from slots.slot08_memory_lock.core.policy import Slot8Policy
+from slots.slot08_memory_lock.core.snapshotter import IntegritySnapshotter
 
-from core.policy import Slot8Policy
-from core.snapshotter import IntegritySnapshotter
 
 def test_bitflip_recovery():
     """Test recovery from bit corruption."""

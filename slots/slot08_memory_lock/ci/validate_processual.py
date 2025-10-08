@@ -110,7 +110,7 @@ class ProcessualValidator:
 
     def run_performance_benchmarks(self) -> ValidationResult:
         """Run performance benchmarks."""
-        print(f"\n🚀 Running Performance Benchmarks...")
+        print("\n🚀 Running Performance Benchmarks...")
 
         step_start = time.time()
 
@@ -155,7 +155,7 @@ class ProcessualValidator:
 
     def validate_acceptance_criteria(self) -> ValidationResult:
         """Validate Processual acceptance criteria."""
-        print(f"\n📋 Validating Acceptance Criteria...")
+        print("\n📋 Validating Acceptance Criteria...")
 
         step_start = time.time()
 
@@ -322,13 +322,13 @@ class ProcessualValidator:
         if overall_passed:
             print("\n✅ ALL VALIDATIONS PASSED")
             print("🎯 Slot 8 is ready for Processual (4.0) classification!")
-            print(f"\nNext Steps:")
+            print("\nNext Steps:")
             for step in report["processual_classification"]["next_steps"]:
                 print(f"  • {step}")
         else:
             print("\n❌ SOME VALIDATIONS FAILED")
             print("⚠️  Slot 8 remains at Structural (3.0) level")
-            print(f"\nRequired Actions:")
+            print("\nRequired Actions:")
             for step in report["processual_classification"]["next_steps"]:
                 print(f"  • {step}")
 

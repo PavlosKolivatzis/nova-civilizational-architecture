@@ -175,7 +175,7 @@ class IntegritySnapshotter:
 
                 # Load metadata
                 metadata = json.loads(metadata_file.read_text())
-                signature = bytes.fromhex(metadata.get("sig", ""))
+                bytes.fromhex(metadata.get("sig", ""))
 
                 snapshot_meta = SnapshotMeta(
                     id=metadata["id"],
@@ -234,7 +234,7 @@ class IntegritySnapshotter:
 
             current_root = self.integrity_store.merkle_root_for_dir(temp_restore)
             if current_root != expected_root:
-                logger.error(f"Restored content integrity check failed")
+                logger.error("Restored content integrity check failed")
                 shutil.rmtree(temp_restore)
                 return False
 

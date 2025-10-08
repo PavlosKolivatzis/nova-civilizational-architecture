@@ -1,7 +1,6 @@
 """Persistence layer for Truth Anchor Engine."""
 
 import json
-import os
 import tempfile
 import threading
 from pathlib import Path

@@ -24,7 +24,7 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
             self._processor = DeltaThreshProcessor()
             print(f"🎯 ΔTHRESH Manager started (v{self.version})")
         except ImportError:
-            print(f"⚠️ ΔTHRESH processor not available")
+            print("⚠️ ΔTHRESH processor not available")
     
     def stop(self) -> None:
         """Clean up ΔTHRESH resources."""

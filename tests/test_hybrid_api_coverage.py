@@ -7,7 +7,7 @@ Part of DEF-006 Sprint 1.
 import pytest
 import asyncio
 import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from slots.slot09_distortion_protection.hybrid_api import (
     HybridApiConfig,
     HybridDistortionDetectionAPI,
@@ -222,12 +222,12 @@ async def test_detect_distortion_circuit_breaker_open():
 @pytest.mark.asyncio
 async def test_detect_distortion_validation_error():
     """Test detect_distortion handles content validation errors."""
-    api = HybridDistortionDetectionAPI()
+    HybridDistortionDetectionAPI()
 
     # Empty content - Pydantic validator raises error at construction
     # Use pytest.raises to catch ValueError from Pydantic/dataclass validation
     with pytest.raises(ValueError, match="Content cannot be empty"):
-        request = DistortionDetectionRequest(content="   ", context={})
+        DistortionDetectionRequest(content="   ", context={})
 
 
 @pytest.mark.asyncio
@@ -268,7 +268,7 @@ async def test_detect_distortion_cache_hit():
     request = DistortionDetectionRequest(content="cached test", context={})
 
     # First request
-    response1 = await api.detect_distortion(request)
+    await api.detect_distortion(request)
     cache_key = api._generate_secure_cache_key("cached test", {})
 
     # Cache should have entry
@@ -276,7 +276,7 @@ async def test_detect_distortion_cache_hit():
     assert cached is not None
 
     # Second identical request should hit cache
-    response2 = await api.detect_distortion(request)
+    await api.detect_distortion(request)
 
     assert api.content_cache.hits > 0
 
@@ -601,7 +601,6 @@ def test_pydantic_fallback_dataclass():
     """Test fallback dataclass implementations when Pydantic unavailable."""
     # This tests the branch at lines 200-237 (Pydantic fallback)
     # The actual classes are tested above, this verifies the import pattern works
-    from slots.slot09_distortion_protection.hybrid_api import PYDANTIC_AVAILABLE
 
     # Environment may or may not have pydantic_settings (depends on install)
     # Test that DistortionDetectionRequest works regardless

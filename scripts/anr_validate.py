@@ -5,7 +5,6 @@ One-button validation for complete A-tier rollout
 """
 
 import os
-import json
 import sys
 
 # Add current directory to Python path for imports

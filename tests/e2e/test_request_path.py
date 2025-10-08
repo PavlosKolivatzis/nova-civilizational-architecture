@@ -2,8 +2,7 @@
 End-to-end test for Slot-1 request path.
 """
 import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 pytestmark = pytest.mark.asyncio
 

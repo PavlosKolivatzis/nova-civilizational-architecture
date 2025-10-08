@@ -10,13 +10,13 @@ import threading
 from unittest.mock import Mock, patch
 
 from orchestrator.semantic_mirror import (
-    SemanticMirror, ContextScope, ContextEntry, get_semantic_mirror, reset_semantic_mirror
+    SemanticMirror, ContextScope, get_semantic_mirror, reset_semantic_mirror
 )
 from slots.slot07_production_controls.context_publisher import (
-    ProductionControlContextPublisher, get_context_publisher, reset_context_publisher
+    ProductionControlContextPublisher, reset_context_publisher
 )
 from slots.slot06_cultural_synthesis.context_aware_synthesis import (
-    ContextAwareCulturalSynthesis, get_context_aware_synthesis, reset_context_aware_synthesis
+    ContextAwareCulturalSynthesis, reset_context_aware_synthesis
 )
 
 

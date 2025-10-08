@@ -96,7 +96,6 @@ def _get_meta_lens_metrics() -> Dict[str, Any]:
         # Try to import META_LENS modules
         try:
             import slots.slot02_deltathresh.meta_lens_processor as mlp
-            import slots.slot02_deltathresh.plugin_meta_lens_addition
 
             # Get runtime metrics if available
             last_epoch = getattr(mlp, "last_epoch", 0)

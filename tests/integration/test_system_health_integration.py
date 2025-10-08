@@ -9,11 +9,9 @@ Tests the complete health system after polish sprint changes:
 Based on actual health system implementation analysis.
 """
 
-import pytest
 import time
 import os
-from typing import Dict, Any
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestSystemHealthIntegration:

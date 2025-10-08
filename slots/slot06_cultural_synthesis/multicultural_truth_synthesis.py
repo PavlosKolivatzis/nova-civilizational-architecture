@@ -1,7 +1,14 @@
 from __future__ import annotations
 
-# --- legacy import hard gate ---
 import os
+from collections.abc import Mapping
+from typing import Any, Dict, Iterator, Optional
+from warnings import warn
+
+from .adapter import CulturalSynthesisAdapter
+from .engine import CulturalProfile, CulturalSynthesisEngine
+
+# --- legacy import hard gate ---
 
 def _env_truthy(name: str) -> bool:
     v = os.getenv(name, "")
@@ -13,13 +20,6 @@ if _env_truthy("NOVA_BLOCK_LEGACY_SLOT6"):
         "Use engine.CulturalSynthesisEngine and adapter.CulturalSynthesisAdapter."
     )
 # --- rest of file (aliases, ProfileWrapper, etc.) ---
-
-from collections.abc import Mapping
-from typing import Iterator, Any, Dict, Optional
-from warnings import warn
-
-from .engine import CulturalSynthesisEngine, CulturalProfile
-from .adapter import CulturalSynthesisAdapter
 
 # Legacy usage tracking for retirement planning
 _LEGACY_CALL_COUNT = 0

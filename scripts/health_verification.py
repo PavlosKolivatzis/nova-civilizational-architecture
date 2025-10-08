@@ -6,9 +6,8 @@ standardized health reporting using the shared healthkit library.
 """
 
 import requests
-import json
 import sys
-from typing import Dict, Any, List
+from typing import Dict, Any
 from datetime import datetime
 
 
@@ -101,7 +100,7 @@ def main():
     for slot_name in expected_slots:
         result = verify_slot_health(slot_name)
         if result["status"] == "ok":
-            health_data = result["health_data"]
+            result["health_data"]
             engine_status = result["engine_status"]
             self_check = result["self_check"]
             capabilities = result["capabilities_count"]

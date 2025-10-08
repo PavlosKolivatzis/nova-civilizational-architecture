@@ -2,7 +2,7 @@
 
 import time
 from collections import deque, defaultdict
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 
 
@@ -171,7 +171,7 @@ class Slot8MetricsCollector:
     def export_prometheus_metrics(self) -> str:
         """Export metrics in Prometheus format for TSDB scraping."""
         lines = []
-        current_time = time.time()
+        time.time()
 
         for metric_name, points in self.metrics.items():
             if not points:

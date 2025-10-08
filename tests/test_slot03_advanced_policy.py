@@ -1,7 +1,5 @@
 """Comprehensive test suite for Slot 3 advanced safety policy."""
-import pytest
 import time
-from unittest.mock import Mock, patch
 
 from slots.slot03_emotional_matrix.advanced_policy import (
     AdvancedSafetyPolicy, RateLimiter, SafetyViolation

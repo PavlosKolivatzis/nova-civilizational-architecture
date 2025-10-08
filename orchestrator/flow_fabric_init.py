@@ -9,7 +9,7 @@ registering the expected inter-slot contract relationships.
 import logging
 import os
 import yaml
-from typing import Dict, Any, List
+from typing import Dict, Any
 from .adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
 logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ def initialize_flow_fabric() -> None:
     for contract_name in KNOWN_CONTRACTS:
         try:
             link_config = create_adaptive_link_config(contract_name, config_data)
-            link = adaptive_link_registry.get_link(contract_name, link_config)
+            adaptive_link_registry.get_link(contract_name, link_config)
             registered_count += 1
             logger.debug(f"Registered adaptive link: {contract_name} (adaptation_enabled={link_config.adaptation_enabled})")
         except Exception as e:

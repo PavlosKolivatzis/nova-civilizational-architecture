@@ -7,7 +7,6 @@ import yaml
 import asyncio
 import logging
 from pathlib import Path
-from dataclasses import field
 from typing import Dict, Any, Optional, List, Callable
 import threading
 from datetime import datetime
@@ -509,7 +508,7 @@ async def get_config_manager() -> EnhancedConfigManager:
 def get_slot_config(slot_id: int, **overrides) -> Dict[str, Any]:
     """Sync wrapper that works in both async and sync contexts."""
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # already in async context
         mgr = _global_config_manager
         if mgr is None:

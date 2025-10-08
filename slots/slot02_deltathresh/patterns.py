@@ -40,7 +40,7 @@ class PatternDetector:
         self.patterns = compile_detection_patterns()
 
     def detect_patterns(self, content: str) -> Dict[str, float]:
-        words = max(1, _word_count_fast(content))
+        max(1, _word_count_fast(content))
         scores: Dict[str, float] = {}
         for layer, pats in self.patterns.items():
             hits = 0
