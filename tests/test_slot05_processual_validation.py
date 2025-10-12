@@ -7,8 +7,8 @@ for 4.0 Processual maturity level in the constellation navigation system.
 import pytest
 from unittest.mock import MagicMock
 
-from slots.slot05_constellation.enhanced_constellation_engine import EnhancedConstellationEngine
-from slots.slot05_constellation.adaptive_processor import AdaptiveProcessor
+from nova.slots.slot05_constellation.enhanced_constellation_engine import EnhancedConstellationEngine
+from nova.slots.slot05_constellation.adaptive_processor import AdaptiveProcessor
 from orchestrator.adapters.enhanced_slot5_constellation import EnhancedSlot5ConstellationAdapter
 
 

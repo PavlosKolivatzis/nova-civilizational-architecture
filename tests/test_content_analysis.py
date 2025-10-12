@@ -1,7 +1,7 @@
 import asyncio
 import pytest
 
-from content_analysis import analyze_content, analyze_content_sync
+from nova.content_analysis import analyze_content, analyze_content_sync
 
 
 @pytest.mark.asyncio

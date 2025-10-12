@@ -1,5 +1,5 @@
-from slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine, EmotionConfig
-from slots.slot03_emotional_matrix.safety_policy import basic_safety_policy
+from nova.slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine, EmotionConfig
+from nova.slots.slot03_emotional_matrix.safety_policy import basic_safety_policy
 import pytest
 
 

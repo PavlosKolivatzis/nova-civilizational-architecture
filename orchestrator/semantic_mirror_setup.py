@@ -113,8 +113,8 @@ def _setup_slot7_context_publishing() -> None:
     """Setup Slot 7 context publishing integration."""
     try:
         # Import here to avoid circular dependencies
-        from slots.slot07_production_controls.context_publisher import get_context_publisher
-        from slots.slot07_production_controls.production_control_engine import ProductionControlEngine
+        from nova.slots.slot07_production_controls.context_publisher import get_context_publisher
+        from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
         
         # Get production engine instance
         # Note: In production, this would be the actual running engine instance
@@ -143,7 +143,7 @@ def _setup_slot6_context_consumption() -> None:
     """Setup Slot 6 context-aware synthesis integration."""
     try:
         # Import here to avoid circular dependencies
-        from slots.slot06_cultural_synthesis.context_aware_synthesis import get_context_aware_synthesis
+        from nova.slots.slot06_cultural_synthesis.context_aware_synthesis import get_context_aware_synthesis
         
         # Initialize context-aware synthesis
         # Note: Base engine would be wired in production
@@ -213,8 +213,8 @@ def get_semantic_mirror_health() -> Dict[str, Any]:
 def reset_semantic_mirror_integration() -> None:
     """Reset Semantic Mirror integration (for testing)."""
     from orchestrator.semantic_mirror import reset_semantic_mirror
-    from slots.slot07_production_controls.context_publisher import reset_context_publisher
-    from slots.slot06_cultural_synthesis.context_aware_synthesis import reset_context_aware_synthesis
+    from nova.slots.slot07_production_controls.context_publisher import reset_context_publisher
+    from nova.slots.slot06_cultural_synthesis.context_aware_synthesis import reset_context_aware_synthesis
     
     reset_semantic_mirror()
     reset_context_publisher() 

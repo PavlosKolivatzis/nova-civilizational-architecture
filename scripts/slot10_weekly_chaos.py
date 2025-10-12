@@ -9,7 +9,7 @@ import argparse
 import json
 import time
 import random
-from slots.slot10_civilizational_deployment.core import (
+from nova.slots.slot10_civilizational_deployment.core import (
     Slot10Policy, Gatekeeper, CanaryController,
     MockHealthFeed, CanaryMetricsExporter, SnapshotBackout
 )

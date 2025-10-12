@@ -29,7 +29,7 @@ def _synthesize_culture(mode: str = "normal", **kw):
     return synthesize(mode=mode, **kw)
 
 def _emit_backpressure(level: float, reason: str = "routing", **kw):
-    from slots.slot07_production_controls.core.reflex import emit_backpressure
+    from nova.slots.slot07_production_controls.core.reflex import emit_backpressure
     return emit_backpressure(level=level, reason=reason)
 
 def _deploy_canary(**kw):

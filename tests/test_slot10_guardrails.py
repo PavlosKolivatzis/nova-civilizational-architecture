@@ -1,11 +1,11 @@
 
-from slots.slot06_cultural_synthesis.engine import (
+from nova.slots.slot06_cultural_synthesis.engine import (
     CulturalProfile,
     GuardrailValidationResult,
 )
 from frameworks.enums import DeploymentGuardrailResult
-from slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
-from slots.slot10_civilizational_deployment.models import MLSDecision
+from nova.slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
+from nova.slots.slot10_civilizational_deployment.models import MLSDecision
 
 
 class StubSlot6:

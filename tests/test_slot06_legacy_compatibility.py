@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skipif(
 
 # Conditional imports to avoid ImportError during test collection
 if not _env_truthy("NOVA_BLOCK_LEGACY_SLOT6"):
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
         ProfileWrapper,
         AdaptiveSynthesisEngine, 
         MulticulturalTruthSynthesisAdapter
@@ -121,7 +121,7 @@ def test_legacy_deprecation_warning():
     import sys
     
     # Clear module cache to ensure warning fires
-    module_name = 'slots.slot06_cultural_synthesis.multicultural_truth_synthesis'
+    module_name = 'nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis'
     if module_name in sys.modules:
         del sys.modules[module_name]
     

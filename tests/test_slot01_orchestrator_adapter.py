@@ -48,12 +48,12 @@ def adapter_testbed(monkeypatch):
                 raise events["cleanup_exception"]
             return events.get("cleanup_result", 2)
 
-    fake_core = types.ModuleType("slots.slot01_truth_anchor.core")
+    fake_core = types.ModuleType("nova.slots.slot01_truth_anchor.core")
     fake_core.TruthAnchorEngine = DummyEngine
     monkeypatch.setitem(sys.modules, fake_core.__name__, fake_core)
 
-    sys.modules.pop("slots.slot01_truth_anchor.orchestrator_adapter", None)
-    adapter_module = importlib.import_module("slots.slot01_truth_anchor.orchestrator_adapter")
+    sys.modules.pop("nova.slots.slot01_truth_anchor.orchestrator_adapter", None)
+    adapter_module = importlib.import_module("nova.slots.slot01_truth_anchor.orchestrator_adapter")
     adapter_module = importlib.reload(adapter_module)
 
     monkeypatch.setattr(adapter_module, "slot1_adapter", adapter_module.Slot1Adapter())

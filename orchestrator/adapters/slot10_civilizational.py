@@ -3,9 +3,9 @@ import logging
 from typing import Any, Dict
 
 try:
-    from slots.slot10_civilizational_deployment.deployer import InstitutionalNodeDeployer
-    from slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
-    from slots.slot10_civilizational_deployment.phase_space import NovaPhaseSpaceSimulator
+    from nova.slots.slot10_civilizational_deployment.deployer import InstitutionalNodeDeployer
+    from nova.slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
+    from nova.slots.slot10_civilizational_deployment.phase_space import NovaPhaseSpaceSimulator
     from orchestrator.adapters.slot6_cultural import Slot6Adapter
     from orchestrator.adapters.slot4_tri import Slot4TRIAdapter
 

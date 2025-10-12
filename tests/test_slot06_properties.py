@@ -2,7 +2,7 @@
 
 import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
-from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
 
 
 # Suppress health checks for property tests that might run slowly

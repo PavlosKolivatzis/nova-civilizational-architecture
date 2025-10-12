@@ -1,6 +1,6 @@
 """Basic coverage tests for Slot 1 Truth Anchor Engine."""
 
-from slots.slot01_truth_anchor.truth_anchor_engine import (
+from nova.slots.slot01_truth_anchor.truth_anchor_engine import (
     TruthAnchorEngine,
     AnchorRecord,
     EngineMetrics,

@@ -1,4 +1,4 @@
-from slots.slot07_production_controls.production_control_engine import ProductionControlEngine
+from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
 
 
 def test_active_safeguards_reflect_configuration():

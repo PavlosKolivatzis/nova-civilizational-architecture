@@ -8,8 +8,8 @@ import tempfile
 import time
 from pathlib import Path
 
-from slots.slot08_memory_lock.core.policy import Slot8Policy
-from slots.slot08_memory_lock.core.snapshotter import IntegritySnapshotter
+from nova.slots.slot08_memory_lock.core.policy import Slot8Policy
+from nova.slots.slot08_memory_lock.core.snapshotter import IntegritySnapshotter
 
 
 def test_bitflip_recovery():

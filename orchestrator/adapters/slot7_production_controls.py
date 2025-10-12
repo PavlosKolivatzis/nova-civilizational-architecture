@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict
 
 try:
-    from slots.slot07_production_controls.production_control_engine import ProductionControlEngine
+    from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
     ENGINE = ProductionControlEngine()
     AVAILABLE = True
 except Exception as exc:  # pragma: no cover - optional slot

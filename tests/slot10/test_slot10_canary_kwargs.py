@@ -1,7 +1,7 @@
 """Test canary kwargs compatibility for CanaryController."""
 from pathlib import Path
 import tempfile
-from slots.slot10_civilizational_deployment.core.audit import AuditLog
+from nova.slots.slot10_civilizational_deployment.core.audit import AuditLog
 
 
 def test_record_accepts_canary_kwargs():

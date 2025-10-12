@@ -18,7 +18,7 @@ class Slot4TRIAdapter:
         """Get the operational TRI engine for real-time monitoring."""
         if self._operational_engine is None:
             try:
-                from slots.slot04_tri.core.tri_engine import TriEngine  # Engine 1
+                from nova.slots.slot04_tri.core.tri_engine import TriEngine  # Engine 1
                 self._operational_engine = TriEngine()
             except Exception:
                 self._operational_engine = False

@@ -1,7 +1,7 @@
 """Test Slot05 TRI production path without mocked mirror."""
 
 from unittest.mock import patch
-from slots.slot05_constellation.constellation_engine import ConstellationEngine
+from nova.slots.slot05_constellation.constellation_engine import ConstellationEngine
 
 
 def test_tri_fallbacks_work_without_mocked_mirror():

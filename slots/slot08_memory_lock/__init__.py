@@ -1,33 +1,33 @@
-"""Slot 8 Memory Lock & IDS Protection - Processual (4.0) Self-Healing System."""
+# ruff: noqa: E402
+"""Compatibility shim for nova.slots.slot08_memory_lock."""
 
-__version__ = "4.0.0"
-__maturity__ = "Processual"
+from __future__ import annotations
 
-from .core.types import (
-    ThreatLevel,
-    RepairAction,
-    QuarantineReason,
-    HealthMetrics,
-    IDSEvent,
-    SnapshotMeta,
-    RepairDecision
-)
+from pathlib import Path
+from src_bootstrap import ensure_src_on_path
 
-from .core.policy import Slot8Policy
-from .core.quarantine import QuarantineSystem
-from .core.repair_planner import RepairPlanner
-from .core.entropy_monitor import EntropyMonitor
+ensure_src_on_path()
 
-__all__ = [
-    "ThreatLevel",
-    "RepairAction",
-    "QuarantineReason",
-    "HealthMetrics",
-    "IDSEvent",
-    "SnapshotMeta",
-    "RepairDecision",
-    "Slot8Policy",
-    "QuarantineSystem",
-    "RepairPlanner",
-    "EntropyMonitor"
-]
+import importlib
+import sys
+
+_target = "nova.slots.slot08_memory_lock"
+_module = importlib.import_module(_target)
+
+src_path = Path(__file__).resolve().parents[2] / 'src' / 'nova' / 'slots' / 'slot08_memory_lock'
+root_path = Path(__file__).resolve().parent
+
+__path__ = []
+for candidate in (root_path, src_path):
+    if candidate.exists():
+        path_str = str(candidate)
+        if path_str not in __path__:
+            __path__.append(path_str)
+
+if hasattr(_module, '__path__'):
+    for entry in _module.__path__:
+        if entry not in __path__:
+            __path__.append(entry)
+
+sys.modules.setdefault(_target, _module)
+sys.modules[__name__] = _module

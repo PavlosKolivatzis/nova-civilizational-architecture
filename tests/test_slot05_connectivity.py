@@ -1,4 +1,4 @@
-from slots.slot05_constellation.constellation_engine import ConstellationEngine
+from nova.slots.slot05_constellation.constellation_engine import ConstellationEngine
 
 
 def test_connectivity_across_components():

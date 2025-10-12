@@ -3,7 +3,7 @@ import logging
 from typing import Any, Optional, Set
 
 try:
-    from slots.slot08_memory_ethics.lock_guard import EthicsGuard, MemoryLock
+    from nova.slots.slot08_memory_ethics.lock_guard import EthicsGuard, MemoryLock
     AVAILABLE = True
 except Exception as exc:  # pragma: no cover - slot optional
     logging.getLogger(__name__).exception(

@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 try:
-    from slots.slot02_deltathresh.core import DeltaThreshProcessor
-    from slots.slot02_deltathresh.models import ProcessingResult
+    from nova.slots.slot02_deltathresh.core import DeltaThreshProcessor
+    from nova.slots.slot02_deltathresh.models import ProcessingResult
     ENGINE = DeltaThreshProcessor()
     AVAILABLE = True
 except Exception as exc:  # pragma: no cover - slot optional

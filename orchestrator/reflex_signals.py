@@ -235,7 +235,7 @@ def get_reflex_bus() -> ReflexBus:
 def setup_slot7_reflex_integration() -> None:
     """Setup integration between Slot 7 and reflex bus."""
     from .adaptive_connections import adaptive_link_registry
-    from slots.slot07_production_controls.reflex_emitter import get_reflex_emitter
+    from nova.slots.slot07_production_controls.reflex_emitter import get_reflex_emitter
     
     # Get instances
     reflex_bus = get_reflex_bus()

@@ -5,17 +5,17 @@ from typing import Any, Dict, Optional
 import logging
 
 try:
-    from slots.slot02_deltathresh.models import ProcessingResult
+    from nova.slots.slot02_deltathresh.models import ProcessingResult
 except Exception:  # pragma: no cover - Slot 2 always available in tests
     ProcessingResult = Any  # type: ignore
 
 try:
-    from slots.slot06_cultural_synthesis.engine import (
+    from nova.slots.slot06_cultural_synthesis.engine import (
         CulturalSynthesisEngine,
         CulturalProfile,
         GuardrailValidationResult,
     )
-    from slots.slot06_cultural_synthesis.adapter import MulticulturalTruthSynthesisAdapter
+    from nova.slots.slot06_cultural_synthesis.adapter import MulticulturalTruthSynthesisAdapter
     ENGINE = MulticulturalTruthSynthesisAdapter(CulturalSynthesisEngine())
     AVAILABLE = True
 except ImportError as exc:  # pragma: no cover - Slot 6 always present in tests

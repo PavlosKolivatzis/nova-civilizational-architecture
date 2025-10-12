@@ -1,17 +1,33 @@
-"""Slot 9 Distortion Protection API package."""
+# ruff: noqa: E402
+"""Compatibility shim for nova.slots.slot09_distortion_protection."""
 
-from .hybrid_api import (
-    HybridDistortionDetectionAPI,
-    create_hybrid_slot9_api,
-    create_production_config,
-    create_development_config,
-    create_fastapi_app,
-)
+from __future__ import annotations
 
-__all__ = [
-    "HybridDistortionDetectionAPI",
-    "create_hybrid_slot9_api",
-    "create_production_config",
-    "create_development_config",
-    "create_fastapi_app",
-]
+from pathlib import Path
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+import importlib
+import sys
+
+_target = "nova.slots.slot09_distortion_protection"
+_module = importlib.import_module(_target)
+
+src_path = Path(__file__).resolve().parents[2] / 'src' / 'nova' / 'slots' / 'slot09_distortion_protection'
+root_path = Path(__file__).resolve().parent
+
+__path__ = []
+for candidate in (root_path, src_path):
+    if candidate.exists():
+        path_str = str(candidate)
+        if path_str not in __path__:
+            __path__.append(path_str)
+
+if hasattr(_module, '__path__'):
+    for entry in _module.__path__:
+        if entry not in __path__:
+            __path__.append(entry)
+
+sys.modules.setdefault(_target, _module)
+sys.modules[__name__] = _module

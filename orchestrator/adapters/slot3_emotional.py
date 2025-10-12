@@ -2,9 +2,9 @@ import logging
 from typing import Any, Dict, Optional
 
 try:
-    from slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine
-    from slots.slot03_emotional_matrix.escalation import EmotionalEscalationManager, ThreatLevel
-    from slots.slot03_emotional_matrix.advanced_policy import AdvancedSafetyPolicy
+    from nova.slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine
+    from nova.slots.slot03_emotional_matrix.escalation import EmotionalEscalationManager, ThreatLevel
+    from nova.slots.slot03_emotional_matrix.advanced_policy import AdvancedSafetyPolicy
     ENGINE = EmotionalMatrixEngine()
     ESCALATION_MANAGER = None  # Will be initialized with registry
     SAFETY_POLICY = AdvancedSafetyPolicy()

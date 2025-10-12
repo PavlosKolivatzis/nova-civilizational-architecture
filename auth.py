@@ -1,15 +1,10 @@
-import os
-from typing import Dict, Any
+# ruff: noqa: E402
+"""Compatibility shim for nova.auth."""
 
-import jwt
+from __future__ import annotations
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "testing-secret")
-JWT_ALGORITHM = "HS256"
+from src_bootstrap import ensure_src_on_path
 
-def verify_jwt_token(token: str) -> Dict[str, Any]:
-    """Verify a JWT token and return the decoded payload.
+ensure_src_on_path()
 
-    Raises:
-        PyJWTError: If the token is invalid or expired.
-    """
-    return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+from nova.auth import *  # noqa: F401,F403

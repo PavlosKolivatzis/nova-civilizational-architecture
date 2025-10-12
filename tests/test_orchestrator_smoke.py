@@ -1,6 +1,6 @@
 import pytest
 
-from slots.slot06_cultural_synthesis.engine import (
+from nova.slots.slot06_cultural_synthesis.engine import (
     CulturalProfile,
     GuardrailValidationResult,
 )

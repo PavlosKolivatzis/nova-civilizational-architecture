@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 """FastAPI application wiring for the orchestrator.
 
 FastAPI is an optional dependency for this project.  The tests exercise the
@@ -16,7 +17,11 @@ import time
 from contextlib import asynccontextmanager
 
 import slots
-from logging_config import configure_logging
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+from nova.logging_config import configure_logging
 from orchestrator.adapters import (
     Slot10DeploymentAdapter,
     Slot2DeltaThreshAdapter,
@@ -258,7 +263,7 @@ if FastAPI is not None:
             logger.warning(f"Flow fabric initialization failed: {e}")
 
         # register slot06 for unlearn pulse fanout
-        from slots.slot06_cultural_synthesis.receiver import register_slot06_receiver
+        from nova.slots.slot06_cultural_synthesis.receiver import register_slot06_receiver
         register_slot06_receiver()
 
         # Phase 2: Initialize creativity governor and log config

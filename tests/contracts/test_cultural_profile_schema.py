@@ -4,7 +4,7 @@
 
 def test_cultural_profile_schema_v1():
     """Test CULTURAL_PROFILE@1 contract - freeze schema and validate bounds."""
-    from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+    from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
     
     engine = CulturalSynthesisEngine()
     
@@ -57,7 +57,7 @@ def test_cultural_profile_schema_v1():
 
 def test_cultural_synthesis_safety_bounds():
     """Test that synthesis always produces safe bounds regardless of input."""
-    from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+    from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
     
     engine = CulturalSynthesisEngine()
     
@@ -104,8 +104,8 @@ def test_cultural_synthesis_safety_bounds():
 
 def test_adapter_profile_validation():
     """Test adapter validates profiles correctly."""
-    from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
-    from slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
+    from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+    from nova.slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
     
     engine = CulturalSynthesisEngine()
     adapter = CulturalSynthesisAdapter(engine)
@@ -121,7 +121,7 @@ def test_adapter_profile_validation():
 
 def test_schema_version_stability():
     """Test that we can detect breaking changes to the schema."""
-    from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+    from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
     
     engine = CulturalSynthesisEngine()
     result = engine.synthesize({"tri_score": 0.5, "layer_scores": {}})
@@ -150,7 +150,7 @@ def test_schema_version_stability():
 
 def test_risk_threshold_contract():
     """Test that risk assessment follows expected thresholds."""
-    from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+    from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
     
     engine = CulturalSynthesisEngine()
     

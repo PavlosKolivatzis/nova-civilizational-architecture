@@ -50,11 +50,11 @@ class NovaOrchestrator:
 
     def _init_slot10(self) -> None:
         try:
-            from slots.slot10_civilizational_deployment.deployer import (
+            from nova.slots.slot10_civilizational_deployment.deployer import (
                 InstitutionalNodeDeployer,
             )
-            from slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
-            from slots.slot10_civilizational_deployment.phase_space import (
+            from nova.slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
+            from nova.slots.slot10_civilizational_deployment.phase_space import (
                 NovaPhaseSpaceSimulator,
             )
 

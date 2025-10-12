@@ -4,7 +4,7 @@
 
 def test_flag_metrics_defaults_off(monkeypatch):
     """Test flag metrics with all flags disabled (default state)."""
-    from slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
+    from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
 
     # Clear all flag environment variables
     for k in ("NOVA_ENABLE_TRI_LINK", "NOVA_ENABLE_LIFESPAN", "NOVA_USE_SHARED_HASH"):
@@ -21,7 +21,7 @@ def test_flag_metrics_defaults_off(monkeypatch):
 
 def test_flag_metrics_truthy_variants(monkeypatch):
     """Test that various truthy values enable flags."""
-    from slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
+    from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
 
     for val in ["1", "true", "TRUE", "yes", "YES", "on", "On"]:
         monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", val)
@@ -37,7 +37,7 @@ def test_flag_metrics_truthy_variants(monkeypatch):
 
 def test_flag_metrics_falsy_variants(monkeypatch):
     """Test that falsy values disable flags."""
-    from slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
+    from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
 
     for val in ["0", "false", "FALSE", "no", "off", "invalid", ""]:
         monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", val)
@@ -53,7 +53,7 @@ def test_flag_metrics_falsy_variants(monkeypatch):
 
 def test_effective_hash_method(monkeypatch):
     """Test effective hash method selection based on availability and flag."""
-    from slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
+    from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
 
     # Test with shared hash enabled
     monkeypatch.setenv("NOVA_USE_SHARED_HASH", "1")
@@ -72,7 +72,7 @@ def test_effective_hash_method(monkeypatch):
 
 def test_comprehensive_metrics_includes_flags():
     """Test that comprehensive metrics includes feature flag states."""
-    from slots.slot07_production_controls.production_control_engine import ProductionControlEngine
+    from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
 
     engine = ProductionControlEngine()
     metrics = engine.get_comprehensive_metrics()
@@ -107,7 +107,7 @@ def test_comprehensive_metrics_includes_flags():
 
 def test_flag_states_with_mixed_values(monkeypatch):
     """Test individual flag states with mixed values."""
-    from slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
+    from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
 
     monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "1")
     monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "0")

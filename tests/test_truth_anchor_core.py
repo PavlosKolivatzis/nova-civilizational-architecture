@@ -1,4 +1,4 @@
-from slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
+from nova.slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
 
 
 def test_engine_initializes_with_core_anchor():

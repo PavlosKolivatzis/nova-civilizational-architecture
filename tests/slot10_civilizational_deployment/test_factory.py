@@ -1,5 +1,5 @@
 
-import slots.slot10_civilizational_deployment.core.factory as factory
+import nova.slots.slot10_civilizational_deployment.core.factory as factory
 
 
 def test_build_canary_controller_lightclock(monkeypatch):

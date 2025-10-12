@@ -1,7 +1,7 @@
 """Test Slot05 TRI signal integration."""
 
 from unittest.mock import patch
-from slots.slot05_constellation.constellation_engine import ConstellationEngine
+from nova.slots.slot05_constellation.constellation_engine import ConstellationEngine
 
 
 class MockMirror:

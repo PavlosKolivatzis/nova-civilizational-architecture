@@ -1,6 +1,6 @@
 """Contract freeze test to prevent breaking changes to Slot 6 API."""
 
-from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
 
 
 # Hard freeze: any change to this set requires explicit schema version bump

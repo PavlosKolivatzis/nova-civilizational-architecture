@@ -1,7 +1,7 @@
 from collections import deque
 
 
-import slots.slot08_memory_lock.core.metrics as metrics
+import nova.slots.slot08_memory_lock.core.metrics as metrics
 
 
 class TimeStub:

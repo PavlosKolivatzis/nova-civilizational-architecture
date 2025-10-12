@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from slots.slot09_distortion_protection.hybrid_api import (
+from nova.slots.slot09_distortion_protection.hybrid_api import (
     CircuitBreaker,
     DistortionDetectionRequest,
     HybridDistortionDetectionAPI,
@@ -128,10 +128,10 @@ class TestHybridAPI:
     @pytest.mark.asyncio
     async def test_detect_distortion_success(self, hybrid_api, sample_request):
         with patch(
-            "slots.slot09_distortion_protection.hybrid_api.NOVA_INTEGRATION_AVAILABLE",
+            "nova.slots.slot09_distortion_protection.hybrid_api.NOVA_INTEGRATION_AVAILABLE",
             True,
         ), patch(
-            "slots.slot09_distortion_protection.hybrid_api.policy_check_with_ids"
+            "nova.slots.slot09_distortion_protection.hybrid_api.policy_check_with_ids"
         ) as mock_policy:
             mock_policy.return_value = {
                 "final_policy": "STANDARD_PROCESSING",
@@ -153,10 +153,10 @@ class TestHybridAPI:
     async def test_block_high_threat(self, hybrid_api):
         req = DistortionDetectionRequest(content="danger", trace_id="block-test")
         with patch(
-            "slots.slot09_distortion_protection.hybrid_api.NOVA_INTEGRATION_AVAILABLE",
+            "nova.slots.slot09_distortion_protection.hybrid_api.NOVA_INTEGRATION_AVAILABLE",
             True,
         ), patch(
-            "slots.slot09_distortion_protection.hybrid_api.policy_check_with_ids"
+            "nova.slots.slot09_distortion_protection.hybrid_api.policy_check_with_ids"
         ) as mock_policy:
             mock_policy.return_value = {
                 "final_policy": "BLOCK_OR_SANDBOX",
@@ -175,7 +175,7 @@ class TestHybridAPI:
     @pytest.mark.asyncio
     async def test_fallback_mode(self, hybrid_api, sample_request):
         with patch(
-            "slots.slot09_distortion_protection.hybrid_api.NOVA_INTEGRATION_AVAILABLE",
+            "nova.slots.slot09_distortion_protection.hybrid_api.NOVA_INTEGRATION_AVAILABLE",
             False,
         ):
             resp = await hybrid_api.detect_distortion(sample_request)
@@ -218,7 +218,7 @@ class TestHybridAPI:
         req = DistortionDetectionRequest(content="slow", trace_id="slow")
 
         with patch(
-            "slots.slot09_distortion_protection.hybrid_api.policy_check_with_ids",
+            "nova.slots.slot09_distortion_protection.hybrid_api.policy_check_with_ids",
             slow_policy,
         ):
             start = time.perf_counter()

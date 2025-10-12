@@ -1,25 +1,10 @@
-import asyncio
-from typing import Any, Dict
+# ruff: noqa: E402
+"""Compatibility shim for nova.content_analysis."""
 
-async def analyze_content(content: str) -> Dict[str, Any]:
-    """Asynchronously analyze textual content.
+from __future__ import annotations
 
-    The implementation is intentionally lightweight – it simply counts
-    characters and words.  The coroutine structure mirrors the async
-    patterns used elsewhere in the project and allows call sites to
-    ``await`` the analysis when running inside an event loop.
-    """
-    # Yield control to ensure cooperative scheduling with other coroutines
-    await asyncio.sleep(0)
-    words = content.split()
-    return {"characters": len(content), "words": len(words)}
+from src_bootstrap import ensure_src_on_path
 
-def analyze_content_sync(content: str) -> Dict[str, Any]:
-    """Synchronous wrapper around :func:`analyze_content`.
+ensure_src_on_path()
 
-    This provides backward compatibility for call sites that are not
-    ``async``-aware.  It runs the coroutine to completion using
-    ``asyncio.run``, mirroring the approach taken in other modules of the
-    repository.
-    """
-    return asyncio.run(analyze_content(content))
+from nova.content_analysis import *  # noqa: F401,F403

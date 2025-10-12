@@ -1,8 +1,13 @@
+# ruff: noqa: E402
 """Tests for newly registered slots."""
 import importlib
 import pytest
 
-from slot_loader import load_slot
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+from nova.slot_loader import load_slot
 
 
 SLOTS = [

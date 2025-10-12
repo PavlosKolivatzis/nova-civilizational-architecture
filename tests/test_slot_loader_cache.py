@@ -1,5 +1,10 @@
+# ruff: noqa: E402
 import time
-import slot_loader
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+from nova import slot_loader
 
 
 def test_find_file_uses_cache(tmp_path, monkeypatch):

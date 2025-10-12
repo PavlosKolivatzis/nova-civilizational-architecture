@@ -4,7 +4,7 @@ import time
 import threading
 from unittest.mock import patch
 
-from slots.slot07_production_controls.production_control_engine import (
+from nova.slots.slot07_production_controls.production_control_engine import (
     ProductionControlEngine,
     ProductionControlsCircuitBreaker,
     RateLimiter,

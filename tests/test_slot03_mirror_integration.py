@@ -1,7 +1,7 @@
 """Test Slot03 semantic mirror integration."""
 
 from unittest.mock import patch
-from slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine
+from nova.slots.slot03_emotional_matrix.emotional_matrix_engine import EmotionalMatrixEngine
 
 
 class MockMirror:

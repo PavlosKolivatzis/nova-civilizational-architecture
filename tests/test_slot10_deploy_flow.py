@@ -1,11 +1,11 @@
 import pytest
 
-from slots.slot06_cultural_synthesis.engine import (
+from nova.slots.slot06_cultural_synthesis.engine import (
     CulturalProfile,
     GuardrailValidationResult,
 )
 from frameworks.enums import DeploymentGuardrailResult
-from slots.slot10_civilizational_deployment import (
+from nova.slots.slot10_civilizational_deployment import (
     InstitutionalNodeDeployer,
     MetaLegitimacySeal,
     NovaPhaseSpaceSimulator,

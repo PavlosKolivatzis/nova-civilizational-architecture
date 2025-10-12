@@ -3,7 +3,7 @@ import logging
 from typing import Any, Dict
 
 try:
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         create_hybrid_slot9_api,
         DistortionDetectionRequest,
     )

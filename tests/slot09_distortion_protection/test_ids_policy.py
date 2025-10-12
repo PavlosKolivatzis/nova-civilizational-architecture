@@ -1,6 +1,6 @@
 import pytest
 
-import slots.slot09_distortion_protection.ids_policy as ids_policy
+import nova.slots.slot09_distortion_protection.ids_policy as ids_policy
 
 
 @pytest.fixture(autouse=True)

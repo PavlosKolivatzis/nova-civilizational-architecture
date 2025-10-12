@@ -4,7 +4,7 @@ This module re-exports the memory lock and ethics guard utilities from the
 Slot 8 implementation and attaches lightweight performance tracking.
 """
 
-from slots.slot08_memory_ethics.lock_guard import (
+from nova.slots.slot08_memory_ethics.lock_guard import (
     MemoryLock,
     EthicsGuard,
     SecurityError,

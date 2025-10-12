@@ -2,7 +2,7 @@
 import time
 from unittest.mock import Mock
 
-from slots.slot03_emotional_matrix.escalation import (
+from nova.slots.slot03_emotional_matrix.escalation import (
     EmotionalEscalationManager, ThreatLevel, EscalationEvent
 )
 

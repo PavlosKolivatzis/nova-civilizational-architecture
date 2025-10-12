@@ -13,7 +13,7 @@ def test_slot1_full_integration():
 
     try:
         # Test 1: Basic functionality with recovery metadata
-        from slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
+        from nova.slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
         engine = TruthAnchorEngine(storage_path=storage_path)
 
         # Register anchor and verify backup metadata is added
@@ -114,7 +114,7 @@ def test_slot1_error_handling():
     """Test error handling and graceful degradation."""
     # Test adapter with invalid storage path
     try:
-        from slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
+        from nova.slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
         engine = TruthAnchorEngine(storage_path='/invalid/path/test.json')
         engine.register('error.test', 'Error Test')
         assert True

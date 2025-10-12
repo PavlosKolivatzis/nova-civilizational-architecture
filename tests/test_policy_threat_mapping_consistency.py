@@ -2,7 +2,7 @@
 
 import pytest
 
-from slots.slot09_distortion_protection.hybrid_api import (
+from nova.slots.slot09_distortion_protection.hybrid_api import (
     HybridDistortionDetectionAPI,
     HybridApiConfig,
     PolicyAction,

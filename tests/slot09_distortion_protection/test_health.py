@@ -2,8 +2,8 @@ import importlib
 
 import pytest
 
-import slots.slot09_distortion_protection.health as health_mod
-import slots.slot09_distortion_protection.ids_policy as ids_policy_mod
+import nova.slots.slot09_distortion_protection.health as health_mod
+import nova.slots.slot09_distortion_protection.ids_policy as ids_policy_mod
 
 
 @pytest.fixture(autouse=True)
@@ -14,7 +14,7 @@ def reset_env(monkeypatch):
 
 
 def test_health_returns_minimal_when_hybrid_missing(monkeypatch):
-    hybrid_module = importlib.import_module("slots.slot09_distortion_protection.hybrid_api")
+    hybrid_module = importlib.import_module("nova.slots.slot09_distortion_protection.hybrid_api")
     original_class = getattr(hybrid_module, "HybridDistortionDetectionAPI")
     original_get_context = getattr(ids_policy_mod, "get_phase_lock_context")
     original_apply_policy = getattr(ids_policy_mod, "apply_ids_policy")
@@ -45,7 +45,7 @@ def test_health_happy_path(monkeypatch):
     def stub_apply_ids_policy(result):
         return {"policy": "STANDARD_PROCESSING", "reason": "ids:test", "severity": "normal"}
 
-    hybrid_module = importlib.import_module("slots.slot09_distortion_protection.hybrid_api")
+    hybrid_module = importlib.import_module("nova.slots.slot09_distortion_protection.hybrid_api")
     monkeypatch.setattr(hybrid_module, "HybridDistortionDetectionAPI", StubHybridAPI)
     ids_flags = importlib.import_module("config.feature_flags")
     monkeypatch.setattr(ids_flags, "IDS_ENABLED", True, raising=False)

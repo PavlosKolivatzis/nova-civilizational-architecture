@@ -246,7 +246,7 @@ def update_flag_metrics() -> None:
     """Update feature flag metrics for Prometheus export."""
     # Import inside function to avoid hard import at module import time
     try:
-        from slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
+        from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
         flags = get_flag_state_metrics()
         tri_on   = bool(flags.get("tri_link_enabled", False))
         life_on  = bool(flags.get("lifespan_enabled", False))
@@ -343,7 +343,7 @@ def update_semantic_mirror_metrics() -> None:
 
         # --- Slot6 decay metrics (increment by delta) ---
         try:
-            from slots.slot06_cultural_synthesis.receiver import get_slot6_decay_metrics
+            from nova.slots.slot06_cultural_synthesis.receiver import get_slot6_decay_metrics
             s6 = get_slot6_decay_metrics()
             # events
             cur_e = int(s6.get("decay_events", 0))
@@ -423,7 +423,7 @@ def update_system_health_metrics() -> None:
 
         # Deployment gate status - always compute even with defaults
         try:
-            from slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper
+            from nova.slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper
             gatekeeper = LightClockGatekeeper(mirror=mirror)
             gate_open = gatekeeper.should_open_gate()
             deployment_gate_gauge.set(1 if gate_open else 0)

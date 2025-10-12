@@ -1,13 +1,18 @@
+# ruff: noqa: E402
 import pytest
 import jwt
 from fastapi.testclient import TestClient
 
-from slots.slot09_distortion_protection.hybrid_api import (
+from nova.slots.slot09_distortion_protection.hybrid_api import (
     create_development_config,
     create_hybrid_slot9_api,
     create_fastapi_app,
 )
-from auth import JWT_SECRET
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+from nova.auth import JWT_SECRET
 
 
 def _token():

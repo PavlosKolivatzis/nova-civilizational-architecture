@@ -12,10 +12,10 @@ from unittest.mock import Mock, patch
 from orchestrator.semantic_mirror import (
     SemanticMirror, ContextScope, get_semantic_mirror, reset_semantic_mirror
 )
-from slots.slot07_production_controls.context_publisher import (
+from nova.slots.slot07_production_controls.context_publisher import (
     ProductionControlContextPublisher, reset_context_publisher
 )
-from slots.slot06_cultural_synthesis.context_aware_synthesis import (
+from nova.slots.slot06_cultural_synthesis.context_aware_synthesis import (
     ContextAwareCulturalSynthesis, reset_context_aware_synthesis
 )
 
@@ -241,7 +241,7 @@ class TestProductionControlContextPublisher:
     def test_context_publication(self):
         """Test that production control context is published correctly."""
         # Mock reflex emitter
-        with patch('slots.slot07_production_controls.context_publisher.get_reflex_emitter') as mock_reflex:
+        with patch('nova.slots.slot07_production_controls.context_publisher.get_reflex_emitter') as mock_reflex:
             mock_reflex.return_value.get_metrics.return_value = {
                 "signals_emitted_by_type": {"breaker_pressure": 2}
             }
@@ -481,7 +481,7 @@ class TestFullSemanticMirrorIntegration:
         publisher = ProductionControlContextPublisher(mock_engine)
         
         # Mock reflex emitter
-        with patch('slots.slot07_production_controls.context_publisher.get_reflex_emitter') as mock_reflex:
+        with patch('nova.slots.slot07_production_controls.context_publisher.get_reflex_emitter') as mock_reflex:
             mock_reflex.return_value.get_metrics.return_value = {
                 "signals_emitted_by_type": {"breaker_pressure": 3}
             }

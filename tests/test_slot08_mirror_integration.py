@@ -1,7 +1,7 @@
 """Test Slot08 semantic mirror integration."""
 
 from unittest.mock import patch
-from slots.slot08_memory_lock.core.repair_planner import RepairPlanner
+from nova.slots.slot08_memory_lock.core.repair_planner import RepairPlanner
 
 
 class MockMirror:

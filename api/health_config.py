@@ -65,7 +65,7 @@ def _get_slot6_metrics() -> Dict[str, Any]:
     except ImportError:
         # Fall back to legacy-only metrics
         try:
-            from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import get_legacy_usage_count
+            from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import get_legacy_usage_count
             legacy_calls = get_legacy_usage_count()
         except (ImportError, AttributeError):
             # Legacy module blocked or not available
@@ -95,7 +95,7 @@ def _get_meta_lens_metrics() -> Dict[str, Any]:
 
         # Try to import META_LENS modules
         try:
-            import slots.slot02_deltathresh.meta_lens_processor as mlp
+            import nova.slots.slot02_deltathresh.meta_lens_processor as mlp
 
             # Get runtime metrics if available
             last_epoch = getattr(mlp, "last_epoch", 0)

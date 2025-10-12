@@ -3,8 +3,8 @@ def test_constellation_updates_with_tri_layers(tmp_path, monkeypatch):
     # Enable TRI link for this test only
     monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "true")
 
-    from slots.slot05_constellation import ConstellationEngine
-    from slots.slot04_tri.core.tri_engine import TriEngine
+    from nova.slots.slot05_constellation import ConstellationEngine
+    from nova.slots.slot04_tri.core.tri_engine import TriEngine
 
     # Use temporary directories for test isolation
     model_dir = tmp_path / "tri_model"

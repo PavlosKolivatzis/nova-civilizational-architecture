@@ -40,7 +40,7 @@ class TestSlot3EmotionalAdapter:
             'rate_limited': False
         }
         
-        from slots.slot03_emotional_matrix.escalation import ThreatLevel
+        from nova.slots.slot03_emotional_matrix.escalation import ThreatLevel
         mock_escalation_mgr.classify_threat.return_value = ThreatLevel.LOW
         
         adapter = Slot3EmotionalAdapter(self.mock_registry)
@@ -72,7 +72,7 @@ class TestSlot3EmotionalAdapter:
             'rate_limited': False
         }
         
-        from slots.slot03_emotional_matrix.escalation import ThreatLevel, EscalationEvent
+        from nova.slots.slot03_emotional_matrix.escalation import ThreatLevel, EscalationEvent
         import time
         
         mock_escalation_mgr.classify_threat.return_value = ThreatLevel.HIGH
@@ -206,7 +206,7 @@ class TestSlot3EmotionalAdapter:
 
     def test_receive_escalation(self):
         """Test receiving escalation events from other slots."""
-        from slots.slot03_emotional_matrix.escalation import ThreatLevel, EscalationEvent
+        from nova.slots.slot03_emotional_matrix.escalation import ThreatLevel, EscalationEvent
         import time
         
         adapter = Slot3EmotionalAdapter()

@@ -1,6 +1,6 @@
 import pytest
 
-from slots.slot08_memory_ethics.lock_guard import (
+from nova.slots.slot08_memory_ethics.lock_guard import (
     MemoryLock,
     EthicsGuard,
     MemoryTamperError,

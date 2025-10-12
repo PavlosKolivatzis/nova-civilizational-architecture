@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from functools import wraps
@@ -5,13 +6,17 @@ from functools import wraps
 from flask import Flask, jsonify, request, render_template
 from jwt import PyJWTError
 
-from auth import verify_jwt_token
-from slots.slot06_cultural_synthesis.engine import (
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+from nova.auth import verify_jwt_token
+from nova.slots.slot06_cultural_synthesis.engine import (
     CulturalSynthesisEngine,
     CulturalProfile,
     GuardrailValidationResult,
 )
-from slots.slot06_cultural_synthesis.adapter import MulticulturalTruthSynthesisAdapter
+from nova.slots.slot06_cultural_synthesis.adapter import MulticulturalTruthSynthesisAdapter
 
 # Initialize the Flask app and the Slot 6 engine adapter
 app = Flask(__name__, template_folder="interface")

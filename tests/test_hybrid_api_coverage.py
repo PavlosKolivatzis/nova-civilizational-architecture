@@ -8,7 +8,7 @@ import pytest
 import asyncio
 import time
 from unittest.mock import patch
-from slots.slot09_distortion_protection.hybrid_api import (
+from nova.slots.slot09_distortion_protection.hybrid_api import (
     HybridApiConfig,
     HybridDistortionDetectionAPI,
     DistortionDetectionRequest,

@@ -2,13 +2,13 @@
 import pytest
 from unittest.mock import Mock, patch
 
-from slots.slot03_emotional_matrix.health import health, get_detailed_metrics
+from nova.slots.slot03_emotional_matrix.health import health, get_detailed_metrics
 
 
 class TestSlot3HealthMonitoring:
     """Test suite for Slot 3 health monitoring functionality."""
 
-    @patch('slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
+    @patch('nova.slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
     def test_basic_health_check_success(self, mock_engine_class):
         """Test successful basic health check."""
         # Mock engine instance and analysis result
@@ -21,13 +21,13 @@ class TestSlot3HealthMonitoring:
         mock_engine_class.return_value = mock_engine
         
         # Mock all the enhanced components to be available
-        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('nova.slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('nova.slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('nova.slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Setup escalation manager mock
             mock_escalation_instance = Mock()
-            from slots.slot03_emotional_matrix.escalation import ThreatLevel
+            from nova.slots.slot03_emotional_matrix.escalation import ThreatLevel
             mock_escalation_instance.classify_threat.return_value = ThreatLevel.LOW
             mock_escalation.return_value = mock_escalation_instance
             
@@ -59,7 +59,7 @@ class TestSlot3HealthMonitoring:
             assert result['overall_status'] == 'fully_operational'
             assert result['maturity_level'] == '4/4_processual'
 
-    @patch('slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
+    @patch('nova.slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
     def test_health_check_with_failures(self, mock_engine_class):
         """Test health check with component failures."""
         # Mock engine instance
@@ -72,9 +72,9 @@ class TestSlot3HealthMonitoring:
         mock_engine_class.return_value = mock_engine
         
         # Mock escalation manager to fail
-        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('nova.slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('nova.slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('nova.slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Make escalation manager fail
             mock_escalation.side_effect = Exception("Escalation manager failed")
@@ -97,7 +97,7 @@ class TestSlot3HealthMonitoring:
             assert result['overall_status'] == 'partially_operational'
             assert result['maturity_level'] == '2/4_relational'
 
-    @patch('slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
+    @patch('nova.slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
     def test_health_check_critical_failure(self, mock_engine_class):
         """Test health check with critical engine failure."""
         # Make the base engine fail
@@ -112,7 +112,7 @@ class TestSlot3HealthMonitoring:
         assert 'error' in result
         assert 'timestamp' in result
 
-    @patch('slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
+    @patch('nova.slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine')
     def test_health_check_basic_analysis_failure(self, mock_engine_class):
         """Test health check when basic analysis fails."""
         # Mock engine that returns invalid results
@@ -126,14 +126,14 @@ class TestSlot3HealthMonitoring:
 
     def test_health_check_includes_timestamp(self):
         """Test that health check includes timestamp."""
-        with patch('slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine'):
+        with patch('nova.slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine'):
             result = health()
             assert 'timestamp' in result
             assert isinstance(result['timestamp'], float)
 
     def test_health_check_sample_analysis_content(self):
         """Test that health check includes sample analysis results."""
-        with patch('slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine') as mock_engine_class:
+        with patch('nova.slots.slot03_emotional_matrix.health.emotional_matrix_engine.EmotionalMatrixEngine') as mock_engine_class:
             mock_engine = Mock()
             mock_engine.analyze.return_value = {
                 'emotional_tone': 'joy',
@@ -155,9 +155,9 @@ class TestDetailedMetrics:
 
     def test_get_detailed_metrics_success(self):
         """Test successful detailed metrics collection."""
-        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('nova.slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('nova.slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('nova.slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Setup mocks
             mock_escalation_instance = Mock()
@@ -208,9 +208,9 @@ class TestDetailedMetrics:
 
     def test_get_detailed_metrics_with_failures(self):
         """Test detailed metrics collection with component failures."""
-        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
-             patch('slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
-             patch('slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
+        with patch('nova.slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation, \
+             patch('nova.slots.slot03_emotional_matrix.advanced_policy.AdvancedSafetyPolicy') as mock_safety, \
+             patch('nova.slots.slot03_emotional_matrix.enhanced_engine.EnhancedEmotionalMatrixEngine') as mock_enhanced:
             
             # Make escalation manager fail
             mock_escalation.side_effect = Exception("Escalation failed")
@@ -231,7 +231,7 @@ class TestDetailedMetrics:
 
     def test_get_detailed_metrics_critical_failure(self):
         """Test detailed metrics with critical failure."""
-        with patch('slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation:
+        with patch('nova.slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager') as mock_escalation:
             # Make the entire function fail
             mock_escalation.side_effect = Exception("Critical failure")
             

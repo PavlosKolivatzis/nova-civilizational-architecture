@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 import tempfile
 
-from slots.slot10_civilizational_deployment.core.audit import AuditLog, _env_truthy
+from nova.slots.slot10_civilizational_deployment.core.audit import AuditLog, _env_truthy
 
 
 class _DummySigner:

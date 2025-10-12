@@ -1,7 +1,7 @@
 """Test Slot10 deployment gate with LightClock integration."""
 
 from unittest.mock import patch, Mock
-from slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper, MirrorReader
+from nova.slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper, MirrorReader
 
 
 class MirrorReaderHelper(MirrorReader):

@@ -1,4 +1,9 @@
-import slot_loader
+# ruff: noqa: E402
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+from nova import slot_loader
 
 
 def test_normalize_removes_leading_zeros_only():

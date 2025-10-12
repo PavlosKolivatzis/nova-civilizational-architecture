@@ -1,6 +1,6 @@
 import pytest
 
-import slots.slot10_civilizational_deployment.core.feedback as feedback
+import nova.slots.slot10_civilizational_deployment.core.feedback as feedback
 
 
 @pytest.fixture(autouse=True)

@@ -1,5 +1,5 @@
 
-from slots.slot06_cultural_synthesis.adapter import (
+from nova.slots.slot06_cultural_synthesis.adapter import (
     CulturalSynthesisAdapter,
     DeploymentGuardrailResult,
 )

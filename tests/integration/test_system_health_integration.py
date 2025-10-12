@@ -130,13 +130,13 @@ class TestSystemHealthIntegration:
         """Test that all new health modules follow healthkit standards."""
         # Test modules created during polish sprint
         test_modules = [
-            ("slots.slot02_deltathresh.health", "slot02_deltathresh"),
-            ("slots.slot04_tri.health", "slot04_tri"),
+            ("nova.slots.slot02_deltathresh.health", "slot02_deltathresh"),
+            ("nova.slots.slot04_tri.health", "slot04_tri"),
             ("slots.slot04_tri_engine.health", "slot04_tri_engine"),
-            ("slots.slot08_memory_ethics.health", "slot08_memory_ethics"),
-            ("slots.slot08_memory_lock.health", "slot08_memory_lock"),
-            ("slots.slot09_distortion_protection.health", "slot09_distortion_protection"),
-            ("slots.slot10_civilizational_deployment.health", "slot10_civilizational_deployment"),
+            ("nova.slots.slot08_memory_ethics.health", "slot08_memory_ethics"),
+            ("nova.slots.slot08_memory_lock.health", "slot08_memory_lock"),
+            ("nova.slots.slot09_distortion_protection.health", "slot09_distortion_protection"),
+            ("nova.slots.slot10_civilizational_deployment.health", "slot10_civilizational_deployment"),
         ]
 
         for module_path, expected_name in test_modules:
@@ -455,13 +455,13 @@ class TestPolishSprintValidation:
         """Test that healthkit library is properly adopted."""
         # All new modules should use healthkit
         sprint_modules = [
-            "slots.slot02_deltathresh.health",
-            "slots.slot04_tri.health",
+            "nova.slots.slot02_deltathresh.health",
+            "nova.slots.slot04_tri.health",
             "slots.slot04_tri_engine.health",
-            "slots.slot08_memory_ethics.health",
-            "slots.slot08_memory_lock.health",
-            "slots.slot09_distortion_protection.health",
-            "slots.slot10_civilizational_deployment.health"
+            "nova.slots.slot08_memory_ethics.health",
+            "nova.slots.slot08_memory_lock.health",
+            "nova.slots.slot09_distortion_protection.health",
+            "nova.slots.slot10_civilizational_deployment.health"
         ]
 
         for module_path in sprint_modules:

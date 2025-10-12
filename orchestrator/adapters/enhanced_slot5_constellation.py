@@ -8,7 +8,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 try:
-    from slots.slot05_constellation.enhanced_constellation_engine import EnhancedConstellationEngine
+    from nova.slots.slot05_constellation.enhanced_constellation_engine import EnhancedConstellationEngine
     from orchestrator.semantic_mirror import get_semantic_mirror
 
     # Initialize with semantic mirror for cross-slot coordination
@@ -19,7 +19,7 @@ try:
 except ImportError:
     try:
         # Fallback to base engine
-        from slots.slot05_constellation.constellation_engine import ConstellationEngine
+        from nova.slots.slot05_constellation.constellation_engine import ConstellationEngine
         ENGINE = ConstellationEngine()
         ENGINE_TYPE = "base"
         AVAILABLE = True

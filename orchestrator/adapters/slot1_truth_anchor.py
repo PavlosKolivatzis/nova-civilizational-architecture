@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 try:
-    from slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
+    from nova.slots.slot01_truth_anchor.truth_anchor_engine import TruthAnchorEngine
 
     ENGINE = TruthAnchorEngine()
     AVAILABLE = True
@@ -15,7 +15,7 @@ except Exception as exc:  # pragma: no cover - optional slot
 
 # Try to import enhanced engine for advanced features
 try:
-    from slots.slot01_truth_anchor.enhanced_truth_anchor_engine import TruthAnchorEngine as EnhancedEngine
+    from nova.slots.slot01_truth_anchor.enhanced_truth_anchor_engine import TruthAnchorEngine as EnhancedEngine
     ENHANCED_ENGINE = EnhancedEngine()
     ENHANCED_AVAILABLE = True
 except Exception:  # pragma: no cover - enhanced features optional

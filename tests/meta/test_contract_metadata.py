@@ -18,22 +18,25 @@ META_PATTERNS: tuple[str, ...] = ("*.meta.yaml", "*.meta.yml", "meta.yaml", "met
 
 def _iter_slot_meta_files() -> list[Path]:
     """Return every slot metadata file regardless of naming convention."""
-    slot_root = Path("slots")
-    if not slot_root.exists():
-        pytest.fail("slots directory missing; repository layout unexpected")
-
+    roots = [Path("slots"), Path("src") / "nova" / "slots"]
     seen: set[Path] = set()
     meta_files: list[Path] = []
 
-    for pattern in META_PATTERNS:
-        for meta_path in slot_root.rglob(pattern):
-            if not meta_path.is_file():
-                continue
-            resolved = meta_path.resolve()
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            meta_files.append(meta_path)
+    for slot_root in roots:
+        if not slot_root.exists():
+            continue
+        for pattern in META_PATTERNS:
+            for meta_path in slot_root.rglob(pattern):
+                if not meta_path.is_file():
+                    continue
+                resolved = meta_path.resolve()
+                if resolved in seen:
+                    continue
+                seen.add(resolved)
+                meta_files.append(meta_path)
+
+    if not meta_files:
+        pytest.fail("No slot metadata files discovered under 'slots/' or 'src/nova/slots/'")
 
     meta_files.sort(key=lambda path: str(path))
     return meta_files

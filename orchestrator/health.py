@@ -1,8 +1,11 @@
+# ruff: noqa: E402
 """Health monitoring and aggregation for the NOVA system."""
 
 import importlib
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 import time
+
+from src_bootstrap import ensure_src_on_path
 
 
 def _prometheus_header(metric: str, mtype: str, help_text: str) -> str:
@@ -33,20 +36,45 @@ def collect_slot_selfchecks(slot_registry: Dict[str, Callable]) -> Dict[str, Any
     """Collect self-check health from each slot's health module."""
     self_checks: Dict[str, Any] = {}
 
+    ensure_src_on_path()
     for slot_id in slot_registry.keys():
+        module = None
+        import_error_reason: Optional[str] = None
+        for module_path in (f"nova.slots.{slot_id}.health", f"slots.{slot_id}.health"):
+            try:
+                module = importlib.import_module(module_path)
+                break
+            except ImportError:
+                continue
+            except Exception as exc:  # pragma: no cover - defensive
+                import_error_reason = str(exc)
+                module = None
+                break
+        if module is None:
+            if import_error_reason:
+                self_checks[slot_id] = {"self_check": "error", "reason": import_error_reason}
+            else:
+                self_checks[slot_id] = {
+                    "self_check": "n/a",
+                    "reason": "health module not found",
+                }
+            continue
+
         try:
-            module_path = f"slots.{slot_id}.health"
-            health_module = importlib.import_module(module_path)
-            self_checks[slot_id] = health_module.health()
-        except ImportError:
+            self_checks[slot_id] = module.health()
+        except Exception as exc:  # pragma: no cover - defensive
             self_checks[slot_id] = {
-                "self_check": "n/a",
-                "reason": "health module not found",
+                "self_check": "error",
+                "reason": str(exc),
             }
-        except Exception as e:  # pragma: no cover - defensive
-            self_checks[slot_id] = {"self_check": "error", "reason": str(e)}
 
     return self_checks
+
+
+
+
+
+
 
 
 def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict[str, Any]:

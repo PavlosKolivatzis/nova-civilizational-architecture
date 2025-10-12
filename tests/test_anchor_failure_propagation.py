@@ -1,6 +1,6 @@
 import math
 
-from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine, CulturalProfile
+from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine, CulturalProfile
 
 
 def test_synthesize_metrics() -> None:

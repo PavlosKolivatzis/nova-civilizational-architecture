@@ -19,7 +19,7 @@ class TestSlot02DeltaThreshHealth:
 
     def test_health_module_structure(self):
         """Test basic health module structure and imports."""
-        from slots.slot02_deltathresh.health import health
+        from nova.slots.slot02_deltathresh.health import health
 
         result = health()
 
@@ -32,7 +32,7 @@ class TestSlot02DeltaThreshHealth:
 
     def test_capabilities_reporting(self):
         """Test that slot02 reports expected capabilities."""
-        from slots.slot02_deltathresh.health import health
+        from nova.slots.slot02_deltathresh.health import health
 
         result = health()
 
@@ -50,7 +50,7 @@ class TestSlot02DeltaThreshHealth:
 
     def test_core_processor_availability_check(self):
         """Test that health module checks core processor availability."""
-        from slots.slot02_deltathresh.health import health
+        from nova.slots.slot02_deltathresh.health import health
 
         # The health module should test CoreProcessor instantiation
         result = health()
@@ -66,7 +66,7 @@ class TestSlot02DeltaThreshHealth:
 
     def test_enhanced_processor_detection(self):
         """Test detection of enhanced processor availability."""
-        from slots.slot02_deltathresh.health import health
+        from nova.slots.slot02_deltathresh.health import health
 
         result = health()
 
@@ -77,7 +77,7 @@ class TestSlot02DeltaThreshHealth:
     def test_error_handling_graceful_degradation(self):
         """Test that health module handles import errors gracefully."""
         # This test verifies the try/except patterns in the health module
-        from slots.slot02_deltathresh.health import health
+        from nova.slots.slot02_deltathresh.health import health
 
         # Even if some imports fail, should still return valid health response
         result = health()
@@ -93,7 +93,7 @@ class TestSlot04TriHealth:
 
     def test_tri_health_structure(self):
         """Test slot04_tri health response structure."""
-        from slots.slot04_tri.health import health
+        from nova.slots.slot04_tri.health import health
 
         result = health()
 
@@ -105,7 +105,7 @@ class TestSlot04TriHealth:
 
     def test_feature_flag_awareness(self):
         """Test that slot04_tri checks feature flags."""
-        from slots.slot04_tri.health import health
+        from nova.slots.slot04_tri.health import health
 
         result = health()
 
@@ -116,7 +116,7 @@ class TestSlot04TriHealth:
 
     def test_tri_engine_availability(self):
         """Test TRI engine component availability checking."""
-        from slots.slot04_tri.health import health
+        from nova.slots.slot04_tri.health import health
 
         result = health()
 
@@ -167,7 +167,7 @@ class TestSlot08MemoryEthicsHealth:
 
     def test_memory_ethics_structure(self):
         """Test slot08_memory_ethics health response structure."""
-        from slots.slot08_memory_ethics.health import health
+        from nova.slots.slot08_memory_ethics.health import health
 
         result = health()
 
@@ -179,7 +179,7 @@ class TestSlot08MemoryEthicsHealth:
 
     def test_ids_integration_check(self):
         """Test IDS integration availability checking."""
-        from slots.slot08_memory_ethics.health import health
+        from nova.slots.slot08_memory_ethics.health import health
 
         result = health()
 
@@ -190,7 +190,7 @@ class TestSlot08MemoryEthicsHealth:
 
     def test_memory_write_eligibility(self):
         """Test memory write eligibility checking."""
-        from slots.slot08_memory_ethics.health import health
+        from nova.slots.slot08_memory_ethics.health import health
 
         result = health()
 
@@ -204,7 +204,7 @@ class TestSlot08MemoryLockHealth:
 
     def test_memory_lock_structure(self):
         """Test slot08_memory_lock health response structure."""
-        from slots.slot08_memory_lock.health import health
+        from nova.slots.slot08_memory_lock.health import health
 
         result = health()
 
@@ -216,7 +216,7 @@ class TestSlot08MemoryLockHealth:
 
     def test_comprehensive_capabilities(self):
         """Test all 10 sophisticated capabilities are reported."""
-        from slots.slot08_memory_lock.health import health
+        from nova.slots.slot08_memory_lock.health import health
 
         result = health()
 
@@ -238,7 +238,7 @@ class TestSlot08MemoryLockHealth:
 
     def test_cryptographic_systems_check(self):
         """Test cryptographic system availability checking."""
-        from slots.slot08_memory_lock.health import health
+        from nova.slots.slot08_memory_lock.health import health
 
         result = health()
 
@@ -253,7 +253,7 @@ class TestSlot09DistortionProtectionHealth:
 
     def test_distortion_protection_structure(self):
         """Test slot09_distortion_protection health response structure."""
-        from slots.slot09_distortion_protection.health import health
+        from nova.slots.slot09_distortion_protection.health import health
 
         result = health()
 
@@ -265,7 +265,7 @@ class TestSlot09DistortionProtectionHealth:
 
     def test_ids_policy_enforcement(self):
         """Test IDS policy enforcement checking."""
-        from slots.slot09_distortion_protection.health import health
+        from nova.slots.slot09_distortion_protection.health import health
 
         result = health()
 
@@ -276,7 +276,7 @@ class TestSlot09DistortionProtectionHealth:
 
     def test_coherence_analysis_check(self):
         """Test coherence analysis system checking."""
-        from slots.slot09_distortion_protection.health import health
+        from nova.slots.slot09_distortion_protection.health import health
 
         result = health()
 
@@ -290,7 +290,7 @@ class TestSlot10CivilizationalDeploymentHealth:
 
     def test_civilizational_deployment_structure(self):
         """Test slot10_civilizational_deployment health response structure."""
-        from slots.slot10_civilizational_deployment.health import health
+        from nova.slots.slot10_civilizational_deployment.health import health
 
         result = health()
 
@@ -303,7 +303,7 @@ class TestSlot10CivilizationalDeploymentHealth:
 
     def test_mls_availability_check(self):
         """Test Meta-Legitimacy Seal availability checking."""
-        from slots.slot10_civilizational_deployment.health import health
+        from nova.slots.slot10_civilizational_deployment.health import health
 
         result = health()
 
@@ -314,7 +314,7 @@ class TestSlot10CivilizationalDeploymentHealth:
 
     def test_phase_space_simulation_check(self):
         """Test phase space simulation system checking."""
-        from slots.slot10_civilizational_deployment.health import health
+        from nova.slots.slot10_civilizational_deployment.health import health
 
         result = health()
 
@@ -324,7 +324,7 @@ class TestSlot10CivilizationalDeploymentHealth:
 
     def test_comprehensive_deployment_capabilities(self):
         """Test comprehensive deployment pipeline capabilities."""
-        from slots.slot10_civilizational_deployment.health import health
+        from nova.slots.slot10_civilizational_deployment.health import health
 
         result = health()
 
@@ -339,13 +339,13 @@ class TestHealthModuleConsistency:
     def test_all_modules_follow_healthkit_pattern(self):
         """Test that all new modules follow consistent healthkit patterns."""
         modules = [
-            ("slots.slot02_deltathresh.health", "slot02_deltathresh"),
-            ("slots.slot04_tri.health", "slot04_tri"),
+            ("nova.slots.slot02_deltathresh.health", "slot02_deltathresh"),
+            ("nova.slots.slot04_tri.health", "slot04_tri"),
             ("slots.slot04_tri_engine.health", "slot04_tri_engine"),
-            ("slots.slot08_memory_ethics.health", "slot08_memory_ethics"),
-            ("slots.slot08_memory_lock.health", "slot08_memory_lock"),
-            ("slots.slot09_distortion_protection.health", "slot09_distortion_protection"),
-            ("slots.slot10_civilizational_deployment.health", "slot10_civilizational_deployment"),
+            ("nova.slots.slot08_memory_ethics.health", "slot08_memory_ethics"),
+            ("nova.slots.slot08_memory_lock.health", "slot08_memory_lock"),
+            ("nova.slots.slot09_distortion_protection.health", "slot09_distortion_protection"),
+            ("nova.slots.slot10_civilizational_deployment.health", "slot10_civilizational_deployment"),
         ]
 
         for module_path, expected_name in modules:
@@ -368,13 +368,13 @@ class TestHealthModuleConsistency:
     def test_response_time_reasonable(self):
         """Test that health modules respond within reasonable time."""
         modules = [
-            "slots.slot02_deltathresh.health",
-            "slots.slot04_tri.health",
+            "nova.slots.slot02_deltathresh.health",
+            "nova.slots.slot04_tri.health",
             "slots.slot04_tri_engine.health",
-            "slots.slot08_memory_ethics.health",
-            "slots.slot08_memory_lock.health",
-            "slots.slot09_distortion_protection.health",
-            "slots.slot10_civilizational_deployment.health",
+            "nova.slots.slot08_memory_ethics.health",
+            "nova.slots.slot08_memory_lock.health",
+            "nova.slots.slot09_distortion_protection.health",
+            "nova.slots.slot10_civilizational_deployment.health",
         ]
 
         for module_path in modules:
@@ -394,13 +394,13 @@ class TestHealthModuleConsistency:
         """Test that modules handle errors consistently."""
         # All modules should handle import failures gracefully
         modules = [
-            "slots.slot02_deltathresh.health",
-            "slots.slot04_tri.health",
+            "nova.slots.slot02_deltathresh.health",
+            "nova.slots.slot04_tri.health",
             "slots.slot04_tri_engine.health",
-            "slots.slot08_memory_ethics.health",
-            "slots.slot08_memory_lock.health",
-            "slots.slot09_distortion_protection.health",
-            "slots.slot10_civilizational_deployment.health",
+            "nova.slots.slot08_memory_ethics.health",
+            "nova.slots.slot08_memory_lock.health",
+            "nova.slots.slot09_distortion_protection.health",
+            "nova.slots.slot10_civilizational_deployment.health",
         ]
 
         for module_path in modules:

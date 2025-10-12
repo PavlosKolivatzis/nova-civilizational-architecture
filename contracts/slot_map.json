@@ -3,21 +3,20 @@
   "schema": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot_map.json",
   "generated": "2025-01-15T09:30:00Z",
   "description": "Machine-readable inventory of NOVA civilizational architecture slots",
-  
   "slots": [
     {
       "id": 1,
       "name": "Truth Anchor",
       "slug": "slot01_truth_anchor",
-      "module_path": "slots.slot01_truth_anchor",
+      "module_path": "nova.slots.slot01_truth_anchor",
       "adapter_class": "TruthAnchorAdapter",
-      "health_path": "slots.slot01_truth_anchor.health",
+      "health_path": "nova.slots.slot01_truth_anchor.health",
       "maturity_level": 4,
       "maturity_stage": "Processual",
       "description": "Reality verification and truth assessment with recovery protocols",
       "key_modules": [
         "enhanced_truth_anchor_engine.py",
-        "orchestrator_adapter.py", 
+        "orchestrator_adapter.py",
         "truth_anchor_engine.py"
       ],
       "contracts": {
@@ -29,9 +28,9 @@
     },
     {
       "id": 2,
-      "name": "ΔTHRESH Integration",
-      "slug": "slot02_deltathresh", 
-      "module_path": "slots.slot02_deltathresh",
+      "name": "\u0394THRESH Integration",
+      "slug": "slot02_deltathresh",
+      "module_path": "nova.slots.slot02_deltathresh",
       "adapter_class": "Slot2DeltaThreshAdapter",
       "health_path": "orchestrator.health",
       "maturity_level": 4,
@@ -54,7 +53,7 @@
       "id": 3,
       "name": "Emotional Matrix",
       "slug": "slot03_emotional_matrix",
-      "module_path": "slots.slot03_emotional_matrix", 
+      "module_path": "slots.slot03_emotional_matrix",
       "adapter_class": "Slot3EmotionalMatrixAdapter",
       "health_path": "slots.slot03_emotional_matrix.health",
       "maturity_level": 4,
@@ -63,14 +62,14 @@
       "key_modules": [
         "emotional_matrix_engine.py",
         "escalation.py",
-        "advanced_policy.py", 
+        "advanced_policy.py",
         "enhanced_engine.py",
         "safety_policy.py"
       ],
       "contracts": {
         "produces": [
           "EMOTION_REPORT@1",
-          "DELTA_THREAT@1", 
+          "DELTA_THREAT@1",
           "TRI_REPORT@1",
           "PRODUCTION_CONTROL@1"
         ],
@@ -78,7 +77,7 @@
       },
       "flags": [
         "SLOT3_ESCALATION_ENABLED",
-        "SLOT3_RATE_PER_MIN", 
+        "SLOT3_RATE_PER_MIN",
         "SLOT3_SWING_WINDOW",
         "SLOT3_SWING_DELTA",
         "SLOT3_PREVIEW_MAXLEN"
@@ -91,7 +90,7 @@
       "name": "TRI Engine",
       "slug": "slot04_tri_engine",
       "module_path": "slots.slot04_tri_engine",
-      "adapter_class": "Slot4TRIAdapter", 
+      "adapter_class": "Slot4TRIAdapter",
       "health_path": "orchestrator.health",
       "maturity_level": 3,
       "maturity_stage": "Structural",
@@ -113,9 +112,9 @@
     },
     {
       "id": 5,
-      "name": "Constellation Navigation", 
+      "name": "Constellation Navigation",
       "slug": "slot05_constellation",
-      "module_path": "slots.slot05_constellation",
+      "module_path": "nova.slots.slot05_constellation",
       "adapter_class": "Slot5ConstellationAdapter",
       "health_path": "orchestrator.health",
       "maturity_level": 2,
@@ -140,9 +139,9 @@
       "id": 6,
       "name": "Cultural Synthesis",
       "slug": "slot06_cultural_synthesis",
-      "module_path": "slots.slot06_cultural_synthesis", 
+      "module_path": "nova.slots.slot06_cultural_synthesis",
       "adapter_class": "Slot6CulturalSynthesisAdapter",
-      "health_path": "slots.slot06_cultural_synthesis.health",
+      "health_path": "nova.slots.slot06_cultural_synthesis.health",
       "maturity_level": 4,
       "maturity_stage": "Processual",
       "description": "Multicultural truth synthesis with formal contract and legacy migration",
@@ -172,9 +171,9 @@
       "id": 7,
       "name": "Production Controls",
       "slug": "slot07_production_controls",
-      "module_path": "slots.slot07_production_controls",
+      "module_path": "nova.slots.slot07_production_controls",
       "adapter_class": "Slot7ProductionControlsAdapter",
-      "health_path": "orchestrator.health", 
+      "health_path": "orchestrator.health",
       "maturity_level": 2,
       "maturity_stage": "Relational",
       "description": "System orchestration, circuit breaker, and cross-slot coordination",
@@ -188,7 +187,7 @@
         "consumes": [
           "PRODUCTION_CONTROL@1",
           "DELTA_THREAT@1",
-          "DISTORTION_DETECTION@1", 
+          "DISTORTION_DETECTION@1",
           "MEMORY_ETHICS@1",
           "EMO_FEEDBACK@1"
         ]
@@ -200,7 +199,7 @@
         "CIRCUIT_BREAKER_ERROR_THRESHOLD",
         "CIRCUIT_BREAKER_RESET_TIMEOUT",
         "CIRCUIT_BREAKER_RECOVERY_TIME",
-        "RATE_LIMIT_ENABLED", 
+        "RATE_LIMIT_ENABLED",
         "RATE_LIMIT_REQUESTS_PER_MINUTE",
         "RATE_LIMIT_BURST_SIZE",
         "RESOURCE_PROTECTION_ENABLED",
@@ -216,7 +215,7 @@
       "id": 8,
       "name": "Memory Ethics",
       "slug": "slot08_memory_ethics",
-      "module_path": "slots.slot08_memory_ethics",
+      "module_path": "nova.slots.slot08_memory_ethics",
       "adapter_class": "Slot8MemoryEthicsAdapter",
       "health_path": "orchestrator.health",
       "maturity_level": 3,
@@ -234,7 +233,7 @@
       },
       "flags": [
         "IDS_ENABLED",
-        "IDS_WEIGHT", 
+        "IDS_WEIGHT",
         "IDS_SANDBOX_ONLY",
         "IDS_SCHEMA_VALIDATE",
         "IDS_ALLOWED_SCOPES",
@@ -252,11 +251,11 @@
       "id": 9,
       "name": "Distortion Protection",
       "slug": "slot09_distortion_protection",
-      "module_path": "slots.slot09_distortion_protection",
+      "module_path": "nova.slots.slot09_distortion_protection",
       "adapter_class": "Slot9DistortionProtectionAdapter",
       "health_path": "orchestrator.health",
       "maturity_level": 4,
-      "maturity_stage": "Processual", 
+      "maturity_stage": "Processual",
       "description": "Infrastructure-aware distortion detection and defense systems",
       "key_modules": [
         "detection_systems",
@@ -278,9 +277,9 @@
     },
     {
       "id": 10,
-      "name": "Civilizational Deployment", 
+      "name": "Civilizational Deployment",
       "slug": "slot10_civilizational_deployment",
-      "module_path": "slots.slot10_civilizational_deployment",
+      "module_path": "nova.slots.slot10_civilizational_deployment",
       "adapter_class": "Slot10DeploymentAdapter",
       "health_path": "orchestrator.health",
       "maturity_level": 3,
@@ -292,7 +291,7 @@
       "contracts": {
         "produces": [],
         "consumes": [
-          "PLAN_WITH_CONSENT@1", 
+          "PLAN_WITH_CONSENT@1",
           "CULTURAL_PROFILE@1"
         ]
       },
@@ -300,14 +299,13 @@
       "operational_status": "active"
     }
   ],
-  
   "orchestrator": {
-    "module_path": "orchestrator", 
+    "module_path": "orchestrator",
     "health_path": "orchestrator.health",
     "key_components": [
       "app.py",
       "health.py",
-      "bus.py", 
+      "bus.py",
       "metrics.py",
       "core/performance_monitor.py",
       "core/event_bus.py"
@@ -317,17 +315,16 @@
     "contracts_supported": [
       "EMOTION_REPORT@1",
       "DELTA_THREAT@1",
-      "TRI_REPORT@1", 
+      "TRI_REPORT@1",
       "PRODUCTION_CONTROL@1",
       "CULTURAL_PROFILE@1",
-      "DISTORTION_DETECTION@1", 
+      "DISTORTION_DETECTION@1",
       "MEMORY_ETHICS@1",
       "CONSTELLATION_STATE@1",
       "PLAN_WITH_CONSENT@1",
       "CONTROL_CMDS@1"
     ]
   },
-  
   "configuration": {
     "manager_class": "EnhancedConfigManager",
     "module_path": "slots.config.enhanced_manager",
@@ -336,18 +333,17 @@
     "feature_flags_path": "config.feature_flags",
     "environment_integration": [
       "NOVA_SLOT*_*",
-      "NOVA_HOT_RELOAD", 
+      "NOVA_HOT_RELOAD",
       "NOVA_SLOTS",
       "VERCEL",
       "AWS_LAMBDA_FUNCTION_NAME"
     ]
   },
-  
   "contracts": {
     "base_path": "contracts/",
     "validated_schemas": [
       "slot3_health_schema.json",
-      "slot6_cultural_profile_schema.json", 
+      "slot6_cultural_profile_schema.json",
       "distortion_detection_response.schema.json",
       "feature.ids.contract.json"
     ],
@@ -358,11 +354,10 @@
       "provenance_tracking": true
     }
   },
-  
   "health_monitoring": {
     "endpoints": [
       "/health",
-      "/health/config", 
+      "/health/config",
       "/metrics"
     ],
     "aggregation_path": "orchestrator.health.health_payload",
@@ -373,18 +368,17 @@
     ],
     "monitoring_format": "prometheus"
   },
-  
   "testing": {
     "total_test_files": 67,
     "test_categories": [
       "api",
-      "chaos", 
+      "chaos",
       "config",
       "contracts",
       "e2e",
       "orch",
       "perf",
-      "performance", 
+      "performance",
       "plugins",
       "property",
       "slo",
@@ -393,13 +387,12 @@
     "ci_workflows": [
       "nova-ci.yml",
       "health-config-matrix.yml",
-      "contracts-freeze.yml", 
+      "contracts-freeze.yml",
       "contracts-nightly.yml",
       "ids-ci.yml",
       "commitlint.yml"
     ]
   },
-  
   "metadata": {
     "repository": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture",
     "architecture_version": "1.0.0",
@@ -409,7 +402,7 @@
     "last_updated": "2025-01-15T09:30:00Z",
     "documentation_files": [
       "docs/ARCHITECTURE.md",
-      "docs/SYSTEM_ANALYSIS.md", 
+      "docs/SYSTEM_ANALYSIS.md",
       "docs/INTERSLOT_CONTRACTS.md",
       "docs/TESTS_OVERVIEW.md",
       "contracts/slot_map.json"

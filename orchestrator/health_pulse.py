@@ -66,7 +66,7 @@ def check_meta_lens_health() -> Dict[str, Any]:
         last_residual = None
         try:
             # This would be set by actual META_LENS operations
-            import slots.slot02_deltathresh.meta_lens_processor as mlp
+            import nova.slots.slot02_deltathresh.meta_lens_processor as mlp
             last_epoch = getattr(mlp, "last_epoch", 0)
             last_residual = getattr(mlp, "last_residual", None)
         except AttributeError:
