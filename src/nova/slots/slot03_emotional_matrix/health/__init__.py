@@ -1,7 +1,12 @@
-# slots/slot03_emotional_matrix/health/__init__.py
-"""Enhanced Health check for Slot 3 - Emotional Matrix."""
+# ruff: noqa: E402
 from __future__ import annotations
+
+from . import emotional_matrix_engine
+from nova.slots.slot03_emotional_matrix.advanced_policy import AdvancedSafetyPolicy
+from nova.slots.slot03_emotional_matrix.escalation import EmotionalEscalationManager
+from nova.slots.slot03_emotional_matrix.enhanced_engine import EnhancedEmotionalMatrixEngine
 import time
+
 
 def health() -> dict:
     """
