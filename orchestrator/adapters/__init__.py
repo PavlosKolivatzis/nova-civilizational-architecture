@@ -1,3 +1,6 @@
+# ruff: noqa: E402
+from src_bootstrap import ensure_src_on_path
+ensure_src_on_path()
 # -*- coding: utf-8 -*-
 """Adapter registry for contract-based routing.
 

@@ -1,3 +1,6 @@
+# ruff: noqa: E402
+from src_bootstrap import ensure_src_on_path
+ensure_src_on_path()
 from typing import Any, Optional, Dict
 
 

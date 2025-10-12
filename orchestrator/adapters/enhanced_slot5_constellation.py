@@ -1,3 +1,6 @@
+# ruff: noqa: E402
+from src_bootstrap import ensure_src_on_path
+ensure_src_on_path()
 """Enhanced Slot 5 Constellation Adapter with Processual-level capabilities.
 
 This adapter provides the orchestration interface for the enhanced constellation engine,

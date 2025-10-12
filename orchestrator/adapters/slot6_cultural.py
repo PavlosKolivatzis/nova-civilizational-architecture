@@ -1,4 +1,7 @@
+# ruff: noqa: E402
 from __future__ import annotations
+from src_bootstrap import ensure_src_on_path
+ensure_src_on_path()
 from dataclasses import dataclass, field
 from frameworks.enums import DeploymentGuardrailResult
 from typing import Any, Dict, Optional

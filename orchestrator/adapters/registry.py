@@ -1,6 +1,9 @@
+# ruff: noqa: E402
+from __future__ import annotations
+from src_bootstrap import ensure_src_on_path
+ensure_src_on_path()
 """Contract-based adapter registry with null adapter fallbacks."""
 
-from __future__ import annotations
 from typing import Any, Callable, Dict
 
 
