@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 def test_slot9_hybrid_api_imports():
     """Test that Slot 9 hybrid API imports without errors."""
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         create_hybrid_slot9_api,
         create_development_config
     )
@@ -24,7 +24,7 @@ def test_slot9_hybrid_api_imports():
 
 def test_shared_hash_availability_detection():
     """Test that shared hash availability is properly detected."""
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         SHARED_HASH_AVAILABLE,
         NOVA_USE_SHARED_HASH
     )
@@ -38,7 +38,7 @@ def test_shared_hash_availability_detection():
 
 def test_audit_hash_chain_with_shared_hash_disabled():
     """Test audit hash chain when shared hash is disabled."""
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         create_hybrid_slot9_api,
         create_development_config
     )
@@ -69,7 +69,7 @@ def test_audit_hash_chain_with_shared_hash_disabled():
 
 def test_audit_hash_chain_with_shared_hash_enabled():
     """Test audit hash chain when shared hash is enabled and available."""
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         create_hybrid_slot9_api,
         create_development_config,
         SHARED_HASH_AVAILABLE
@@ -106,7 +106,7 @@ def test_audit_hash_chain_with_shared_hash_enabled():
 
 def test_hash_chain_state_persistence():
     """Test that hash chain state persists across multiple calls."""
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         create_hybrid_slot9_api,
         create_development_config
     )
@@ -143,7 +143,7 @@ def test_hash_chain_state_persistence():
 
 def test_api_version_consistency():
     """Test that API version is consistent across components."""
-    from slots.slot09_distortion_protection.hybrid_api import HybridDistortionDetectionAPI
+    from nova.slots.slot09_distortion_protection.hybrid_api import HybridDistortionDetectionAPI
 
     api = HybridDistortionDetectionAPI()
 
@@ -159,7 +159,7 @@ def test_api_version_consistency():
 
 def test_environment_flag_variations():
     """Test different environment variable values for shared hash."""
-    from slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api
+    from nova.slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api
 
     # Test various truthy values
     truthy_values = ["1", "true", "TRUE", "yes", "YES", "on", "ON"]
@@ -182,7 +182,7 @@ def test_environment_flag_variations():
 
 def test_hash_signature_format():
     """Test that hash signatures follow expected format."""
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         create_hybrid_slot9_api,
         create_development_config
     )
@@ -209,7 +209,7 @@ def test_hash_signature_format():
 
 def test_compliance_markers_in_audit_trail():
     """Test that compliance markers are properly handled in audit trails."""
-    from slots.slot09_distortion_protection.hybrid_api import (
+    from nova.slots.slot09_distortion_protection.hybrid_api import (
         create_hybrid_slot9_api,
         create_development_config
     )
