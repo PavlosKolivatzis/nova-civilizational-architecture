@@ -25,8 +25,8 @@ def health() -> dict:
     
     try:
         # Test base engine
-        from .emotional_matrix_engine import EmotionalMatrixEngine
-        eng = EmotionalMatrixEngine()
+        from . import emotional_matrix_engine
+        eng = emotional_matrix_engine.EmotionalMatrixEngine()
         analysis_result = eng.analyze("ok")
         result["engine_version"] = getattr(eng, "__version__", "unknown")
         
