@@ -27,10 +27,10 @@ Target coverage: **85%** (11,990 / 14,107 statements)
 
 | Lines | Module | Evidence |
 |-------|--------|----------|
-| 385 | `slots/slot06_cultural_synthesis/legacy_engine.py` | grep shows zero imports |
-| 107 | `slots/slot10_civilizational_deployment/core/canary_backup.py` | Backup module, never activated |
+| 385 | `src/nova/slots/slot06_cultural_synthesis/legacy_engine.py` | grep shows zero imports |
+| 107 | `src/nova/slots/slot10_civilizational_deployment/core/canary_backup.py` | Backup module, never activated |
 | 59 | `debug_negation_bug.py` | Debug script in repo root |
-| 16 | `slots/slot06_cultural_synthesis/usage_example.py` | Example file |
+| 16 | `src/nova/slots/slot06_cultural_synthesis/usage_example.py` | Example file |
 
 **Total removable**: 567 lines
 
@@ -57,7 +57,7 @@ pytest --cov=. --cov-report=term | grep TOTAL
 | Module | Missing | Total | Cov% | Priority | Effort |
 |--------|---------|-------|------|----------|--------|
 | `orchestrator/semantic_creativity.py` | 239 | 355 | 32.7% | P0 | High (8h) |
-| `slots/slot01_truth_anchor/orchestrator_adapter.py` | 128 | 128 | 0.0% | P1 | Medium (3h) |
+| `src/nova/slots/slot01_truth_anchor/orchestrator_adapter.py` | 128 | 128 | 0.0% | P1 | Medium (3h) |
 | `orchestrator/router/anr_bandit.py` | 125 | 125 | 0.0% | P2 | Medium (4h) |
 | `orchestrator/health_pulse.py` | 122 | 122 | 0.0% | P2 | Low (2h) |
 | `orchestrator/semantic_mirror_setup.py` | 77 | 77 | 0.0% | P2 | Low (2h) |
@@ -83,12 +83,12 @@ pytest --cov=. --cov-report=term | grep TOTAL
 
 | Module | Missing | Total | Cov% | Priority | Effort |
 |--------|---------|-------|------|----------|--------|
-| `slots/slot08_memory_lock/ids/detectors.py` | 73 | 193 | 62.2% | P1 | Medium (3h) |
-| `slots/slot08_memory_lock/core/integrity_store.py` | 52 | 99 | 47.5% | P1 | Medium (2h) |
-| `slots/slot09_distortion_protection/hybrid_api.py` | 137 | 717 | 80.9% | P0 | High (6h) |
-| `slots/slot01_truth_anchor/enhanced_truth_anchor_engine.py` | 61 | 150 | 59.3% | P1 | Medium (3h) |
-| `slots/slot06_cultural_synthesis/context_aware_synthesis.py` | 70 | 215 | 67.4% | P1 | Medium (3h) |
-| `slots/slot03_emotional_matrix/enhanced_engine.py` | 24 | 39 | 38.5% | P2 | Low (1h) |
+| `src/nova/slots/slot08_memory_lock/ids/detectors.py` | 73 | 193 | 62.2% | P1 | Medium (3h) |
+| `src/nova/slots/slot08_memory_lock/core/integrity_store.py` | 52 | 99 | 47.5% | P1 | Medium (2h) |
+| `src/nova/slots/slot09_distortion_protection/hybrid_api.py` | 137 | 717 | 80.9% | P0 | High (6h) |
+| `src/nova/slots/slot01_truth_anchor/enhanced_truth_anchor_engine.py` | 61 | 150 | 59.3% | P1 | Medium (3h) |
+| `src/nova/slots/slot06_cultural_synthesis/context_aware_synthesis.py` | 70 | 215 | 67.4% | P1 | Medium (3h) |
+| `src/nova/slots/slot03_emotional_matrix/enhanced_engine.py` | 24 | 39 | 38.5% | P2 | Low (1h) |
 
 **Subtotal**: 417 statements (22% of gap)
 **Cumulative coverage**: 82.0%
@@ -98,8 +98,8 @@ pytest --cov=. --cov-report=term | grep TOTAL
 
 | Module | Missing | Total | Cov% | Priority | Effort |
 |--------|---------|-------|------|----------|--------|
-| `slots/slot05_constellation/plugin.py` | 23 | 37 | 37.8% | P2 | Low (1h) |
-| `slots/slot10_civilizational_deployment/core/tri_gating.py` | 18 | 27 | 33.3% | P1 | Low (1h) |
+| `src/nova/slots/slot05_constellation/plugin.py` | 23 | 37 | 37.8% | P2 | Low (1h) |
+| `src/nova/slots/slot10_civilizational_deployment/core/tri_gating.py` | 18 | 27 | 33.3% | P1 | Low (1h) |
 | `orchestrator/adapters/slot10_civilizational.py` | 18 | 27 | 33.3% | P1 | Low (1h) |
 | `slots/slot04_tri_engine/ids_integration.py` | 14 | 19 | 26.3% | P2 | Low (1h) |
 

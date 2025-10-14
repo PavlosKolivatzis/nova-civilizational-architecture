@@ -96,7 +96,7 @@ if nova_feature_flag_enabled("NOVA_ENABLE_TRI_LINK"):
 
 ### **Core Constellation Engine API**
 ```python
-from slots.slot05_constellation.constellation_engine import ConstellationEngine
+from nova.slots.slot05_constellation.constellation_engine import ConstellationEngine
 
 # Initialize constellation engine
 engine = ConstellationEngine()
@@ -239,7 +239,7 @@ if engine.tri_integration_enabled():
 ## 🚀 Quick Start
 
 ```python
-from slots.slot05_constellation.constellation_engine import ConstellationEngine
+from nova.slots.slot05_constellation.constellation_engine import ConstellationEngine
 from utils.feature_flags import nova_feature_flag_enabled
 
 # Basic constellation operations

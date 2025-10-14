@@ -27,4 +27,4 @@ NOVA's architecture revolves around an **Orchestrator** and a **Slot Loader** th
 
 ![Slot relationships](slot_relationships.svg)
 
-When adding a new slot, implement the required contract in the `slots/` directory and ensure the slot loader can discover it. The orchestrator will then route interactions through the new slot alongside existing ones.
+When adding a new slot, implement the required contract in the `src/nova/slots/` directory and ensure the slot loader can discover it. The orchestrator will then route interactions through the new slot alongside existing ones.

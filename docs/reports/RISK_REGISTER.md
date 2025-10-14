@@ -124,7 +124,7 @@
 - **False Claims:**
   - "Cultural effectiveness weighting (Slot 6)" - grep shows 0 imports in slot06
   - "Performance metrics for Slot 7 monitoring" - grep shows 0 imports in slot07
-- **Verification:** `grep -r "slot04_tri_engine" slots/slot06_cultural_synthesis/` → 0 results
+- **Verification:** `grep -r "slot04_tri_engine" src/nova/slots/slot06_cultural_synthesis/` → 0 results
 - **Evidence:** DRIFT_REPORT.md:37-49, DEFECTS_REGISTER.yml:DEF-002
 
 **Mitigation:**

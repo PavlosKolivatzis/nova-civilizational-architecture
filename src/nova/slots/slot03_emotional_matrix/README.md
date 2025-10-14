@@ -118,7 +118,7 @@ def classify_threat(self, emotional_score: float, content: str) -> ThreatLevel:
 
 ### **Core Emotional Analysis API**
 ```python
-from slots.slot03_emotional_matrix.enhanced_engine import EnhancedEmotionalEngine
+from nova.slots.slot03_emotional_matrix.enhanced_engine import EnhancedEmotionalEngine
 
 # Initialize emotional engine with escalation
 engine = EnhancedEmotionalEngine()
@@ -136,7 +136,7 @@ if result['escalation']['triggered']:
 
 ### **Advanced Safety Analysis**
 ```python
-from slots.slot03_emotional_matrix.advanced_policy import AdvancedSafetyPolicy
+from nova.slots.slot03_emotional_matrix.advanced_policy import AdvancedSafetyPolicy
 
 # Safety policy validation
 safety_policy = AdvancedSafetyPolicy()
@@ -151,7 +151,7 @@ if not validation['is_safe']:
 
 ### **Cross-Slot Escalation**
 ```python
-from slots.slot03_emotional_matrix.escalation import EscalationManager
+from nova.slots.slot03_emotional_matrix.escalation import EscalationManager
 
 # Escalation management
 escalation_mgr = EscalationManager()
@@ -282,9 +282,9 @@ escalation_mgr.escalate(
 ## 🚀 Quick Start
 
 ```python
-from slots.slot03_emotional_matrix.enhanced_engine import EnhancedEmotionalEngine
-from slots.slot03_emotional_matrix.escalation import EscalationManager, ThreatLevel
-from slots.slot03_emotional_matrix.health import health
+from nova.slots.slot03_emotional_matrix.enhanced_engine import EnhancedEmotionalEngine
+from nova.slots.slot03_emotional_matrix.escalation import EscalationManager, ThreatLevel
+from nova.slots.slot03_emotional_matrix.health import health
 
 # Initialize emotional safety guardian
 engine = EnhancedEmotionalEngine()

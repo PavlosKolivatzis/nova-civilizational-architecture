@@ -131,7 +131,7 @@ def protect(self):
 
 ### **Circuit Breaker API**
 ```python
-from slots.slot07_production_controls.production_control_engine import ProductionControlEngine
+from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
 
 # Initialize production control engine
 engine = ProductionControlEngine()
@@ -148,7 +148,7 @@ print(f"System pressure: {health['circuit_breaker']['pressure_level']:.2f}")
 
 ### **Context Publishing**
 ```python
-from slots.slot07_production_controls.context_publisher import get_context_publisher
+from nova.slots.slot07_production_controls.context_publisher import get_context_publisher
 
 # Publish system context
 publisher = get_context_publisher()
@@ -286,9 +286,9 @@ signals:
 ## 🚀 Quick Start
 
 ```python
-from slots.slot07_production_controls.production_control_engine import ProductionControlEngine
-from slots.slot07_production_controls.context_publisher import get_context_publisher
-from slots.slot07_production_controls.metrics import get_slot7_metrics
+from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
+from nova.slots.slot07_production_controls.context_publisher import get_context_publisher
+from nova.slots.slot07_production_controls.metrics import get_slot7_metrics
 
 # Initialize production control system
 engine = ProductionControlEngine()

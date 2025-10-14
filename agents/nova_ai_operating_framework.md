@@ -17,10 +17,10 @@ Keep all agents aligned with Nova's epistemology: slots interpret, core attests,
 ## 3) First 10 minutes checklist
 
 **Read:**
-- `slots/*/meta.yaml`
+- `src/nova/slots/*/meta.yaml` (legacy shims remain under `slots/`)
 - `orchestrator/app.py`
 - `orchestrator/prometheus_metrics.py`
-- `slots/slot07_production_controls/flag_metrics.py`
+- `src/nova/slots/slot07_production_controls/flag_metrics.py`
 
 **Run:**
 - `pytest -q -m "not slow"`
@@ -128,3 +128,4 @@ Keep all agents aligned with Nova's epistemology: slots interpret, core attests,
 - Dashboards: `ops/dashboards/nova-phase2-observability.json`
 - Alerts: `ops/alerts/nova-phase2.rules.yml`
 - Runbooks: `ops/runbooks/`
+

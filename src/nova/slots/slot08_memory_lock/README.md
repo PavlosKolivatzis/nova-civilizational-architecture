@@ -133,9 +133,9 @@ def read_only_access(self):
 
 ### **Core Memory Protection API**
 ```python
-from slots.slot08_memory_lock.core.quarantine import QuarantineSystem
-from slots.slot08_memory_lock.core.repair_planner import RepairPlanner
-from slots.slot08_memory_lock.core.entropy_monitor import EntropyMonitor
+from nova.slots.slot08_memory_lock.core.quarantine import QuarantineSystem
+from nova.slots.slot08_memory_lock.core.repair_planner import RepairPlanner
+from nova.slots.slot08_memory_lock.core.entropy_monitor import EntropyMonitor
 
 # Initialize memory protection system
 quarantine = QuarantineSystem()
@@ -159,7 +159,7 @@ with quarantine.read_only_access() as memory:
 
 ### **Intrusion Detection System**
 ```python
-from slots.slot08_memory_lock.ids.detectors import SurgeDetector
+from nova.slots.slot08_memory_lock.ids.detectors import SurgeDetector
 
 # Real-time threat detection
 surge_detector = SurgeDetector(window_s=60, threshold=500)
@@ -177,8 +177,8 @@ for operation in memory_operations:
 
 ### **Autonomous Recovery Operations**
 ```python
-from slots.slot08_memory_lock.core.snapshotter import IntegritySnapshotter
-from slots.slot08_memory_lock.core.types import RepairAction
+from nova.slots.slot08_memory_lock.core.snapshotter import IntegritySnapshotter
+from nova.slots.slot08_memory_lock.core.types import RepairAction
 
 # Cryptographically signed snapshots
 snapshotter = IntegritySnapshotter()
@@ -311,10 +311,10 @@ if corruption_detected:
 ## 🚀 Quick Start
 
 ```python
-from slots.slot08_memory_lock.core import (
+from nova.slots.slot08_memory_lock.core import (
     QuarantineSystem, RepairPlanner, EntropyMonitor
 )
-from slots.slot08_memory_lock.ids.detectors import SurgeDetector
+from nova.slots.slot08_memory_lock.ids.detectors import SurgeDetector
 
 # Initialize complete memory protection system
 print("Initializing Slot8 Memory Lock & IDS Protection...")

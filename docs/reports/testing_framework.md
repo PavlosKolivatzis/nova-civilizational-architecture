@@ -10,7 +10,7 @@ Validates that Slot 6 can be imported and initialized.
 ```python
 # test_slot6_import.py
 try:
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
         MulticulturalTruthSynthesisAdapter,
         AdaptiveSynthesisEngine,
         CulturalProfile,
@@ -35,7 +35,7 @@ Checks that different cultural contexts yield distinct profiles.
 #### Script
 ```python
 # test_cultural_analysis.py
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     MulticulturalTruthSynthesisAdapter,
     AdaptiveSynthesisEngine,
 )
@@ -79,7 +79,7 @@ Validates guardrails for cultural deployment.
 #### Script
 ```python
 # test_guardrails.py
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     MulticulturalTruthSynthesisAdapter,
     AdaptiveSynthesisEngine,
     CulturalProfile,
@@ -140,7 +140,7 @@ def create_mock_slots():
     )
 
     # Real Slot 6
-    from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+    from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
         MulticulturalTruthSynthesisAdapter,
         AdaptiveSynthesisEngine,
     )
@@ -159,25 +159,25 @@ async def test_integration_smoke():
     slots = create_mock_slots()
 
     # Test cultural analysis integration
-    profile = slots.slot6.analyze_cultural_context(
+    profile = nova.slots.slot6.analyze_cultural_context(
         "Test Institution", {"region": "US", "clarity_priority": 0.7}
     )
     print("✅ Slot 6 analysis within integration")
 
     # Test guardrails
-    result = slots.slot6.validate_cultural_deployment(
+    result = nova.slots.slot6.validate_cultural_deployment(
         profile, "academic", {"content": "test content", "messaging": {}}
     )
     print(f"✅ Guardrail result: {result.result.value}")
 
     # Test inter-slot communication (mocked)
-    slot2_result = slots.slot2.process_content("test content", None)
+    slot2_result = nova.slots.slot2.process_content("test content", None)
     print(f"✅ Slot 2 TRI score: {slot2_result.tri_score}")
 
-    slot4_status = slots.slot4.get_tri_engine_status()
+    slot4_status = nova.slots.slot4.get_tri_engine_status()
     print(f"✅ Slot 4 Kalman estimate: {slot4_status['mathematical_components']['kalman_filter']['current_estimate']}")
 
-    slot9_status = slots.slot9.get_system_status()
+    slot9_status = nova.slots.slot9.get_system_status()
     print(f"✅ Slot 9 metrics: {slot9_status['metrics']}")
 
 if __name__ == "__main__":
@@ -192,7 +192,7 @@ Verifies performance metrics increment and thread safety counts.
 #### Script
 ```python
 # test_performance_metrics.py
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     MulticulturalTruthSynthesisAdapter,
     AdaptiveSynthesisEngine,
 )
@@ -223,7 +223,7 @@ Ensures multiple threads use the engine safely.
 # test_thread_safety.py
 import threading
 import time
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     MulticulturalTruthSynthesisAdapter,
     AdaptiveSynthesisEngine,
 )
@@ -300,7 +300,7 @@ echo "🔍 NOVA Enhancement Validation"
 echo "================================"
 
 echo "Testing Slot 6 import..."
-python -c "from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesisAdapter, AdaptiveSynthesisEngine; print('✅ Import successful')"
+python -c "from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesisAdapter, AdaptiveSynthesisEngine; print('✅ Import successful')"
 
 echo "Testing basic functionality..."
 python test_slot6_import.py
@@ -342,7 +342,7 @@ echo "✅ All tests completed"
 ## Troubleshooting Failed Tests
 
 - **Import Failures:**
-  - Check file location: `slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py`
+  - Check file location: `src/nova/slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py`
   - Verify Python path includes nova directory
   - Check for syntax errors in Slot 6 file
 - **Cultural Analysis Issues:**

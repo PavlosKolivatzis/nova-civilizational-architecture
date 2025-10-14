@@ -1,0 +1,1 @@
+# Legacy Slot Migration Archive\n\nThis directory contains historical documentation produced before the codebase moved into the src/nova/slots/slotXX_* namespace. Refer to the parent README's Directory Legend for guidance on navigating between the archive and the live modules.

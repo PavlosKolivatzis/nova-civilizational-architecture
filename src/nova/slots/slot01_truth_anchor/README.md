@@ -74,7 +74,7 @@ meta.yaml                                 - Slot configuration
 
 ### **Basic Engine API**
 ```python
-from slots.slot01_truth_anchor import TruthAnchorEngine
+from nova.slots.slot01_truth_anchor import TruthAnchorEngine
 
 # Initialize with optional secret key
 engine = TruthAnchorEngine(secret_key=None, storage_path=None)
@@ -194,7 +194,7 @@ Anchors are secured by a `RealityLock` pairing each anchor string with a SHA-256
 ## 🚀 Quick Start
 
 ```python
-from slots.slot01_truth_anchor import TruthAnchorEngine
+from nova.slots.slot01_truth_anchor import TruthAnchorEngine
 
 # Initialize engine (auto-generates secret key)
 engine = TruthAnchorEngine()

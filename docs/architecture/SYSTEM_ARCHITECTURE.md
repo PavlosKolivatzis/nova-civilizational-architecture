@@ -189,7 +189,7 @@ The META_LENS_REPORT@1 system represents Nova's structured epistemological analy
 │                        META_LENS EPISTEMOLOGICAL LAYER                            │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                     │
-│  Fixed-Point Iteration Engine (slots/slot02_deltathresh/meta_lens_processor.py)  │
+│  Fixed-Point Iteration Engine (src/nova/slots/slot02_deltathresh/meta_lens_processor.py)  │
 │  ├─ Damped convergence: R^(k+1) = (1-α)·R^(k) + α·F(R^(k))                      │
 │  ├─ State vector: [independence, resonance, invisibility, synthesis, risk, volatility] │
 │  ├─ Watchdog abort: distortion>0.75 OR volatility>0.8                            │
@@ -242,7 +242,7 @@ The META_LENS_REPORT@1 system represents Nova's structured epistemological analy
 │                                                                                     │
 │  Configuration Management (config/)                                               │
 │  ├─ feature_flags.py - Feature flag coordination                                 │
-│  └─ Enhanced configuration management via slots/config                            │
+│  └─ Enhanced configuration management via src/nova/slots/config                            │
 │                                                                                     │
 │  Shared Utilities                                                                 │
 │  ├─ auth.py - JWT authentication and verification                                │

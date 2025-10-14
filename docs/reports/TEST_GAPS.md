@@ -78,13 +78,13 @@ def test_all_flow_fabric_contracts_have_metadata():
 def test_slot04_tri_engine_integrates_with_slot06():
     """Verify slot04_tri_engine is imported/used by slot06"""
     # This test SHOULD FAIL because integration doesn't exist
-    from slots.slot06_cultural_synthesis import some_module
+    from nova.slots.slot06_cultural_synthesis import some_module
     assert 'slot04_tri_engine' in dir(some_module)
 
 def test_slot04_tri_engine_integrates_with_slot07():
     """Verify slot04_tri_engine is imported/used by slot07"""
     # This test SHOULD FAIL because integration doesn't exist
-    from slots.slot07_production_controls import some_module
+    from nova.slots.slot07_production_controls import some_module
     assert 'slot04_tri_engine' in dir(some_module)
 ```
 

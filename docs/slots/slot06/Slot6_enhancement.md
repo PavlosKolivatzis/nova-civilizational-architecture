@@ -13,7 +13,7 @@ The Slot 6 Adaptive Synthesis Engine powers Nova’s cultural adaptation matrix.
 
 ## Usage
 ```python
-from slots.slot06_cultural_synthesis.engine import AdaptiveSynthesisEngine
+from nova.slots.slot06_cultural_synthesis.engine import AdaptiveSynthesisEngine
 
 engine = AdaptiveSynthesisEngine()
 profile = engine.analyze_cultural_context(
@@ -29,10 +29,10 @@ result = engine.validate_cultural_deployment(
 
 print(result.result, result.compliance_score)
 ```
-Additional scenarios can be found in `slots/slot06_cultural_synthesis/test_implementation.py`.
+Additional scenarios are covered in the Slot 6 test suite under `tests/test_slot06_*`.
 
 ## Implementation
-See [engine.py](slots/slot06_cultural_synthesis/engine.py) for the core engine implementation, [adapter.py](slots/slot06_cultural_synthesis/adapter.py) for the Slot 10 adapter, and [serializers.py](slots/slot06_cultural_synthesis/serializers.py) for serialization helpers.
+See [engine.py](src/nova/slots/slot06_cultural_synthesis/engine.py) for the core engine implementation, [adapter.py](src/nova/slots/slot06_cultural_synthesis/adapter.py) for the Slot 10 adapter, and [serializers.py](src/nova/slots/slot06_cultural_synthesis/serializers.py) for serialization helpers.
 
 ## Metrics
 `get_performance_metrics()` returns analysis counts, guardrail blocks, and principle preservation rate along with engine fingerprint and configuration.

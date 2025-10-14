@@ -74,6 +74,15 @@ Phase 2-3 Achievements:
 • Total: 200+ new Phase 4 tests across 706 total system tests
 ```
 
+## Directory Legend
+
+- `src/nova/slots/slotXX_*`: canonical runtime modules for each slot
+- `slots/slotXX_*`: compatibility shims retained for legacy imports
+- `docs/slots/slotXX/`: slot-specific design and operations documentation
+- `docs/architecture/`: cross-slot architecture and flow references
+- `docs/reports/`: audits, coverage, risk, and testing overviews
+- `archive/legacy-slot-migration/`: historical documentation covering the pre-namespaced layout
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -104,7 +113,7 @@ python -m pytest -q
 npm run maturity
 
 # Test enhanced Slot 9 API
-python -c "from slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api; print('✅ System ready')"
+python -c "from nova.slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api; print('✅ System ready')"
 ```
 
 ### One-liner: run Nova with Phase 4 enabled
@@ -412,8 +421,10 @@ npm run maturity
 pytest -q
 
 # Slot-specific testing
-pytest -q slots/slot02_deltathresh
+python -m pytest tests/test_slot02_deltathresh.py -q
 ```
+
+> Note: Source packages now live under `src/nova/`; prefer imports like `from nova.slots.slotXX...` when running examples.
 
 ## 🔐 Security & Production
 
@@ -435,7 +446,7 @@ python app.py --deploy "MIT_AI_Lab" --type academic
 
 # API server mode
 python -c "
-from slots.slot09_distortion_protection.hybrid_api import create_fastapi_app, create_hybrid_slot9_api
+from nova.slots.slot09_distortion_protection.hybrid_api import create_fastapi_app, create_hybrid_slot9_api
 app = create_fastapi_app(create_hybrid_slot9_api())
 import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)
 "

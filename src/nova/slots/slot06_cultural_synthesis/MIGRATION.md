@@ -13,8 +13,8 @@ The legacy `multicultural_truth_synthesis` module is maintained for backward com
 ### Current API (Recommended)
 
 ```python
-from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
-from slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
+from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+from nova.slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
 
 engine = CulturalSynthesisEngine()
 adapter = CulturalSynthesisAdapter(engine)
@@ -31,7 +31,7 @@ cultural_profile = adapter.analyze_cultural_context("TestInst", {"region": "EU"}
 
 ```python
 # ⚠️ DEPRECATED - Issues DeprecationWarning
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     AdaptiveSynthesisEngine, 
     MulticulturalTruthSynthesisAdapter
 )

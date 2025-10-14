@@ -25,12 +25,13 @@ npm run maturity
 
 - Always prefer the maturity command with `--format json` (via the wrappers/aliases).
 - Do not fail the session on thresholds; only surface JSON output and continue.
-- Use `pytest -q slots/slot02_deltathresh` for specific slot testing.
-- Check for `meta.yaml` files under `slots/**` for schema validation.
+- Use `python -m pytest tests/test_slot02_deltathresh.py -q` for specific slot testing.
+- Check for `meta.yaml` files under `src/nova/slots/**` for schema validation.
 
 ## Quick Commands
 
 - Full test suite: `pytest -q`
-- Slot 2 tests: `pytest -q slots/slot02_deltathresh`
+- Slot 2 tests: `python -m pytest tests/test_slot02_deltathresh.py -q`
 - Maturity check: `npm run maturity`
 - Maturity diff: `npm run maturity:diff`
+

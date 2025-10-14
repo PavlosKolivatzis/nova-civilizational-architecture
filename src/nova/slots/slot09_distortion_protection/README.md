@@ -142,8 +142,8 @@ def apply_ids_policy(analysis_result: dict) -> dict:
 
 ### **Core Distortion Detection API**
 ```python
-from slots.slot09_distortion_protection import HybridDistortionDetectionAPI
-from slots.slot09_distortion_protection.hybrid_api import HybridApiConfig
+from nova.slots.slot09_distortion_protection import HybridDistortionDetectionAPI
+from nova.slots.slot09_distortion_protection.hybrid_api import HybridApiConfig
 
 # Initialize distortion detection system
 config = HybridApiConfig(
@@ -168,7 +168,7 @@ print(f"Infrastructure level: {result.infrastructure_level}")
 
 ### **Infrastructure-Aware Analysis**
 ```python
-from slots.slot09_distortion_protection.hybrid_api import (
+from nova.slots.slot09_distortion_protection.hybrid_api import (
     InfrastructureLevel, ThreatSeverity, DistortionType
 )
 
@@ -189,7 +189,7 @@ elif analysis.infrastructure_level == InfrastructureLevel.CULTURAL:
 
 ### **IDS Integration & Vector Analysis**
 ```python
-from slots.slot09_distortion_protection.ids_policy import policy_check_with_ids
+from nova.slots.slot09_distortion_protection.ids_policy import policy_check_with_ids
 
 # Advanced vector analysis with IDS integration
 content_analysis = {
@@ -326,10 +326,10 @@ print(f"Drift analysis: {ids_result['content_analysis']['drift']}")
 ## 🚀 Quick Start
 
 ```python
-from slots.slot09_distortion_protection import (
+from nova.slots.slot09_distortion_protection import (
     HybridDistortionDetectionAPI, create_hybrid_slot9_api, HybridApiConfig
 )
-from slots.slot09_distortion_protection.hybrid_api import InfrastructureLevel, ThreatSeverity
+from nova.slots.slot09_distortion_protection.hybrid_api import InfrastructureLevel, ThreatSeverity
 import asyncio
 
 async def demonstrate_slot9_capabilities():

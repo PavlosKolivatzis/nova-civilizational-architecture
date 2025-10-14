@@ -64,4 +64,4 @@ Slots 03, 05, and 08 contained outdated TODO comments referencing missing Semant
 ## References
 - META_LENS_TETHER_CONFIRMATION.md — Architectural integration patterns
 - `orchestrator/semantic_mirror.py` — Mirror implementation
-- `slots/slot04_tri_engine/` — TRI_REPORT@1 contract source
+- `slots/slot04_tri_engine/` (legacy shim) — TRI_REPORT@1 contract source

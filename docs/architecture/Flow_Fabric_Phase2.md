@@ -14,7 +14,7 @@ Security Monitor        Rate Limiting      Safety Clamps  Contract Routing
 
 ## Key Components
 
-### Reflex Emitter (`slots/slot07_production_controls/reflex_emitter.py`)
+### Reflex Emitter (`src/nova/slots/slot07_production_controls/reflex_emitter.py`)
 - **Bounded Signals**: Hysteresis (0.8/0.6), cooldown (1-30s), rate limiting (≤1/sec)
 - **Signal Types**: `breaker_pressure`, `memory_pressure`, `integrity_violation`
 - **Safety Clamps**: Frequency [0.1-5.0], Weight [0.1-3.0]
@@ -24,7 +24,7 @@ Security Monitor        Rate Limiting      Safety Clamps  Contract Routing
 - **Target Coordination**: EMOTION_REPORT@1, CULTURAL_PROFILE@1, TRI_REPORT@1
 - **Effect Calculation**: Pressure → frequency/weight reduction within clamps
 
-### Policy Configuration (`slots/slot07_production_controls/core/rules.yaml`)
+### Policy Configuration (`src/nova/slots/slot07_production_controls/core/rules.yaml`)
 - **Thresholds**: Rise/fall thresholds per signal type
 - **Environment Overrides**: Development, staging, production profiles
 - **Clamp Bounds**: Downstream safety limits

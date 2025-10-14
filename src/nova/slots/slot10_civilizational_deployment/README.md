@@ -155,7 +155,7 @@ def assess(self, profile: CulturalProfile, institution_type: str,
 
 ### **Core Deployment API**
 ```python
-from slots.slot10_civilizational_deployment import (
+from nova.slots.slot10_civilizational_deployment import (
     InstitutionalNodeDeployer, MetaLegitimacySeal,
     DeploymentPhase, MLSDecision
 )
@@ -182,8 +182,8 @@ print(f"Cultural transformation: {deployment_result.transformed}")
 
 ### **Progressive Canary Deployment**
 ```python
-from slots.slot10_civilizational_deployment.core.canary import CanaryController
-from slots.slot10_civilizational_deployment.core.policy import Slot10Policy
+from nova.slots.slot10_civilizational_deployment.core.canary import CanaryController
+from nova.slots.slot10_civilizational_deployment.core.policy import Slot10Policy
 
 # Configure canary deployment
 policy = Slot10Policy(
@@ -208,7 +208,7 @@ for stage_pct in policy.canary_stages:
 
 ### **MetaLegitimacySeal Validation**
 ```python
-from slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
+from nova.slots.slot10_civilizational_deployment.mls import MetaLegitimacySeal
 
 # Final cultural validation
 mls = MetaLegitimacySeal(slot6_adapter, slot2_adapter)
@@ -344,10 +344,10 @@ elif decision == MLSDecision.QUARANTINE:
 ## 🚀 Quick Start
 
 ```python
-from slots.slot10_civilizational_deployment import (
+from nova.slots.slot10_civilizational_deployment import (
     InstitutionalNodeDeployer, MetaLegitimacySeal, DeploymentPhase, MLSDecision
 )
-from slots.slot10_civilizational_deployment.core.canary import CanaryController
+from nova.slots.slot10_civilizational_deployment.core.canary import CanaryController
 from orchestrator.adapters.slot6_cultural import Slot6Adapter
 import asyncio
 

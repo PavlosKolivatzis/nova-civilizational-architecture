@@ -26,9 +26,9 @@ PYTHONPATH=. python orchestrator/health_pulse.py
 ### Individual Slot Health Checks
 ```bash
 # Slot-specific health verification
-pytest slots/slot08_memory_lock/tests/ -v    # 23 autonomy tests
-pytest slots/slot04_tri/tests/ -v           # 7 autonomy tests
-pytest slots/slot10_civilizational_deployment/tests/ -v  # 9 autonomy tests
+python -m pytest src/nova/slots/slot08_memory_lock/tests/ -v    # 23 autonomy tests
+python -m pytest src/nova/slots/slot04_tri/tests/ -v           # 7 autonomy tests
+python -m pytest src/nova/slots/slot10_civilizational_deployment/tests/ -v  # 9 autonomy tests
 
 # Full system validation
 python -m pytest -q  # 506 total tests
@@ -51,7 +51,7 @@ python -m pytest -q  # 506 total tests
 
 **Usage Example**:
 ```python
-from slots.slot10_civilizational_deployment.core import CanaryMetricsExporter, CanaryController
+from nova.slots.slot10_civilizational_deployment.core import CanaryMetricsExporter, CanaryController
 
 # Initialize with metrics export
 metrics_exporter = CanaryMetricsExporter(export_interval_s=30.0)
@@ -71,7 +71,7 @@ with open('/var/lib/node_exporter/textfile_collector/slot10.prom', 'w') as f:
 **Hash-chained HMAC-SHA256 records** provide tamper-evident operational history:
 
 ```python
-from slots.slot10_civilizational_deployment.core import AuditLog
+from nova.slots.slot10_civilizational_deployment.core import AuditLog
 
 # Initialize audit logging (opt-in)
 audit = AuditLog(log_dir=Path("audit_logs"))
@@ -164,15 +164,15 @@ python scripts/slot10_weekly_chaos.py --seed 42 --export-dir artifacts
 capabilities:
   DEPLOY/GATEKEEPER@1:
     description: "Live health gate evaluation for deployment decisions"
-    test_evidence: "slots/slot10_civilizational_deployment/tests/test_gates.py"
+    test_evidence: "src/nova/slots/slot10_civilizational_deployment/tests/test_gates.py"
 
   DEPLOY/CANARY@1:
     description: "Progressive canary deployment with autonomous rollback"
-    test_evidence: "slots/slot10_civilizational_deployment/tests/test_canary.py"
+    test_evidence: "src/nova/slots/slot10_civilizational_deployment/tests/test_canary.py"
 
   DEPLOY/SNAPSHOT_BACKOUT@1:
     description: "Cross-slot recovery coordination with MTTR validation"
-    test_evidence: "slots/slot10_civilizational_deployment/tests/test_backout.py"
+    test_evidence: "src/nova/slots/slot10_civilizational_deployment/tests/test_backout.py"
 ```
 
 ## 📈 Performance Monitoring

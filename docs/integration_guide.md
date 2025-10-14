@@ -6,7 +6,7 @@
 ## Quick Start Checklist
 
 ### Step 1: Create New Slot 6 File
-- [ ] Create `slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py`
+- [ ] Create `src/nova/slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py`
 - [ ] Copy entire code from `slot6_enhancement.md`
 - [ ] Save file
 
@@ -20,7 +20,7 @@
 Add to your Slot 10 file that uses Slot 6:
 
 ```python
-from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
     MulticulturalTruthSynthesisAdapter,
     AdaptiveSynthesisEngine,
 )
@@ -53,7 +53,7 @@ After applying all patches:
 ## Troubleshooting
 
 ### Common Issues
-- **Import Errors:** Ensure `slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py` is in the correct location and all import statements are properly added.
+- **Import Errors:** Ensure `src/nova/slots/slot06_cultural_synthesis/multicultural_truth_synthesis.py` is in the correct location and all import statements are properly added.
 - **Method Not Found:** Verify you replaced entire methods, not just parts, and check indentation matches existing code style.
 - **Rate Limiting Issues:** Ensure `from collections import deque` is added and `self._deploy_ts = deque(maxlen=256)` is in `__init__`.
 
@@ -66,7 +66,7 @@ python -m py_compile nova/slot6_multicultural_truth_synthesis.py
 python your_slot10_demo.py
 
 # Test new Slot 6 directly
-python -c "from slots.slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesisAdapter, AdaptiveSynthesisEngine; print('Import successful')"
+python -c "from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import MulticulturalTruthSynthesisAdapter, AdaptiveSynthesisEngine; print('Import successful')"
 ## Success Indicators
 You'll know integration worked when:
 - [ ] No import errors when loading Slot 6

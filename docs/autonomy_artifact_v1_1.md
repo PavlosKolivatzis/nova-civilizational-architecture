@@ -253,13 +253,13 @@ emotional_matrix_engine.py: sha256:f1b9d8e5...
 ### Verification Commands
 ```bash
 # Verify TRI signal chain
-NOVA_LIGHTCLOCK_DEEP=1 python -c "from slots.slot04_tri.core.tri_engine import TriEngine; print(TriEngine().assess().tri_score)"
+NOVA_LIGHTCLOCK_DEEP=1 python -c "from nova.slots.slot04_tri.core.tri_engine import TriEngine; print(TriEngine().assess().tri_score)"
 
 # Test deployment gate with mock signals
-pytest slots/slot10_civilizational_deployment/tests/test_lightclock_canary.py -v
+python -m pytest src/nova/slots/slot10_civilizational_deployment/tests/test_lightclock_canary.py -v
 
 # Validate phase lock computation
-pytest slots/slot07_production_controls/tests/test_phase_lock.py -v
+python -m pytest src/nova/slots/slot07_production_controls/tests/test_phase_lock.py -v
 ```
 
 ---

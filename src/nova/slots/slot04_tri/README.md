@@ -85,7 +85,7 @@ Slot4 (TRI) ↔ Slot5 (Constellation) ↔ Slot6 (Cultural Synthesis)
 
 ### **Core TRI Engine API**
 ```python
-from slots.slot04_tri.core import TriEngine
+from nova.slots.slot04_tri.core import TriEngine
 
 # Initialize TRI engine
 engine = TriEngine()
@@ -223,7 +223,7 @@ engine.restore()   # Restore from snapshot
 ## 🚀 Quick Start
 
 ```python
-from slots.slot04_tri.core import TriEngine
+from nova.slots.slot04_tri.core import TriEngine
 
 # Basic TRI calculation
 engine = TriEngine()
@@ -241,7 +241,7 @@ else:
     print("✅ Normal operation - full TRI capabilities")
 
 # Advanced configuration
-from slots.slot04_tri.core.policy import TriPolicy
+from nova.slots.slot04_tri.core.policy import TriPolicy
 
 custom_policy = TriPolicy(
     drift_z_threshold=2.5,  # Custom drift sensitivity

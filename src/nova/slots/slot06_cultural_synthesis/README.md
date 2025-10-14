@@ -113,7 +113,7 @@ if system_context.production_pressure > 0.8:
 
 ### **Core Cultural Synthesis API**
 ```python
-from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
 
 # Initialize synthesis engine
 engine = CulturalSynthesisEngine()
@@ -137,7 +137,7 @@ print(f"Residual risk: {metrics['residual_risk']}")
 
 ### **Context-Aware Synthesis**
 ```python
-from slots.slot06_cultural_synthesis.context_aware_synthesis import get_context_aware_synthesis
+from nova.slots.slot06_cultural_synthesis.context_aware_synthesis import get_context_aware_synthesis
 
 # Context-aware cultural synthesis
 context_engine = get_context_aware_synthesis()
@@ -155,7 +155,7 @@ if results["_context"]["adaptations_applied"]:
 
 ### **Guardrail Validation**
 ```python
-from slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
+from nova.slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
 
 # Guardrail validation for deployment
 adapter = CulturalSynthesisAdapter(engine)
@@ -177,7 +177,7 @@ elif validation.result == DeploymentGuardrailResult.BLOCKED_PRINCIPLE_VIOLATION:
 
 ### **Phase 4 Unlearn Pulse Receiver**
 ```python
-from slots.slot06_cultural_synthesis.receiver import register_slot06_receiver, get_pulse_metrics
+from nova.slots.slot06_cultural_synthesis.receiver import register_slot06_receiver, get_pulse_metrics
 
 # Register Slot06 as unlearn pulse receiver
 register_slot06_receiver()
@@ -295,9 +295,9 @@ print(f"Time since last pulse: {metrics['time_since_last']:.1f}s")
 ## 🚀 Quick Start
 
 ```python
-from slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
-from slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
-from slots.slot06_cultural_synthesis.context_aware_synthesis import get_context_aware_synthesis
+from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
+from nova.slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter
+from nova.slots.slot06_cultural_synthesis.context_aware_synthesis import get_context_aware_synthesis
 
 # Basic cultural synthesis
 engine = CulturalSynthesisEngine()

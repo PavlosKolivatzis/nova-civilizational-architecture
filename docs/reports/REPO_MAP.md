@@ -22,22 +22,24 @@
 
 ```
 nova-civilizational-architecture/
-├── slots/                    # 10+ slot implementations
-├── orchestrator/            # Core orchestration logic
-├── tests/                   # Comprehensive test suite (24 subdirectories)
-├── scripts/                 # Operational scripts (health, chaos, validation)
-├── docs/                    # Documentation
-├── config/                  # Configuration files
-├── api/                     # API layer
-├── .github/                 # CI/CD workflows
-└── [root configs]           # pytest.ini, requirements.txt, etc.
+├── src/                  # Primary package root
+│   └── nova/             # Namespaced runtime (slots, loader, auth)
+├── slots/                # Legacy import shims (read-only)
+├── orchestrator/         # Core orchestration logic
+├── tests/                # Comprehensive test suite (24 subdirectories)
+├── scripts/              # Operational scripts (health, chaos, validation)
+├── docs/                 # Documentation
+├── config/               # Configuration files
+├── api/                  # API layer
+├── .github/              # CI/CD workflows
+└── [root configs]        # pytest.ini, requirements.txt, etc.
 ```
 
 ---
 
 ## Slots (Slot01-Slot10)
 
-**Location:** `/slots/`
+**Location:** `src/nova/slots/` (legacy shims remain under `slots/`)
 
 | Slot | Directory | Purpose | Status |
 |------|-----------|---------|--------|
@@ -55,8 +57,8 @@ nova-civilizational-architecture/
 | 10 | `slot10_civilizational_deployment` | Deployment Engine | 🔍 TO AUDIT |
 
 **Common Modules:**
-- `slots/common/` - Shared utilities
-- `slots/config/` - Slot configuration management
+- `src/nova/slots/common/` - Shared utilities
+- `src/nova/slots/config/` - Slot configuration management
 
 **FINDINGS:**
 - ✅ **SLOT 4 DUAL-ENGINE**: Intentional architecture - Engine 1 (operational monitoring) + Engine 2 (content analysis)
@@ -208,9 +210,9 @@ nova-civilizational-architecture/
 | Area | Owner(s) | Files |
 |------|----------|-------|
 | Core Orchestrator | TBD | `orchestrator/core/`, `orchestrator/app.py` |
-| Slots 1-3 | TBD | `slots/slot01_*/`, `slots/slot02_*/`, `slots/slot03_*/` |
-| Slots 4-6 | TBD | `slots/slot04_*/`, `slots/slot05_*/`, `slots/slot06_*/` |
-| Slots 7-10 | TBD | `slots/slot07_*/`, `slots/slot08_*/`, `slots/slot09_*/`, `slots/slot10_*/` |
+| Slots 1-3 | TBD | `src/nova/slots/slot01_*/`, `src/nova/slots/slot02_*/`, `src/nova/slots/slot03_*/` |
+| Slots 4-6 | TBD | `src/nova/slots/slot04_*/`, `src/nova/slots/slot05_*/`, `src/nova/slots/slot06_*/` |
+| Slots 7-10 | TBD | `src/nova/slots/slot07_*/`, `src/nova/slots/slot08_*/`, `src/nova/slots/slot09_*/`, `src/nova/slots/slot10_*/` |
 | Flow Fabric | TBD | `orchestrator/flow_fabric*.py`, `orchestrator/contracts/` |
 | Testing | TBD | `tests/` |
 | CI/CD | TBD | `.github/workflows/` |

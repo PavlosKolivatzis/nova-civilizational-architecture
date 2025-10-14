@@ -81,7 +81,7 @@ plugin.py                     (109 lines) - Plugin architecture
 
 ### **Core Processing API**
 ```python
-from slots.slot02_deltathresh import DeltaThreshProcessor, ProcessingConfig
+from nova.slots.slot02_deltathresh import DeltaThreshProcessor, ProcessingConfig
 
 # Initialize processor
 config = ProcessingConfig()
@@ -111,7 +111,7 @@ result = processor.process_content("Sample content", "analysis_request")
 
 ### **Configuration Options**
 ```python
-from slots.slot02_deltathresh.config import OperationalMode, ProcessingMode
+from nova.slots.slot02_deltathresh.config import OperationalMode, ProcessingMode
 
 # Operational modes
 OperationalMode.STABLE_LOCK      # Default stable processing
@@ -223,7 +223,7 @@ test_versioning.py      - Version compatibility testing
 ## 🚀 Quick Start
 
 ```python
-from slots.slot02_deltathresh import DeltaThreshProcessor
+from nova.slots.slot02_deltathresh import DeltaThreshProcessor
 
 # Simple usage
 processor = DeltaThreshProcessor()
@@ -234,7 +234,7 @@ print(f"TRI Score: {result.tri_score}")
 print(f"Processing time: {result.processing_time_ms}ms")
 
 # Advanced configuration
-from slots.slot02_deltathresh.config import ProcessingConfig, OperationalMode
+from nova.slots.slot02_deltathresh.config import ProcessingConfig, OperationalMode
 
 config = ProcessingConfig(
     operational_mode=OperationalMode.ENHANCED,

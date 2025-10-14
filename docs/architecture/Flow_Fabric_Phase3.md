@@ -33,14 +33,14 @@ Thread-safe context broker with bounded access control:
 - **Rate Limiting**: 1000 queries/minute per slot
 - **Thread Safety**: Concurrent access from multiple slots
 
-### **Context Publisher** (`slots/slot07_production_controls/context_publisher.py`)
+### **Context Publisher** (`src/nova/slots/slot07_production_controls/context_publisher.py`)
 Publishes Slot 7 production state:
 - **Breaker State**: Circuit breaker status (`closed`, `open`, `half-open`)
 - **Pressure Level**: System pressure (0.0-1.0) with trend analysis
 - **Resource Status**: Utilization, active requests, success rates
 - **Health Summary**: Overall system health and incident history
 
-### **Context-Aware Synthesis** (`slots/slot06_cultural_synthesis/context_aware_synthesis.py`)
+### **Context-Aware Synthesis** (`src/nova/slots/slot06_cultural_synthesis/context_aware_synthesis.py`)
 Slot 6 cultural synthesis with contextual adaptations:
 - **Complexity Reduction**: Under system pressure (20-60% reduction)
 - **Conservative Mode**: During circuit breaker incidents

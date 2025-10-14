@@ -301,7 +301,7 @@ The system uses the Enhanced Configuration Manager with the following capabiliti
 
 1. **Request Ingestion**: API endpoints (`/health`, `/metrics`) or direct orchestrator calls
 2. **Health Aggregation**: `orchestrator/health.py` collects slot self-checks via `collect_slot_selfchecks()`
-3. **Slot Health Functions**: Individual slot health modules (e.g., `slots/slot03_emotional_matrix/health/__init__.py`)
+3. **Slot Health Functions**: Individual slot health modules (e.g., `src/nova/slots/slot03_emotional_matrix/health/__init__.py`)
 4. **Provenance Integration**: Health functions load schema metadata and attach `schema_id`/`schema_version`
 5. **Response Composition**: Orchestrator aggregates all health data with timestamps and system metrics
 6. **Contract Validation**: CI workflows validate response structure against JSON schemas
@@ -325,3 +325,4 @@ The system uses the Enhanced Configuration Manager with the following capabiliti
 - **Event Publishing**: Asynchronous event distribution
 - **Metrics Collection**: Prometheus-compatible metrics export
 - **Circuit Breaker Integration**: Automatic failure detection and isolation
+
