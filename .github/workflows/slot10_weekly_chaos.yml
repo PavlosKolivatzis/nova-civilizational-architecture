@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Slot 10 tests (fast)
         run: |
-          python -m pytest slots/slot10_civilizational_deployment/tests -q
+          python -m pytest src/nova/slots/slot10_civilizational_deployment/tests -q
 
       - name: Weekly chaos run
         run: |
