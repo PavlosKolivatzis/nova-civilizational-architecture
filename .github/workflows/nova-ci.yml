@@ -126,10 +126,10 @@ jobs:
         echo "📋 Validating enhancement documentation..."
         echo "import os" > ci_validate_docs.py
         echo "required_files = [" >> ci_validate_docs.py
-        echo "    'Slot6_enhancement.md'," >> ci_validate_docs.py
+        echo "    'docs/slots/slot06/Slot6_enhancement.md'," >> ci_validate_docs.py
         echo "    'slots/slot10_civilizational_deployment/integration_patches_ready.md'," >> ci_validate_docs.py
-        echo "    'integration_guide.md'," >> ci_validate_docs.py
-        echo "    'testing_framework.md'," >> ci_validate_docs.py
+        echo "    'docs/integration_guide.md'," >> ci_validate_docs.py
+        echo "    'docs/reports/testing_framework.md'," >> ci_validate_docs.py
         echo "]" >> ci_validate_docs.py   
         echo "missing = [f for f in required_files if not os.path.exists(f)]" >> ci_validate_docs.py
         echo "if missing:" >> ci_validate_docs.py
@@ -159,3 +159,4 @@ jobs:
         echo "✅ Documentation: Complete enhancement framework"
         echo "✅ Repository Health: Production-ready structure"
         echo "=================================================="
+
