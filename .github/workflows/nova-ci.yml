@@ -10,6 +10,45 @@ on:
     branches: [ main ]
 
 jobs:
+  mypy-check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout NOVA Architecture
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install mypy
+
+    - name: Run mypy (typed surfaces)
+      run: |
+        python -m mypy --hide-error-context --pretty --follow-imports=skip \
+          orchestrator/plugins/loader.py \
+          orchestrator/core/performance_monitor.py \
+          orchestrator/metrics.py \
+          src/nova/slots/slot02_deltathresh/adapters/versioning.py \
+          src/nova/slots/slot02_deltathresh/core.py \
+          src/nova/slots/slot03_emotional_matrix/advanced_policy.py \
+          src/nova/slots/slot03_emotional_matrix/escalation.py \
+          src/nova/slots/slot08_memory_lock/core/policy.py \
+          src/nova/slots/slot08_memory_lock/core/entropy_monitor.py \
+          src/nova/slots/slot08_memory_lock/core/integrity_store.py \
+          src/nova/slots/slot08_memory_lock/core/quarantine.py \
+          src/nova/slots/slot09_distortion_protection/hybrid_api.py \
+          src/nova/slots/slot10_civilizational_deployment/core/audit.py \
+          src/nova/slots/slot10_civilizational_deployment/core/metrics.py \
+          src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py \
+          src/nova/slots/slot10_civilizational_deployment/core/policy.py \
+          scripts/validate-schemas.py \
+          scripts/health_verification.py
+
   validate-architecture:
     runs-on: ubuntu-latest
     strategy:
