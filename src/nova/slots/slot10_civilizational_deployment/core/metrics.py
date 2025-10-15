@@ -113,7 +113,7 @@ class CanaryMetricsExporter:
             self.metrics_history.pop(0)
 
         # Create exportable metrics dict
-        exported = {
+        exported: Dict[str, Any] = {
             "timestamp": now,
             "deploy_stage_pct": metrics.stage_percentage,
             "deploy_stage_idx": metrics.stage_idx,
@@ -139,7 +139,7 @@ class CanaryMetricsExporter:
         # Add failed condition labels if any
         if metrics.gate_failed_conditions:
             for i, condition in enumerate(metrics.gate_failed_conditions[:5]):  # Limit to 5
-                exported[f"gate_fail_condition_{i}"] = condition
+                exported[f"gate_fail_condition_{i}"] = str(condition)
 
         logger.debug("Exported canary metrics: %s", exported)
         return exported
