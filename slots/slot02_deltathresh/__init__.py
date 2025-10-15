@@ -1,13 +1,18 @@
 # ruff: noqa: E402
-from .core import DeltaThreshProcessor
-from .config import ProcessingConfig, OperationalMode, ProcessingMode
-from .models import ProcessingResult
+"""Compatibility shim for nova.slots.slot02_deltathresh."""
 
+from __future__ import annotations
 
-__all__ = [
-    "DeltaThreshProcessor",
-    "ProcessingConfig",
-    "OperationalMode",
-    "ProcessingMode",
-    "ProcessingResult",
-]
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+import importlib
+import sys
+
+_target = "nova.slots.slot02_deltathresh"
+_module = importlib.import_module(_target)
+
+# Alias both legacy and new names to the same module object
+sys.modules.setdefault(_target, _module)
+sys.modules[__name__] = _module
