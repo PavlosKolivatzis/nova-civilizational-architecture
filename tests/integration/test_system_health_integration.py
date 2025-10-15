@@ -23,12 +23,12 @@ class TestSystemHealthIntegration:
         from orchestrator.core.performance_monitor import PerformanceMonitor
         from orchestrator.core import create_router
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         # Use the actual METRIC_SLOT_REGISTRY pattern from app.py
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -53,12 +53,12 @@ class TestSystemHealthIntegration:
         """Test that health system discovers all slot health modules."""
         from orchestrator.health import collect_slot_selfchecks
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         # Use actual slot registry
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -101,11 +101,11 @@ class TestSystemHealthIntegration:
         from orchestrator.core.performance_monitor import PerformanceMonitor
         from orchestrator.core import create_router
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -170,14 +170,14 @@ class TestFlowFabricIntegration:
             from orchestrator.core import create_router
             from orchestrator.flow_fabric_init import initialize_flow_fabric
             import pkgutil
-            import slots
+            import nova.slots as nova_slots
 
             # Initialize flow fabric to get links registered
             initialize_flow_fabric()
 
             slot_registry = {
                 name: None
-                for _, name, _ in pkgutil.iter_modules(slots.__path__)
+                for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
                 if name.startswith("slot")
             }
 
@@ -210,14 +210,14 @@ class TestFlowFabricIntegration:
             from orchestrator.core import create_router
             from orchestrator.flow_fabric_init import initialize_flow_fabric, KNOWN_CONTRACTS
             import pkgutil
-            import slots
+            import nova.slots as nova_slots
 
             # Initialize flow fabric to get links registered
             initialize_flow_fabric()
 
             slot_registry = {
                 name: None
-                for _, name, _ in pkgutil.iter_modules(slots.__path__)
+                for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
                 if name.startswith("slot")
             }
 
@@ -266,11 +266,11 @@ class TestCrossComponentIntegration:
         from orchestrator.core.performance_monitor import PerformanceMonitor
         from orchestrator.core import create_router
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -336,7 +336,7 @@ class TestEndToEndHealthWorkflow:
         from orchestrator.core.performance_monitor import PerformanceMonitor
         from orchestrator.core import create_router
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         # 1. Initialize flow fabric (simulates app startup)
         initialize_flow_fabric()
@@ -347,7 +347,7 @@ class TestEndToEndHealthWorkflow:
         # 2. Health system should aggregate all components (simulates /health endpoint)
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -375,11 +375,11 @@ class TestEndToEndHealthWorkflow:
         from orchestrator.core.performance_monitor import PerformanceMonitor
         from orchestrator.core import create_router
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -413,11 +413,11 @@ class TestPolishSprintValidation:
         """Test that polish sprint achieved target slot coverage."""
         from orchestrator.health import collect_slot_selfchecks
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -478,3 +478,12 @@ class TestPolishSprintValidation:
             assert "deps" in result
             assert result["self_check"] in ["ok", "error"]
             assert result["engine_status"] in ["normal", "minimal", "degraded"]
+
+
+
+
+
+
+
+
+

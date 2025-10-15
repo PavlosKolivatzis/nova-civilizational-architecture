@@ -5,7 +5,7 @@ and don't experience race conditions during parallel operation.
 """
 
 import pkgutil
-import slots
+import nova.slots as nova_slots
 import concurrent.futures as cf
 import pytest
 from orchestrator.health import health_payload, collect_slot_selfchecks
@@ -20,7 +20,7 @@ def _slot_registry():
     """Helper to create slot registry."""
     return {
         name: None
-        for _, name, _ in pkgutil.iter_modules(slots.__path__)
+        for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
         if name.startswith("slot")
     }
 

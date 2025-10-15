@@ -17,7 +17,7 @@ import time
 import uuid
 from typing import Any, Dict
 
-import slots
+import nova.slots as nova_slots
 
 from orchestrator.core import create_router
 from orchestrator.core.performance_monitor import PerformanceMonitor
@@ -57,7 +57,7 @@ def _get_system_reflection() -> Dict[str, Any]:
     # Discover all slots
     slot_registry = {
         name: None
-        for _, name, _ in pkgutil.iter_modules(slots.__path__)
+        for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
         if name.startswith("slot")
     }
 

@@ -72,7 +72,7 @@ class TestFlowFabricHealthResponsiveness:
         from orchestrator.core import create_router
         from orchestrator.flow_fabric_init import initialize_flow_fabric
         import pkgutil
-        import slots
+        import nova.slots as nova_slots
 
         # Initialize flow fabric
         initialize_flow_fabric()
@@ -80,7 +80,7 @@ class TestFlowFabricHealthResponsiveness:
         # Get current health status
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 

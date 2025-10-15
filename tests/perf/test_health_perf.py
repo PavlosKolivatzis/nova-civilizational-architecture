@@ -9,7 +9,7 @@ import pytest
 import pkgutil
 import os
 import gc
-import slots
+import nova.slots as nova_slots
 from orchestrator.health import health_payload
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.core import create_router
@@ -27,7 +27,7 @@ class TestHealthPerformanceGuards:
         router = create_router(monitor)
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -57,7 +57,7 @@ class TestHealthPerformanceGuards:
         router = create_router(monitor)
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -85,7 +85,7 @@ class TestHealthPerformanceGuards:
 
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -184,7 +184,7 @@ class TestHealthPerformanceGuards:
         router = create_router(monitor)
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -234,7 +234,7 @@ class TestHealthMemoryPerformance:
         router = create_router(monitor)
         slot_registry = {
             name: None
-            for _, name, _ in pkgutil.iter_modules(slots.__path__)
+            for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
             if name.startswith("slot")
         }
 
@@ -288,3 +288,7 @@ class TestHealthMemoryPerformance:
         memory_growth = (final_memory - baseline_memory) / 1024 / 1024  # MB
         limit = 5.0 * PERF_SCALE
         assert memory_growth < limit, f"ANR memory usage grew too much: {memory_growth:.1f}MB (limit: {limit:.1f}MB)"
+
+
+
+

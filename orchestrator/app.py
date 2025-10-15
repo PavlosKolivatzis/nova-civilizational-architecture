@@ -16,7 +16,7 @@ import pkgutil
 import time
 from contextlib import asynccontextmanager
 
-import slots
+import nova.slots as nova_slots
 from src_bootstrap import ensure_src_on_path
 
 ensure_src_on_path()
@@ -71,7 +71,7 @@ SLOT_REGISTRY = {
 # Registry of all slots for health/metrics aggregation (slots 1-10)
 METRIC_SLOT_REGISTRY = {
     name: None
-    for _, name, _ in pkgutil.iter_modules(slots.__path__)
+    for _, name, _ in pkgutil.iter_modules(nova_slots.__path__)
     if name.startswith("slot")
 }
 try:  # pragma: no cover - illustrative orchestrator wiring
@@ -393,4 +393,5 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
     if orch and slot_fn:
         return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
     return None
+
 
