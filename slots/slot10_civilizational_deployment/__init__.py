@@ -1,4 +1,5 @@
 # ruff: noqa: E402
+from ._shim_warning import warn_shim_use
 """Compatibility shim for nova.slots.slot10_civilizational_deployment."""
 
 from __future__ import annotations

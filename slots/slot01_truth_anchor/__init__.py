@@ -1,4 +1,5 @@
 # ruff: noqa: E402
+from ._shim_warning import warn_shim_use
 """Compatibility shim for nova.slots.slot01_truth_anchor."""
 
 from __future__ import annotations
