@@ -7,7 +7,7 @@ contract system, with graceful fallback to mocks when adapters unavailable.
 
 import os
 import time
-from typing import Dict, Any
+from typing import Any, Dict, TypedDict
 
 # Adapter timeout and retry configuration
 ADAPTER_TIMEOUT_MS = int(os.getenv("META_LENS_ADAPTER_TIMEOUT_MS", "200"))
@@ -15,10 +15,17 @@ ADAPTER_MAX_RETRIES = int(os.getenv("META_LENS_ADAPTER_MAX_RETRIES", "2"))
 ADAPTER_BREAKER_TTL_SEC = int(os.getenv("META_LENS_ADAPTER_BREAKER_TTL_SEC", "30"))
 
 # Simple circuit breaker state
-_breaker_state = {
+
+class BreakerState(TypedDict):
+    failures: int
+    last_failure: float
+    is_open: bool
+
+
+_breaker_state: BreakerState = {
     "failures": 0,
-    "last_failure": 0,
-    "is_open": False
+    "last_failure": 0.0,
+    "is_open": False,
 }
 
 def _call_with_timeout_retry(adapter_registry: Any, contract_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -54,6 +61,8 @@ def _call_with_timeout_retry(adapter_registry: Any, contract_id: str, payload: D
                 raise e
             # Retry with exponential backoff
             time.sleep(0.01 * (2 ** attempt))
+
+    raise RuntimeError(f"Adapter call to {contract_id} failed without raising error")
 
 def create_real_adapter_functions(content, context):
     """Create real adapter functions that call actual Nova slots."""

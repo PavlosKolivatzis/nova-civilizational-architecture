@@ -5,7 +5,10 @@ This script verifies that all 12 Nova slots are operational with
 standardized health reporting using the shared healthkit library.
 """
 
-import requests
+try:
+    import requests  # type: ignore[import-untyped]
+except ImportError:
+    requests = None  # type: ignore[assignment]
 import sys
 from typing import Dict, Any
 from datetime import datetime
@@ -55,6 +58,8 @@ def verify_aggregate_health(base_url: str = "http://localhost:8000") -> Dict[str
 
 def main():
     """Main verification routine."""
+    if requests is None:
+        raise RuntimeError("The 'requests' package is required to run health verification.")
     print("Nova Civilizational Architecture - Health Verification")
     print("=" * 60)
     print(f"Verification time: {datetime.now().isoformat()}")

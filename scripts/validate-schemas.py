@@ -6,11 +6,17 @@ Usage: python scripts/validate-schemas.py
 import json
 import pathlib
 import sys
-from jsonschema import Draft7Validator
+try:
+    from jsonschema import Draft7Validator  # type: ignore[import-untyped]
+except ImportError:
+    Draft7Validator = None  # type: ignore[assignment]
 
 
-def validate_schemas():
-    """Validate all contract schemas are well-formed JSON Schema Draft-07"""
+
+def validate_schemas() -> bool:
+    """Validate all contract schemas are well-formed JSON Schema Draft-07."""
+    if Draft7Validator is None:
+        raise RuntimeError("jsonschema is required to validate schemas; install jsonschema>=4.0")
     schemas = [
         'contracts/slot3_health_schema.json',
         'contracts/slot6_cultural_profile_schema.json'

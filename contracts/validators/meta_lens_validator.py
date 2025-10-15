@@ -2,8 +2,14 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
-import fastjsonschema
+from typing import Any, Callable, Dict, Optional
+
+try:
+    import fastjsonschema
+except ImportError:  # pragma: no cover - handled gracefully
+    fastjsonschema = None  # type: ignore[assignment]
+
+ValidateFunc = Callable[[Dict[str, Any]], None]
 
 
 class MetaLensValidator:
@@ -11,12 +17,17 @@ class MetaLensValidator:
 
     def __init__(self):
         """Initialize validator with compiled schema."""
+        if fastjsonschema is None:
+            raise RuntimeError(
+                "fastjsonschema is required for MetaLensValidator; install fastjsonschema>=2.16.0"
+            )
+
         schema_path = Path(__file__).parent.parent / "meta_lens_report@1.json"
         with open(schema_path) as f:
             schema = json.load(f)
 
-        self._validate_func = fastjsonschema.compile(schema)
-        self._schema = schema
+        self._validate_func: ValidateFunc = fastjsonschema.compile(schema)  # type: ignore[call-arg]
+        self._schema: Dict[str, Any] = schema
 
     def validate(self, report: Dict[str, Any]) -> bool:
         """
