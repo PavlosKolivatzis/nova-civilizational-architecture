@@ -1,7 +1,7 @@
 """Test Slot04 TRI signal publishing to Semantic Mirror."""
 
 from unittest.mock import Mock, patch
-from slots.slot04_tri_engine.publish import publish_tri_to_mirror
+from nova.slots.slot04_tri_engine.publish import publish_tri_to_mirror
 
 
 class MockMirror:

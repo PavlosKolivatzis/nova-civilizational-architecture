@@ -132,7 +132,7 @@ class TestSystemHealthIntegration:
         test_modules = [
             ("nova.slots.slot02_deltathresh.health", "slot02_deltathresh"),
             ("nova.slots.slot04_tri.health", "slot04_tri"),
-            ("slots.slot04_tri_engine.health", "slot04_tri_engine"),
+            ("nova.slots.slot04_tri_engine.health", "slot04_tri_engine"),
             ("nova.slots.slot08_memory_ethics.health", "slot08_memory_ethics"),
             ("nova.slots.slot08_memory_lock.health", "slot08_memory_lock"),
             ("nova.slots.slot09_distortion_protection.health", "slot09_distortion_protection"),
@@ -457,7 +457,7 @@ class TestPolishSprintValidation:
         sprint_modules = [
             "nova.slots.slot02_deltathresh.health",
             "nova.slots.slot04_tri.health",
-            "slots.slot04_tri_engine.health",
+            "nova.slots.slot04_tri_engine.health",
             "nova.slots.slot08_memory_ethics.health",
             "nova.slots.slot08_memory_lock.health",
             "nova.slots.slot09_distortion_protection.health",

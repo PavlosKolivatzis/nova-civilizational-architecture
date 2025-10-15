@@ -31,7 +31,7 @@ class Slot4TRIAdapter:
         """Get the content-analysis TRI engine for plugin-based scoring."""
         if self._content_engine is None:
             try:
-                from slots.slot04_tri_engine.engine import TRIEngine  # Engine 2
+                from nova.slots.slot04_tri_engine.engine import TRIEngine  # Engine 2
                 self._content_engine = TRIEngine()
             except Exception:
                 self._content_engine = False

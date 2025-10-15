@@ -40,7 +40,7 @@ class Slot04TRIPlugin(SlotPlugin):
             """Calculate TRI report for given content."""
             try:
                 # Import here to avoid startup dependencies
-                from slots.slot04_tri_engine.engine import TRIEngine
+                from .engine import TRIEngine
                 
                 engine = TRIEngine()
                 

@@ -61,7 +61,7 @@ class TestSlot04Health:
 
     def test_slot04_tri_engine_health_import(self):
         """Test that slot04_tri_engine health module can be imported."""
-        from slots.slot04_tri_engine.health import health
+        from nova.slots.slot04_tri_engine.health import health
         assert callable(health)
 
     def test_slot04_tri_health_response(self):
@@ -78,7 +78,7 @@ class TestSlot04Health:
 
     def test_slot04_tri_engine_health_response(self):
         """Test slot04_tri_engine health response format."""
-        from slots.slot04_tri_engine.health import health
+        from nova.slots.slot04_tri_engine.health import health
 
         result = health()
 
@@ -178,7 +178,7 @@ class TestHealthKitIntegration:
         modules = [
             ("nova.slots.slot02_deltathresh.health", "slot02_deltathresh"),
             ("nova.slots.slot04_tri.health", "slot04_tri"),
-            ("slots.slot04_tri_engine.health", "slot04_tri_engine"),
+            ("nova.slots.slot04_tri_engine.health", "slot04_tri_engine"),
             ("nova.slots.slot08_memory_ethics.health", "slot08_memory_ethics"),
             ("nova.slots.slot08_memory_lock.health", "slot08_memory_lock"),
             ("nova.slots.slot09_distortion_protection.health", "slot09_distortion_protection"),
@@ -228,7 +228,7 @@ class TestHealthModuleResilience:
         modules = [
             "nova.slots.slot02_deltathresh.health",
             "nova.slots.slot04_tri.health",
-            "slots.slot04_tri_engine.health",
+            "nova.slots.slot04_tri_engine.health",
             "nova.slots.slot08_memory_ethics.health",
             "nova.slots.slot08_memory_lock.health",
             "nova.slots.slot09_distortion_protection.health",

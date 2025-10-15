@@ -89,9 +89,9 @@
       "id": 4,
       "name": "TRI Engine",
       "slug": "slot04_tri_engine",
-      "module_path": "slots.slot04_tri_engine",
+      "module_path": "nova.slots.slot04_tri_engine",
       "adapter_class": "Slot4TRIAdapter",
-      "health_path": "orchestrator.health",
+      "health_path": "nova.slots.slot04_tri_engine.health",
       "maturity_level": 3,
       "maturity_stage": "Structural",
       "description": "Three-factor risk assessment with Kalman/Bayesian components",
@@ -409,4 +409,3 @@
     ]
   }
 }
-

@@ -130,7 +130,7 @@ class TestSlot04TriEngineHealth:
 
     def test_tri_engine_health_structure(self):
         """Test slot04_tri_engine health response structure."""
-        from slots.slot04_tri_engine.health import health
+        from nova.slots.slot04_tri_engine.health import health
 
         result = health()
 
@@ -142,7 +142,7 @@ class TestSlot04TriEngineHealth:
 
     def test_tri_status_instantiation(self):
         """Test TRIStatus component testing."""
-        from slots.slot04_tri_engine.health import health
+        from nova.slots.slot04_tri_engine.health import health
 
         result = health()
 
@@ -153,7 +153,7 @@ class TestSlot04TriEngineHealth:
 
     def test_integration_module_checking(self):
         """Test integration module availability checking."""
-        from slots.slot04_tri_engine.health import health
+        from nova.slots.slot04_tri_engine.health import health
 
         result = health()
 
@@ -341,7 +341,7 @@ class TestHealthModuleConsistency:
         modules = [
             ("nova.slots.slot02_deltathresh.health", "slot02_deltathresh"),
             ("nova.slots.slot04_tri.health", "slot04_tri"),
-            ("slots.slot04_tri_engine.health", "slot04_tri_engine"),
+            ("nova.slots.slot04_tri_engine.health", "slot04_tri_engine"),
             ("nova.slots.slot08_memory_ethics.health", "slot08_memory_ethics"),
             ("nova.slots.slot08_memory_lock.health", "slot08_memory_lock"),
             ("nova.slots.slot09_distortion_protection.health", "slot09_distortion_protection"),
@@ -370,7 +370,7 @@ class TestHealthModuleConsistency:
         modules = [
             "nova.slots.slot02_deltathresh.health",
             "nova.slots.slot04_tri.health",
-            "slots.slot04_tri_engine.health",
+            "nova.slots.slot04_tri_engine.health",
             "nova.slots.slot08_memory_ethics.health",
             "nova.slots.slot08_memory_lock.health",
             "nova.slots.slot09_distortion_protection.health",
@@ -396,7 +396,7 @@ class TestHealthModuleConsistency:
         modules = [
             "nova.slots.slot02_deltathresh.health",
             "nova.slots.slot04_tri.health",
-            "slots.slot04_tri_engine.health",
+            "nova.slots.slot04_tri_engine.health",
             "nova.slots.slot08_memory_ethics.health",
             "nova.slots.slot08_memory_lock.health",
             "nova.slots.slot09_distortion_protection.health",

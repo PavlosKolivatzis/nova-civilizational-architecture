@@ -49,7 +49,7 @@ def health() -> Dict[str, Any]:
     try:
         # Try to import the simple TRI engine
         try:
-            from slots.slot04_tri_engine.engine import TRIStatus
+            from .engine import TRIStatus
         except Exception as ie:
             return minimal(
                 NAME,

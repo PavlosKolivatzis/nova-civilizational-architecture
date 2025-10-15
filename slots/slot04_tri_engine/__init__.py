@@ -1,5 +1,17 @@
 # ruff: noqa: E402
-"""Slot 4 – TRI engine exports."""
-from .engine import TRIEngine, TRIStatus
+"""Compatibility shim for nova.slots.slot04_tri_engine."""
 
-__all__ = ["TRIEngine", "TRIStatus"]
+from __future__ import annotations
+
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+import importlib
+import sys
+
+_target = "nova.slots.slot04_tri_engine"
+_module = importlib.import_module(_target)
+
+sys.modules.setdefault(_target, _module)
+sys.modules[__name__] = _module
