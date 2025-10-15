@@ -1,4 +1,4 @@
-from slots.common.hashutils import compute_audit_hash
+from nova.slots.common.hashutils import compute_audit_hash
 
 
 def test_hash_changes_when_nested_fields_change():

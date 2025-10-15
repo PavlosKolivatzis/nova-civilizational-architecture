@@ -55,7 +55,7 @@ except ImportError:
 
 # Shared hash utility with fallback
 try:
-    from slots.common.hashutils import compute_audit_hash  # blake2b(backed)
+    from nova.slots.common.hashutils import compute_audit_hash  # blake2b(backed)
     SHARED_HASH_AVAILABLE = True
 except Exception:  # ImportError or any init error -> mark unavailable
     compute_audit_hash = None  # type: ignore

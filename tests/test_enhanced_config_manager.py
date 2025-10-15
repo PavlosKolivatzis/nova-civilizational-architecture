@@ -9,7 +9,7 @@ import pytest
 import pytest_asyncio
 import yaml
 
-from slots.config.enhanced_manager import (
+from nova.slots.config.enhanced_manager import (
     EnhancedConfigManager,
     get_config_manager,
     get_slot_config,
@@ -48,7 +48,7 @@ class TestEnhancedConfigManager:
     @pytest.mark.asyncio
     async def test_initialization_without_watchdog(self, temp_config_dir):
         """Test initialization works without watchdog dependency."""
-        with patch("slots.config.enhanced_manager._WATCHDOG", False):
+        with patch("nova.slots.config.enhanced_manager._WATCHDOG", False):
             manager = EnhancedConfigManager(config_dir=temp_config_dir)
             await manager.initialize()
 
@@ -61,7 +61,7 @@ class TestEnhancedConfigManager:
     @pytest.mark.asyncio
     async def test_polling_watcher_fallback(self, temp_config_dir):
         """Test polling fallback when watchdog unavailable."""
-        with patch("slots.config.enhanced_manager._WATCHDOG", False):
+        with patch("nova.slots.config.enhanced_manager._WATCHDOG", False):
             manager = EnhancedConfigManager(
                 config_dir=temp_config_dir, enable_hot_reload=True
             )
@@ -91,7 +91,7 @@ class TestEnhancedConfigManager:
     @pytest.mark.asyncio
     async def test_hot_reload_with_polling(self, temp_config_dir):
         """Test hot-reload functionality with polling watcher."""
-        with patch("slots.config.enhanced_manager._WATCHDOG", False):
+        with patch("nova.slots.config.enhanced_manager._WATCHDOG", False):
             manager = EnhancedConfigManager(
                 config_dir=temp_config_dir, enable_hot_reload=True
             )
@@ -251,7 +251,7 @@ async def test_real_world_scenario():
                 "NOVA_SLOT09_detection_sensitivity": "0.85",
             },
         ):
-            with patch("slots.config.enhanced_manager._WATCHDOG", False):
+            with patch("nova.slots.config.enhanced_manager._WATCHDOG", False):
                 manager = EnhancedConfigManager(config_dir=str(config_dir))
                 await manager.initialize()
 

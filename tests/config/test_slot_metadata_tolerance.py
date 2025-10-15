@@ -1,7 +1,7 @@
 """Test SlotMetadata tolerance for id field and unknown extras."""
 
 import pytest
-from slots.config.enhanced_manager import SlotMetadata
+from nova.slots.config.enhanced_manager import SlotMetadata
 
 
 class TestSlotMetadataTolerance:

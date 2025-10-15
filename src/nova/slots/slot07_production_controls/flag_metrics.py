@@ -20,7 +20,7 @@ def get_flag_state_metrics() -> Dict[str, Any]:
 
     # Detect shared hash utility availability
     try:
-        from slots.common.hashutils import compute_audit_hash  # noqa: F401
+        from nova.slots.common.hashutils import compute_audit_hash  # noqa: F401
         shared_hash_available = True
     except Exception:
         shared_hash_available = False

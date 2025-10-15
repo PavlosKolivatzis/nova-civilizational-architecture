@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from typing import Any, Dict, List
-from slots.config import get_config_manager  # EnhancedConfigManager global
+from nova.slots.config import get_config_manager  # EnhancedConfigManager global
 
 router = APIRouter()
 

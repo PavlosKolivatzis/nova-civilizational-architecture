@@ -62,7 +62,7 @@ PY
 # Test 3: SlotMetadata tolerance check
 echo "✅ Testing SlotMetadata tolerance..."
 python - <<'PY'
-from slots.config.enhanced_manager import SlotMetadata
+from nova.slots.config.enhanced_manager import SlotMetadata
 
 # Test with id field and unknown keys
 test_data = {

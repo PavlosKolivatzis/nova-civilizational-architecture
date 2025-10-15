@@ -1,12 +1,17 @@
-from .enhanced_manager import (
-    EnhancedConfigManager,
-    get_config_manager,
-    get_slot_config,
-)
+# ruff: noqa: E402
+"""Compatibility shim for nova.slots.config."""
 
-__all__ = [
-    "EnhancedConfigManager",
-    "get_config_manager",
-    "get_slot_config",
-]
+from __future__ import annotations
 
+from src_bootstrap import ensure_src_on_path
+
+ensure_src_on_path()
+
+import importlib
+import sys
+
+_target = "nova.slots.config"
+_module = importlib.import_module(_target)
+
+sys.modules.setdefault(_target, _module)
+sys.modules[__name__] = _module

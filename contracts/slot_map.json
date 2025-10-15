@@ -327,7 +327,7 @@
   },
   "configuration": {
     "manager_class": "EnhancedConfigManager",
-    "module_path": "slots.config.enhanced_manager",
+    "module_path": "nova.slots.config.enhanced_manager",
     "hot_reload_supported": true,
     "metadata_tolerance": true,
     "feature_flags_path": "config.feature_flags",

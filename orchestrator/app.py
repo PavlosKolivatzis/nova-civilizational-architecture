@@ -205,7 +205,7 @@ if FastAPI is not None:
             await asyncio.sleep(period)
 
     async def _startup() -> None:
-        from slots.config import get_config_manager
+        from nova.slots.config import get_config_manager
         await get_config_manager()
 
         # --- UNLEARN_PULSE emitter wiring ---
@@ -284,7 +284,7 @@ if FastAPI is not None:
         asyncio.create_task(_canary_loop())
 
     async def _shutdown() -> None:
-        from slots.config import get_config_manager
+        from nova.slots.config import get_config_manager
         mgr = await get_config_manager()
         await mgr.shutdown()
 

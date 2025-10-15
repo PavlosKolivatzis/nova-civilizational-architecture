@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional, Union
 
 # Shared hash integration (Phase 2)
 try:
-    from slots.common.hashutils import compute_audit_hash  # blake2b
+    from nova.slots.common.hashutils import compute_audit_hash  # blake2b
     SHARED_HASH_AVAILABLE = True
 except Exception:  # ImportError or init error → fallback cleanly
     SHARED_HASH_AVAILABLE = False
