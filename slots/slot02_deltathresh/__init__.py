@@ -13,6 +13,5 @@ import sys
 _target = "nova.slots.slot02_deltathresh"
 _module = importlib.import_module(_target)
 
-# Alias both legacy and new names to the same module object
 sys.modules.setdefault(_target, _module)
 sys.modules[__name__] = _module
