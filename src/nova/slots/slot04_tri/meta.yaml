@@ -37,7 +37,7 @@ dependencies:
 tests:
   paths:
     - "tests/e2e/test_constellation_with_tri.py"
-    - "slots/slot04_tri/tests/*"
+    - "src/nova/slots/slot04_tri/tests/*"
   expectations:
     coverage_min: 0.70
     fail_fast: true

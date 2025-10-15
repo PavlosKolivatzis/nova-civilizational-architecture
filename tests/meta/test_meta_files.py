@@ -1,7 +1,9 @@
 """Meta file validation tests for consistent slot documentation."""
-import yaml
 import glob
 import os
+from typing import Dict, List
+
+import yaml
 
 REQUIRED_KEYS = {
     "name", "slug", "version", "description", "status", "feature_flags",
@@ -18,15 +20,32 @@ KNOWN_FEATURE_FLAGS = {
 }
 
 
+def _discover_slot_meta_files() -> List[str]:
+    """Return unique slot metadata paths preferring namespaced layout."""
+    paths: List[str] = []
+    seen: set[str] = set()
+    for base in ("src/nova/slots", "slots"):
+        pattern = os.path.join(base, "slot*/meta.yaml")
+        for path in glob.glob(pattern):
+            if path not in seen:
+                paths.append(path)
+                seen.add(path)
+    return paths
+
+
+def _load_meta(path: str) -> Dict[str, object]:
+    with open(path, "r", encoding="utf-8") as handle:
+        return yaml.safe_load(handle)
+
+
 def test_meta_shape():
     """Test that all meta.yaml files have required keys and structure."""
-    meta_files = list(glob.glob("slots/*/meta.yaml")) + ["meta.yaml"]
+    meta_files = _discover_slot_meta_files() + ["meta.yaml"]
 
     assert meta_files, "No meta.yaml files found"
 
     for path in meta_files:
-        with open(path, "r", encoding="utf-8") as f:
-            meta = yaml.safe_load(f)
+        meta = _load_meta(path)
 
         # Check required keys
         missing = REQUIRED_KEYS - set(meta.keys())
@@ -42,11 +61,10 @@ def test_meta_shape():
 
 def test_feature_flag_consistency():
     """Test that feature flags are from known set and properly documented."""
-    meta_files = list(glob.glob("slots/*/meta.yaml")) + ["meta.yaml"]
+    meta_files = _discover_slot_meta_files() + ["meta.yaml"]
 
     for path in meta_files:
-        with open(path, "r", encoding="utf-8") as f:
-            meta = yaml.safe_load(f)
+        meta = _load_meta(path)
 
         for flag in meta["feature_flags"]:
             assert flag in KNOWN_FEATURE_FLAGS, f"{path} unknown feature flag: {flag}"
@@ -54,19 +72,30 @@ def test_feature_flag_consistency():
 
 def test_phase2_flag_mapping():
     """Test that Phase 2 slots have correct feature flag assignments."""
-    expected_flags = {
-        "slots/slot01_truth_anchor/meta.yaml": [],
-        "slots/slot04_tri/meta.yaml": ["NOVA_ENABLE_TRI_LINK"],
-        "slots/slot05_constellation/meta.yaml": ["NOVA_ENABLE_TRI_LINK"],
-        "slots/slot09_distortion_protection/meta.yaml": ["NOVA_USE_SHARED_HASH"],
-        "meta.yaml": ["NOVA_ENABLE_LIFESPAN", "NOVA_ENABLE_PROMETHEUS"],
-        "slots/slot10_civilizational_deployment/meta.yaml": ["NOVA_USE_SHARED_HASH"]
+    expected_flags_by_slot = {
+        "slot01_truth_anchor": [],
+        "slot04_tri": ["NOVA_ENABLE_TRI_LINK"],
+        "slot05_constellation": ["NOVA_ENABLE_TRI_LINK"],
+        "slot09_distortion_protection": ["NOVA_USE_SHARED_HASH"],
+        "slot10_civilizational_deployment": ["NOVA_USE_SHARED_HASH"],
     }
 
-    for path, expected in expected_flags.items():
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                meta = yaml.safe_load(f)
+    def resolve_slot_meta(slot: str) -> str:
+        for base in ("src/nova/slots", "slots"):
+            candidate = os.path.join(base, slot, "meta.yaml")
+            if os.path.exists(candidate):
+                return candidate
+        raise AssertionError(f"No metadata found for {slot}")
 
-            actual = meta["feature_flags"]
-            assert actual == expected, f"{path} expected flags {expected}, got {actual}"
+    root_expected = ["NOVA_ENABLE_LIFESPAN", "NOVA_ENABLE_PROMETHEUS"]
+    assert os.path.exists("meta.yaml"), "Root meta.yaml missing"
+    root_meta = _load_meta("meta.yaml")
+    assert root_meta["feature_flags"] == root_expected, (
+        f"meta.yaml expected flags {root_expected}, got {root_meta['feature_flags']}"
+    )
+
+    for slot, expected in expected_flags_by_slot.items():
+        path = resolve_slot_meta(slot)
+        meta = _load_meta(path)
+        actual = meta["feature_flags"]
+        assert actual == expected, f"{path} expected flags {expected}, got {actual}"

@@ -101,7 +101,7 @@ pytest --cov=. --cov-report=term | grep TOTAL
 | `src/nova/slots/slot05_constellation/plugin.py` | 23 | 37 | 37.8% | P2 | Low (1h) |
 | `src/nova/slots/slot10_civilizational_deployment/core/tri_gating.py` | 18 | 27 | 33.3% | P1 | Low (1h) |
 | `orchestrator/adapters/slot10_civilizational.py` | 18 | 27 | 33.3% | P1 | Low (1h) |
-| `slots/slot04_tri_engine/ids_integration.py` | 14 | 19 | 26.3% | P2 | Low (1h) |
+| `src/nova/slots/slot04_tri_engine/ids_integration.py` | 14 | 19 | 26.3% | P2 | Low (1h) |
 
 **Subtotal**: 73 statements (4% of gap)
 **Cumulative coverage**: 82.5%

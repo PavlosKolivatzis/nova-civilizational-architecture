@@ -1,11 +1,11 @@
 """Quarantine system for isolating compromised memory during security incidents."""
 
-import time
 import logging
 import threading
+import time
 from contextlib import contextmanager
-from typing import Dict, Any, List, Optional, Callable
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 from .types import ThreatLevel, QuarantineReason
 from .policy import QuarantinePolicy
@@ -31,25 +31,25 @@ class QuarantineSystem:
         self.policy = policy or QuarantinePolicy()
 
         # Quarantine state
-        self.state = QuarantineState.INACTIVE
-        self.activation_time = None
-        self.activation_reason = None
-        self.activation_context = {}
+        self.state: QuarantineState = QuarantineState.INACTIVE
+        self.activation_time: Optional[float] = None
+        self.activation_reason: Optional[QuarantineReason] = None
+        self.activation_context: Dict[str, Any] = {}
 
         # Access control
-        self._read_only_mode = False
-        self._write_blocked = False
+        self._read_only_mode: bool = False
+        self._write_blocked: bool = False
         self._access_lock = threading.RLock()
 
         # Event tracking
-        self.quarantine_events = []
-        self.access_attempts_during_quarantine = []
-        self.recovery_attempts = 0
-        self.auto_recoveries_attempted = 0
+        self.quarantine_events: List[Dict[str, Any]] = []
+        self.access_attempts_during_quarantine: List[Dict[str, Any]] = []
+        self.recovery_attempts: int = 0
+        self.auto_recoveries_attempted: int = 0
 
         # Callbacks for integration
-        self.escalation_callbacks: List[Callable] = []
-        self.recovery_callbacks: List[Callable] = []
+        self.escalation_callbacks: List[Callable[[Dict[str, Any]], None]] = []
+        self.recovery_callbacks: List[Callable[[float, Optional[QuarantineReason], Dict[str, Any]], None]] = []
 
     def activate_quarantine(self, reason: QuarantineReason,
                           threat_level: ThreatLevel,
@@ -107,14 +107,17 @@ class QuarantineSystem:
                 return False
 
             # Check if manual approval is required
-            if (self.policy.require_manual_approval and not manual_override and
-                self.activation_reason in [QuarantineReason.TAMPER_EVIDENCE,
-                                         QuarantineReason.CORRUPTION_DETECTED]):
+            if (
+                self.policy.require_manual_approval
+                and not manual_override
+                and self.activation_reason in [QuarantineReason.TAMPER_EVIDENCE, QuarantineReason.CORRUPTION_DETECTED]
+            ):
                 logger.warning("Manual approval required for quarantine deactivation")
                 return False
 
             # Record deactivation
-            duration = time.time() - self.activation_time
+            activation_time = self.activation_time or time.time()
+            duration = time.time() - activation_time
             self.state = QuarantineState.INACTIVE
 
             # Restore normal access
@@ -232,7 +235,11 @@ class QuarantineSystem:
                 logger.info("Attempting automatic quarantine recovery")
                 self.auto_recoveries_attempted += 1
 
-                recovery_context = {
+                if self.activation_time is None:
+                    logger.warning("Activation time missing during auto recovery attempt")
+                    return
+
+                recovery_context: Dict[str, Any] = {
                     "type": "automatic",
                     "attempt_number": self.auto_recoveries_attempted,
                     "time_in_quarantine": time.time() - self.activation_time
@@ -286,10 +293,11 @@ class QuarantineSystem:
         logger.error("Quarantine recovery failed")
 
         # Log failure details
+        time_in_quarantine = time.time() - self.activation_time if self.activation_time else 0.0
         self._log_quarantine_event("recovery_failed", {
             "attempt_number": self.recovery_attempts,
             "context": context,
-            "time_in_quarantine": time.time() - self.activation_time
+            "time_in_quarantine": time_in_quarantine
         })
 
         # Check if we should escalate
@@ -300,9 +308,10 @@ class QuarantineSystem:
         """Escalate quarantine failure to configured targets."""
         logger.critical("Escalating quarantine failure to administrators")
 
-        escalation_data = {
+        time_in_quarantine = time.time() - self.activation_time if self.activation_time else 0.0
+        escalation_data: Dict[str, Any] = {
             "reason": self.activation_reason.value if self.activation_reason else "unknown",
-            "time_in_quarantine": time.time() - self.activation_time if self.activation_time else 0,
+            "time_in_quarantine": time_in_quarantine,
             "recovery_attempts": self.recovery_attempts,
             "auto_recovery_attempts": self.auto_recoveries_attempted,
             "context": self.activation_context
@@ -338,8 +347,14 @@ class QuarantineSystem:
 
         # In production, this would send alerts via email, Slack, PagerDuty, etc.
 
-    def _record_quarantine_access(self, source: str, operation: str,
-                                access_type: str, granted: bool, error: str = None):
+    def _record_quarantine_access(
+        self,
+        source: str,
+        operation: str,
+        access_type: str,
+        granted: bool,
+        error: Optional[str] = None,
+    ) -> None:
         """Record access attempts during quarantine for analysis."""
         access_record = {
             "timestamp": time.time(),
@@ -374,11 +389,14 @@ class QuarantineSystem:
 
         logger.info(f"Quarantine event: {event_type} - {details}")
 
-    def register_escalation_callback(self, callback: Callable[[Dict[str, Any]], None]):
+    def register_escalation_callback(self, callback: Callable[[Dict[str, Any]], None]) -> None:
         """Register callback for quarantine escalation events."""
         self.escalation_callbacks.append(callback)
 
-    def register_recovery_callback(self, callback: Callable[[float, QuarantineReason, Dict[str, Any]], None]):
+    def register_recovery_callback(
+        self,
+        callback: Callable[[float, Optional[QuarantineReason], Dict[str, Any]], None],
+    ) -> None:
         """Register callback for quarantine recovery events."""
         self.recovery_callbacks.append(callback)
 
@@ -394,11 +412,12 @@ class QuarantineSystem:
         }
 
         if self.state == QuarantineState.ACTIVE and self.activation_time:
-            status.update({
+            status_extra: Dict[str, Any] = {
                 "activation_reason": self.activation_reason.value if self.activation_reason else None,
                 "time_in_quarantine_s": time.time() - self.activation_time,
                 "access_attempts_during_quarantine": len(self.access_attempts_during_quarantine)
-            })
+            }
+            status.update(status_extra)
 
         return status
 
@@ -411,14 +430,16 @@ class QuarantineSystem:
         total_activations = len(activations)
         successful_recoveries = len(deactivations)
 
-        metrics = {
+        quarantine_reasons: Dict[str, int] = {}
+        policy_effectiveness: Dict[str, float] = {}
+        metrics: Dict[str, Any] = {
             "total_activations": total_activations,
             "successful_recoveries": successful_recoveries,
             "current_state": self.state.value,
             "recovery_success_rate": successful_recoveries / max(1, total_activations),
             "average_quarantine_duration": 0.0,
-            "quarantine_reasons": {},
-            "policy_effectiveness": {}
+            "quarantine_reasons": quarantine_reasons,
+            "policy_effectiveness": policy_effectiveness,
         }
 
         # Calculate average quarantine duration
@@ -429,12 +450,12 @@ class QuarantineSystem:
         # Analyze quarantine reasons
         for activation in activations:
             reason = activation["details"].get("reason", "unknown")
-            metrics["quarantine_reasons"][reason] = metrics["quarantine_reasons"].get(reason, 0) + 1
+            quarantine_reasons[reason] = quarantine_reasons.get(reason, 0) + 1
 
         # Policy effectiveness analysis
         if self.policy.auto_recovery_after_s > 0:
             auto_successes = len([d for d in deactivations
                                 if not d["details"].get("manual_override", True)])
-            metrics["policy_effectiveness"]["auto_recovery_rate"] = auto_successes / max(1, total_activations)
+            policy_effectiveness["auto_recovery_rate"] = auto_successes / max(1, total_activations)
 
         return metrics

@@ -4,13 +4,14 @@ on:
   push:
     paths:
       - 'services/ids/**'
-      - 'slots/slot04_tri_engine/ids_integration.py'
-      - 'slots/slot09_distortion_protection/ids_policy.py'
-      - 'slots/slot08_memory_ethics/ids_protection.py'
+      - 'src/nova/slots/slot04_tri_engine/ids_integration.py'
+      - 'src/nova/slots/slot09_distortion_protection/ids_policy.py'
+      - 'src/nova/slots/slot08_memory_ethics/ids_protection.py'
       - 'config/feature_flags.py'
   pull_request:
     paths:
       - 'services/ids/**'
+      - 'src/nova/slots/**/ids_*.py'
       - 'slots/**/ids_*.py'
       - 'config/feature_flags.py'
 

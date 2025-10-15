@@ -59,7 +59,7 @@ slots:
     proofs:
       tests_passed: 7
       files:
-        - slots/slot04_tri/tests/test_processual_tri.py
+        - src/nova/slots/slot04_tri/tests/test_processual_tri.py
     notes: "Phase 2-3 upgrade: 3.0 → 4.0 with autonomous recovery & governance"
     previous_score: 3
 
@@ -114,7 +114,7 @@ slots:
     proofs:
       tests_passed: 23
       files:
-        - slots/slot08_memory_lock/tests/
+        - src/nova/slots/slot08_memory_lock/tests/
     notes: "Phase 2-3 upgrade: 3.0 → 4.0 with self-healing quarantine & adaptive entropy"
     previous_score: 3
 
@@ -139,7 +139,7 @@ slots:
     proofs:
       tests_passed: 9
       files:
-        - slots/slot10_civilizational_deployment/tests/
+        - src/nova/slots/slot10_civilizational_deployment/tests/
     notes: "Phase 2-3 upgrade: 3.0 → 4.0 with autonomous canary deployment & cross-slot coordination"
     previous_score: 3
 

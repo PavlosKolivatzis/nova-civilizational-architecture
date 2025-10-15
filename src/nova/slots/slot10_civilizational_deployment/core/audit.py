@@ -1,40 +1,50 @@
 """Signed audit logging for canary deployments with hash-chaining."""
 
 from __future__ import annotations
+
+import hashlib
+import hmac
+import json
+import os
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
-import json
-import time
-import os
-import hmac
-import hashlib
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Union
+
+compute_audit_hash: Optional[Callable[[Mapping[str, Any]], str]]
 
 # Shared hash integration (Phase 2)
 try:
-    from nova.slots.common.hashutils import compute_audit_hash  # blake2b
-    SHARED_HASH_AVAILABLE = True
-except Exception:  # ImportError or init error → fallback cleanly
+    from nova.slots.common.hashutils import compute_audit_hash as _shared_hash  # blake2b
+except Exception:
     SHARED_HASH_AVAILABLE = False
     compute_audit_hash = None
+else:
+    SHARED_HASH_AVAILABLE = True
+    compute_audit_hash = _shared_hash
+
 
 def _env_truthy(name: str) -> bool:
     """Check if environment variable is truthy."""
     v = os.getenv(name, "").strip().lower()
     return v in {"1", "true", "yes", "on"}
 
+
 def _canon(obj: Dict[str, Any]) -> bytes:
     """Minimal canonical JSON for signing / hashing."""
     return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()
 
+
 class AuditSigner:
     """Default HMAC signer for audit payloads."""
-    def __init__(self, secret: Optional[bytes] = None):
+
+    def __init__(self, secret: Optional[bytes] = None) -> None:
         self._secret = secret or b"default-nova-secret"
 
     def sign(self, payload: bytes) -> str:
         mac = hmac.new(self._secret, payload, hashlib.sha256).hexdigest()
         return "hmac256:" + mac
+
 
 @dataclass
 class AuditRecord:
@@ -43,22 +53,24 @@ class AuditRecord:
     reason: str
     metrics: Dict[str, Any]
     gate: Dict[str, Any]
-    prev: str                    # previous chain hash (legacy alias)
-    hash: str                    # computed hash (blake2b or sha256)
-    sig: str                     # hmac signature
-    hash_method: str             # "shared_blake2b" or "fallback_sha256"
-    api_version: str             # e.g., "3.1.0-slot10"
+    prev: str  # previous chain hash (legacy alias)
+    hash: str  # computed hash (blake2b or sha256)
+    sig: str  # hmac signature
+    hash_method: str  # "shared_blake2b" or "fallback_sha256"
+    api_version: str  # e.g., "3.1.0-slot10"
     pct_from: Optional[float] = None
     pct_to: Optional[float] = None
     extra: Dict[str, Any] = field(default_factory=dict)
 
+
 class AuditLog:
     """Simple append-style audit log that maintains chain state."""
-    def __init__(self, root: Union[str, Path], signer: Optional[AuditSigner] = None):
+
+    def __init__(self, root: Union[str, Path], signer: Optional[AuditSigner] = None) -> None:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         self.signer = signer or AuditSigner()
-        self._last_hash: str = ""   # chain head
+        self._last_hash: str = ""  # chain head
 
     def record(
         self,
@@ -77,23 +89,26 @@ class AuditLog:
             "event": {"action": action, "stage_idx": stage_idx, "reason": reason},
             "metrics": metrics or {},
             "gate": gate or {},
-            "prev": prev,                  # keep legacy key for consumers
-            "previous_hash": prev,         # canonical key for chain linking
+            "prev": prev,  # keep legacy key for consumers
+            "previous_hash": prev,  # canonical key for chain linking
             "api_version": "3.1.0-slot10",
         }
+
         # Include canary rollout details when provided
-        canary = {}
+        canary: Dict[str, float] = {}
         if pct_from is not None:
             canary["pct_from"] = pct_from
         if pct_to is not None:
             canary["pct_to"] = pct_to
         if canary:
             body["canary"] = canary
+
         # Preserve any future kwargs without breaking callers
         if extra:
-            body["extra"] = extra
+            body["extra"] = dict(extra)
+
         use_shared = _env_truthy("NOVA_USE_SHARED_HASH")
-        if SHARED_HASH_AVAILABLE and use_shared and compute_audit_hash:
+        if SHARED_HASH_AVAILABLE and use_shared and compute_audit_hash is not None:
             body["hash_method"] = "shared_blake2b"
             digest = compute_audit_hash(body)
         else:
@@ -120,5 +135,5 @@ class AuditLog:
             api_version=body["api_version"],
             pct_from=pct_from,
             pct_to=pct_to,
-            extra=extra or {},
+            extra=dict(extra) if extra else {},
         )

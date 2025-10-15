@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 import pathlib
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Type
 
 import yaml
 
@@ -27,7 +27,7 @@ class PluginLoader:
 
     def __init__(
         self,
-        slots_dirs: tuple[str, ...] = ("src/nova/slots", "slots"),
+        slots_dirs: tuple[str, ...] = ("src/nova/slots",),
         enabled: Optional[List[str]] = None,
     ) -> None:
         ensure_src_on_path()
@@ -62,7 +62,6 @@ class PluginLoader:
 
             module_candidates = (
                 f"nova.slots.{slot_id}.plugin",
-                f"slots.{slot_id}.plugin",
             )
 
             module = None
@@ -76,23 +75,32 @@ class PluginLoader:
                 self._loaded[slot_id] = LoadedSlot(meta, None, {})
                 continue
 
-            plugin_class = None
+            plugin_class: Optional[Type[SlotPlugin]] = None
             for name in dir(module):
                 if name.endswith("Plugin") and not name.startswith("_"):
                     plugin_class = getattr(module, name)
                     break
 
-            if plugin_class:
-                try:
-                    plugin: SlotPlugin = plugin_class()
-                    adapters = plugin.adapters()
-                except Exception as exc:
-                    print(f" Failed to instantiate plugin {slot_id}: {exc}")
-                    plugin = None
-                    adapters = {}
-                self._loaded[slot_id] = LoadedSlot(meta, plugin, adapters)
-            else:
+            if plugin_class is None:
                 self._loaded[slot_id] = LoadedSlot(meta, None, {})
+                continue
+
+            plugin_instance: Optional[SlotPlugin] = None
+            adapters: Dict[str, Any] = {}
+
+            try:
+                plugin_instance = plugin_class()
+            except Exception as exc:
+                print(f" Failed to instantiate plugin {slot_id}: {exc}")
+            else:
+                try:
+                    adapters = dict(plugin_instance.adapters())
+                except Exception as exc:
+                    print(f" Failed to collect adapters for {slot_id}: {exc}")
+                    plugin_instance = None
+                    adapters = {}
+
+            self._loaded[slot_id] = LoadedSlot(meta, plugin_instance, adapters)
 
         return self._loaded
 

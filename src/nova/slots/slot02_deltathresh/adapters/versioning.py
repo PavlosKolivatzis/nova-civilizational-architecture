@@ -16,7 +16,7 @@ def adapt_processing_result(payload: Any) -> ProcessingResult:
     """
     if isinstance(payload, ProcessingResult):
         data: Dict[str, Any] = asdict(payload)
-    elif is_dataclass(payload):
+    elif is_dataclass(payload) and not isinstance(payload, type):
         data = asdict(payload)
     elif isinstance(payload, Mapping):
         data = dict(payload)

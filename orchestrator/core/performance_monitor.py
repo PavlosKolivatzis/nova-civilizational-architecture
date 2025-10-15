@@ -1,22 +1,26 @@
+from __future__ import annotations
+
 import time
 from collections import defaultdict, deque
-from typing import Any, Dict
+from typing import Any, DefaultDict, Deque, Dict, List
 
 
 class PerformanceMonitor:
     def __init__(self, window: int = 500) -> None:
-        self._events = deque(maxlen=window)
-        self._slot_lat = defaultdict(list)
-        self._slot_err = defaultdict(int)
-        self._slot_cnt = defaultdict(int)
+        self._events: Deque[Dict[str, Any]] = deque(maxlen=window)
+        self._slot_lat: DefaultDict[str, List[float]] = defaultdict(list)
+        self._slot_err: DefaultDict[str, int] = defaultdict(int)
+        self._slot_cnt: DefaultDict[str, int] = defaultdict(int)
 
     def record_event_start(self, event: Any) -> None:
-        self._events.append({
-            "trace_id": event.trace_id,
-            "slot_id": event.target_slot,
-            "t0_ns": event.created_ns,
-            "status": "start",
-        })
+        self._events.append(
+            {
+                "trace_id": event.trace_id,
+                "slot_id": event.target_slot,
+                "t0_ns": event.created_ns,
+                "status": "start",
+            }
+        )
 
     def record_event_success(self, event: Any, result: Any) -> None:
         t1 = time.perf_counter_ns()
@@ -24,12 +28,14 @@ class PerformanceMonitor:
         sid = event.target_slot
         self._slot_lat[sid].append(lat_ms)
         self._slot_cnt[sid] += 1
-        self._events.append({
-            "trace_id": event.trace_id,
-            "slot_id": sid,
-            "status": "ok",
-            "latency_ms": lat_ms,
-        })
+        self._events.append(
+            {
+                "trace_id": event.trace_id,
+                "slot_id": sid,
+                "status": "ok",
+                "latency_ms": lat_ms,
+            }
+        )
 
     def record_event_failure(self, event: Any, exc: Exception) -> None:
         t1 = time.perf_counter_ns()
@@ -38,13 +44,15 @@ class PerformanceMonitor:
         self._slot_lat[sid].append(lat_ms)
         self._slot_err[sid] += 1
         self._slot_cnt[sid] += 1
-        self._events.append({
-            "trace_id": event.trace_id,
-            "slot_id": sid,
-            "status": "error",
-            "latency_ms": lat_ms,
-            "error": str(exc),
-        })
+        self._events.append(
+            {
+                "trace_id": event.trace_id,
+                "slot_id": sid,
+                "status": "error",
+                "latency_ms": lat_ms,
+                "error": str(exc),
+            }
+        )
 
     def get_slot_health(self, slot_id: str) -> Dict[str, Any]:
         lat_list = self._slot_lat.get(slot_id, [])
@@ -61,5 +69,5 @@ class PerformanceMonitor:
             "time_window_seconds": 3600,
         }
 
-    def get_trace_window(self):
+    def get_trace_window(self) -> List[Dict[str, Any]]:
         return list(self._events)

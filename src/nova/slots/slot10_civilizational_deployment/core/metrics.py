@@ -1,7 +1,7 @@
 """Canary deployment metrics export for observability."""
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, List
 import time
 import logging
@@ -26,7 +26,7 @@ class CanaryMetrics:
 
     # Gate and SLO status
     gate_status: str = "unknown"  # "pass" | "fail" | "unknown"
-    gate_failed_conditions: List[str] = None
+    gate_failed_conditions: List[str] = field(default_factory=list)
     slo_violation_count: int = 0
 
     # Performance metrics
@@ -37,11 +37,6 @@ class CanaryMetrics:
     # Rollback metrics
     rollback_triggered: bool = False
     rollback_reason: str = ""
-
-    def __post_init__(self):
-        if self.gate_failed_conditions is None:
-            self.gate_failed_conditions = []
-
 
 class CanaryMetricsExporter:
     """Export canary deployment metrics for monitoring systems."""
@@ -85,16 +80,22 @@ class CanaryMetricsExporter:
 
         return metrics
 
-    def update_metrics(self, metrics: CanaryMetrics, gate_result=None, runtime_metrics=None, rollback_reason: str = "") -> CanaryMetrics:
+    def update_metrics(
+        self,
+        metrics: CanaryMetrics,
+        gate_result: Optional[Any] = None,
+        runtime_metrics: Optional[Dict[str, Any]] = None,
+        rollback_reason: str = "",
+    ) -> CanaryMetrics:
         """Update metrics with gate and runtime data."""
         if gate_result:
             metrics.gate_status = "pass" if gate_result.passed else "fail"
-            metrics.gate_failed_conditions = gate_result.failed_conditions or []
+            metrics.gate_failed_conditions = list(gate_result.failed_conditions or [])
 
         if runtime_metrics:
-            metrics.error_rate = runtime_metrics.get("error_rate", 0.0)
-            metrics.latency_p95 = runtime_metrics.get("latency_p95", 0.0)
-            metrics.saturation = runtime_metrics.get("saturation", 0.0)
+            metrics.error_rate = float(runtime_metrics.get("error_rate", 0.0))
+            metrics.latency_p95 = float(runtime_metrics.get("latency_p95", 0.0))
+            metrics.saturation = float(runtime_metrics.get("saturation", 0.0))
 
         if rollback_reason:
             metrics.rollback_reason = rollback_reason

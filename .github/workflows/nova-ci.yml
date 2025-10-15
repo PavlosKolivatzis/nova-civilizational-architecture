@@ -58,15 +58,17 @@ jobs:
         echo "    'slot01_truth_anchor'," >> ci_validate_slots.py
         echo "    'slot02_deltathresh'," >> ci_validate_slots.py
         echo "    'slot03_emotional_matrix'," >> ci_validate_slots.py
-        echo "    'slot04_tri_engine'," >> ci_validate_slots.py
+        echo "    'slot04_tri'," >> ci_validate_slots.py
         echo "    'slot05_constellation'," >> ci_validate_slots.py
         echo "    'slot06_cultural_synthesis'," >> ci_validate_slots.py
         echo "    'slot07_production_controls'," >> ci_validate_slots.py
-        echo "    'slot08_memory_ethics'," >> ci_validate_slots.py
+        echo "    'slot08_memory_lock'," >> ci_validate_slots.py
         echo "    'slot09_distortion_protection'," >> ci_validate_slots.py
         echo "    'slot10_civilizational_deployment'" >> ci_validate_slots.py
         echo "]" >> ci_validate_slots.py
-        echo "missing = [s for s in expected_slots if not os.path.exists(os.path.join('slots', s))]" >> ci_validate_slots.py
+        echo "from pathlib import Path" >> ci_validate_slots.py
+        echo "slots_root = Path('src') / 'nova' / 'slots'" >> ci_validate_slots.py
+        echo "missing = [s for s in expected_slots if not (slots_root / s).exists()]" >> ci_validate_slots.py
         echo "if missing:" >> ci_validate_slots.py
         echo "    print('❌ Missing slots:', missing)" >> ci_validate_slots.py
         echo "    exit(1)" >> ci_validate_slots.py
@@ -78,10 +80,10 @@ jobs:
         set -e
         echo "🧪 Testing Slot 6 new CulturalSynthesisEngine API..."
         echo "import sys, os" > ci_test_slot6_new.py
-        echo "sys.path.insert(0, os.path.abspath('slots'))" >> ci_test_slot6_new.py
+        echo "sys.path.insert(0, os.path.abspath('src'))" >> ci_test_slot6_new.py
         echo "try:" >> ci_test_slot6_new.py
-        echo "    from slot06_cultural_synthesis.engine import CulturalSynthesisEngine" >> ci_test_slot6_new.py
-        echo "    from slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter" >> ci_test_slot6_new.py
+        echo "    from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine" >> ci_test_slot6_new.py
+        echo "    from nova.slots.slot06_cultural_synthesis.adapter import CulturalSynthesisAdapter" >> ci_test_slot6_new.py
         echo "    engine = CulturalSynthesisEngine()" >> ci_test_slot6_new.py
         echo "    adapter = CulturalSynthesisAdapter(engine)" >> ci_test_slot6_new.py
         echo "    profile = {'institution': 'TestInstitution', 'region': 'EU'}" >> ci_test_slot6_new.py
@@ -127,7 +129,7 @@ jobs:
         echo "import os" > ci_validate_docs.py
         echo "required_files = [" >> ci_validate_docs.py
         echo "    'docs/slots/slot06/Slot6_enhancement.md'," >> ci_validate_docs.py
-        echo "    'slots/slot10_civilizational_deployment/integration_patches_ready.md'," >> ci_validate_docs.py
+        echo "    'src/nova/slots/slot10_civilizational_deployment/integration_patches_ready.md'," >> ci_validate_docs.py
         echo "    'docs/integration_guide.md'," >> ci_validate_docs.py
         echo "    'docs/reports/testing_framework.md'," >> ci_validate_docs.py
         echo "]" >> ci_validate_docs.py   

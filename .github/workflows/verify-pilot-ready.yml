@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'orchestrator/router/**'
+      - 'src/nova/slots/**'
       - 'slots/**'
       - 'tests/**'
       - 'verify_pilot_ready.py'

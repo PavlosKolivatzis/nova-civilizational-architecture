@@ -1,7 +1,7 @@
 """Centralized metrics for NOVA system components."""
 
 import threading
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Deque
 from datetime import datetime, timezone
 from collections import deque
 import math
@@ -16,7 +16,7 @@ class Slot6Metrics:
         self._legacy_calls = 0
         self._last_decision: Optional[Dict[str, Any]] = None
         self._window = max(8, int(window))
-        self._residual_risk = deque(maxlen=self._window)
+        self._residual_risk: Deque[float] = deque(maxlen=self._window)
         self._last_updated: Optional[datetime] = None
 
     def record_decision(self, result_name: str, pps: float, residual_risk: float, **metadata):

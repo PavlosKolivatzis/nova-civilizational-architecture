@@ -6,7 +6,7 @@ import hashlib
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
 from .config import (
     OperationalMode,
@@ -323,7 +323,12 @@ class DeltaThreshProcessor:
 
     # ------------------------------------------------------------------
     def get_threat_data_for_slot9(self) -> Dict[str, Any]:
-        metrics = self.performance_tracker.get_metrics()
+        metrics: Dict[str, Any] = self.performance_tracker.get_metrics()
+        layer_detections_raw = metrics.get("layer_detections", {})
+        if isinstance(layer_detections_raw, Mapping):
+            layer_detections = cast(Mapping[str, Any], layer_detections_raw)
+        else:
+            layer_detections = {}
         return {
             "source_slot": 2,
             "timestamp": time.time(),
@@ -341,18 +346,10 @@ class DeltaThreshProcessor:
                 },
             },
             "layer_analysis": {
-                "delta_detections": metrics.get("layer_detections", {}).get(
-                    "delta", 0
-                ),
-                "sigma_detections": metrics.get("layer_detections", {}).get(
-                    "sigma", 0
-                ),
-                "theta_detections": metrics.get("layer_detections", {}).get(
-                    "theta", 0
-                ),
-                "omega_detections": metrics.get("layer_detections", {}).get(
-                    "omega", 0
-                ),
+                "delta_detections": int(layer_detections.get("delta", 0)),
+                "sigma_detections": int(layer_detections.get("sigma", 0)),
+                "theta_detections": int(layer_detections.get("theta", 0)),
+                "omega_detections": int(layer_detections.get("omega", 0)),
             },
             "recommendations": self._generate_threat_recommendations(metrics),
         }

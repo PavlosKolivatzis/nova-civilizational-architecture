@@ -3,7 +3,7 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Mapping, Tuple, cast
 
 
 class MerkleIntegrityStore:
@@ -137,11 +137,12 @@ class MerkleIntegrityStore:
 
     def create_integrity_manifest(self, root_dir: Path) -> Dict[str, Any]:
         """Create detailed integrity manifest for a directory."""
-        manifest = {
+        files: Dict[str, Dict[str, Any]] = {}
+        manifest: Dict[str, Any] = {
             "merkle_root": self.merkle_root_for_dir(root_dir),
             "hash_algorithm": self.hash_algorithm,
             "created_timestamp": self._get_timestamp(),
-            "files": {}
+            "files": files,
         }
 
         if root_dir.exists():
@@ -150,7 +151,7 @@ class MerkleIntegrityStore:
                     rel_path = str(file_path.relative_to(root_dir))
                     stat = file_path.stat()
 
-                    manifest["files"][rel_path] = {
+                    files[rel_path] = {
                         "content_hash": self.hash_file(file_path),
                         "size": stat.st_size,
                         "mtime": int(stat.st_mtime),
@@ -159,14 +160,17 @@ class MerkleIntegrityStore:
 
         return manifest
 
-    def verify_against_manifest(self, root_dir: Path,
-                               manifest: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    def verify_against_manifest(
+        self,
+        root_dir: Path,
+        manifest: Mapping[str, Any],
+    ) -> Tuple[bool, Dict[str, Any]]:
         """Verify directory against a detailed manifest."""
         current_manifest = self.create_integrity_manifest(root_dir)
 
         is_valid = (current_manifest["merkle_root"] == manifest["merkle_root"])
 
-        verification = {
+        verification: Dict[str, Any] = {
             "is_valid": is_valid,
             "verification_timestamp": self._get_timestamp(),
             "manifest_timestamp": manifest.get("created_timestamp"),
@@ -179,20 +183,26 @@ class MerkleIntegrityStore:
 
         return is_valid, verification
 
-    def _compare_manifests(self, original: Dict[str, Any],
-                          current: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _compare_manifests(
+        self,
+        original: Mapping[str, Any],
+        current: Mapping[str, Any],
+    ) -> List[Dict[str, Any]]:
         """Compare two manifests and return list of changes."""
-        changes = []
+        changes: List[Dict[str, Any]] = []
 
-        original_files = set(original.get("files", {}).keys())
-        current_files = set(current.get("files", {}).keys())
+        original_files_map = cast(Mapping[str, Dict[str, Any]], original.get("files", {}))
+        current_files_map = cast(Mapping[str, Dict[str, Any]], current.get("files", {}))
+
+        original_files = set(original_files_map.keys())
+        current_files = set(current_files_map.keys())
 
         # Deleted files
         for deleted_file in original_files - current_files:
             changes.append({
                 "type": "deleted",
                 "file": deleted_file,
-                "original_hash": original["files"][deleted_file]["content_hash"]
+                "original_hash": original_files_map[deleted_file]["content_hash"],
             })
 
         # Added files
@@ -200,13 +210,13 @@ class MerkleIntegrityStore:
             changes.append({
                 "type": "added",
                 "file": added_file,
-                "current_hash": current["files"][added_file]["content_hash"]
+                "current_hash": current_files_map[added_file]["content_hash"],
             })
 
         # Modified files
         for common_file in original_files & current_files:
-            orig_info = original["files"][common_file]
-            curr_info = current["files"][common_file]
+            orig_info = original_files_map[common_file]
+            curr_info = current_files_map[common_file]
 
             if orig_info["content_hash"] != curr_info["content_hash"]:
                 changes.append({

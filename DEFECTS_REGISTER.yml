@@ -63,15 +63,15 @@ defects:
     resolution_commit: eaa15ba
     title: "slot04_tri_engine README contains false integration claims"
     description: |
-      slots/slot04_tri_engine/README.md:17 claims:
+      src/nova/slots/slot04_tri_engine/README.md:17 claims:
       - "Cultural effectiveness weighting (Slot 6)" - FALSE
       - "Performance metrics for Slot 7 monitoring" - FALSE
       grep verification proves ZERO imports in slot06 and slot07
     impact: "Misleading documentation, developers waste time on non-existent integrations"
     evidence:
       - "DRIFT_REPORT.md:37-49"
-      - "grep -r 'slot04_tri_engine' slots/slot06_cultural_synthesis/ → 0 results"
-      - "grep -r 'slot04_tri_engine' slots/slot07_production_controls/ → 0 results"
+      - "grep -r 'slot04_tri_engine' src/nova/slots/slot06_cultural_synthesis/ → 0 results"
+      - "grep -r 'slot04_tri_engine' src/nova/slots/slot07_production_controls/ → 0 results"
     root_cause: "README stale 49 days, reflects intended architecture never implemented"
     resolution: |
       - Rewrote slot04_tri_engine/README.md with accurate dual-engine architecture
@@ -88,8 +88,8 @@ defects:
     title: "Duplicate Slot 4 implementations with unclear ownership"
     description: |
       Two Slot 4 implementations exist:
-      - slots/slot04_tri/ (operational, 828 lines, flow mesh connected)
-      - slots/slot04_tri_engine/ (content analysis, 637 lines, zombie state)
+      - src/nova/slots/slot04_tri/ (operational, 828 lines, flow mesh connected)
+      - src/nova/slots/slot04_tri_engine/ (content analysis, 637 lines, zombie state)
       orchestrator/adapters/slot4_tri.py routes to BOTH but ownership unclear
     impact: "Unclear which implementation to maintain, test, or deprecate"
     evidence:
@@ -115,14 +115,14 @@ defects:
     title: "Duplicate Slot 8 implementations with unclear ownership"
     description: |
       Two Slot 8 implementations exist:
-      - slots/slot08_memory_ethics/ (README 48 days stale)
-      - slots/slot08_memory_lock/ (README 11 days lag)
+      - src/nova/slots/slot08_memory_ethics/ (README 48 days stale)
+      - src/nova/slots/slot08_memory_lock/ (README 11 days lag)
       Unclear which is canonical
     impact: "Unclear which implementation to maintain, test, or deprecate"
     evidence:
       - "DRIFT_REPORT.md:65-77"
       - "REPO_MAP.md:52-53"
-      - "git log -1 --format='%ci' slots/slot08_memory_ethics/README.md → 2025-08-13"
+      - "git log -1 --format='%ci' src/nova/slots/slot08_memory_ethics/README.md → 2025-08-13"
       - "orchestrator/adapters/slot8_memory_ethics.py:6 - imports legacy only"
       - "slot08_memory_lock/README.md:399-410 - documents dual architecture"
     root_cause: "Migration-ready dual architecture - legacy (active) + Processual 4.0 (not yet integrated)"
@@ -346,11 +346,11 @@ defects:
     impact: "Documentation doesn't reflect current code"
     evidence:
       - "DRIFT_REPORT.md:318-331"
-      - "git log -1 --format='%ci' slots/slot04_tri_engine/README.md"
+      - "git log -1 --format='%ci' src/nova/slots/slot04_tri_engine/README.md"
     root_cause: "READMEs not updated with code changes"
     reproduction: |
-      git log -1 --format='%ci' slots/slot04_tri_engine/README.md
-      git log -1 --format='%ci' slots/slot04_tri_engine/
+      git log -1 --format='%ci' src/nova/slots/slot04_tri_engine/README.md
+      git log -1 --format='%ci' src/nova/slots/slot04_tri_engine/
     remediation: "Update stale READMEs or archive if implementations are legacy"
     test_gap: "No automated staleness detection"
 
@@ -368,7 +368,7 @@ defects:
     evidence:
       - "DRIFT_REPORT.md:151"
     root_cause: "Multiple VERSION constants in same slot"
-    reproduction: "grep -r 'VERSION.*=' slots/slot02_deltathresh/"
+    reproduction: "grep -r 'VERSION.*=' src/nova/slots/slot02_deltathresh/"
     remediation: "Standardize to single version string"
     test_gap: "No test validates version consistency"
 
@@ -442,10 +442,10 @@ defects:
     impact: "Incomplete contract metadata for Slot 2"
     evidence:
       - "DRIFT_REPORT.md:145-147"
-      - "slots/slot02_deltathresh/slot02_deltathresh.meta.yaml"
+      - "src/nova/slots/slot02_deltathresh/slot02_deltathresh.meta.yaml"
     root_cause: "meta.yaml not updated when contracts added"
     reproduction: |
-      grep -A5 "produces:" slots/slot02_deltathresh/*.yaml
+      grep -A5 "produces:" src/nova/slots/slot02_deltathresh/*.yaml
       grep "DELTA_THREAT\\|META_LENS" orchestrator/flow_fabric_init.py
     remediation: "Add missing contracts to slot02 meta.yaml produces section"
     test_gap: "No test validates metadata completeness per slot"
@@ -460,10 +460,10 @@ defects:
     impact: "Incomplete contract metadata for Slot 5"
     evidence:
       - "DRIFT_REPORT.md:148"
-      - "slots/slot05_constellation/*.yaml"
+      - "src/nova/slots/slot05_constellation/*.yaml"
     root_cause: "meta.yaml not updated when contract added"
     reproduction: |
-      grep -A5 "produces:" slots/slot05_constellation/*.yaml
+      grep -A5 "produces:" src/nova/slots/slot05_constellation/*.yaml
       grep "CONSTELLATION_REPORT" orchestrator/flow_fabric_init.py
     remediation: "Add CONSTELLATION_REPORT@1 to slot05 meta.yaml or remove from flow fabric"
     test_gap: "No test validates contract registration matches metadata"
@@ -478,9 +478,9 @@ defects:
     impact: "Zero metadata for Slot 3 contracts"
     evidence:
       - "DRIFT_REPORT.md:144"
-      - "find slots/slot03_emotional_matrix -name '*.yaml'"
+      - "find src/nova/slots/slot03_emotional_matrix -name '*.yaml'"
     root_cause: "meta.yaml never created for Slot 3"
-    reproduction: "ls slots/slot03_emotional_matrix/*.yaml"
+    reproduction: "ls src/nova/slots/slot03_emotional_matrix/*.yaml"
     remediation: "Create slot03_emotional_matrix.meta.yaml with produces/consumes"
     test_gap: "No test enforces meta.yaml existence for all slots"
 
@@ -494,9 +494,9 @@ defects:
     impact: "Zero metadata for Slot 7 contracts"
     evidence:
       - "DRIFT_REPORT.md:146"
-      - "find slots/slot07_production_controls -name '*.yaml'"
+      - "find src/nova/slots/slot07_production_controls -name '*.yaml'"
     root_cause: "meta.yaml never created for Slot 7"
-    reproduction: "ls slots/slot07_production_controls/*.yaml"
+    reproduction: "ls src/nova/slots/slot07_production_controls/*.yaml"
     remediation: "Create slot07_production_controls.meta.yaml with consumes declaration"
     test_gap: "No test enforces meta.yaml existence for all slots"
 
@@ -578,7 +578,7 @@ defects:
     root_cause: "Two systems evolved independently"
     reproduction: |
       grep "KNOWN_CONTRACTS" orchestrator/flow_fabric_init.py
-      grep -A5 "contracts:" slots/slot04_tri/meta.yaml
+      grep -A5 "contracts:" src/nova/slots/slot04_tri/meta.yaml
     remediation: "Document dual contract system in INTERSLOT_CONTRACTS.md"
     test_gap: "No validation of naming conventions"
 

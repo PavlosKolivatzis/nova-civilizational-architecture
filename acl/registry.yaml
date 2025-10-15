@@ -17,22 +17,22 @@ capabilities:
     desc: Self-healing memory with signed snapshots, quarantine, adaptive repair
     requires: [MEM/SNAPSHOT_SIGNING@1, MEM/QUARANTINE_POLICY@1, IDS/STORE_SURGE@1]
     tests:
-      - slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_mttr_requirement
-      - slots/slot08_memory_lock/tests/test_self_healing_integration.py::TestSelfHealingIntegration::test_end_to_end_recovery_workflow
+      - src/nova/slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_mttr_requirement
+      - src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py::TestSelfHealingIntegration::test_end_to_end_recovery_workflow
 
   - key: MEM/QUARANTINE_POLICY@1
     owner: slot08
     status: active
     desc: Versioned quarantine policy with activation <=1s, auto-recovery, read-only continuity
     tests:
-      - slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_quarantine_flip_time
+      - src/nova/slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_quarantine_flip_time
 
   - key: IDS/STORE_SURGE@1
     owner: slot08
     status: active
     desc: Write-surge detection that emits structured events
     tests:
-      - slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_autonomous_threat_detection
+      - src/nova/slots/slot08_memory_lock/tests/test_processual_capabilities.py::TestProcessualCapabilities::test_autonomous_threat_detection
 
   - key: MEM/SNAPSHOT_SIGNING@1
     owner: slot08
@@ -46,8 +46,8 @@ capabilities:
     status: active
     desc: Drift/surge detection for TRI streams with O(1) rolling stats
     tests:
-      - slots/slot04_tri/tests/test_processual_tri.py::test_autonomous_detection_and_recovery
-      - slots/slot04_tri/tests/test_processual_tri.py::test_surge_respects_warmup
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_autonomous_detection_and_recovery
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_surge_respects_warmup
 
   - key: TRI/CALCULATE@1
     owner: slot04
@@ -55,30 +55,30 @@ capabilities:
     desc: TRI scoring with confidence intervals and safe-mode gating
     requires: [TRI/PATTERN_DETECT@1, TRI/CONFIDENCE_BOUNDS@1]
     tests:
-      - slots/slot04_tri/tests/test_processual_tri.py::test_confidence_interval_behavior
-      - slots/slot04_tri/tests/test_processual_tri.py::test_safe_mode_continuity
-      - slots/slot04_tri/tests/test_processual_tri.py::test_threshold_adapts_and_reverts
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_confidence_interval_behavior
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_safe_mode_continuity
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_threshold_adapts_and_reverts
 
   - key: TRI/CONFIDENCE_BOUNDS@1
     owner: slot04
     status: active
     desc: Statistical confidence interval calculation with adaptive thresholds
     tests:
-      - slots/slot04_tri/tests/test_processual_tri.py::test_confidence_interval_behavior
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_confidence_interval_behavior
 
   - key: TRI/SAFE_MODE@1
     owner: slot04
     status: active
     desc: Production-grade safe mode with monotonic timing and auto-expiry
     tests:
-      - slots/slot04_tri/tests/test_processual_tri.py::test_safe_mode_continuity
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_safe_mode_continuity
 
   - key: TRI/SNAPSHOT@1
     owner: slot04
     status: active
     desc: Signed TRI model snapshots with path-bound Merkle verification
     tests:
-      - slots/slot04_tri/tests/test_processual_tri.py::test_snapshot_ops
+      - src/nova/slots/slot04_tri/tests/test_processual_tri.py::test_snapshot_ops
 
   # Slot 10 Civilizational Deployment Capabilities (Processual 4.0)
   - key: DEPLOY/GATEKEEPER@1
@@ -87,8 +87,8 @@ capabilities:
     desc: Gate evaluation using Slot 8/4 health signals for deployment decisions
     requires: [MEM/SELF_HEAL@1, TRI/CALCULATE@1]
     tests:
-      - slots/slot10_civilizational_deployment/tests/test_gates.py::test_gate_block_on_quarantine
-      - slots/slot10_civilizational_deployment/tests/test_gates.py::test_gate_block_on_drift
+      - src/nova/slots/slot10_civilizational_deployment/tests/test_gates.py::test_gate_block_on_quarantine
+      - src/nova/slots/slot10_civilizational_deployment/tests/test_gates.py::test_gate_block_on_drift
 
   - key: DEPLOY/CANARY@1
     owner: slot10
@@ -96,8 +96,8 @@ capabilities:
     desc: Progressive delivery controlled by ACL gates with autonomous rollback
     requires: [DEPLOY/GATEKEEPER@1, MEM/SELF_HEAL@1, TRI/CALCULATE@1]
     tests:
-      - slots/slot10_civilizational_deployment/tests/test_canary.py::test_canary_promotes_when_all_green
-      - slots/slot10_civilizational_deployment/tests/test_canary.py::test_canary_rolls_back_on_slo_violation
+      - src/nova/slots/slot10_civilizational_deployment/tests/test_canary.py::test_canary_promotes_when_all_green
+      - src/nova/slots/slot10_civilizational_deployment/tests/test_canary.py::test_canary_rolls_back_on_slo_violation
 
   - key: DEPLOY/SNAPSHOT_BACKOUT@1
     owner: slot10
@@ -105,7 +105,7 @@ capabilities:
     desc: Cross-slot snapshot coordination for consistent rollback
     requires: [MEM/SNAPSHOT_SIGNING@1, TRI/SNAPSHOT@1]
     tests:
-      - slots/slot10_civilizational_deployment/tests/test_backout.py::test_cross_slot_rollback
+      - src/nova/slots/slot10_civilizational_deployment/tests/test_backout.py::test_cross_slot_rollback
 
 # System Integration Gates (top-level)
 gates:

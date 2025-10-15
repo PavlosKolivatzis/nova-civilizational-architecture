@@ -3,9 +3,9 @@
 import hashlib
 import json
 import time
-from collections import deque, defaultdict
-from typing import Any, Dict, Optional
+from collections import defaultdict, deque
 from statistics import mean, stdev
+from typing import Any, Deque, DefaultDict, Dict, Optional
 
 from .policy import Slot8Policy
 
@@ -21,22 +21,22 @@ class EntropyMonitor:
         self.policy = policy or Slot8Policy()
 
         # Sliding windows for different metrics
-        self.schema_hashes = deque(maxlen=window_size)
-        self.content_sizes = deque(maxlen=window_size)
-        self.operation_types = deque(maxlen=window_size)
-        self.timestamps = deque(maxlen=window_size)
+        self.schema_hashes: Deque[str] = deque(maxlen=window_size)
+        self.content_sizes: Deque[int] = deque(maxlen=window_size)
+        self.operation_types: Deque[str] = deque(maxlen=window_size)
+        self.timestamps: Deque[float] = deque(maxlen=window_size)
 
         # Pattern tracking
-        self.schema_patterns = defaultdict(int)
-        self.size_patterns = defaultdict(int)
-        self.operation_patterns = defaultdict(int)
+        self.schema_patterns: DefaultDict[str, int] = defaultdict(int)
+        self.size_patterns: DefaultDict[str, int] = defaultdict(int)
+        self.operation_patterns: DefaultDict[str, int] = defaultdict(int)
 
         # Adaptive thresholds
-        self.adaptive_entropy_threshold = entropy_threshold
-        self.baseline_entropy = 0.0
-        self.anomaly_count = 0
-        self._baseline_seen = 0
-        self._frozen_baseline_threshold = None  # set after enough baseline samples
+        self.adaptive_entropy_threshold: float = entropy_threshold
+        self.baseline_entropy: float = 0.0
+        self.anomaly_count: int = 0
+        self._baseline_seen: int = 0
+        self._frozen_baseline_threshold: Optional[float] = None  # set after enough baseline samples
 
     def update(self, obj: Any, operation_type: str = "unknown") -> float:
         """Update entropy monitor with new object and return entropy score."""
@@ -208,7 +208,7 @@ class EntropyMonitor:
         """Get comprehensive entropy monitoring metrics."""
         current_entropy = self._calculate_entropy_score()
 
-        metrics = {
+        metrics: Dict[str, Any] = {
             "current_entropy": current_entropy,
             "adaptive_threshold": self.adaptive_entropy_threshold,
             "baseline_entropy": self.baseline_entropy,
@@ -224,16 +224,17 @@ class EntropyMonitor:
             metrics["schema_diversity"] = len(set(self.schema_hashes)) / len(self.schema_hashes)
 
         if self.content_sizes:
-            metrics["size_stats"] = {
+            size_stats: Dict[str, float] = {
                 "min": min(self.content_sizes),
                 "max": max(self.content_sizes),
                 "mean": mean(self.content_sizes),
                 "variance": stdev(self.content_sizes) if len(self.content_sizes) > 1 else 0.0
             }
+            metrics["size_stats"] = size_stats
 
         # Operation pattern analysis
         if self.operation_types:
-            operation_counts = defaultdict(int)
+            operation_counts: DefaultDict[str, int] = defaultdict(int)
             for op in self.operation_types:
                 operation_counts[op] += 1
             metrics["operation_distribution"] = dict(operation_counts)

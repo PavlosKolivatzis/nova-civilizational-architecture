@@ -8,7 +8,7 @@ Fuzzy repo utility for NOVA:
 Usage (CLI):
   python tools/fuzzy_repo.py find "slot6 cultural synthesis"
   python tools/fuzzy_repo.py find "slot10 deployment mls"
-  python tools/fuzzy_repo.py move "slot6 meta yaml" --to slots/slot06_cultural_synthesis/slot6.meta.yaml --apply
+  python tools/fuzzy_repo.py move "slot6 meta yaml" --to src/nova/slots/slot06_cultural_synthesis/slot6.meta.yaml --apply
   python tools/fuzzy_repo.py rm "civilization_deployment" --apply
   python tools/fuzzy_repo.py print "app py"
   python tools.fuzzy_repo.py fix-import "nova.slots.slot06_cultural_synthesis.adapter"

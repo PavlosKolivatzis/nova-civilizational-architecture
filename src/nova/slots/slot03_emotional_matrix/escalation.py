@@ -1,8 +1,9 @@
 """Escalation Manager for Slot 3 - Emotional Matrix Safety System."""
 import logging
-from typing import Dict, Any, Optional, List, Callable
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 
 class ThreatLevel(Enum):
@@ -22,11 +23,7 @@ class EscalationEvent:
     timestamp: float
     source_slot: str = "slot03_emotional"
     escalation_reason: str = ""
-    suggested_actions: List[str] = None
-
-    def __post_init__(self):
-        if self.suggested_actions is None:
-            self.suggested_actions = []
+    suggested_actions: List[str] = field(default_factory=list)
 
 
 class EmotionalEscalationManager:
@@ -37,10 +34,10 @@ class EmotionalEscalationManager:
     cross-slot coordination for emotional safety incidents.
     """
 
-    def __init__(self, adapter_registry: Optional[Dict] = None):
+    def __init__(self, adapter_registry: Optional[Dict[str, Any]] = None) -> None:
         self.logger = logging.getLogger(__name__)
-        self.adapter_registry = adapter_registry or {}
-        self._escalation_handlers: Dict[ThreatLevel, List[Callable]] = {
+        self.adapter_registry: Dict[str, Any] = adapter_registry or {}
+        self._escalation_handlers: Dict[ThreatLevel, List[Callable[[EscalationEvent], None]]] = {
             ThreatLevel.LOW: [],
             ThreatLevel.MEDIUM: [],
             ThreatLevel.HIGH: [],
@@ -48,7 +45,7 @@ class EmotionalEscalationManager:
         }
         self._escalation_history: List[EscalationEvent] = []
 
-    def register_handler(self, threat_level: ThreatLevel, handler: Callable):
+    def register_handler(self, threat_level: ThreatLevel, handler: Callable[[EscalationEvent], None]) -> None:
         """Register a handler for specific threat level."""
         self._escalation_handlers[threat_level].append(handler)
 
@@ -95,8 +92,6 @@ class EmotionalEscalationManager:
         Returns:
             EscalationEvent with classification and suggested actions
         """
-        import time
-        
         threat_level = self.classify_threat(emotional_analysis)
         
         # Create escalation event
@@ -175,7 +170,7 @@ class EmotionalEscalationManager:
         
         return actions.get(threat_level, [])
 
-    def _route_to_slots(self, event: EscalationEvent):
+    def _route_to_slots(self, event: EscalationEvent) -> None:
         """Route escalation event to relevant slots."""
         if not self.adapter_registry:
             return

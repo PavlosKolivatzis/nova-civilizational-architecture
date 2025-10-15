@@ -1,22 +1,25 @@
 """Advanced Safety Policy for Slot 3 - Emotional Matrix Safety System."""
 from __future__ import annotations
+
 import re
 import time
 import threading
 from collections import defaultdict
+from typing import Any, DefaultDict, Dict, List, Optional
 
 # Patterns for harmful content detection
-_HARM_PATTERNS: tuple = (
+_HARM_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b(self[-\s]?harm|kill myself|suicide)\b", re.I),
     re.compile(r"\b(hate\s+speech|genocide|ethnic cleansing)\b", re.I),
     re.compile(r"\b(hate all|kill everyone|want to kill|destroy them all)\b", re.I),
     re.compile(r"\b(should die|disappear forever|attack and destroy)\b", re.I),
 )
 
-_DAMPENING_PHRASES: tuple = (
+_DAMPENING_PHRASES: tuple[re.Pattern[str], ...] = (
     re.compile(r"\bjust\s+kidding\b", re.I),
     re.compile(r"\bonly\s+a\s+joke\b", re.I),
 )
+
 
 def _ensure_ellipsis(s: str) -> str:
     """Ensure previews end with an ellipsis."""
@@ -25,35 +28,43 @@ def _ensure_ellipsis(s: str) -> str:
 
 class SafetyViolation:
     """Represents a safety policy violation."""
-    def __init__(self, violation_type: str, content: str, confidence: float, timestamp: float, metadata: dict = None):
+
+    def __init__(
+        self,
+        violation_type: str,
+        content: str,
+        confidence: float,
+        timestamp: float,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
         self.violation_type = violation_type
         self.content = content
         self.confidence = confidence
         self.timestamp = timestamp
-        self.metadata = metadata or {}
+        self.metadata: Dict[str, Any] = metadata or {}
 
 
 class RateLimiter:
     """Simple rate limiter for content analysis."""
-    
-    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
+
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60) -> None:
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self.requests = defaultdict(list)
-    
+        self.requests: DefaultDict[str, List[float]] = defaultdict(list)
+
     def is_allowed(self, identifier: str) -> bool:
         """Check if request is allowed within rate limits."""
         now = time.time()
         window_start = now - self.window_seconds
-        
+
         # Clean old requests
         request_times = self.requests[identifier]
         self.requests[identifier] = [t for t in request_times if t > window_start]
-        
+
         # Check if within limits
         if len(self.requests[identifier]) >= self.max_requests:
             return False
-        
+
         # Add current request
         self.requests[identifier].append(now)
         return True
@@ -64,8 +75,13 @@ class AdvancedSafetyPolicy:
     Harmful/manipulation hints + simple token-bucket rate limiting by source.
     """
 
-    def __init__(self, rate_limit_requests: int = 100, rate_limit_window: int = 60, 
-                 rate_per_min: int = None, enable_content_filtering: bool = True):
+    def __init__(
+        self,
+        rate_limit_requests: int = 100,
+        rate_limit_window: int = 60,
+        rate_per_min: Optional[int] = None,
+        enable_content_filtering: bool = True,
+    ) -> None:
         # Support both old and new parameter names for compatibility
         if rate_per_min is not None:
             self._allow = max(1, int(rate_per_min))
@@ -73,16 +89,18 @@ class AdvancedSafetyPolicy:
             # Convert from requests per window to requests per minute
             self._allow = max(1, int(rate_limit_requests * 60 / rate_limit_window))
         self._lock = threading.RLock()
-        self._buckets: dict = defaultdict(lambda: (time.time(), float(self._allow)))
-        self.enable_content_filtering = enable_content_filtering
-        self.stats = {
+        self._buckets: DefaultDict[str, tuple[float, float]] = defaultdict(
+            lambda: (time.time(), float(self._allow))
+        )
+        self.enable_content_filtering: bool = enable_content_filtering
+        self.stats: Dict[str, int] = {
             "total_checks": 0,
             "violations_detected": 0,
             "rate_limit_hits": 0,
             "content_filtered": 0
         }
-        self._recent_violations = []  # Track recent violations
-        self._pattern_names = {}  # Track custom pattern names
+        self._recent_violations: List[SafetyViolation] = []  # Track recent violations
+        self._pattern_names: Dict[str, str] = {}  # Track custom pattern names
 
     def rate_limit_ok(self, source: str) -> bool:
         """Check if rate limiting allows this request."""
@@ -97,19 +115,24 @@ class AdvancedSafetyPolicy:
             self._buckets[source] = (now, tokens - 1.0)
             return True
 
-    def detect_harmful(self, text: str) -> list[str]:
+    def detect_harmful(self, text: str) -> List[str]:
         """Detect harmful content patterns."""
         return [p.pattern for p in _HARM_PATTERNS if p.search(text or "")]
 
-    def detect_manipulation(self, text: str) -> list[str]:
+    def detect_manipulation(self, text: str) -> List[str]:
         """Detect manipulation patterns."""
         return [p.pattern for p in _DAMPENING_PHRASES if p.search(text or "")]
 
-    def validate(self, analysis_result: dict, content: str = "", user_id: str = None) -> dict:
+    def validate(
+        self,
+        analysis_result: Dict[str, Any],
+        content: str = "",
+        user_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Advanced validation with comprehensive safety checks."""
         self.stats["total_checks"] += 1
         
-        validation_result = {
+        validation_result: Dict[str, Any] = {
             "is_safe": True,
             "violations": [],
             "filtered_content": content,
@@ -118,7 +141,7 @@ class AdvancedSafetyPolicy:
         }
         
         # Check rate limiting first
-        if user_id and not self.rate_limit_ok(user_id):
+        if user_id is not None and not self.rate_limit_ok(user_id):
             validation_result["rate_limited"] = True
             validation_result["is_safe"] = False
             self.stats["rate_limit_hits"] += 1
@@ -159,11 +182,11 @@ class AdvancedSafetyPolicy:
             
         return validation_result
 
-    def _basic_safety_check(self, analysis_result: dict) -> dict:
+    def _basic_safety_check(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
         """Basic safety validation."""
         from nova.slots.slot03_emotional_matrix.safety_policy import validate_metrics
         
-        result = {
+        result: Dict[str, Any] = {
             "is_safe": True,
             "violations": [],
             "policy_actions": []
@@ -181,15 +204,15 @@ class AdvancedSafetyPolicy:
         
         return result
 
-    def _check_content_safety(self, content: str) -> list[dict]:
+    def _check_content_safety(self, content: str) -> List[Dict[str, Any]]:
         """Check content for safety violations."""
-        violations = []
+        violations: List[Dict[str, Any]] = []
         
         # Check harmful patterns (including dynamically added ones)
         harmful_patterns = self.detect_harmful(content)
         for pattern in harmful_patterns:
             # Check if this is a custom pattern by looking for pattern info
-            pattern_name = getattr(self, '_pattern_names', {}).get(pattern, None)
+            pattern_name = self._pattern_names.get(pattern)
             if pattern_name:
                 violation_type = f"harmful_content_{pattern_name}"
             else:
@@ -217,25 +240,28 @@ class AdvancedSafetyPolicy:
         
         return violations
 
-    def get_policy_stats(self) -> dict:
+    def get_policy_stats(self) -> Dict[str, float | int]:
         """Get policy statistics."""
+        total_checks = self.stats["total_checks"]
+        violations = self.stats["violations_detected"]
+        violation_rate = violations / max(1, total_checks)
         return {
             "total_checks": self.stats["total_checks"],
             "violations_detected": self.stats["violations_detected"],
             "rate_limit_hits": self.stats["rate_limit_hits"],
             "content_filtered": self.stats["content_filtered"],
-            "violation_rate": self.stats["violations_detected"] / max(1, self.stats["total_checks"]),
-            "safety_effectiveness": 1.0 - (self.stats["violations_detected"] / max(1, self.stats["total_checks"]))
+            "violation_rate": violation_rate,
+            "safety_effectiveness": 1.0 - violation_rate,
         }
 
-    def get_recent_violations(self, limit: int = 20) -> list:
+    def get_recent_violations(self, limit: int = 20) -> List[Dict[str, Any]]:
         """Get recent violations."""
-        violations = getattr(self, '_recent_violations', [])[-limit:]
+        violations = self._recent_violations[-limit:]
         # Convert SafetyViolation objects to dict format expected by tests
         return [
             {
                 'type': v.violation_type,
-                'content_preview': v.content + "..." if len(v.content) < 100 else v.content[:100] + "...",
+                'content_preview': _ensure_ellipsis(v.content[:100]),
                 'confidence': v.confidence,
                 'timestamp': v.timestamp,
                 'metadata': v.metadata
@@ -243,12 +269,12 @@ class AdvancedSafetyPolicy:
             for v in violations
         ]
 
-    def update_harmful_patterns(self, new_patterns: list):
+    def update_harmful_patterns(self, new_patterns: List[Dict[str, Any]]) -> None:
         """Update harmful content patterns."""
         global _HARM_PATTERNS
         
         # Add new patterns to existing ones
-        new_compiled_patterns = []
+        new_compiled_patterns: List[re.Pattern[str]] = []
         for pattern_info in new_patterns:
             if isinstance(pattern_info, dict) and 'patterns' in pattern_info:
                 pattern_name = pattern_info.get('name', 'unnamed')

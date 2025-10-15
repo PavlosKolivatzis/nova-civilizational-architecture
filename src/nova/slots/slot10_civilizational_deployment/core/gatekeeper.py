@@ -1,6 +1,6 @@
 """Gatekeeper for Slot 10 deployment decisions using ACL registry gates."""
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
 import logging
 import time
@@ -14,7 +14,7 @@ class GateResult:
     passed: bool
     failed_conditions: List[str]
     evaluation_time_s: float = 0.0
-    health_snapshot: Dict[str, Any] = None
+    health_snapshot: Dict[str, Any] = field(default_factory=dict)
 
 class Gatekeeper:
     """Evaluates deploy gates from live Slot 8/4 health signals."""

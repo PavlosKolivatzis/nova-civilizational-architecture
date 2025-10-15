@@ -40,7 +40,7 @@ def collect_slot_selfchecks(slot_registry: Dict[str, Callable]) -> Dict[str, Any
     for slot_id in slot_registry.keys():
         module = None
         import_error_reason: Optional[str] = None
-        for module_path in (f"nova.slots.{slot_id}.health", f"slots.{slot_id}.health"):
+        for module_path in (f"nova.slots.{slot_id}.health",):
             try:
                 module = importlib.import_module(module_path)
                 break

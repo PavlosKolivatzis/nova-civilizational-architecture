@@ -1,7 +1,24 @@
 """Policy configuration for Slot 10 Civilizational Deployment system."""
 
-from dataclasses import dataclass
-from typing import List
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+
+def _default_canary_stages() -> list[float]:
+    """Standard progressive rollout percentages."""
+    return [0.01, 0.05, 0.25, 0.50, 1.00]
+
+
+def _default_chaos_scenarios() -> list[str]:
+    """Baseline chaos drills executed during weekly exercises."""
+    return [
+        "write_surge",
+        "model_drift_spike",
+        "partial_network_partition",
+        "disk_full",
+        "slow_io",
+    ]
 
 
 @dataclass
@@ -14,7 +31,7 @@ class Slot10Policy:
     rollback_timeout_s: float = 10.0  # Max time for rollback execution
 
     # Canary progression stages
-    canary_stages: List[float] = None  # Will be set in __post_init__
+    canary_stages: list[float] = field(default_factory=_default_canary_stages)
     min_stage_duration_s: int = 300  # Minimum observation time per stage (5 minutes)
     # Minimum time between promotions (seconds). 0 disables the velocity guard.
     min_promotion_gap_s: float = 0.0
@@ -38,26 +55,12 @@ class Slot10Policy:
     max_concurrent_rollbacks: int = 1  # Conservative rollback concurrency
 
     # Chaos and resilience testing
-    chaos_scenarios: List[str] = None  # Will be set in __post_init__
+    chaos_scenarios: list[str] = field(default_factory=_default_chaos_scenarios)
     acceptable_chaos_recovery_rate: float = 0.8  # 80% auto-recovery success
 
     # Observability and alerting
     metrics_collection_interval_s: int = 30
     alert_cooldown_s: int = 300  # 5 minutes between similar alerts
-
-    def __post_init__(self):
-        """Initialize default values for mutable fields."""
-        if self.canary_stages is None:
-            self.canary_stages = [0.01, 0.05, 0.25, 0.50, 1.00]  # 1% → 100%
-
-        if self.chaos_scenarios is None:
-            self.chaos_scenarios = [
-                "write_surge",
-                "model_drift_spike",
-                "partial_network_partition",
-                "disk_full",
-                "slow_io"
-            ]
 
     @property
     def stage_count(self) -> int:

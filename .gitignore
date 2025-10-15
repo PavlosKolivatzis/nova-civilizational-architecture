@@ -67,9 +67,4 @@ __pycache__/
 *.pyo
 orchestrator/__pycache__/app.cpython-313.pyc
 orchestrator/adapters/__pycache__/slot5_constellation.cpython-313.pyc
-slots/slot02_deltathresh/enhanced/__pycache__/processor.cpython-313.pyc
-slots/slot05_constellation/__pycache__/__init__.cpython-313.pyc
-slots/slot05_constellation/__pycache__/constellation_engine.cpython-313.pyc
-slots/slot05_constellation/__pycache__/health.cpython-313.pyc
-slots/slot09_distortion_protection/__pycache__/hybrid_api.cpython-313.pyc
 README.md.bak

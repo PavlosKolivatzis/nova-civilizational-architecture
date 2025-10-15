@@ -11,9 +11,9 @@ import hashlib
 import uuid
 import json
 import os
-from typing import Dict, Any, Optional, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypedDict, cast
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
 import threading
 from datetime import datetime, timezone
@@ -40,18 +40,24 @@ except ImportError:
 # NOVA-specific imports (with fallbacks)
 try:
     from .ids_policy import policy_check_with_ids
-    from services.ids.core import IDSState
     from config.feature_flags import IDS_ENABLED
     NOVA_INTEGRATION_AVAILABLE = True
 except ImportError:
     NOVA_INTEGRATION_AVAILABLE = False
-    # Fallback enums
-    class IDSState(str, Enum):
+
+    def policy_check_with_ids(*_args: Any, **_kwargs: Any) -> Dict[str, Any]:
+        return {"status": "not_available"}
+
+    IDS_ENABLED = True
+
+try:
+    from services.ids.core import IDSState
+except ImportError:
+    class IDSState(str, Enum):  # type: ignore[no-redef]
         STABLE = "stable"
         REINTEGRATING = "reintegrating"
         DIVERGING = "diverging"
         DISINTEGRATING = "disintegrating"
-    IDS_ENABLED = True
 
 # Shared hash utility with fallback
 try:
@@ -122,6 +128,17 @@ class ThreatSeverity(str, Enum):
     MEDIUM = "medium"
     HIGH = "high"
 
+
+class MetricsDict(TypedDict):
+    total_requests: int
+    blocked_requests: int
+    warning_requests: int
+    error_count: int
+    processing_times: List[float]
+    start_time: float
+    threat_detections_by_type: Dict[str, int]
+    policy_actions_taken: Dict[str, int]
+
 @dataclass
 class HybridApiConfig:
     """Enhanced configuration combining resilience and domain-specific settings."""
@@ -152,67 +169,15 @@ class HybridApiConfig:
 # 2. HYBRID DATA MODELS WITH NOVA INTEGRATION
 # ============================================================================
 
-if PYDANTIC_AVAILABLE:
-    class DistortionDetectionRequest(BaseModel):
-        content: str = Field(..., min_length=1, max_length=10240)
-        context: Dict[str, Any] = Field(default_factory=dict)
-        session_id: str = "default"
-        trace_id: Optional[str] = None
-        include_detailed_analysis: bool = False
-        priority: RequestPriority = RequestPriority.NORMAL
-
-        @field_validator('content')
-        @classmethod
-        def validate_content_not_empty(cls, v):
-            if not v or not v.strip():
-                raise ValueError('Content cannot be empty or whitespace only')
-            return v
-
-    class DistortionDetectionResponse(BaseModel):
-        # Version control fields
-        format_version: str
-        api_version: str
-        compatibility_level: str
-
-        # Core fields (enhanced version)
-        status: ResponseStatus
-        threat_level: float = Field(..., ge=0.0, le=1.0)
-        policy_action: PolicyAction
-        confidence: float = Field(..., ge=0.0, le=1.0)
-        processing_time_ms: float = Field(..., ge=0.0)
-        trace_id: str
-
-        # NOVA-specific fields (my version)
-        distortion_type: DistortionType
-        infrastructure_level: InfrastructureLevel
-        severity: ThreatSeverity
-        ids_analysis: Dict[str, Any]
-        audit_trail: Dict[str, Any]
-        deployment_context: Dict[str, Any] = Field(default_factory=dict)
-        deployment_feedback: Dict[str, Any] = Field(default_factory=dict)
-
-        # Optional detailed analysis
-        threat_landscape: Optional[Dict[str, Any]] = None
-        intervention_strategy: Optional[Dict[str, Any]] = None
-        error_details: Optional[Dict[str, Any]] = None
-
-else:
-    # Fallback dataclass implementations
+if TYPE_CHECKING:
     @dataclass
     class DistortionDetectionRequest:
         content: str
-        context: Dict[str, Any] = None
+        context: Dict[str, Any] = field(default_factory=dict)
         session_id: str = "default"
         trace_id: Optional[str] = None
         include_detailed_analysis: bool = False
         priority: RequestPriority = RequestPriority.NORMAL
-        
-        def __post_init__(self):
-            self.context = self.context or {}
-            if not self.content or not self.content.strip():
-                raise ValueError("Content cannot be empty")
-            if len(self.content) > 10240:
-                raise ValueError("Content exceeds maximum length")
 
     @dataclass
     class DistortionDetectionResponse:
@@ -230,11 +195,94 @@ else:
         severity: ThreatSeverity
         ids_analysis: Dict[str, Any]
         audit_trail: Dict[str, Any]
-        deployment_context: Dict[str, Any]
-        deployment_feedback: Dict[str, Any]
+        deployment_context: Dict[str, Any] = field(default_factory=dict)
+        deployment_feedback: Dict[str, Any] = field(default_factory=dict)
         threat_landscape: Optional[Dict[str, Any]] = None
         intervention_strategy: Optional[Dict[str, Any]] = None
         error_details: Optional[Dict[str, Any]] = None
+else:
+    if PYDANTIC_AVAILABLE:
+        class DistortionDetectionRequest(BaseModel):
+            content: str = Field(..., min_length=1, max_length=10240)
+            context: Dict[str, Any] = Field(default_factory=dict)
+            session_id: str = "default"
+            trace_id: Optional[str] = None
+            include_detailed_analysis: bool = False
+            priority: RequestPriority = RequestPriority.NORMAL
+
+            @field_validator('content')
+            @classmethod
+            def validate_content_not_empty(cls, v: str) -> str:
+                if not v or not v.strip():
+                    raise ValueError('Content cannot be empty or whitespace only')
+                return v
+
+        class DistortionDetectionResponse(BaseModel):
+            # Version control fields
+            format_version: str
+            api_version: str
+            compatibility_level: str
+
+            # Core fields (enhanced version)
+            status: ResponseStatus
+            threat_level: float = Field(..., ge=0.0, le=1.0)
+            policy_action: PolicyAction
+            confidence: float = Field(..., ge=0.0, le=1.0)
+            processing_time_ms: float = Field(..., ge=0.0)
+            trace_id: str
+
+            # NOVA-specific fields (my version)
+            distortion_type: DistortionType
+            infrastructure_level: InfrastructureLevel
+            severity: ThreatSeverity
+            ids_analysis: Dict[str, Any]
+            audit_trail: Dict[str, Any]
+            deployment_context: Dict[str, Any] = Field(default_factory=dict)
+            deployment_feedback: Dict[str, Any] = Field(default_factory=dict)
+
+            # Optional detailed analysis
+            threat_landscape: Optional[Dict[str, Any]] = None
+            intervention_strategy: Optional[Dict[str, Any]] = None
+            error_details: Optional[Dict[str, Any]] = None
+
+    else:
+        # Fallback dataclass implementations
+        @dataclass
+        class DistortionDetectionRequest:
+            content: str
+            context: Dict[str, Any] = field(default_factory=dict)
+            session_id: str = "default"
+            trace_id: Optional[str] = None
+            include_detailed_analysis: bool = False
+            priority: RequestPriority = RequestPriority.NORMAL
+
+            def __post_init__(self) -> None:
+                if not self.content or not self.content.strip():
+                    raise ValueError("Content cannot be empty")
+                if len(self.content) > 10240:
+                    raise ValueError("Content exceeds maximum length")
+
+        @dataclass
+        class DistortionDetectionResponse:
+            format_version: str
+            api_version: str
+            compatibility_level: str
+            status: ResponseStatus
+            threat_level: float
+            policy_action: PolicyAction
+            confidence: float
+            processing_time_ms: float
+            trace_id: str
+            distortion_type: DistortionType
+            infrastructure_level: InfrastructureLevel
+            severity: ThreatSeverity
+            ids_analysis: Dict[str, Any]
+            audit_trail: Dict[str, Any]
+            deployment_context: Dict[str, Any] = field(default_factory=dict)
+            deployment_feedback: Dict[str, Any] = field(default_factory=dict)
+            threat_landscape: Optional[Dict[str, Any]] = None
+            intervention_strategy: Optional[Dict[str, Any]] = None
+            error_details: Optional[Dict[str, Any]] = None
 
 # ============================================================================
 # 3. ENHANCED RESILIENCE UTILITIES
@@ -356,7 +404,7 @@ class HybridDistortionDetectionAPI:
         self.logger = logging.getLogger('slot9_hybrid_api')
         
         # Performance tracking (enhanced version)
-        self.metrics = {
+        self.metrics: MetricsDict = {
             'total_requests': 0,
             'blocked_requests': 0,
             'warning_requests': 0,
@@ -547,7 +595,11 @@ class HybridDistortionDetectionAPI:
         }
 
     # Vector extraction methods (from my version)
-    def _extract_traits_vector(self, content: str, context: Dict = None) -> List[float]:
+    def _extract_traits_vector(
+        self,
+        content: str,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> List[float]:
         """Extract traits embedding vector from content."""
         words = content.split()
         return [
@@ -559,7 +611,11 @@ class HybridDistortionDetectionAPI:
             content.count('\n') / max(1, len(content))  # Line break density
         ]
     
-    def _extract_content_vector(self, content: str, context: Dict = None) -> List[float]:
+    def _extract_content_vector(
+        self,
+        content: str,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> List[float]:
         """Extract content embedding vector from content."""
         words = content.split()
         sentences = content.split('.')
@@ -1234,7 +1290,9 @@ class HybridDistortionDetectionAPI:
         """Get comprehensive system health with detailed metrics."""
         with self._metrics_lock:
             total_requests = self.metrics['total_requests']
-            processing_times = self.metrics['processing_times'] or [0]
+            processing_times = self.metrics['processing_times']
+            if not processing_times:
+                processing_times = [0.0]
             
             # Calculate performance metrics
             avg_time = sum(processing_times) / len(processing_times)
@@ -1313,7 +1371,7 @@ class HybridDistortionDetectionAPI:
             )
             
             # Convert exceptions to error responses
-            processed_responses = []
+            processed_responses: List[DistortionDetectionResponse] = []
             for i, response in enumerate(responses):
                 if isinstance(response, Exception):
                     trace_id = requests[i].trace_id or f"bulk_error_{i}"
@@ -1322,7 +1380,7 @@ class HybridDistortionDetectionAPI:
                     )
                     processed_responses.append(error_response)
                 else:
-                    processed_responses.append(response)
+                    processed_responses.append(cast(DistortionDetectionResponse, response))
             
             return processed_responses
             

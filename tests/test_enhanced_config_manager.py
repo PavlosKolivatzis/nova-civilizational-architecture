@@ -31,7 +31,7 @@ class TestEnhancedConfigManager:
                 "slot": 2,
                 "name": "ΔTHRESH Integration Manager",
                 "version": "2.0.0",
-                "entry_point": "slots/slot02_deltathresh/core.py:DeltaThreshProcessor",
+                "entry_point": "nova.slots.slot02_deltathresh.core:DeltaThreshProcessor",
                 "config_schema": {
                     "truth_threshold": "float",
                     "tri_enabled": "bool",
@@ -219,20 +219,20 @@ async def test_real_world_scenario():
                 "slot": 2,
                 "name": "ΔTHRESH Integration Manager",
                 "version": "2.0.0",
-                "entry_point": "slots/slot02_deltathresh/core.py:DeltaThreshProcessor",
+                "entry_point": "nova.slots.slot02_deltathresh.core:DeltaThreshProcessor",
                 "config_schema": {"truth_threshold": "float"},
             },
             6: {
                 "slot": 6,
                 "name": "Cultural Synthesis Engine",
                 "version": "7.4.1",
-                "entry_point": "slots/slot06_cultural_synthesis/adapter.py:Adapter",
+                "entry_point": "nova.slots.slot06_cultural_synthesis.adapter:Adapter",
             },
             9: {
                 "slot": 9,
                 "name": "Distortion Protection",
                 "version": "2.4.0",
-                "entry_point": "slots/slot09_distortion_protection/core.py:Core",
+                "entry_point": "nova.slots.slot09_distortion_protection.core:Core",
             },
         }
 

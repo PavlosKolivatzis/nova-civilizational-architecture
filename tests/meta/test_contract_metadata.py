@@ -75,7 +75,7 @@ def test_all_flow_fabric_contracts_have_metadata():
     from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
     meta_files = _iter_slot_meta_files()
-    assert meta_files, "No slot metadata files discovered under 'slots/'"
+    assert meta_files, "No slot metadata files discovered under 'slots/' or 'src/nova/slots/'"
 
     all_produces: set[str] = set()
     for meta_file in meta_files:

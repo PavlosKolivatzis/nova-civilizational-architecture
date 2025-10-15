@@ -1,7 +1,20 @@
 """Policy configuration for Slot 8 self-healing memory system."""
 
-from dataclasses import dataclass
-from typing import List
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+
+def _default_forbidden_paths() -> list[str]:
+    # Explicit list to avoid mutable default reuse
+    return [
+        "/etc/.*",
+        "/var/lib/nova/secrets/.*",
+        "/root/.*",
+        r".*\.key",
+        r".*\.pem",
+        r".*\.p12",
+    ]
 
 
 @dataclass
@@ -15,7 +28,7 @@ class Slot8Policy:
 
     # Performance budgets
     cpu_budget_pct: float = 0.02  # 2% CPU limit
-    memory_budget_mb: int = 150   # 150MB for 10k objects
+    memory_budget_mb: int = 150  # 150MB for 10k objects
     scan_interval_s: int = 30
 
     # Recovery parameters
@@ -31,7 +44,7 @@ class Slot8Policy:
     surge_threshold: int = 500  # writes per window
     surge_window_s: int = 60
     entropy_threshold: float = 0.8  # Schema churn rate
-    forbidden_paths: List[str] = None
+    forbidden_paths: list[str] = field(default_factory=_default_forbidden_paths)
 
     # Cryptographic
     signer_key_ref: str = "ed25519://slot8-signing"  # KMS/HSM ref in prod
@@ -57,25 +70,8 @@ class Slot8Policy:
     surge_threshold_base: int = 50  # Base threshold for surge detection
     surge_cooldown_s: float = 0.0  # Cooldown between surge detections
 
-    # Performance SLOs
-    mttr_target_s: float = 5.0  # Mean Time To Recovery SLO
-    quarantine_flip_max_s: float = 1.0  # Max quarantine activation time
-    quarantine_timeout_s: int = 300  # Auto-recovery timeout
-
-    def __post_init__(self):
-        """Initialize default values for mutable fields."""
-        if self.forbidden_paths is None:
-            self.forbidden_paths = [
-                "/etc/.*",
-                "/var/lib/nova/secrets/.*",
-                "/root/.*",
-                r".*\.key",
-                r".*\.pem",
-                r".*\.p12"
-            ]
-
     @property
-    def quarantine_policy(self) -> 'QuarantinePolicy':
+    def quarantine_policy(self) -> QuarantinePolicy:
         """Get quarantine policy configuration."""
         return QuarantinePolicy(
             auto_quarantine_on_corruption=True,
@@ -87,7 +83,7 @@ class Slot8Policy:
             require_manual_approval=False,
             auto_recovery_after_s=self.quarantine_timeout_s,
             max_auto_recoveries=3,
-            escalate_after_failures=2
+            escalate_after_failures=2,
         )
 
 
@@ -103,7 +99,7 @@ class AdaptiveThresholds:
     # Adaptation tracking
     adaptation_count: int = 0
     last_adaptation_ts: int = 0
-    performance_history: List[float] = None
+    performance_history: list[float] = field(default_factory=list)
 
     # Bounds for safety
     min_surge_threshold: int = 100
@@ -112,11 +108,6 @@ class AdaptiveThresholds:
     max_entropy_threshold: float = 0.95
     min_scan_interval_s: int = 10
     max_scan_interval_s: int = 300
-
-    def __post_init__(self):
-        """Initialize performance history."""
-        if self.performance_history is None:
-            self.performance_history = []
 
 
 @dataclass
@@ -140,15 +131,12 @@ class QuarantinePolicy:
 
     # Escalation
     escalate_after_failures: int = 2
-    escalation_targets: List[str] = None
-
-    def __post_init__(self):
-        """Initialize escalation targets."""
-        if self.escalation_targets is None:
-            self.escalation_targets = [
-                "slot07_production_controls",
-                "slot03_emotional_matrix"  # For threat escalation
-            ]
+    escalation_targets: list[str] = field(
+        default_factory=lambda: [
+            "slot07_production_controls",
+            "slot03_emotional_matrix",
+        ]
+    )
 
 
 def get_default_policy() -> Slot8Policy:

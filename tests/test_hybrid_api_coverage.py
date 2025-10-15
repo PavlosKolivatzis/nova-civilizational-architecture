@@ -1,5 +1,5 @@
 """
-Tests for slots/slot09_distortion_protection/hybrid_api.py coverage improvement.
+Tests for src/nova/slots/slot09_distortion_protection/hybrid_api.py coverage improvement.
 
 Targets uncovered paths: circuit breaker, cache eviction, error handling, edge cases.
 Part of DEF-006 Sprint 1.

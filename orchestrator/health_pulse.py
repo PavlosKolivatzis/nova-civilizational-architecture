@@ -92,9 +92,9 @@ def run_test_suites() -> Dict[str, Any]:
     results = {}
 
     slots = [
-        ("slot08_memory_lock", "slots/slot08_memory_lock/tests/"),
-        ("slot04_tri", "slots/slot04_tri/tests/"),
-        ("slot10_civilizational_deployment", "slots/slot10_civilizational_deployment/tests/")
+        ("slot08_memory_lock", "src/nova/slots/slot08_memory_lock/tests/"),
+        ("slot04_tri", "src/nova/slots/slot04_tri/tests/"),
+        ("slot10_civilizational_deployment", "src/nova/slots/slot10_civilizational_deployment/tests/")
     ]
 
     for slot_name, test_path in slots:
