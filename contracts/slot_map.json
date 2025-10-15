@@ -53,9 +53,9 @@
       "id": 3,
       "name": "Emotional Matrix",
       "slug": "slot03_emotional_matrix",
-      "module_path": "slots.slot03_emotional_matrix",
+      "module_path": "nova.slots.slot03_emotional_matrix",
       "adapter_class": "Slot3EmotionalMatrixAdapter",
-      "health_path": "slots.slot03_emotional_matrix.health",
+      "health_path": "nova.slots.slot03_emotional_matrix.health",
       "maturity_level": 4,
       "maturity_stage": "Processual",
       "description": "Emotional analysis with escalation management and advanced safety policies",
@@ -409,3 +409,4 @@
     ]
   }
 }
+
