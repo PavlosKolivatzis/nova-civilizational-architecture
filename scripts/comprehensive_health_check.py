@@ -23,7 +23,7 @@ def check_slot_implementation(slot_name: str, slot_path: Path) -> Dict[str, Any]
         if has_core:
             try:
                 import importlib
-                importlib.import_module(f"slots.{slot_name}.core")
+                importlib.import_module(f"nova.slots.{slot_name}.core")
                 import_status = "success"
             except Exception as e:
                 import_status = f"error: {str(e)[:100]}"
@@ -43,19 +43,22 @@ def run_slot_tests(slot_name: str, slot_path: Path) -> Dict[str, Any]:
     tests_dir = slot_path / "tests"
     test_dir = slot_path / "test"
 
-    test_path = None
-    if tests_dir.exists():
-        test_path = f"slots/{slot_name}/tests/"
-    elif test_dir.exists():
-        test_path = f"slots/{slot_name}/test/"
+    test_targets = []
+    tests_root = Path("tests")
+    patterns = [f"test_{slot_name}*.py"]
+    for pattern in patterns:
+        matches = list(tests_root.rglob(pattern))
+        if matches:
+            test_targets = sorted({str(m.parent) for m in matches})
+            break
 
-    if not test_path:
-        return {"status": "no_tests", "reason": "No test directory found"}
+    if not test_targets:
+        return {"status": "no_tests", "reason": "No slot-specific tests found"}
 
     try:
         result = subprocess.run([
-            sys.executable, "-m", "pytest", test_path, "-q", "--tb=no"
-        ], capture_output=True, text=True, cwd=".", timeout=30)
+            sys.executable, "-m", "pytest", *test_targets, "-q", "--tb=no"
+        ], capture_output=True, text=True, cwd=".", timeout=60)
 
         if result.returncode == 0:
             # Parse test count from output
@@ -126,7 +129,7 @@ def comprehensive_health_check():
     print(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}")
     print()
 
-    slots_dir = Path("slots")
+    slots_dir = Path("src/nova/slots")
     slot_results = {}
     total_tests = 0
     maturity_scores = []

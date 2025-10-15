@@ -27,7 +27,8 @@ def test_slot_can_be_loaded(slot_name, engine_cls):
 @pytest.mark.parametrize("slot_name, _", SLOTS)
 def test_slot_health_check(slot_name, _):
     """Health checks should report operational status."""
-    health_mod = importlib.import_module(f"slots.{slot_name}.health")
+    health_mod = importlib.import_module(f"nova.slots.{slot_name}.health")
     status = health_mod.health()
     assert status["self_check"] == "ok"
     assert status["engine_status"] == "operational"
+
