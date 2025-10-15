@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 
+from ._shim_warning import warn_shim_use
+
 from src_bootstrap import ensure_src_on_path
 
 ensure_src_on_path()
+warn_shim_use("slot01_truth_anchor")
+
 
 import importlib
 import sys
