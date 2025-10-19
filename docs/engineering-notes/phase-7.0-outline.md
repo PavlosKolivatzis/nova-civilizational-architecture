@@ -33,6 +33,10 @@ Phase 7.0 introduces **Temporal Resonance** - the ability for Nova's cognitive a
 - **Phase 7.0-rc**: Full temporal coherence with memory integration
 - **Phase 7.0-gold**: Production deployment with temporal resilience
 
+## Inheritance Clause
+All temporal resonance modeling must source variance metrics directly from
+the sealed Phase 6.0 belief archives; no recomputation or retrofitting allowed.
+
 ---
 
 *This outline serves as a development checkpoint for Phase 7.0 Temporal Resonance implementation.*

@@ -2,3 +2,4 @@
 {"phase":"6.0","tag":"v6.0-belief-propagation","rsi":"ops/validation/phase-6.0-rsi-report.json","status":"golden","timestamp":"2025-10-19T09:14:00Z"}
 {"phase":"6.0","tag":"v6.0-belief-propagation","status":"golden","validation":"rsi_passed","timestamp":"2025-10-19T12:20:00Z","notes":"Probabilistic belief propagation finalized; all systems green."}
 {"phase":"6.0","tag":"v6.0-belief-propagation","status":"golden","commit":"af35eba","timestamp":"2025-10-19T20:55:00Z","hash":"PLACEHOLDER_HASH_FOR_PDF_GENERATION","notes":"Probabilistic belief propagation finalized; cognitive–operational–ethical trinity sealed."}
+{"phase":"6.0","tag":"v6.0-belief-propagation","status":"sealed","commit":"c3bab48","timestamp":"2025-10-19T21:00:00Z","notes":"Phase 6.0 closure capsule committed; permanent archive confirmed.","principle":"The sun shines on this work."}

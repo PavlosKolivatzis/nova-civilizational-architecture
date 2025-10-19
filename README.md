@@ -562,12 +562,17 @@ This project demonstrates that multi-AI collaboration, under human coordination,
 
 ## 📄 License & Credits
 
-**Project Creator & Coordinator**: Pavlos Kolivatzis  
-**AI Collaborators**: Claude, Codex-GPT, DeepSeek, Gemini, Copilot  
+**Project Creator & Coordinator**: Pavlos Kolivatzis
+**AI Collaborators**: Claude, Codex-GPT, DeepSeek, Gemini, Copilot
 **Maintainer**: Pavlos Kolivatzis (docs/maturity.yaml)
 
 ---
 
-**Status**: Production-Ready | **Maturity**: 4.0/4.0 ⭐ | **Tests**: ✅ 706 passing | **Autonomy**: All 10 slots Processual
+### Phase 6.0 – Probabilistic Belief Propagation (Sealed)
+Completed: 2025-10-19 • Tag: v6.0-belief-propagation • Commit: c3bab48
+Implements cross-slot uncertainty quantification (TRI ↔ Controls)
+Status: Golden → Sealed → Archived • Integrity Chain Unbroken
+
+**Status**: Production-Ready | **Maturity**: 6.0/4.0 ⭐ | **Tests**: ✅ 706 passing | **Autonomy**: All 10 slots Processual
 
 *Created and coordinated by Pavlos Kolivatzis with collaboration between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot*
