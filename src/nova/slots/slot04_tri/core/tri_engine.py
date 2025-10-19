@@ -12,7 +12,7 @@ from .detectors import DriftDetector, SurgeDetector
 from .repair_planner import RepairPlanner
 from .snapshotter import TriSnapshotter
 from .safe_mode import SafeMode
-from nova.belief_contracts import BeliefState, update_belief
+from nova.belief_contracts import BeliefState
 
 @dataclass
 class TriMetrics:
@@ -144,12 +144,13 @@ class TriEngine:
                 # Create belief state from tri_score with uncertainty from std
                 tri_variance = (health.tri_std ** 2) if health.tri_std else 0.01
                 tri_belief = BeliefState.from_point_estimate(health.tri_score, tri_variance)
-                get_semantic_mirror().publish_context(
-                    "slot04.tri_belief", tri_belief, source="slot04_tri", ttl_s=300
-                )
-                # Backward compatibility: also publish scalar
+                # Backward compatibility: publish scalar snapshot first
                 get_semantic_mirror().publish_context(
                     "slot04.tri_score", health.tri_score, source="slot04_tri", ttl_s=300
+                )
+                # Probabilistic contract consumers expect belief state payload
+                get_semantic_mirror().publish_context(
+                    "slot04.tri_belief", tri_belief, source="slot04_tri", ttl_s=300
                 )
         except Exception:
             pass
