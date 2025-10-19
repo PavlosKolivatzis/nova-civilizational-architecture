@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 from config.feature_flags import get_production_controls_config
 from .flag_metrics import get_flag_state_metrics
+from nova.belief_contracts import BeliefState, update_belief
 
 logger = logging.getLogger(__name__)
 
@@ -264,7 +265,10 @@ class ProductionControlEngine:
         
         # Thread safety
         self._metrics_lock = threading.Lock()
-        
+
+        # Phase-lock belief state for probabilistic contracts
+        self._phase_lock_belief = BeliefState.from_point_estimate(0.5, 0.1)
+
         # Avoid potential logging issues during initialization
         # logger.info(f"ProductionControlEngine v{self.__version__} initialized")
     
@@ -449,12 +453,21 @@ class ProductionControlEngine:
                     "max_processing_time_ms": round(max(times) * 1000, 2),
                 })
         
+        # Compute phase lock to update belief state
+        phase_lock = self.compute_phase_lock()
+
         return {
             **base_metrics,
             "circuit_breaker": self.circuit_breaker.get_metrics(),
             "rate_limiter": self.rate_limiter.get_metrics(),
             "resource_protector": self.resource_protector.get_metrics(),
-            "phase_lock": self.compute_phase_lock(),
+            "phase_lock": phase_lock,
+            "phase_lock_belief": {
+                "mean": self._phase_lock_belief.mean,
+                "variance": self._phase_lock_belief.variance,
+                "confidence": self._phase_lock_belief.confidence,
+                "timestamp": self._phase_lock_belief.timestamp
+            },
             "safeguards_active": self._get_active_safeguards(),
             "config": self.config,
             "feature_flags": get_flag_state_metrics(),
@@ -513,6 +526,22 @@ class ProductionControlEngine:
 
         # Phase lock formula
         phase_lock = max(0.0, min(1.0, 0.7 * success_rate + 0.3 * (1.0 - pressure_level)))
+
+        # Update belief state with new observation
+        new_belief = BeliefState.from_point_estimate(phase_lock, 0.05)  # Low uncertainty for direct computation
+        self._phase_lock_belief = update_belief(self._phase_lock_belief, new_belief)
+
+        # Publish belief to mirror for cross-slot consumption
+        try:
+            if (os.getenv("NOVA_PUBLISH_PHASE_LOCK", "1") == "1" and
+                os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "1") == "1"):
+                from orchestrator.semantic_mirror import get_semantic_mirror
+                get_semantic_mirror().publish_context(
+                    "slot07.phase_lock_belief", self._phase_lock_belief, source="slot07_production", ttl_s=300
+                )
+        except Exception:
+            pass  # Graceful degradation
+
         return phase_lock
 
     def reset_circuit_breaker(self) -> bool:

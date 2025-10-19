@@ -1,0 +1,67 @@
+schema: nova_contract/v1
+contract_id: slot04-07-belief-state
+title: Probabilistic Belief Propagation Contract
+description: Cross-slot belief state exchange between TRI (Slot 04) and Production Controls (Slot 07)
+
+slots:
+  - id: 4
+    name: TRI Engine
+    role: belief_publisher
+  - id: 7
+    name: Production Controls
+    role: belief_consumer
+
+interface:
+  belief_state:
+    type: BeliefState
+    fields:
+      - name: mean
+        type: float
+        range: [0.0, 1.0]
+        description: Expected value of phase lock signal
+      - name: variance
+        type: float
+        range: [0.0, 1.0]
+        description: Uncertainty measure (lower = more confident)
+      - name: timestamp
+        type: float
+        description: Unix timestamp of last update
+      - name: confidence
+        type: float
+        range: [0.0, 1.0]
+        description: Derived confidence (1.0 - variance)
+
+  mirror_keys:
+    publisher: "slot04.tri_belief"
+    consumer: "slot07.phase_lock_belief"
+
+safety_guarantees:
+  - monotonic_variance_growth: "Variance never decreases during outages"
+  - bounded_values: "All numeric fields clamped to valid ranges"
+  - graceful_degradation: "Local operation continues during mirror failures"
+  - conservative_defaults: "Cold start with mean=0.5, variance=0.1"
+
+operational_triggers:
+  - variance_threshold_soft: 0.20
+    action: "soft_throttle"
+    description: "Reduce processing rate, emit warning"
+  - variance_threshold_hard: 0.25
+    action: "circuit_breaker_trip"
+    description: "Trip circuit breaker, escalate to operators"
+  - variance_recovery: 0.10
+    action: "auto_recover"
+    description: "Clear alerts, resume normal operation"
+
+metrics:
+  - nova_slot_phase_lock_belief_mean{slot="4|7"}
+  - nova_slot_phase_lock_belief_variance{slot="4|7"}
+  - belief_updates_total{slot="4|7"}
+  - belief_stale_seconds{slot="4|7"}
+
+environment_flags:
+  - NOVA_ENABLE_PROBABILISTIC_CONTRACTS: "Enable belief propagation (default: 1)"
+  - NOVA_PUBLISH_TRI: "Enable TRI belief publishing (default: 1)"
+  - NOVA_PUBLISH_PHASE_LOCK: "Enable phase lock belief publishing (default: 1)"
+
+version: "1.0.0"
+created_at: "2025-10-19T00:00:00Z"

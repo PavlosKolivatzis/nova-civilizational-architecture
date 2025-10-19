@@ -85,6 +85,21 @@ lightclock_phase_lock_gauge = Gauge(
     registry=_REGISTRY,
 )
 
+# Phase 6.0 Probabilistic Contracts metrics
+slot_phase_lock_belief_mean_gauge = Gauge(
+    "nova_slot_phase_lock_belief_mean",
+    "Phase lock belief mean from probabilistic contracts",
+    ["slot"],
+    registry=_REGISTRY,
+)
+
+slot_phase_lock_belief_variance_gauge = Gauge(
+    "nova_slot_phase_lock_belief_variance",
+    "Phase lock belief variance from probabilistic contracts",
+    ["slot"],
+    registry=_REGISTRY,
+)
+
 system_pressure_gauge = Gauge(
     "nova_system_pressure_level",
     "System pressure level from Slot7",
@@ -398,7 +413,7 @@ def update_semantic_mirror_metrics() -> None:
 
 
 def update_system_health_metrics() -> None:
-    """Update system pressure, TRI coherence, and deployment gate status."""
+    """Update system pressure, TRI coherence, belief metrics, and deployment gate status."""
     from os import getenv
 
     try:
@@ -420,6 +435,20 @@ def update_system_health_metrics() -> None:
         if coherence is None:
             coherence = getenv("TRI_COHERENCE", "0.7")  # Default decent coherence
         tri_coherence_gauge.set(float(coherence))
+
+        # Phase 6.0 Belief metrics from probabilistic contracts
+        if mirror:
+            # Slot 4 TRI belief
+            tri_belief = mirror.get_context("slot04.tri_belief", "prometheus_metrics")
+            if tri_belief and hasattr(tri_belief, 'mean'):
+                slot_phase_lock_belief_mean_gauge.labels(slot="4").set(tri_belief.mean)
+                slot_phase_lock_belief_variance_gauge.labels(slot="4").set(tri_belief.variance)
+
+            # Slot 7 Production Controls belief
+            pc_belief = mirror.get_context("slot07.phase_lock_belief", "prometheus_metrics")
+            if pc_belief and hasattr(pc_belief, 'mean'):
+                slot_phase_lock_belief_mean_gauge.labels(slot="7").set(pc_belief.mean)
+                slot_phase_lock_belief_variance_gauge.labels(slot="7").set(pc_belief.variance)
 
         # Deployment gate status - always compute even with defaults
         try:

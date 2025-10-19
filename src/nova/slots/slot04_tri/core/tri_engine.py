@@ -12,6 +12,7 @@ from .detectors import DriftDetector, SurgeDetector
 from .repair_planner import RepairPlanner
 from .snapshotter import TriSnapshotter
 from .safe_mode import SafeMode
+from nova.belief_contracts import BeliefState, update_belief
 
 @dataclass
 class TriMetrics:
@@ -133,12 +134,20 @@ class TriEngine:
             phase_jitter=phase_jitter,
         )
 
-        # Publish tri_score to the mirror for Slot10 gate (env-tunable)
+        # Publish tri_score belief to the mirror for Slot10 gate (env-tunable)
         try:
             if (os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "1" and
                 health.tri_score is not None and
-                os.getenv("NOVA_PUBLISH_TRI", "1") == "1"):
+                os.getenv("NOVA_PUBLISH_TRI", "1") == "1" and
+                os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "1") == "1"):
                 from orchestrator.semantic_mirror import get_semantic_mirror
+                # Create belief state from tri_score with uncertainty from std
+                tri_variance = (health.tri_std ** 2) if health.tri_std else 0.01
+                tri_belief = BeliefState.from_point_estimate(health.tri_score, tri_variance)
+                get_semantic_mirror().publish_context(
+                    "slot04.tri_belief", tri_belief, source="slot04_tri", ttl_s=300
+                )
+                # Backward compatibility: also publish scalar
                 get_semantic_mirror().publish_context(
                     "slot04.tri_score", health.tri_score, source="slot04_tri", ttl_s=300
                 )

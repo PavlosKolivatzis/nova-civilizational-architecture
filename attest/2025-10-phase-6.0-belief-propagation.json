@@ -1,0 +1,22 @@
+{
+  "schema": "nova_attestation/v1",
+  "release": "Phase 6.0 – Probabilistic Belief Propagation",
+  "subjects": [
+    {"type": "git-commit", "ref": "HEAD"},
+    {"type": "slot", "id": "slot04"},
+    {"type": "slot", "id": "slot07"}
+  ],
+  "claims": {
+    "high_confidence": [
+      {"claim": "Uncertainty quantification stable across mirrors", "confidence_pct": 95},
+      {"claim": "Variance-based safety integration complete", "confidence_pct": 95}
+    ]
+  },
+  "provenance": {
+    "ledger": "run/belief_ledger.ndjson",
+    "metrics": "nova_slot_phase_lock_belief_*",
+    "receipts": "ops/logs/belief_state_*.json"
+  },
+  "principles": ["provenance_first", "reversibility_by_default", "rule_of_sunlight"],
+  "generated_at_utc": "2025-10-19T00:00:00Z"
+}
