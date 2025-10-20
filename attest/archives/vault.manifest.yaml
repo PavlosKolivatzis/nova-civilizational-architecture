@@ -1,0 +1,148 @@
+vault:
+  name: Nova_Continuity_Vault
+  version: 1
+  created_at: "2025-10-20T16:31:00Z"
+  generator: "Nova Ops (Phase 9.0 init)"
+  repository:
+    default_branch: main
+    commit: "221b231"
+    url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
+  policy:
+    immutability: true
+    inheritance: "All continuity and network fusion MUST derive from sealed archives only."
+
+lineage:
+  - phase: "6.0"
+    name: "Probabilistic Belief Propagation"
+    tag: "v6.0-sealed"
+    archives:
+      - file: "attest/archives/Nova_Phase_6.0_Seal.tar.gz"
+        sha256: "df0d18e2b5fc2aa23a6e4f00304f139c17ac5fe9114ebfe942e28ef56f1bf80a"
+        created_at: "2025-10-19T09:00:00Z"
+    attestations:
+      - "attest/2025-10-phase-6.0-belief-propagation.json"
+    docs:
+      - "docs/releases/phase-6.0-golden-status.md"
+      - "docs/releases/phase-6.0-closure-capsule.md"
+
+  - phase: "7.0"
+    name: "Temporal Resonance"
+    tag: "v7.0-rc-complete"
+    archives:
+      - file: "attest/archives/Nova_Phase_7.0_Snapshot.tar.gz"
+        sha256: "placeholder-sha256-phase7"
+        created_at: "2025-10-20T10:00:00Z"
+    attestations:
+      - "attest/latest_phase_7.0_beta.json"
+      - "ops/logs/trsi_validation_*.jsonl"
+      - "ops/logs/rc_validation_*.jsonl"
+    docs:
+      - "docs/releases/phase-7.0-rc-blueprint.md"
+      - "ops/grafana/dashboards/temporal_resonance_forecast.json"
+      - "ops/grafana/dashboards/temporal_memory_resonance.json"
+      - "ops/alerts/temporal_resonance_alerts.yaml"
+
+  - phase: "8.0"
+    name: "Continuity Engine"
+    tag: "v8.0-gold"
+    archives:
+      - file: "attest/archives/Nova_Phase_8.0_Seal.tar.zst"
+        sha256: "placeholder-sha256-phase8"
+        created_at: "2025-10-20T12:00:00Z"
+    attestations:
+      - "docs/releases/phase-8.0-gold-capsule.md"
+      - "ops/runbook/continuity-engine.md"
+      - "ops/runbook/phase-8.0-alpha-checklist.md"
+      - "ops/runbook/phase-8.0-beta-checklist.md"
+      - "ops/runbook/phase-8.0-rc-checklist.md"
+      - "ops/logs/continuity/weekly/*.jsonl"
+    docs:
+      - "docs/releases/phase-8.0-blueprint.md"
+      - "ops/grafana/dashboards/continuity_engine.json"
+
+  - phase: "9.0"
+    name: "Adaptive Civilizational Networks"
+    tag: "v9.0-initialized"
+    archives:
+      - file: "attest/archives/Nova_Phase_9.0_Baseline.tar.zst"
+        sha256: "placeholder-sha256-phase9"
+        created_at: "2025-10-20T16:30:00Z"
+    attestations:
+      - "docs/releases/phase-9.0-initialization.md"
+    docs:
+      - "docs/releases/phase-9.0-outline.md"
+
+metrics_registry:
+  csi:
+    normal_range: [0.75, 0.85]
+    alert_below: 0.70
+    source: "Phase 6–7 fusion"
+  ehs:
+    normal_range: [0.80, 0.90]
+    alert_below: 0.75
+    source: "Phase 7–8 forecasting"
+  regeneration_success:
+    normal_range: [0.90, 0.95]
+    alert_below: 0.85
+    source: "Phase 8 ledger"
+  nci:
+    normal_range: [0.70, 0.90]
+    alert_below: 0.65
+    source: "Phase 9 federation"
+  fehs_consensus:
+    normal_range: [0.85, 1.00]
+    alert_below: 0.80
+    source: "Phase 9 consensus"
+
+trust:
+  signing:
+    gpg_key_fingerprint: "placeholder-gpg-fingerprint"
+    cosign_key_ref: "trust/cosign.pub"
+  mirrors:
+    - name: "primary"
+      endpoint: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
+      mode: "read-write"
+    - name: "federated-1"
+      endpoint: "placeholder-federated-endpoint-1"
+      mode: "read-only"
+    - name: "federated-2"
+      endpoint: "placeholder-federated-endpoint-2"
+      mode: "read-only"
+
+retention:
+  rotation:
+    cadence: "quarterly"
+    keep: 8
+  cold_storage:
+    provider: "placeholder-cloud-provider"
+    region: "placeholder-region"
+    redundancy: ">= 3 replicas"
+  legal_hold:
+    enabled: true
+    policy_ref: "ETHICS-BOARD-LOCK-v1"
+
+verification:
+  steps:
+    - name: "Hash check"
+      cmd: "sha256sum -c attest/archives/phase-6.0-archive.sha256 && sha256sum -c attest/archives/Nova_Continuity_Vault.sha256"
+    - name: "Manifest lint"
+      cmd: "yamllint attest/archives/vault.manifest.yaml"
+    - name: "Schema check (attestations)"
+      cmd: "python scripts/validate_attestations.py --schema-dir attest --logs ops/logs"
+    - name: "Signature verify (GPG)"
+      cmd: "gpg --verify attest/archives/vault.manifest.yaml.asc attest/archives/vault.manifest.yaml"
+    - name: "Signature verify (cosign)"
+      cmd: "cosign verify-blob --key trust/cosign.pub --signature attest/archives/vault.manifest.sig attest/archives/vault.manifest.yaml"
+
+signatures:
+  gpg:
+    file: "attest/archives/vault.manifest.yaml.asc"
+    created_at: "2025-10-20T16:31:00Z"
+  cosign:
+    file: "attest/archives/vault.manifest.sig"
+    created_at: "2025-10-20T16:31:00Z"
+
+notes:
+  - "All future phases MUST reference this manifest in their initialization note."
+  - "No retrofitting or recomputation of sealed metrics is permitted."
+  - "Use mirrors ONLY in read-only mode unless explicitly authorized."
