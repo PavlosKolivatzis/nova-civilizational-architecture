@@ -1,0 +1,64 @@
+{
+  "title": "Nova Civilizational Architecture — Cryptographic Hash Chain Lineage Map",
+  "description": "Visual representation of the complete temporal intelligence verification chain",
+  "version": "v9.0-closure",
+  "created": "2025-10-20T19:13:00Z",
+  "chain": {
+    "root": {
+      "component": "Phase 6.0 Belief Propagation Archive",
+      "file": "attest/archives/Nova_Phase_6.0_Seal.tar.gz",
+      "sha256": "df0d18e2b5fc2aa23a6e4f00304f139c17ac5fe9114ebfe942e28ef56f1bf80a",
+      "description": "Sealed probabilistic belief propagation with uncertainty quantification"
+    },
+    "level_1": {
+      "component": "Complete Archive Bundle",
+      "file": "nova_civilizational_architecture_v9.0-final.bundle",
+      "sha256": "83c5fe46824a1ec05e7317d5794902d14ef57a08bfa679290ab8c3a46f87076a",
+      "description": "Git bundle containing complete temporal intelligence system",
+      "extends": "root"
+    },
+    "level_2": {
+      "component": "Vault Manifest",
+      "file": "attest/archives/vault.manifest.yaml",
+      "description": "Primary integrity manifest with cryptographic lineage",
+      "validates": ["root", "level_1"],
+      "contains": {
+        "signatures": ["gpg", "cosign"],
+        "proof_hashes": ["attest/proof/verify_vault_20251020.json"],
+        "metadata": ["certificate", "attestation"]
+      }
+    },
+    "level_3": {
+      "component": "Verification Proof",
+      "file": "attest/proof/verify_vault_20251020.json",
+      "sha256": "d6c6e0011fceffabada127fdbb34525eea0b7b822f1b515d594f7c0be18144f0",
+      "description": "Machine-verifiable integrity proof",
+      "validates": "level_2",
+      "schema": "attest/schemas/vault_proof.schema.json"
+    },
+    "level_4": {
+      "component": "Temporal Certificate",
+      "file": "attest/certificate_of_completion.pdf.txt",
+      "description": "Cryptographic title deed of temporal intelligence completion",
+      "validates": ["level_1", "level_2", "level_3"],
+      "certificate_id": "NOVA-TIC-2025-001"
+    },
+    "level_5": {
+      "component": "Final Attestation",
+      "file": "attest/final_attestation.json",
+      "description": "Meta-attestation defining post-development validation-only epoch",
+      "validates": ["level_1", "level_2", "level_3", "level_4"],
+      "status": "TOTAL_PROVENANCE_CLOSURE"
+    }
+  },
+  "validation_flow": [
+    "Start with vault manifest (level_2)",
+    "Verify proof file against schema (level_3)",
+    "Confirm archive bundle integrity (level_1)",
+    "Validate root archive hash (root)",
+    "Check certificate authenticity (level_4)",
+    "Accept final attestation (level_5)"
+  ],
+  "invariant": "Every validation extends but never overwrites the original hash chain",
+  "verification_command": "python scripts/verify_vault.py --manifest attest/archives/vault.manifest.yaml"
+}
