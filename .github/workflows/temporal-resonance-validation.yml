@@ -105,8 +105,60 @@ jobs:
           # Output JSONL summary
           echo "{\"timestamp\":\"$(date -Iseconds)\",\"archive_verified\":true,\"trsi_drift_check\":\"passed\",\"drift_value\":$DRIFT}" > "$SUMMARY_FILE"
 
-      - name: Upload validation log
+      - name: Extract today's TRSI stats
+        id: trsi
+        run: |
+          LOG="ops/logs/trsi_validation_$(date -u +%Y%m%d).jsonl"
+          if [ ! -f "$LOG" ]; then
+            echo "Missing $LOG" >&2; exit 1
+          fi
+          # grab the last line (latest record)
+          LINE=$(tail -n 1 "$LOG")
+          # export as step outputs
+          echo "trsi_mean=$(echo "$LINE" | jq -r '.trsi_value')" >> $GITHUB_OUTPUT
+          echo "drift_mae=$(echo "$LINE" | jq -r '.drift_value // 0')" >> $GITHUB_OUTPUT
+
+      - name: Compute / verify sealed archive hash
+        id: seal
+        run: |
+          # If you keep the precomputed hash file:
+          HASH_FILE="attest/archives/phase-6.0-archive.sha256"
+          if [ -f "$HASH_FILE" ]; then
+            # Verify and extract value
+            sha256sum -c "$HASH_FILE"
+            VALUE=$(cut -d' ' -f1 "$HASH_FILE")
+            echo "sha256=${VALUE}" >> $GITHUB_OUTPUT
+          else
+            # Or recompute (less ideal):
+            FILE="attest/archives/Nova_Phase_6.0_Seal.tar.gz"
+            VALUE=$(sha256sum "$FILE" | cut -d' ' -f1)
+            echo "sha256=${VALUE}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate & validate Phase 7.0-β attestation
+        id: attest
+        env:
+          TRSI_MEAN: ${{ steps.trsi.outputs.trsi_mean }}
+          DRIFT_MAE: ${{ steps.trsi.outputs.drift_mae }}
+          ARCHIVE_SHA256: ${{ steps.seal.outputs.sha256 }}
+          GIT_COMMIT: ${{ github.sha }}
+          UTC_TIMESTAMP: ${{ github.event.head_commit.timestamp }}
+          ATTEST_SCHEMA: attest/phase-7.0-beta.json
+          OUTPUT_JSON: attest/latest_phase_7.0_beta.json
+        run: |
+          chmod +x scripts/validate_phase_7_beta.py
+          python scripts/validate_phase_7_beta.py > attest/_latest_phase_7.0_beta.line.json
+
+      - name: Append attestation to daily JSONL
+        run: |
+          mkdir -p ops/logs
+          OUT="ops/logs/trsi_validation_$(date -u +%Y%m%d).jsonl"
+          cat attest/_latest_phase_7.0_beta.line.json >> "$OUT"
+
+      - name: Upload validation artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: trsi-validation-${{ github.run_number }}
-          path: ops/logs/trsi_validation_*.jsonl
+          name: phase-7-beta-attestation-${{ github.run_id }}
+          path: |
+            attest/latest_phase_7.0_beta.json
+            ops/logs/trsi_validation_*.jsonl
