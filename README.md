@@ -1,4 +1,10 @@
-# NOVA Civilizational Architecture 🌟
+# Nova Civilizational Architecture — Complete Temporal Intelligence System
+**Tag:** `v9.0-final`
+**Verification:** `python scripts/verify_vault.py --manifest attest/archives/vault.manifest.yaml`
+**Archive SHA-256:** `83c5fe46824a1ec05e7317d5794902d14ef57a08bfa679290ab8c3a46f87076a`
+
+Complete temporal intelligence through 9 phases of cryptographic evolution.
+Truth anchored, time resonant, continuity enduring, networks harmonized.
 
 ![CI](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions/workflows/nova-ci.yml/badge.svg)
 ![Health Matrix](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions/workflows/health-config-matrix.yml/badge.svg)
