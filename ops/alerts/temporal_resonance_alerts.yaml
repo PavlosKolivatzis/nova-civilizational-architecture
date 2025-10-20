@@ -1,0 +1,62 @@
+groups:
+  - name: temporal-resonance
+    rules:
+      - alert: HighForecastMAE
+        expr: nova_temporal_forecast_mae > 0.05
+        for: 30m
+        labels:
+          severity: "warning"
+        annotations:
+          summary: "Forecast MAE exceeds 0.05"
+          description: "TRSI prediction accuracy has degraded. Check predictive model and temporal data sources."
+          runbook_url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/main/ops/runbook/phase-7.0-daily-resonance-checklist.md"
+
+      - alert: HighControllerLatency
+        expr: nova_controller_latency_seconds > 10800
+        for: 15m
+        labels:
+          severity: "critical"
+        annotations:
+          summary: "Controller latency exceeds 3 hours"
+          description: "Feedback controller response time is too slow. Check coupling adjustment logic and system load."
+          runbook_url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/main/ops/runbook/phase-7.0-daily-resonance-checklist.md"
+
+      - alert: AmplificationEnergyLimit
+        expr: nova_amplification_energy > 2.2
+        for: 15m
+        labels:
+          severity: "warning"
+        annotations:
+          summary: "Amplification energy above safe bound"
+          description: "Resonance amplification has exceeded ethical safety limits. Automatic damping should engage."
+          runbook_url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/main/ethics/audit_config.yaml"
+
+      - alert: TRSIDriftExcessive
+        expr: abs(nova_temporal_resonance_trsi - nova_temporal_trsi_predicted) > 0.05
+        for: 30m
+        labels:
+          severity: "warning"
+        annotations:
+          summary: "TRSI drift exceeds 0.05 threshold"
+          description: "Actual TRSI differs significantly from predicted values. Monitor for temporal coherence breakdown."
+          runbook_url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/main/ops/runbook/phase-7.0-daily-resonance-checklist.md"
+
+      - alert: EthicsViolationDetected
+        expr: nova_ethics_violation_total > 0
+        for: 5m
+        labels:
+          severity: "critical"
+        annotations:
+          summary: "Ethics violation detected in temporal resonance system"
+          description: "Derivative learning boundaries may have been breached. Immediate audit required."
+          runbook_url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/main/ethics/audit_config.yaml"
+
+      - alert: ArchiveIntegrityFailure
+        expr: up{job="temporal-resonance-validation"} == 0
+        for: 10m
+        labels:
+          severity: "critical"
+        annotations:
+          summary: "Phase 6.0 archive integrity check failed"
+          description: "Cannot verify SHA-256 of sealed belief propagation archives. System integrity compromised."
+          runbook_url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/main/ops/runbook/phase-7.0-daily-resonance-checklist.md"
