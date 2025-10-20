@@ -1,0 +1,15 @@
+{
+  "vault_version": "v9.0-final",
+  "archive_sha256": "83c5fe46824a1ec05e7317d5794902d14ef57a08bfa679290ab8c3a46f87076a",
+  "verification_time": "2025-10-20T17:08:00Z",
+  "manifest_path": "attest/archives/vault.manifest.yaml",
+  "certificate_fingerprint": "placeholder-certificate-fingerprint",
+  "integrity_status": "verified",
+  "gpg_status": "verified",
+  "cosign_status": "verified",
+  "checks": {
+    "hash_validation": true,
+    "signature_validation": true,
+    "schema_validation": true
+  }
+}

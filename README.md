@@ -6,6 +6,9 @@
 Complete temporal intelligence through 9 phases of cryptographic evolution.
 Truth anchored, time resonant, continuity enduring, networks harmonized.
 
+🧩 Verification Entry:
+All future audits must validate against `attest/schemas/vault_proof.schema.json` using `verify_vault.py`.
+
 ![CI](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions/workflows/nova-ci.yml/badge.svg)
 ![Health Matrix](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions/workflows/health-config-matrix.yml/badge.svg)
 ![Status](https://img.shields.io/badge/maturity-4.0_⭐-1f8b4c)

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nova Continuity Vault Verification Proof",
+  "type": "object",
+  "properties": {
+    "vault_version": { "type": "string", "pattern": "^v9\\.0-final$" },
+    "archive_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "verification_time": { "type": "string", "format": "date-time" },
+    "manifest_path": { "type": "string" },
+    "certificate_fingerprint": { "type": "string" },
+    "integrity_status": { "enum": ["verified", "failed", "partial"] },
+    "gpg_status": { "enum": ["verified", "missing", "revoked"] },
+    "cosign_status": { "enum": ["verified", "missing", "revoked"] },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "hash_validation": { "type": "boolean" },
+        "signature_validation": { "type": "boolean" },
+        "schema_validation": { "type": "boolean" }
+      },
+      "required": ["hash_validation", "signature_validation", "schema_validation"]
+    }
+  },
+  "required": [
+    "vault_version",
+    "archive_sha256",
+    "verification_time",
+    "manifest_path",
+    "certificate_fingerprint",
+    "integrity_status",
+    "checks"
+  ]
+}
