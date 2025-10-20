@@ -1,0 +1,59 @@
+name: temporal-resonance-validation
+
+on:
+  schedule:
+    # Daily at 09:00 UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  validate-resonance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Phase 6.0 archive integrity
+        run: |
+          cd attest/archives
+          sha256sum -c phase-6.0-archive.sha256
+
+      - name: Parse TRSI log and check drift
+        run: |
+          # Extract latest TRSI values from checklist (simplified parsing)
+          # Assumes table format: | Date | TRSI | ... |
+          LATEST_TRSI=$(grep -A 10 "| Date \| TRSI \|" ops/runbook/phase-7.0-daily-resonance-checklist.md | tail -n +3 | head -1 | awk -F'|' '{print $3}' | xargs)
+          PREVIOUS_TRSI=$(grep -A 10 "| Date \| TRSI \|" ops/runbook/phase-7.0-daily-resonance-checklist.md | tail -n +4 | head -1 | awk -F'|' '{print $3}' | xargs)
+
+          if [ -z "$LATEST_TRSI" ] || [ -z "$PREVIOUS_TRSI" ]; then
+            echo "TRSI values not found in log"
+            exit 1
+          fi
+
+          DRIFT=$(echo "$LATEST_TRSI - $PREVIOUS_TRSI" | bc -l | tr -d -)
+          THRESHOLD=0.05
+
+          if (( $(echo "$DRIFT > $THRESHOLD" | bc -l) )); then
+            echo "TRSI drift $DRIFT exceeds threshold $THRESHOLD"
+            exit 1
+          fi
+
+          echo "TRSI drift $DRIFT within acceptable range"
+
+      - name: Generate validation summary
+        run: |
+          DATE=$(date +%Y%m%d)
+          SUMMARY_FILE="ops/logs/trsi_validation_${DATE}.jsonl"
+
+          # Create directory if needed
+          mkdir -p ops/logs
+
+          # Output JSONL summary
+          echo "{\"timestamp\":\"$(date -Iseconds)\",\"archive_verified\":true,\"trsi_drift_check\":\"passed\",\"drift_value\":$DRIFT}" > "$SUMMARY_FILE"
+
+      - name: Upload validation log
+        uses: actions/upload-artifact@v4
+        with:
+          name: trsi-validation-${{ github.run_number }}
+          path: ops/logs/trsi_validation_*.jsonl
