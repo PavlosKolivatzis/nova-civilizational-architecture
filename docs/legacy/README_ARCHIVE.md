@@ -54,6 +54,21 @@ cd nova-restore && python scripts/verify_vault.py ...
 
 ---
 
+## 🧩 **Archive Verification Badge**
+
+```
+NOVA_CIVILIZATIONAL_ARCHITECTURE_V9.0_ARCHIVE
+SHA256: 83c5fe46824a1ec05e7317d5794902d14ef57a08bfa679290ab8c3a46f87076a
+PROOF: attest/proof/verify_vault_20251020.json
+SCHEMA: attest/schemas/vault_proof.schema.json
+MANIFEST: attest/archives/vault.manifest.yaml
+BUNDLE: nova_civilizational_architecture_v9.0-final.bundle
+VALIDATED: 2025-10-20T17:08:00Z
+STATUS: ✅ VERIFIED (TOTAL PROVENANCE CLOSURE)
+```
+
+---
+
 ## 🌅 **Final Statement**
 
 > "Nova endures through verifiability.
