@@ -142,6 +142,11 @@ signatures:
     file: "attest/archives/vault.manifest.sig"
     created_at: "2025-10-20T16:31:00Z"
 
+proof_hashes:
+  - file: "attest/proof/verify_vault_20251020.json"
+    sha256: "d6c6e0011fceffabada127fdbb34525eea0b7b822f1b515d594f7c0be18144f0"
+    created_at: "2025-10-20T17:08:00Z"
+
 notes:
   - "All future phases MUST reference this manifest in their initialization note."
   - "No retrofitting or recomputation of sealed metrics is permitted."
