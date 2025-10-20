@@ -1,0 +1,344 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "TRSI",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "spanNulls": true
+          },
+          "mappings": [],
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "semi-dark-yellow", "value": 0.65},
+              {"color": "green", "value": 0.7}
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "id": 1,
+      "options": {
+        "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "single", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "nova_temporal_resonance_trsi{slot=\"$slot\",env=~\"$env\"}",
+          "legendFormat": "TRSI actual",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "nova_temporal_trsi_predicted{slot=\"$slot\",env=~\"$env\"}",
+          "legendFormat": "TRSI predicted",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Temporal Resonance — TRSI (Actual vs Predicted)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROM"
+      },
+      "description": "Mean Absolute Error of TRSI forecast over the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 0.03},
+              {"color": "red", "value": 0.05}
+            ]
+          },
+          "unit": "none",
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 8},
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["last"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "avg_over_time(nova_temporal_forecast_mae{slot=\"$slot\",env=~\"$env\"}[$__range])",
+          "legendFormat": "MAE",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Forecast MAE (avg over range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROM"
+      },
+      "description": "Average feedback controller response latency.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 3600},
+              {"color": "red", "value": 10800}
+            ]
+          },
+          "unit": "s",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 8},
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["last"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "avg_over_time(nova_controller_latency_seconds{slot=\"$slot\",env=~\"$env\"}[$__range])",
+          "legendFormat": "latency",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Controller Latency (avg over range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROM"
+      },
+      "description": "Amplification energy should remain ≤ 2.0; damping engages > 1.8.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Energy",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
+          "mappings": [],
+          "min": 0,
+          "max": 2.2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 1.8},
+              {"color": "green", "value": 2.0}
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14},
+      "id": 4,
+      "options": {
+        "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "single", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "nova_amplification_energy{slot=\"$slot\",env=~\"$env\"}",
+          "legendFormat": "Amplification Energy",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Amplification Energy",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROM"
+      },
+      "description": "Baseline TRSI trend for selected slot/env.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "TRSI",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "spanNulls": true
+          },
+          "mappings": [],
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 0.65},
+              {"color": "green", "value": 0.7}
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 22},
+      "id": 5,
+      "options": {
+        "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "single", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "nova_temporal_resonance_trsi{slot=\"$slot\",env=~\"$env\"}",
+          "legendFormat": "TRSI",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "TRSI — Baseline Trend",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["Nova", "Phase-7.0", "Temporal-Resonance", "Beta"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Prometheus",
+        "name": "DS_PROM",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "$DS_PROM"},
+        "definition": "label_values(nova_temporal_resonance_trsi, slot)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Slot",
+        "multi": false,
+        "name": "slot",
+        "options": [],
+        "query": {
+          "query": "label_values(nova_temporal_resonance_trsi, slot)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "$DS_PROM"},
+        "definition": "label_values(nova_temporal_resonance_trsi, env)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Env",
+        "multi": true,
+        "name": "env",
+        "options": [],
+        "query": {
+          "query": "label_values(nova_temporal_resonance_trsi, env)",
+          "refId": "EnvVariableQuery"
+        },
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {"from": "now-7d", "to": "now"},
+  "timepicker": {
+    "refresh_intervals": ["30s", "1m", "5m", "15m", "1h", "6h"],
+    "time_options": ["1h", "6h", "12h", "24h", "7d", "14d", "30d"]
+  },
+  "timezone": "",
+  "title": "Nova — Temporal Resonance (β)",
+  "uid": "nova-trsi-beta",
+  "version": 1,
+  "weekStart": ""
+}
