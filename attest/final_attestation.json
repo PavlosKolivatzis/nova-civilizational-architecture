@@ -1,0 +1,15 @@
+{
+  "system": "Nova Civilizational Architecture",
+  "phase": "v9.0-archive",
+  "certificate_id": "NOVA-TIC-2025-001",
+  "integrity_status": "verified",
+  "verification_date": "2025-10-20T18:50:00Z",
+  "archive_sha256": "83c5fe46824a1ec05e7317d5794902d14ef57a08bfa679290ab8c3a46f87076a",
+  "bundle": "nova_civilizational_architecture_v9.0-final.bundle",
+  "proof_file": "attest/proof/verify_vault_20251020.json",
+  "schema": "attest/schemas/vault_proof.schema.json",
+  "manifest": "attest/archives/vault.manifest.yaml",
+  "certificate": "attest/certificate_of_completion.pdf.txt",
+  "validation_command": "python scripts/verify_vault.py --manifest attest/archives/vault.manifest.yaml",
+  "status": "TOTAL_PROVENANCE_CLOSURE"
+}
