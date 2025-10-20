@@ -1,0 +1,169 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Phase 7.0 Temporal Resonance Overview",
+    "tags": ["nova", "phase7", "temporal-resonance"],
+    "timezone": "UTC",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Temporal Resonance Stability Index (TRSI)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_temporal_resonance_stability_index",
+            "legendFormat": "TRSI",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "none",
+            "min": 0,
+            "max": 1
+          }
+        ],
+        "description": "Primary metric for temporal coherence quality. Values >0.7 indicate strong resonance."
+      },
+      {
+        "id": 2,
+        "title": "TRSI Trend (24h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(nova_temporal_resonance_stability_index[24h])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "orange",
+                  "value": -0.05
+                },
+                {
+                  "color": "green",
+                  "value": 0.05
+                }
+              ]
+            }
+          }
+        },
+        "description": "24-hour TRSI trend. Green indicates improving resonance, red indicates degradation."
+      },
+      {
+        "id": 3,
+        "title": "Variance Decay Heatmap",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "nova_temporal_decay_weight",
+            "refId": "A"
+          }
+        ],
+        "dataFormat": "tsbuckets",
+        "description": "Temporal decay weights across time windows. Darker colors indicate stronger decay (less influence)."
+      },
+      {
+        "id": 4,
+        "title": "Resonance Coupling Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "expr": "nova_temporal_resonance_coefficient",
+            "refId": "A"
+          }
+        ],
+        "description": "Distribution of resonance coupling coefficients. Higher values indicate stronger temporal alignment."
+      },
+      {
+        "id": 5,
+        "title": "Temporal Coherence Score",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "nova_temporal_coherence_score",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "orange",
+                  "value": 0.5
+                },
+                {
+                  "color": "green",
+                  "value": 0.8
+                }
+              ]
+            }
+          }
+        },
+        "description": "Harmonic mean of TRSI and coupling strength. Measures overall temporal system health."
+      },
+      {
+        "id": 6,
+        "title": "Archive Integrity Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "nova_archive_integrity_check",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "VERIFIED",
+                    "color": "green"
+                  },
+                  "1": {
+                    "text": "FAILED",
+                    "color": "red"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "description": "Phase 6.0 archive cryptographic verification status."
+      },
+      {
+        "id": 7,
+        "title": "TRSI Drift Alert",
+        "type": "alertlist",
+        "alertName": "TRSI Drift Threshold",
+        "description": "Alerts when TRSI changes exceed 0.05 within 24 hours."
+      }
+    ],
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    "refresh": "5m",
+    "schemaVersion": 27,
+    "version": 0,
+    "links": []
+  }
+}
