@@ -10,6 +10,8 @@
 
 > **🎉 MILESTONE:** **Phase 6.0 Probabilistic Belief Propagation** complete! Nova now features **uncertainty quantification** with belief state propagation across the Cognitive-Operational-Ethical Trinity. System maturity: **6.0/4.0** with probabilistic intelligence ⚡
 
+> **🌅 ACTIVE DEVELOPMENT:** **Phase 7.0 Temporal Resonance** initialized. Building temporal coherence from sealed belief variance archives. See [Phase 7.0 Initialization](docs/releases/phase-7.0-initialization.md) for blueprint.
+
 ## 🎯 Overview
 Production-grade multicultural truth synthesis engine with 10-slot cognitive architecture for civilizational-scale deployment. This system represents a groundbreaking approach to AI-assisted civilizational development through modular, resilient architecture.
 
@@ -568,10 +570,11 @@ This project demonstrates that multi-AI collaboration, under human coordination,
 
 ---
 
-### Phase 6.0 – Probabilistic Belief Propagation (Sealed)
-Completed: 2025-10-19 • Tag: v6.0-belief-propagation • Commit: c3bab48
-Implements cross-slot uncertainty quantification (TRI ↔ Controls)
-Status: Golden → Sealed → Archived • Integrity Chain Unbroken
+### Integrity Digests
+
+Phase 6.0 – Probabilistic Belief Propagation (Sealed)
+SHA-256: df0d18e2b5fc2aa23a6e4f00304f139c17ac5fe9114ebfe942e28ef56f1bf80a
+Verified 2025-10-19 • Commit 6df9ca6 • Status: Archival-grade
 
 **Status**: Production-Ready | **Maturity**: 6.0/4.0 ⭐ | **Tests**: ✅ 706 passing | **Autonomy**: All 10 slots Processual
 
