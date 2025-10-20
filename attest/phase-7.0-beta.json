@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nova-civilizational.org/attest/phase-7.0-beta.schema.json",
+  "title": "Phase 7.0-β Predictive Controls & Resonance Amplification Attestation",
+  "description": "JSON schema for Phase 7.0-β attestation entries in the Nova Civilizational Architecture ledger",
+  "type": "object",
+  "properties": {
+    "phase": {
+      "type": "string",
+      "const": "7.0-beta",
+      "description": "Phase identifier for this attestation"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "Git commit hash for this phase milestone"
+    },
+    "trsi_mean": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Mean TRSI value over the beta evaluation period"
+    },
+    "drift_mae": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 0.1,
+      "description": "Mean Absolute Error of TRSI drift forecasts"
+    },
+    "audit_status": {
+      "type": "string",
+      "enum": ["clean", "warnings", "violations"],
+      "description": "Ethics and compliance audit status"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the phase artifacts"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp of attestation creation"
+    },
+    "signature": {
+      "type": "string",
+      "const": "The sun shines on this work.",
+      "description": "Standard Nova attestation signature"
+    },
+    "controller_response_latency_hours": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 24.0,
+      "description": "Average controller response latency in hours"
+    },
+    "amplification_energy_max": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 2.0,
+      "description": "Maximum observed amplification energy coefficient"
+    },
+    "forecast_accuracy_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7,
+      "description": "Number of days forecast accuracy was maintained"
+    }
+  },
+  "required": [
+    "phase",
+    "commit",
+    "trsi_mean",
+    "drift_mae",
+    "audit_status",
+    "sha256",
+    "timestamp",
+    "signature"
+  ],
+  "additionalProperties": false
+}
