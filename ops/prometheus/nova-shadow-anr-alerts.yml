@@ -1,0 +1,20 @@
+groups:
+- name: nova-shadow-anr
+  rules:
+  - alert: NovaFlowFabricDown
+    expr: max_over_time(nova_flow_fabric_links[5m]) < 1
+    for: 5m
+    labels: {severity: critical}
+    annotations: {summary: "Flow Fabric has 0 links for 5m"}
+
+  - alert: NovaANREntropyHigh
+    expr: avg_over_time(nova_anr_entropy_bits[15m]) > 2.2
+    for: 30m
+    labels: {severity: warning}
+    annotations: {summary: "ANR shadow entropy stuck >2.2 for 30m"}
+
+  - alert: NovaBeliefVarianceSpike
+    expr: rate(nova_slot_phase_lock_belief_variance[10m]) > 0.05
+    for: 10m
+    labels: {severity: warning}
+    annotations: {summary: "Belief variance rising quickly"}

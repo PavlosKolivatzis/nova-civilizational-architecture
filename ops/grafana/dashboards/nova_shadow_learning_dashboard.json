@@ -1,0 +1,166 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Nova Shadow Learning Dashboard",
+    "tags": ["nova", "shadow-learning", "anr", "observability"],
+    "timezone": "UTC",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Flow Fabric Links",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "nova_flow_fabric_links",
+            "legendFormat": "Links",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "orange", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+      },
+      {
+        "id": 2,
+        "title": "ANR Entropy Bits",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_anr_entropy_bits",
+            "legendFormat": "Entropy",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+      },
+      {
+        "id": 3,
+        "title": "ANR Decisiveness",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_anr_decisiveness",
+            "legendFormat": "Decisiveness",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+      },
+      {
+        "id": 4,
+        "title": "Belief Mean (Slot 4)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_slot_phase_lock_belief_mean{slot=\"4\"}",
+            "legendFormat": "Slot 4 Mean",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+      },
+      {
+        "id": 5,
+        "title": "Belief Variance (Slot 4)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_slot_phase_lock_belief_variance{slot=\"4\"}",
+            "legendFormat": "Slot 4 Variance",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+      },
+      {
+        "id": 6,
+        "title": "Belief Mean (Slot 7)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_slot_phase_lock_belief_mean{slot=\"7\"}",
+            "legendFormat": "Slot 7 Mean",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+      },
+      {
+        "id": 7,
+        "title": "Belief Variance (Slot 7)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_slot_phase_lock_belief_variance{slot=\"7\"}",
+            "legendFormat": "Slot 7 Variance",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 }
+      },
+      {
+        "id": 8,
+        "title": "Slot-10 Gate Decisions",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "nova_slot10_gate_decisions_total",
+            "legendFormat": "Decisions",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 }
+      },
+      {
+        "id": 9,
+        "title": "Anomaly Unlearn Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(nova_anomaly_unlearn_events_total[5m])",
+            "legendFormat": "Unlearn Rate",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 }
+      },
+      {
+        "id": 10,
+        "title": "Unlearn Half-Life (Min/Max)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nova_unlearn_min_half_life",
+            "legendFormat": "Min Half-Life",
+            "refId": "A"
+          },
+          {
+            "expr": "nova_unlearn_max_half_life",
+            "legendFormat": "Max Half-Life",
+            "refId": "B"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 }
+      }
+    ],
+    "time": { "from": "now-1h", "to": "now" },
+    "timepicker": {},
+    "templating": { "list": [] },
+    "annotations": { "list": [] },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 0,
+    "links": []
+  }
+}
