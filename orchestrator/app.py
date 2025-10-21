@@ -311,6 +311,37 @@ if FastAPI is not None:
         payload["status"] = "ok"
         return payload
 
+    def _update_phase10_metrics():
+        """Update Phase 10 Prometheus metrics from module state."""
+        try:
+            from orchestrator.phase10_manager import get_phase10_manager
+            from orchestrator.prometheus_metrics import (
+                phase10_eai_gauge,
+                phase10_fcq_gauge,
+                phase10_cgc_gauge,
+                phase10_pis_gauge,
+                phase10_ag_throttle_counter,
+                phase10_ag_escalation_counter,
+            )
+
+            mgr = get_phase10_manager()
+
+            # Update gauges
+            ag_metrics = mgr.ag.get_metrics()
+            pcr_metrics = mgr.pcr.get_metrics()
+            cig_metrics = mgr.cig.get_metrics()
+
+            phase10_eai_gauge.labels(deployment="local").set(ag_metrics["eai"])
+            phase10_cgc_gauge.labels(mesh="global").set(cig_metrics["cgc"])
+            phase10_pis_gauge.labels(ledger="pcr").set(pcr_metrics["pis"])
+
+            # Update counters (set to current totals; Prometheus handles deltas)
+            phase10_ag_throttle_counter._value._value = ag_metrics["throttle_events_total"]
+            phase10_ag_escalation_counter._value._value = ag_metrics["escalation_events_total"]
+
+        except Exception as e:
+            logger.warning(f"Phase 10 metrics update failed: {e}")
+
     @app.get("/metrics")
     async def metrics() -> Response:
         """Prometheus-compatible metrics for all slots."""
@@ -323,6 +354,8 @@ if FastAPI is not None:
         try:
             # New export path
             from orchestrator.prometheus_metrics import get_metrics_response
+            # Phase 10: Update metrics before export
+            _update_phase10_metrics()
             data, content_type = get_metrics_response()
             return Response(content=data, media_type=content_type)
         except Exception:
@@ -330,6 +363,82 @@ if FastAPI is not None:
             # Assumes these symbols already exist in this module's scope
             data = prometheus_metrics(METRIC_SLOT_REGISTRY, monitor)
             return Response(content=data, media_type="text/plain")
+
+    # Phase 10: FEP (Federated Ethical Protocol) endpoints
+    @app.post("/phase10/fep/proposal")
+    async def fep_submit_proposal(payload: dict):
+        """Submit ethical decision proposal for federated voting."""
+        from orchestrator.phase10_manager import get_phase10_manager
+        mgr = get_phase10_manager()
+        result = mgr.fep.submit_proposal(
+            decision_id=payload["decision_id"],
+            topic=payload["topic"],
+            **payload.get("options", {})
+        )
+        return result
+
+    @app.post("/phase10/fep/vote")
+    async def fep_vote(payload: dict):
+        """Cast vote on FEP proposal."""
+        from orchestrator.phase10_manager import get_phase10_manager
+        mgr = get_phase10_manager()
+        result = mgr.fep.vote(
+            decision_id=payload["decision_id"],
+            node_id=payload["node_id"],
+            alignment=payload["alignment"],
+            weight=payload.get("weight", 1.0),
+            dissent_reason=payload.get("dissent_reason"),
+        )
+        # Record in PCR after vote
+        return result
+
+    @app.post("/phase10/fep/finalize")
+    async def fep_finalize(payload: dict):
+        """Finalize FEP decision and record in PCR."""
+        from orchestrator.phase10_manager import get_phase10_manager
+        mgr = get_phase10_manager()
+
+        # AG boundary check
+        boundary = mgr.ag.check_decision_boundary()
+        if boundary["action"] != "proceed":
+            return {
+                "error": "ag_blocked",
+                "action": boundary["action"],
+                "reason": boundary["reason"],
+                "eai": boundary["eai"],
+            }
+
+        # Finalize decision
+        decision = mgr.fep.finalize(payload["decision_id"])
+
+        # Record in PCR
+        mgr.pcr.append(
+            decision_id=decision.id,
+            decision_hash=decision.provenance["hash"],
+        )
+
+        # Update AG
+        mgr.ag.record_decision(safe=decision.is_approved())
+
+        return {
+            "status": "finalized",
+            "decision_id": decision.id,
+            "fcq": decision.fcq,
+            "approved": decision.is_approved(),
+        }
+
+    @app.get("/phase10/metrics")
+    async def phase10_metrics():
+        """Export Phase 10 operational metrics."""
+        from orchestrator.phase10_manager import get_phase10_manager
+        mgr = get_phase10_manager()
+        return {
+            "fep": mgr.fep.get_metrics(),
+            "pcr": mgr.pcr.get_metrics(),
+            "ag": mgr.ag.get_metrics(),
+            "cig": mgr.cig.get_metrics(),
+            "fle": mgr.fle.get_metrics(),
+        }
 
     @app.post("/ops/expire-now")
     async def force_expire():
