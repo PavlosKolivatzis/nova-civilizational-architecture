@@ -1,0 +1,11 @@
+{
+  "id": "inf_game_theory_dishes",
+  "title": "Game Theory: Cooperation vs Betrayal",
+  "tri_score": 0.81,
+  "resilience_class": "B",
+  "summary": "Mathematical proof that cooperation and forgiveness outperform selfish strategies in repeated interactions.",
+  "tags": ["INF-o-INITY", "PAD.E.L.", "education", "phase6-9"],
+  "phase_map": ["6.0", "7.0", "8.0", "9.0"],
+  "last_update": "2025-10-21",
+  "status": "published"
+}
