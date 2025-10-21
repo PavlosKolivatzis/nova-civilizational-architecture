@@ -115,6 +115,12 @@ def _get_system_reflection() -> Dict[str, Any]:
         "NOVA_ENABLE_PROMETHEUS": os.getenv("NOVA_ENABLE_PROMETHEUS", "0"),
         "NOVA_ANR_ENABLED": os.getenv("NOVA_ANR_ENABLED", "0"),
         "NOVA_ANR_PILOT": os.getenv("NOVA_ANR_PILOT", "0.0"),
+        "NOVA_ANR_LEARN_SHADOW": os.getenv("NOVA_ANR_LEARN_SHADOW", "0"),
+        "NOVA_ANR_STRICT_ON_ANOMALY": os.getenv("NOVA_ANR_STRICT_ON_ANOMALY", "0"),
+        "NOVA_ENABLE_PROBABILISTIC_CONTRACTS": os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "0"),
+        "NOVA_SLOT10_ENABLED": os.getenv("NOVA_SLOT10_ENABLED", "false"),
+        "NOVA_ENABLE_META_LENS": os.getenv("NOVA_ENABLE_META_LENS", "0"),
+        "NOVA_UNLEARN_ANOMALY": os.getenv("NOVA_UNLEARN_ANOMALY", "0"),
         "NOVA_BUILD_SHA": os.getenv("NOVA_BUILD_SHA", "unknown"),
         "NOVA_VERSION": os.getenv("NOVA_VERSION", "5.1.1-polish"),
     }

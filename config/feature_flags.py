@@ -74,6 +74,34 @@ FAILOVER_ENABLED = get_feature_flag("FAILOVER_ENABLED", True)
 BACKUP_MODE_ENABLED = get_feature_flag("BACKUP_MODE_ENABLED", False)
 GRACEFUL_DEGRADATION_ENABLED = get_feature_flag("GRACEFUL_DEGRADATION_ENABLED", True)
 
+# Observability and Phase 4.1 Metabolism Configuration
+NOVA_ENABLE_PROMETHEUS = get_feature_flag("NOVA_ENABLE_PROMETHEUS", True)
+NOVA_UNLEARN_ANOMALY = get_feature_flag("NOVA_UNLEARN_ANOMALY", True)
+NOVA_SLOT06_W_TRI = get_feature_flag("NOVA_SLOT06_W_TRI", 0.7)
+NOVA_SLOT07_W_PRESS = get_feature_flag("NOVA_SLOT07_W_PRESS", 0.8)
+NOVA_SLOT10_W_JITTER = get_feature_flag("NOVA_SLOT10_W_JITTER", 0.3)
+NOVA_UNLEARN_MIN_HALF_LIFE = get_feature_flag("NOVA_UNLEARN_MIN_HALF_LIFE", 60)
+NOVA_UNLEARN_MAX_HALF_LIFE = get_feature_flag("NOVA_UNLEARN_MAX_HALF_LIFE", 1800)
+
+# ANR (Adaptive Neural Routing) Configuration
+NOVA_ANR_ENABLED = get_feature_flag("NOVA_ANR_ENABLED", True)
+NOVA_ANR_PILOT = get_feature_flag("NOVA_ANR_PILOT", 0.0)
+NOVA_ANR_LEARN_SHADOW = get_feature_flag("NOVA_ANR_LEARN_SHADOW", True)
+NOVA_ANR_STRICT_ON_ANOMALY = get_feature_flag("NOVA_ANR_STRICT_ON_ANOMALY", True)
+NOVA_ANR_MAX_FAST_PROB = get_feature_flag("NOVA_ANR_MAX_FAST_PROB", 0.15)
+
+# Phase 6.0 Belief Propagation Configuration
+NOVA_ENABLE_PROBABILISTIC_CONTRACTS = get_feature_flag("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", True)
+
+# Slot 10 Civilizational Deployment Configuration
+NOVA_SLOT10_ENABLED = get_feature_flag("NOVA_SLOT10_ENABLED", True)
+
+# META_LENS Configuration (Optional, flag-gated)
+NOVA_ENABLE_META_LENS = get_feature_flag("NOVA_ENABLE_META_LENS", False)
+META_LENS_MAX_ITERS = get_feature_flag("META_LENS_MAX_ITERS", 3)
+META_LENS_ALPHA = get_feature_flag("META_LENS_ALPHA", 0.5)
+META_LENS_EPSILON = get_feature_flag("META_LENS_EPSILON", 0.02)
+
 
 def get_ids_config() -> Dict[str, Any]:
     """Get complete IDS configuration"""
