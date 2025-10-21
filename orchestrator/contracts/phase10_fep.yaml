@@ -1,0 +1,17 @@
+contract: "FEP@10.0"
+version: "1"
+routes:
+  submit_proposal: "POST /phase10/fep/proposal"
+  vote: "POST /phase10/fep/vote"
+  finalize: "POST /phase10/fep/finalize"
+policies:
+  fcq_threshold: 0.90
+  record_dissent: true
+  decay_hours: 72
+security:
+  signatures: "ed25519"
+  hash: "sha256"
+  provenance: "append_only"
+auditing:
+  export_format: "json-ld"
+  export_schedule_minutes: 10

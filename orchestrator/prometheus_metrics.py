@@ -178,6 +178,47 @@ canary_enabled_gauge = Gauge(
     registry=_REGISTRY,
 )
 
+# Phase 10 Ethical Autonomy & Federated Cognition metrics
+phase10_eai_gauge = Gauge(
+    "nova_phase10_eai",
+    "Ethical Autonomy Index (safe_autonomy / decisions × consensus_quality)",
+    ["deployment"],
+    registry=_REGISTRY,
+)
+
+phase10_fcq_gauge = Gauge(
+    "nova_phase10_fcq",
+    "Federated Consensus Quality for decisions",
+    ["decision"],
+    registry=_REGISTRY,
+)
+
+phase10_cgc_gauge = Gauge(
+    "nova_phase10_cgc",
+    "Cognitive Graph Coherence across deployments",
+    ["mesh"],
+    registry=_REGISTRY,
+)
+
+phase10_pis_gauge = Gauge(
+    "nova_phase10_pis",
+    "Provenance Integrity Score for federated ledger",
+    ["ledger"],
+    registry=_REGISTRY,
+)
+
+phase10_ag_throttle_counter = Counter(
+    "nova_phase10_ag_throttle_events_total",
+    "Total Autonomy Governor throttle events",
+    registry=_REGISTRY,
+)
+
+phase10_ag_escalation_counter = Counter(
+    "nova_phase10_ag_escalations_total",
+    "Total Autonomy Governor escalations requiring human review",
+    registry=_REGISTRY,
+)
+
 canary_seeded_counter = Counter(
     "nova_unlearn_canary_seeded_total",
     "Total canary contexts seeded",

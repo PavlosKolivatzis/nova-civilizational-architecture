@@ -1,0 +1,58 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "Phase 10 – Ethical Autonomy & Federated Cognition"
+type: object
+properties:
+  metrics:
+    type: object
+    properties:
+      EAI: {type: number, minimum: 0, maximum: 1}
+      FCQ: {type: number, minimum: 0, maximum: 1}
+      CGC: {type: number, minimum: 0, maximum: 1}
+      PIS: {type: number, minimum: 0, maximum: 1}
+  FEPDecision:
+    type: object
+    required: [id, topic, votes, threshold, fcq, provenance]
+    properties:
+      id: {type: string}
+      topic: {type: string}
+      threshold: {type: number, minimum: 0, maximum: 1}
+      fcq: {type: number, minimum: 0, maximum: 1}
+      votes:
+        type: array
+        items:
+          type: object
+          required: [node_id, weight, alignment, signature]
+          properties:
+            node_id: {type: string}
+            weight: {type: number, minimum: 0}
+            alignment: {type: number, minimum: 0, maximum: 1}
+            provenance_integrity: {type: number, minimum: 0, maximum: 1}
+            signature: {type: string}
+      dissent_notes: {type: array, items: {type: string}}
+      decay_recheck_after_hours: {type: integer, minimum: 1}
+      provenance:
+        type: object
+        required: [hash, parent_hash, timestamp]
+        properties:
+          hash: {type: string}
+          parent_hash: {type: string}
+          timestamp: {type: string, format: date-time}
+  CIGNode:
+    type: object
+    required: [id, source_deployment, ts, embedding_hash]
+    properties:
+      id: {type: string}
+      source_deployment: {type: string}
+      ts: {type: string, format: date-time}
+      belief_ci: {type: number, minimum: 0, maximum: 1}
+      freshness_half_life_hours: {type: number, minimum: 1}
+      embedding_hash: {type: string}
+  AGBoundaryEvent:
+    type: object
+    required: [ts, eai, action, reason]
+    properties:
+      ts: {type: string, format: date-time}
+      eai: {type: number, minimum: 0, maximum: 1}
+      action: {enum: ["throttle", "escalate", "hold"]}
+      reason: {type: string}
+required: [metrics]
