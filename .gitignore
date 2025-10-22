@@ -59,6 +59,7 @@ daily_snapshots.txt
 phase*.txt
 phase*.json
 bandit*.json
+!attest/phase11_init.json
 
 # Experimental artifacts (creativity parameter sweeps, bakeoffs)
 artifacts/

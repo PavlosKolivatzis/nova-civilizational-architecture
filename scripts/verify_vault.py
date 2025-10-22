@@ -16,6 +16,7 @@ Exit Codes:
 """
 
 import argparse
+import json
 import subprocess
 import sys
 import yaml
@@ -190,6 +191,30 @@ def main():
     # Load manifest
     if not verifier.load_manifest():
         return 2
+
+    # Validate Phase 11 attestation if present
+    phase11_path = Path("attest") / "phase11_init.json"
+    if phase11_path.exists():
+        try:
+            with phase11_path.open("r", encoding="utf-8") as fh:
+                phase11_data = json.load(fh)
+        except json.JSONDecodeError as exc:
+            print(f"? Phase 11 attestation invalid JSON: {exc}")
+            return 1
+
+        required_keys = {
+            "schema",
+            "epoch_base",
+            "branch",
+            "base_commit",
+            "generated_at_utc",
+        }
+        missing = sorted(required_keys - phase11_data.keys())
+        if missing:
+            print(f"? Phase 11 attestation missing keys: {', '.join(missing)}")
+            return 1
+
+        print(f"✅ Phase 11 attestation present: {phase11_data['branch']} @ {phase11_data['base_commit']}")
 
     # Execute verifications
     success, results = verifier.verify_all()
