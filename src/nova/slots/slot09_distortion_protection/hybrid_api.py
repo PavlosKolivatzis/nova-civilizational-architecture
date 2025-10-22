@@ -11,6 +11,7 @@ import hashlib
 import uuid
 import json
 import os
+from functools import partial
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypedDict, cast
 from enum import Enum
 from dataclasses import dataclass, field
@@ -548,15 +549,24 @@ class HybridDistortionDetectionAPI:
                 }
             }
             
-            # Process with timeout protection (enhanced version resilience)
-            policy_result = await asyncio.wait_for(
-                asyncio.to_thread(policy_check_with_ids, content_analysis, trace_id),
-                timeout=self.config.max_processing_time_ms / 1000
+            loop = asyncio.get_running_loop()
+            policy_future = loop.run_in_executor(
+                None,
+                partial(policy_check_with_ids, content_analysis, trace_id),
             )
+
+            done, _ = await asyncio.wait(
+                {policy_future},
+                timeout=self.config.max_processing_time_ms / 1000,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+
+            if not done:
+                raise TimeoutError("IDS processing timed out")
+
+            return policy_future.result()
             
-            return policy_result
-            
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, TimeoutError):
             self.logger.warning(f"IDS processing timeout for trace_id={trace_id}")
             raise TimeoutError("IDS processing timed out")
         except Exception as e:
