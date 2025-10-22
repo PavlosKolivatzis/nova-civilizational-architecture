@@ -1,0 +1,78 @@
+{
+  "schema": "nova.reflection.v1.1",
+  "timestamp_iso": "SEAL-TIME-UTC",
+  "epoch": "v10.0-complete",
+  "build": {
+    "sha": "932d0b1",
+    "version": "v10.0-complete"
+  },
+  "observation": {
+    "flow_fabric": {
+      "initialized": true,
+      "links": 9,
+      "status": "healthy",
+      "adaptive_active": true
+    },
+    "anr": {
+      "enabled": true,
+      "shadow": true,
+      "pilot": 0.0
+    },
+    "metrics": {
+      "TRI": 0.81,
+      "EAI_target": 0.85,
+      "FCQ_threshold": 0.90,
+      "CGC_target": 0.82,
+      "PIS": 1.0
+    }
+  },
+  "claims": {
+    "production_ready": 1.0,
+    "observability_sufficient": 1.0,
+    "architectural_consciousness": 0.96,
+    "flow_fabric_healthy": 0.9
+  },
+  "attestations": {
+    "sealed_phases": [
+      "6.0",
+      "7.0",
+      "8.0",
+      "9.0",
+      "10.0"
+    ],
+    "provenance_chain": "verified",
+    "fep_policy": {
+      "fcq_freeze": 0.90,
+      "dissent_preserved": true
+    },
+    "ag_policy": {
+      "tri_min": 0.80,
+      "eai_throttle": 0.75
+    },
+    "privacy_budget": {
+      "epsilon_max": 1.0,
+      "window_days": 30
+    }
+  },
+  "meta": {
+    "epoch_mode": "post-development",
+    "kilo_mode": "verify-persistent",
+    "codex_sync": "complete",
+    "external_audit_ready": true
+  },
+  "risks": [
+    "Consensus brittleness under heterogeneous nodes",
+    "Semantic drift in federated graphs",
+    "Rare autonomy spikes requiring human escalation"
+  ],
+  "guardrails": [
+    "PCR append-only with 10-minute integrity checks",
+    "AG never raises autonomy when TRI<0.80 or EAI<0.75",
+    "FLE-II gradients-only; epsilon budgets auditable"
+  ],
+  "next_options": [
+    "Open Phase 11 on a fork from epoch-v10",
+    "Publish public whitepaper derived from v10 release + attestation",
+    "Operate in observation mode with weekly ethics runbooks"
+  ]
+}
