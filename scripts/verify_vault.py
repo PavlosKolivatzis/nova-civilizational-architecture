@@ -22,6 +22,7 @@ import sys
 import yaml
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
+import os
 
 
 class VaultVerifier:
@@ -38,10 +39,10 @@ class VaultVerifier:
             with open(self.manifest_path, 'r', encoding='utf-8') as f:
                 self.manifest = yaml.safe_load(f)
             if self.verbose:
-                print(f"✓ Loaded manifest: {self.manifest_path}")
+                print(f"✓ Loaded manifest: {self.manifest_path}".encode('utf-8').decode('utf-8', errors='replace'))
             return True
         except (FileNotFoundError, yaml.YAMLError) as e:
-            print(f"✗ Failed to load manifest: {e}")
+            print(f"✗ Failed to load manifest: {e}".encode('utf-8').decode('utf-8', errors='replace'))
             return False
 
     def execute_step(self, step: Dict[str, str]) -> Tuple[bool, str]:
@@ -59,8 +60,8 @@ class VaultVerifier:
 
         try:
             if self.verbose:
-                print(f"→ Executing: {name}")
-                print(f"  Command: {cmd}")
+                print(f"→ Executing: {name}".encode('utf-8').decode('utf-8', errors='replace'))
+                print(f"  Command: {cmd}".encode('utf-8').decode('utf-8', errors='replace'))
 
             result = subprocess.run(
                 cmd,
@@ -75,9 +76,9 @@ class VaultVerifier:
 
             if self.verbose:
                 status = "✓" if success else "✗"
-                print(f"{status} {name}: {'PASSED' if success else 'FAILED'}")
+                print(f"{status} {name}: {'PASSED' if success else 'FAILED'}".encode('utf-8').decode('utf-8', errors='replace'))
                 if output.strip():
-                    print(f"  Output: {output.strip()}")
+                    print(f"  Output: {output.strip()}".encode('utf-8').decode('utf-8', errors='replace'))
 
             return success, output
 
@@ -98,7 +99,7 @@ class VaultVerifier:
         steps = verification.get('steps', [])
 
         if not steps:
-            print("✗ No verification steps defined in manifest")
+            print("✗ No verification steps defined in manifest".encode('utf-8').decode('utf-8', errors='replace'))
             return False, []
 
         results = []
@@ -126,16 +127,16 @@ class VaultVerifier:
         passed = sum(1 for r in results if r['success'])
         total = len(results)
 
-        print(f"\n📊 Verification Summary: {passed}/{total} steps passed")
+        print(f"\n📊 Verification Summary: {passed}/{total} steps passed".encode('utf-8').decode('utf-8', errors='replace'))
 
         if passed == total:
-            print("🎉 All vault verifications PASSED")
+            print("🎉 All vault verifications PASSED".encode('utf-8').decode('utf-8', errors='replace'))
         else:
-            print("❌ Some vault verifications FAILED")
+            print("❌ Some vault verifications FAILED".encode('utf-8').decode('utf-8', errors='replace'))
             print("\nFailed steps:")
             for result in results:
                 if not result['success']:
-                    print(f"  ✗ {result['step']}: {result['output']}")
+                    print(f"  ✗ {result['step']}: {result['output']}".encode('utf-8').decode('utf-8', errors='replace'))
 
     def check_dependencies(self) -> bool:
         """Check if required tools are available."""
@@ -153,8 +154,8 @@ class VaultVerifier:
                 missing.append(tool)
 
         if missing:
-            print(f"✗ Missing required tools: {', '.join(missing)}")
-            print("Install missing tools and try again.")
+            print(f"✗ Missing required tools: {', '.join(missing)}".encode('utf-8').decode('utf-8', errors='replace'))
+            print("Install missing tools and try again.".encode('utf-8').decode('utf-8', errors='replace'))
             return False
 
         if self.verbose:
@@ -178,6 +179,10 @@ def main():
 
     args = parser.parse_args()
 
+    # Set UTF-8 encoding for stdout to handle Unicode properly
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+
     print("🔒 Nova Continuity Vault Verification")
     print(f"Manifest: {args.manifest}")
     print()
@@ -199,7 +204,7 @@ def main():
             with phase11_path.open("r", encoding="utf-8") as fh:
                 phase11_data = json.load(fh)
         except json.JSONDecodeError as exc:
-            print(f"? Phase 11 attestation invalid JSON: {exc}")
+            print(f"? Phase 11 attestation invalid JSON: {exc}".encode('utf-8').decode('utf-8', errors='replace'))
             return 1
 
         required_keys = {
@@ -211,10 +216,10 @@ def main():
         }
         missing = sorted(required_keys - phase11_data.keys())
         if missing:
-            print(f"? Phase 11 attestation missing keys: {', '.join(missing)}")
+            print(f"? Phase 11 attestation missing keys: {', '.join(missing)}".encode('utf-8').decode('utf-8', errors='replace'))
             return 1
 
-        print(f"✅ Phase 11 attestation present: {phase11_data['branch']} @ {phase11_data['base_commit']}")
+        print(f"✅ Phase 11 attestation present: {phase11_data['branch']} @ {phase11_data['base_commit']}".encode('utf-8').decode('utf-8', errors='replace'))
 
     # Execute verifications
     success, results = verifier.verify_all()
