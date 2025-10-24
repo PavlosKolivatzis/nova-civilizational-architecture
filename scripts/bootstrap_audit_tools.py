@@ -11,6 +11,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import platform
+import shutil
 import sys
 import urllib.request
 from pathlib import Path
@@ -26,9 +29,8 @@ def read_metadata() -> Dict[str, str]:
         raise SystemExit(f"Metadata file not found: {METADATA_FILE}")
     with METADATA_FILE.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
-    required = {"url", "sha256"}
-    if not required.issubset(data):
-        raise SystemExit(f"Metadata missing required fields: {required}")
+    if "artifacts" not in data:
+        raise SystemExit("Metadata missing 'artifacts' mapping.")
     return data
 
 
@@ -50,9 +52,35 @@ def sha256sum(path: Path) -> str:
     return digest.hexdigest()
 
 
-def ensure_cosign(metadata: Dict[str, str]) -> Path:
-    target = TOOLS_DIR / "cosign.exe"
-    expected = metadata["sha256"]
+def determine_platform_key(metadata: Dict[str, object]) -> str:
+    override = os.environ.get("COSIGN_PLATFORM")
+    if override:
+        key = override.lower()
+    else:
+        system = platform.system().lower()
+        machine = platform.machine().lower()
+        if system == "windows" and machine in {"amd64", "x86_64"}:
+            key = "windows-amd64"
+        elif system == "linux" and machine in {"amd64", "x86_64"}:
+            key = "linux-amd64"
+        else:
+            raise SystemExit(f"Unsupported platform: {system}/{machine}")
+    artifacts = metadata.get("artifacts", {})
+    if key not in artifacts:
+        raise SystemExit(f"No cosign artifact metadata for platform '{key}'.")
+    return key
+
+
+def ensure_cosign(metadata: Dict[str, object]) -> Path:
+    platform_key = determine_platform_key(metadata)
+    artifact = metadata["artifacts"][platform_key]
+    required = {"url", "sha256", "filename"}
+    if not required.issubset(artifact):
+        missing = required - artifact.keys()
+        raise SystemExit(f"Artifact metadata missing fields: {missing}")
+
+    target = TOOLS_DIR / artifact["filename"]
+    expected = artifact["sha256"]
     if target.exists():
         actual = sha256sum(target)
         if actual == expected:
@@ -61,17 +89,22 @@ def ensure_cosign(metadata: Dict[str, str]) -> Path:
         print("existing cosign checksum mismatch; redownloading...")
         target.unlink()
 
-    print(f"Downloading cosign from {metadata['url']}...")
-    download_file(metadata["url"], target)
+    print(f"Downloading cosign from {artifact['url']}...")
+    download_file(artifact["url"], target)
     actual = sha256sum(target)
     if actual != expected:
         target.unlink(missing_ok=True)
         raise SystemExit(f"Checksum mismatch for cosign: {actual} != {expected}")
+    if os.name != "nt":
+        target.chmod(0o755)
     print("cosign download complete and verified.")
     return target
 
 
 def ensure_sha256sum() -> Path:
+    path = shutil.which("sha256sum")
+    if path:
+        return Path(path)
     git_bin = Path(r"C:\Program Files\Git\usr\bin\sha256sum.exe")
     if git_bin.exists():
         return git_bin
@@ -80,14 +113,14 @@ def ensure_sha256sum() -> Path:
 
 def main() -> int:
     metadata = read_metadata()
-    Tools = {
+    tools = {
         "cosign": ensure_cosign(metadata),
         "sha256sum": ensure_sha256sum(),
     }
 
     mapping = {
-        "COSIGN_PATH": str(Tools["cosign"]),
-        "SHA256SUM_PATH": str(Tools["sha256sum"]),
+        "COSIGN_PATH": str(tools["cosign"]),
+        "SHA256SUM_PATH": str(tools["sha256sum"]),
     }
     output = TOOLS_DIR / "paths.env"
     with output.open("w", encoding="utf-8") as handle:

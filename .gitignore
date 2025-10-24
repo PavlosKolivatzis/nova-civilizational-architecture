@@ -72,6 +72,7 @@ README.md.bak
 
 # Audit tool cache
 tools/audit/cosign.exe
+tools/audit/cosign
 tools/audit/paths.env
 trust/private/
 trust/cosign.key
