@@ -35,5 +35,22 @@ arc-analyze:
 
 reproduce-arc-experiment: arc-baseline arc-cycles arc-stability arc-analyze
 
+arc-ablation:
+	@echo "Running ablation studies..."
+	@for ablation in spectral equilibrium shield; do \
+		echo "=== Ablation: $$ablation ==="; \
+		for i in $$(seq 1 5); do \
+			python src/nova/arc/run_calibration_cycle.py \
+				--cycle $$i \
+				--domains $(DOMAINS) \
+				--ablate $$ablation \
+				--output data/arc_cycle_$${i}_ablate_$${ablation}_results.json || exit 1; \
+		done; \
+		python src/nova/arc/analyze_results.py \
+			--results-dir data/ \
+			--glob "arc_cycle_*_ablate_$${ablation}_results.json" \
+			--output docs/reports/arc_ablation_$${ablation}_analysis.md; \
+	done
+
 arc-verify:
 	python scripts/verify_vault.py
