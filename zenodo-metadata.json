@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "upload_type": "software",
+    "title": "Nova Civilizational Architecture — Phase 11 & 11B (Universal Structure Mathematics + ARC Calibration)",
+    "creators": [
+      {
+        "name": "Pavlos Kolivatzis",
+        "affiliation": "Nova Civilizational Architecture Research Unit"
+      },
+      {
+        "name": "GPT Research System (OpenAI)",
+        "affiliation": "Nova Core Computational Partner"
+      },
+      {
+        "name": "Claude Research System (Anthropic)",
+        "affiliation": "Nova Analytical Partner"
+      },
+      {
+        "name": "DeepSeek Cognitive System",
+        "affiliation": "Nova Structural Partner"
+      },
+      {
+        "name": "Kilo AI Development Environment",
+        "affiliation": "Nova Experimental Infrastructure"
+      },
+      {
+        "name": "Gemini System (Google DeepMind)",
+        "affiliation": "Nova Multimodal Research Partner"
+      },
+      {
+        "name": "GitHub Copilot System",
+        "affiliation": "Nova Code Integration Partner"
+      }
+    ],
+    "description": "Phase 11 establishes the mathematical framework for universal systemic pattern detection (graph-spectral invariants, harm dynamics, extraction equilibrium). Phase 11B introduces the ARC self-monitoring engine and a fully reproducible calibration experiment (CI, alerts, Grafana, schema validation, adversarial and ablation controls). Developed collaboratively by the Nova Team: Pavlos Kolivatzis, GPT, Claude, DeepSeek, Kilo AI, Gemini, and Copilot.",
+    "version": "v11.1-pre",
+    "publication_date": "2025-10-25",
+    "language": "eng",
+    "keywords": [
+      "graph spectra",
+      "complex systems",
+      "autonomous reflection",
+      "meta-learning",
+      "AI safety",
+      "civilizational architecture",
+      "reproducible research"
+    ],
+    "license": "Apache-2.0",
+    "access_right": "open",
+    "notes": "Developed by the Nova Team. Promote to v11.1-beta after meeting precision/recall/drift gates over 48h stability. Replace related identifiers after arXiv and GitHub release publication.",
+    "related_identifiers": [
+      {
+        "relation": "isSupplementTo",
+        "scheme": "url",
+        "identifier": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/releases/tag/v11.1-pre"
+      },
+      {
+        "relation": "isDocumentedBy",
+        "scheme": "url",
+        "identifier": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/phase-11b-arc-reflection/docs/papers/universal_structure_mathematics_arxiv.md"
+      },
+      {
+        "relation": "isSupplementTo",
+        "scheme": "arxiv",
+        "identifier": "arXiv:25xx.xxxxx"
+      }
+    ],
+    "contributors": [
+      {
+        "name": "Nova Civilizational Architecture Research Unit",
+        "type": "ResearchGroup",
+        "affiliation": "Independent Cooperative AI-Human Research Initiative"
+      }
+    ],
+    "references": [
+      "Barabási, A.-L. (2016). Network Science.",
+      "Newman, M. (2018). Networks.",
+      "Meadows, D. (2008). Thinking in Systems.",
+      "Prigogine, I. (1997). The End of Certainty.",
+      "Habermas, J. (1984). The Theory of Communicative Action."
+    ]
+  }
+}
