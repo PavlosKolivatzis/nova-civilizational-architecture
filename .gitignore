@@ -60,6 +60,7 @@ phase*.txt
 phase*.json
 bandit*.json
 !attest/phase11_init.json
+!docs/grafana/phase11_panels.json
 
 # Experimental artifacts (creativity parameter sweeps, bakeoffs)
 artifacts/

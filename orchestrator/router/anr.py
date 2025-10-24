@@ -10,6 +10,7 @@ import uuid
 
 from orchestrator.router.routes import ExecutionPlan, build_plan_for_route
 from orchestrator.semantic_mirror import publish, get_context
+from orchestrator.arc import maybe_reflect
 from orchestrator.router.features import (
     build_feature_vector, FEATURE_DIM,
     normalize_immediate_reward, normalize_deployment_reward
@@ -208,6 +209,7 @@ class AdaptiveNeuralRouter:
             }
         }
         publish("router.anr_explain", explain_payload, "anr", ttl=180.0)
+        maybe_reflect(decision, best_shadow, explain_payload, random.random)
 
         # Publish decision to semantic mirror (with sampling for shadow load control)
         key = "router.anr_shadow_decision" if decision.shadow else "router.anr_live_decision"
