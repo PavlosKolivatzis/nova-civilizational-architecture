@@ -1,0 +1,9 @@
+cosign already present (C:\code\nova-civilizational-architecture\tools\audit\cosign.exe), checksum verified.
+Wrote tool path hints to C:\code\nova-civilizational-architecture\tools\audit\paths.env
+🔒 Nova Continuity Vault Verification
+Manifest: attest/archives/vault.manifest.yaml
+
+✅ Phase 11 attestation present: phase-11 @ 932d0b1
+
+📊 Verification Summary: 5/5 steps passed
+🎉 All vault verifications PASSED
