@@ -1,0 +1,29 @@
+name: alignment-smoke
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --only-binary :all: -r requirements.txt
+
+      - name: Validate slot registry
+        run: python scripts/slot_registry_check.py
+
+      - name: Run health smoke tests
+        run: python -m pytest -m health -q

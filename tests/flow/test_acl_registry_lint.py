@@ -49,7 +49,8 @@ DOCUMENTED_KEYS = {
     "router.anr_live_decision",
     "router.current_decision_id",
     "router.anr_reward_immediate",
-    "router.anr_reward_deployment"
+    "router.anr_reward_deployment",
+    "router.anr_explain"
 }
 
 # Valid key pattern (no stray 'test.' matches)

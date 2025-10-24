@@ -1,0 +1,21 @@
+{
+  "schema": "nova_attestation/v1",
+  "epoch_base": "v10.0-complete",
+  "branch": "phase-11",
+  "base_commit": "932d0b1",
+  "generated_at_utc": "2025-10-22T15:17:11Z",
+  "toolchain": {
+    "python": "3.13.7",
+    "pip": "25.2",
+    "node": "v22.19.0"
+  },
+  "invariants": {
+    "rollback_single_flag": true,
+    "no_new_protocols": true,
+    "native_extensions_only": true
+  },
+  "flags_defaults": {
+    "NOVA_ANR_ENABLED": 0,
+    "NOVA_ENABLE_META_LENS": 0
+  }
+}

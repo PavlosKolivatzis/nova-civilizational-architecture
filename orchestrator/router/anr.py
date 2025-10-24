@@ -10,6 +10,7 @@ import uuid
 
 from orchestrator.router.routes import ExecutionPlan, build_plan_for_route
 from orchestrator.semantic_mirror import publish, get_context
+from orchestrator.arc import maybe_reflect
 from orchestrator.router.features import (
     build_feature_vector, FEATURE_DIM,
     normalize_immediate_reward, normalize_deployment_reward
@@ -190,6 +191,25 @@ class AdaptiveNeuralRouter:
             "route": route,
             "ts": decision.ts,
         }
+
+        # Publish reflective explanation blob for monitoring/ops
+        best_shadow = max(probs, key=probs.get)
+        tri_delta = float(ctx.get("tri_delta", ctx.get("tri_drift_z", 0.0)) or 0.0)
+        latency_cost = float(ctx.get("latency_cost", ctx.get("latency_norm", 0.0)) or 0.0)
+        explain_payload = {
+            "decision_id": decision.id,
+            "live_route": decision.route,
+            "shadow_best": best_shadow,
+            "tri_delta_expected": tri_delta,
+            "latency_cost": latency_cost,
+            "anomaly": "anomaly_engaged" in decision.reasons or self._anomaly_engaged(),
+            "features_used": {
+                key: value if isinstance(value, (int, float, str, bool)) or value is None else str(value)
+                for key, value in ctx.items()
+            }
+        }
+        publish("router.anr_explain", explain_payload, "anr", ttl=180.0)
+        maybe_reflect(decision, best_shadow, explain_payload, random.random)
 
         # Publish decision to semantic mirror (with sampling for shadow load control)
         key = "router.anr_shadow_decision" if decision.shadow else "router.anr_live_decision"

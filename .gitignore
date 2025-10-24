@@ -59,6 +59,8 @@ daily_snapshots.txt
 phase*.txt
 phase*.json
 bandit*.json
+!attest/phase11_init.json
+!docs/grafana/phase11_panels.json
 
 # Experimental artifacts (creativity parameter sweeps, bakeoffs)
 artifacts/
@@ -68,3 +70,10 @@ __pycache__/
 orchestrator/__pycache__/app.cpython-313.pyc
 orchestrator/adapters/__pycache__/slot5_constellation.cpython-313.pyc
 README.md.bak
+
+# Audit tool cache
+tools/audit/cosign.exe
+tools/audit/cosign
+tools/audit/paths.env
+trust/private/
+trust/cosign.key

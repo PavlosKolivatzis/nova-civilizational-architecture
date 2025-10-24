@@ -1,3 +1,4 @@
+---
 vault:
   name: Nova_Continuity_Vault
   version: 1
@@ -9,7 +10,8 @@ vault:
     url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
   policy:
     immutability: true
-    inheritance: "All continuity and network fusion MUST derive from sealed archives only."
+    inheritance: >-
+      All continuity and network fusion MUST derive from sealed archives only.
 
 lineage:
   - phase: "6.0"
@@ -17,7 +19,8 @@ lineage:
     tag: "v6.0-sealed"
     archives:
       - file: "attest/archives/Nova_Phase_6.0_Seal.tar.gz"
-        sha256: "df0d18e2b5fc2aa23a6e4f00304f139c17ac5fe9114ebfe942e28ef56f1bf80a"
+        sha256: >-
+          df0d18e2b5fc2aa23a6e4f00304f139c17ac5fe9114ebfe942e28ef56f1bf80a
         created_at: "2025-10-19T09:00:00Z"
     attestations:
       - "attest/2025-10-phase-6.0-belief-propagation.json"
@@ -96,11 +99,12 @@ metrics_registry:
 
 trust:
   signing:
-    gpg_key_fingerprint: "placeholder-gpg-fingerprint"
+    gpg_key_fingerprint: "AD122869B421CDE14816E8ED5164361906D14877"
     cosign_key_ref: "trust/cosign.pub"
   mirrors:
     - name: "primary"
-      endpoint: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
+      endpoint: >-
+        https://github.com/PavlosKolivatzis/nova-civilizational-architecture
       mode: "read-write"
     - name: "federated-1"
       endpoint: "placeholder-federated-endpoint-1"
@@ -124,15 +128,24 @@ retention:
 verification:
   steps:
     - name: "Hash check"
-      cmd: "sha256sum -c attest/archives/phase-6.0-archive.sha256 && sha256sum -c attest/archives/Nova_Continuity_Vault.sha256"
+      cmd: >-
+        sha256sum -c attest/archives/phase-6.0-archive.sha256 &&
+        sha256sum -c attest/archives/Nova_Continuity_Vault.sha256
     - name: "Manifest lint"
       cmd: "yamllint attest/archives/vault.manifest.yaml"
     - name: "Schema check (attestations)"
-      cmd: "python scripts/validate_attestations.py --schema-dir attest --logs ops/logs"
+      cmd: >-
+        python scripts/validate_attestations.py
+        --schema-dir attest --logs ops/logs
     - name: "Signature verify (GPG)"
-      cmd: "gpg --verify attest/archives/vault.manifest.yaml.asc attest/archives/vault.manifest.yaml"
+      cmd: >-
+        gpg --verify attest/archives/vault.manifest.yaml.asc
+        attest/archives/vault.manifest.yaml
     - name: "Signature verify (cosign)"
-      cmd: "cosign verify-blob --key trust/cosign.pub --signature attest/archives/vault.manifest.sig attest/archives/vault.manifest.yaml"
+      cmd: >-
+        cosign verify-blob --key trust/cosign.pub
+        --signature attest/archives/vault.manifest.sig
+        attest/archives/vault.manifest.yaml
 
 signatures:
   gpg:
@@ -148,6 +161,8 @@ proof_hashes:
     created_at: "2025-10-20T17:08:00Z"
 
 notes:
-  - "All future phases MUST reference this manifest in their initialization note."
+  - >-
+      All future phases MUST reference this manifest in their initialization
+      note.
   - "No retrofitting or recomputation of sealed metrics is permitted."
   - "Use mirrors ONLY in read-only mode unless explicitly authorized."

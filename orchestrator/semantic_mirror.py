@@ -465,7 +465,8 @@ def _configure_default_access_rules(mirror: SemanticMirror) -> None:
         "router.anr_shadow_decision": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
         "router.anr_live_decision": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
         "router.anr_reward_immediate": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
-        "router.anr_reward_deployment": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"]
+        "router.anr_reward_deployment": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
+        "router.anr_explain": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"]
     }
     
     mirror.configure_access_rules(default_rules)

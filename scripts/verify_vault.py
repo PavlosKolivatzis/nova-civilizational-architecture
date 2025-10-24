@@ -16,11 +16,60 @@ Exit Codes:
 """
 
 import argparse
+import json
+import os
+import shutil
 import subprocess
 import sys
 import yaml
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
+
+if os.name == "nt":
+    # Force UTF-8 output so audit logs render correctly on Windows consoles.
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+# Make bundled audit tools available without relying on global PATH.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+TOOLS_DIR = REPO_ROOT / "tools" / "audit"
+BOOTSTRAP_SCRIPT = REPO_ROOT / "scripts" / "bootstrap_audit_tools.py"
+PATH_HINT_FILE = TOOLS_DIR / "paths.env"
+if TOOLS_DIR.exists():
+    current_path = os.environ.get("PATH", "")
+    # Prepend to ensure our versions win when multiple are installed.
+    os.environ["PATH"] = f"{str(TOOLS_DIR)}{os.pathsep}{current_path}" if current_path else str(TOOLS_DIR)
+
+
+def ensure_audit_tools_on_path() -> None:
+    """Ensure cosign/sha256sum are available, bootstrapping if necessary."""
+    needs_bootstrap = (
+        not shutil.which("cosign")
+        or not shutil.which("sha256sum")
+        or not PATH_HINT_FILE.exists()
+    )
+
+    if needs_bootstrap and BOOTSTRAP_SCRIPT.exists():
+        subprocess.run([sys.executable, str(BOOTSTRAP_SCRIPT)], cwd=str(REPO_ROOT), check=True)
+
+    if PATH_HINT_FILE.exists():
+        with PATH_HINT_FILE.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                if key.endswith("_PATH") and value:
+                    os.environ[key] = value
+                    candidate = Path(value)
+                    path_entry = str(candidate.parent if candidate.suffix else candidate)
+                    path = os.environ.get("PATH", "")
+                    if path_entry not in path.split(os.pathsep):
+                        os.environ["PATH"] = f"{path_entry}{os.pathsep}{path}" if path else path_entry
 
 
 class VaultVerifier:
@@ -37,10 +86,10 @@ class VaultVerifier:
             with open(self.manifest_path, 'r', encoding='utf-8') as f:
                 self.manifest = yaml.safe_load(f)
             if self.verbose:
-                print(f"✓ Loaded manifest: {self.manifest_path}")
+                print(f"✓ Loaded manifest: {self.manifest_path}".encode('utf-8').decode('utf-8', errors='replace'))
             return True
         except (FileNotFoundError, yaml.YAMLError) as e:
-            print(f"✗ Failed to load manifest: {e}")
+            print(f"✗ Failed to load manifest: {e}".encode('utf-8').decode('utf-8', errors='replace'))
             return False
 
     def execute_step(self, step: Dict[str, str]) -> Tuple[bool, str]:
@@ -58,8 +107,8 @@ class VaultVerifier:
 
         try:
             if self.verbose:
-                print(f"→ Executing: {name}")
-                print(f"  Command: {cmd}")
+                print(f"→ Executing: {name}".encode('utf-8').decode('utf-8', errors='replace'))
+                print(f"  Command: {cmd}".encode('utf-8').decode('utf-8', errors='replace'))
 
             result = subprocess.run(
                 cmd,
@@ -74,9 +123,9 @@ class VaultVerifier:
 
             if self.verbose:
                 status = "✓" if success else "✗"
-                print(f"{status} {name}: {'PASSED' if success else 'FAILED'}")
+                print(f"{status} {name}: {'PASSED' if success else 'FAILED'}".encode('utf-8').decode('utf-8', errors='replace'))
                 if output.strip():
-                    print(f"  Output: {output.strip()}")
+                    print(f"  Output: {output.strip()}".encode('utf-8').decode('utf-8', errors='replace'))
 
             return success, output
 
@@ -97,7 +146,7 @@ class VaultVerifier:
         steps = verification.get('steps', [])
 
         if not steps:
-            print("✗ No verification steps defined in manifest")
+            print("✗ No verification steps defined in manifest".encode('utf-8').decode('utf-8', errors='replace'))
             return False, []
 
         results = []
@@ -125,35 +174,43 @@ class VaultVerifier:
         passed = sum(1 for r in results if r['success'])
         total = len(results)
 
-        print(f"\n📊 Verification Summary: {passed}/{total} steps passed")
+        print(f"\n📊 Verification Summary: {passed}/{total} steps passed".encode('utf-8').decode('utf-8', errors='replace'))
 
         if passed == total:
-            print("🎉 All vault verifications PASSED")
+            print("🎉 All vault verifications PASSED".encode('utf-8').decode('utf-8', errors='replace'))
         else:
-            print("❌ Some vault verifications FAILED")
+            print("❌ Some vault verifications FAILED".encode('utf-8').decode('utf-8', errors='replace'))
             print("\nFailed steps:")
             for result in results:
                 if not result['success']:
-                    print(f"  ✗ {result['step']}: {result['output']}")
+                    print(f"  ✗ {result['step']}: {result['output']}".encode('utf-8').decode('utf-8', errors='replace'))
 
     def check_dependencies(self) -> bool:
         """Check if required tools are available."""
         required_tools = ['sha256sum', 'yamllint', 'gpg', 'cosign']
+        version_flags = {
+            'cosign': ['version'],
+        }
 
         missing = []
         for tool in required_tools:
             try:
-                subprocess.run(
-                    [tool, '--version'],
-                    capture_output=True,
-                    check=True
-                )
+                cmd = [tool] + version_flags.get(tool, ['--version'])
+                subprocess.run(cmd, capture_output=True, check=True)
+                if tool == 'gpg':
+                    pubkey = Path("trust") / "vault_public.gpg"
+                    if pubkey.exists():
+                        subprocess.run(
+                            ['gpg', '--import', str(pubkey)],
+                            capture_output=True,
+                            check=True,
+                        )
             except (subprocess.CalledProcessError, FileNotFoundError):
                 missing.append(tool)
 
         if missing:
-            print(f"✗ Missing required tools: {', '.join(missing)}")
-            print("Install missing tools and try again.")
+            print(f"✗ Missing required tools: {', '.join(missing)}".encode('utf-8').decode('utf-8', errors='replace'))
+            print("Install missing tools and try again.".encode('utf-8').decode('utf-8', errors='replace'))
             return False
 
         if self.verbose:
@@ -163,6 +220,7 @@ class VaultVerifier:
 
 def main():
     """Main verification entry point."""
+    ensure_audit_tools_on_path()
     parser = argparse.ArgumentParser(description="Verify Nova Continuity Vault integrity")
     parser.add_argument(
         '--manifest',
@@ -177,6 +235,10 @@ def main():
 
     args = parser.parse_args()
 
+    # Set UTF-8 encoding for stdout to handle Unicode properly
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+
     print("🔒 Nova Continuity Vault Verification")
     print(f"Manifest: {args.manifest}")
     print()
@@ -190,6 +252,30 @@ def main():
     # Load manifest
     if not verifier.load_manifest():
         return 2
+
+    # Validate Phase 11 attestation if present
+    phase11_path = Path("attest") / "phase11_init.json"
+    if phase11_path.exists():
+        try:
+            with phase11_path.open("r", encoding="utf-8") as fh:
+                phase11_data = json.load(fh)
+        except json.JSONDecodeError as exc:
+            print(f"? Phase 11 attestation invalid JSON: {exc}".encode('utf-8').decode('utf-8', errors='replace'))
+            return 1
+
+        required_keys = {
+            "schema",
+            "epoch_base",
+            "branch",
+            "base_commit",
+            "generated_at_utc",
+        }
+        missing = sorted(required_keys - phase11_data.keys())
+        if missing:
+            print(f"? Phase 11 attestation missing keys: {', '.join(missing)}".encode('utf-8').decode('utf-8', errors='replace'))
+            return 1
+
+        print(f"✅ Phase 11 attestation present: {phase11_data['branch']} @ {phase11_data['base_commit']}".encode('utf-8').decode('utf-8', errors='replace'))
 
     # Execute verifications
     success, results = verifier.verify_all()
