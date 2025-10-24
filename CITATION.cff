@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "Nova Civilizational Architecture — Phase 11 & 11B (Universal Structure Mathematics, ARC)"
+message: "If you use this work, please cite:"
+authors:
+  - family-names: "Kolivatzis"
+    given-names: "Pavlos"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+abstract: >
+  Phase 11 establishes a mathematical framework for universal systemic pattern detection
+  (graph-spectral invariants, harm dynamics, extraction equilibrium).
+  Phase 11B adds the ARC self-monitoring engine and a reproducible calibration experiment
+  demonstrating autonomous AI self-improvement with statistical significance.
+version: "v11.1-pre"
+date-released: "2025-10-25"
+keywords: [complex systems, graph spectra, autonomy, meta-learning, AI safety]
+license: "Apache-2.0"
+preferred-citation:
+  type: article
+  title: "Universal Structure Mathematics and Autonomous Reflection in Nova"
+  authors:
+    - name: "Pavlos Kolivatzis"
+  journal: "arXiv preprint"
+  year: 2025
+repository-code: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
+url: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
