@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ARC Cycle Results",
+  "type": "object",
+  "required": ["cycle", "params", "metrics", "timestamp_utc"],
+  "properties": {
+    "cycle": { "type": "integer", "minimum": 0 },
+    "params": {
+      "type": "object",
+      "required": ["alpha", "beta", "gamma"],
+      "properties": {
+        "alpha": { "type": "number" },
+        "beta":  { "type": "number" },
+        "gamma": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["precision", "recall", "f1", "drift", "equilibrium_variation"],
+      "properties": {
+        "precision": { "type": "number", "minimum": 0, "maximum": 1 },
+        "recall":    { "type": "number", "minimum": 0, "maximum": 1 },
+        "f1":        { "type": "number", "minimum": 0, "maximum": 1 },
+        "drift":     { "type": "number", "minimum": 0, "maximum": 1 },
+        "equilibrium_variation": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "timestamp_utc": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Phase 11B — ARC Calibration",
+  "panels": [
+    { "type": "stat", "title": "ARC Precision", "targets": [{ "expr": "nova_arc_precision" }] },
+    { "type": "stat", "title": "ARC Recall", "targets": [{ "expr": "nova_arc_recall" }] },
+    { "type": "gauge", "title": "ARC Drift", "targets": [{ "expr": "nova_arc_drift" }], "fieldConfig": { "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "red", "value": 0.20 } ] } } },
+    { "type": "timeseries", "title": "Precision / Recall (history)", "targets": [{ "expr": "nova_arc_precision" }, { "expr": "nova_arc_recall" }] },
+    { "type": "timeseries", "title": "ARC Drift", "targets": [{ "expr": "nova_arc_drift" }] }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}

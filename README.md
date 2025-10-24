@@ -602,4 +602,30 @@ Verified 2025-10-24 • Commit 1a1ab42 • Status: Archival-grade
 
 **Status**: Production-Ready | **Maturity**: 4.0/4.0 ⭐ | **Tests**: ✅ 1082 passing | **Autonomy**: All 10 slots Processual + ARC Reflection
 
+### Phase 11B — ARC Calibration (v11.1-pre)
+Run the full experiment locally:
+
+```bash
+make reproduce-arc-experiment
+```
+
+Metrics stream at `/metrics`:
+
+* `nova_arc_precision`, `nova_arc_recall`, `nova_arc_drift`
+
+CI: **Actions → ARC Calibration Experiment** (manual or weekly).
+Artifacts: baseline + cycles + stability JSON + final report markdown.
+
+**Quick Start:**
+```bash
+# One-command reproduction
+make reproduce-arc-experiment
+
+# Individual steps
+make arc-baseline    # Generate domains + baseline sweep
+make arc-cycles      # Run 10 calibration cycles
+make arc-stability   # 7-day stability monitoring
+make arc-analyze     # Generate final report + plots
+```
+
 *Created and coordinated by Pavlos Kolivatzis with collaboration between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot*
