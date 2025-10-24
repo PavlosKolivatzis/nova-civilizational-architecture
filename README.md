@@ -129,6 +129,18 @@ npm run maturity
 python -c "from nova.slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api; print('✅ System ready')"
 ```
 
+### Vault Audit Workflow
+To keep the repository lightweight, audit tooling (cosign, sha256sum paths) is fetched on demand. Run:
+
+```bash
+python scripts/bootstrap_audit_tools.py  # download/verify cosign, record tool paths
+python scripts/verify_vault.py           # execute the full continuity audit
+```
+
+The bootstrapper writes `tools/audit/paths.env` and downloads the cosign binary into `tools/audit/` (both gitignored). Store the signing private key outside the repo, e.g. `%USERPROFILE%\.nova\trust\cosign.key`, and export its public half to `trust/cosign.pub` if you ever rotate keys.
+
+See `docs/VAULT_KEY_ROTATION.md` for full automation instructions covering GPG and cosign key regeneration.
+
 ### One-liner: run Nova with Phase 4 enabled
 ```bash
 # Production metrics correctness (singleton required for counter accuracy)

@@ -17,12 +17,59 @@ Exit Codes:
 
 import argparse
 import json
+import os
+import shutil
 import subprocess
 import sys
 import yaml
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
-import os
+
+if os.name == "nt":
+    # Force UTF-8 output so audit logs render correctly on Windows consoles.
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+# Make bundled audit tools available without relying on global PATH.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+TOOLS_DIR = REPO_ROOT / "tools" / "audit"
+BOOTSTRAP_SCRIPT = REPO_ROOT / "scripts" / "bootstrap_audit_tools.py"
+PATH_HINT_FILE = TOOLS_DIR / "paths.env"
+if TOOLS_DIR.exists():
+    current_path = os.environ.get("PATH", "")
+    # Prepend to ensure our versions win when multiple are installed.
+    os.environ["PATH"] = f"{str(TOOLS_DIR)}{os.pathsep}{current_path}" if current_path else str(TOOLS_DIR)
+
+
+def ensure_audit_tools_on_path() -> None:
+    """Ensure cosign/sha256sum are available, bootstrapping if necessary."""
+    needs_bootstrap = (
+        not shutil.which("cosign")
+        or not shutil.which("sha256sum")
+        or not PATH_HINT_FILE.exists()
+    )
+
+    if needs_bootstrap and BOOTSTRAP_SCRIPT.exists():
+        subprocess.run([sys.executable, str(BOOTSTRAP_SCRIPT)], cwd=str(REPO_ROOT), check=True)
+
+    if PATH_HINT_FILE.exists():
+        with PATH_HINT_FILE.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                if key.endswith("_PATH") and value:
+                    os.environ[key] = value
+                    candidate = Path(value)
+                    path_entry = str(candidate.parent if candidate.suffix else candidate)
+                    path = os.environ.get("PATH", "")
+                    if path_entry not in path.split(os.pathsep):
+                        os.environ["PATH"] = f"{path_entry}{os.pathsep}{path}" if path else path_entry
 
 
 class VaultVerifier:
@@ -141,15 +188,23 @@ class VaultVerifier:
     def check_dependencies(self) -> bool:
         """Check if required tools are available."""
         required_tools = ['sha256sum', 'yamllint', 'gpg', 'cosign']
+        version_flags = {
+            'cosign': ['version'],
+        }
 
         missing = []
         for tool in required_tools:
             try:
-                subprocess.run(
-                    [tool, '--version'],
-                    capture_output=True,
-                    check=True
-                )
+                cmd = [tool] + version_flags.get(tool, ['--version'])
+                subprocess.run(cmd, capture_output=True, check=True)
+                if tool == 'gpg':
+                    pubkey = Path("trust") / "vault_public.gpg"
+                    if pubkey.exists():
+                        subprocess.run(
+                            ['gpg', '--import', str(pubkey)],
+                            capture_output=True,
+                            check=True,
+                        )
             except (subprocess.CalledProcessError, FileNotFoundError):
                 missing.append(tool)
 
@@ -165,6 +220,7 @@ class VaultVerifier:
 
 def main():
     """Main verification entry point."""
+    ensure_audit_tools_on_path()
     parser = argparse.ArgumentParser(description="Verify Nova Continuity Vault integrity")
     parser.add_argument(
         '--manifest',
