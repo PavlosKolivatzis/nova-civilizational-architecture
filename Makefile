@@ -52,5 +52,15 @@ arc-ablation:
 			--output docs/reports/arc_ablation_$${ablation}_analysis.md; \
 	done
 
+arxiv-pdf:
+	@echo "Generating arXiv-ready PDF..."
+	@cd docs/papers && \
+	pdflatex universal_structure_mathematics_arxiv.tex && \
+	bibtex universal_structure_mathematics_arxiv && \
+	pdflatex universal_structure_mathematics_arxiv.tex && \
+	pdflatex universal_structure_mathematics_arxiv.tex && \
+	mv universal_structure_mathematics_arxiv.pdf ../../../universal_structure_mathematics.pdf
+	@echo "PDF generated: universal_structure_mathematics.pdf"
+
 arc-verify:
 	python scripts/verify_vault.py
