@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scientific falsification protocol: pre-registered conditions for hypothesis invalidation
 - arXiv paper draft: "Universal Structure Mathematics and Autonomous Reflection in Nova"
 - CITATION.cff: academic citation metadata for reproducible research
+- Slot01 Quantum Entropy: simulator adapter, entropy metadata, Prometheus metrics, Alembic migration, and tests
 
 ### Security/Integrity
 - Vault attest on every second cycle; final snapshot archived

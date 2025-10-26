@@ -70,6 +70,7 @@ class SlotMetadata:
         self.security_level = security_level
         self.performance_targets = performance_targets
         self.id = id
+        self.slug = kwargs.pop("slug", None)
         
         # Store any extra/unknown fields
         self.extra = kwargs
@@ -466,6 +467,7 @@ class EnhancedConfigManager:
                 'security_level': metadata.security_level,
                 'performance_targets': metadata.performance_targets,
                 'id': metadata.id,
+                'slug': metadata.slug,
                 **metadata.extra
             }
         
@@ -521,6 +523,32 @@ def get_slot_config(slot_id: int, **overrides) -> Dict[str, Any]:
         async def _inner():
             mgr = await get_config_manager()
             return mgr.get_slot_config(slot_id, overrides)
+        return asyncio.run(_inner())
+
+
+def _export_all_configs(manager: EnhancedConfigManager) -> Dict[str, Dict[str, Any]]:
+    data: Dict[str, Dict[str, Any]] = {}
+    for slot_id in manager.list_slots():
+        cfg = manager.get_slot_config(slot_id)
+        data[f"slot{slot_id:02d}"] = cfg
+        metadata = manager.get_slot_metadata(slot_id)
+        if metadata and metadata.slug:
+            data[metadata.slug] = cfg
+    return data
+
+
+def get_config() -> Dict[str, Dict[str, Any]]:
+    """Return all slot runtime configs keyed by slot shorthand and slug."""
+    try:
+        asyncio.get_running_loop()
+        mgr = _global_config_manager
+        if mgr is None:
+            return {}
+        return _export_all_configs(mgr)
+    except RuntimeError:
+        async def _inner():
+            mgr = await get_config_manager()
+            return _export_all_configs(mgr)
         return asyncio.run(_inner())
 
 

@@ -40,6 +40,11 @@ dependencies:
   internal: []
   external: []
 
+quantum_entropy:
+  enabled: true
+  backend: simulator
+  bytes_per_seed: 32
+
 tests:
   paths:
     - "tests/slot01*"
