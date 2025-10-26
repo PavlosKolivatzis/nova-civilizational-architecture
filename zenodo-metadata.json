@@ -57,12 +57,7 @@
       {
         "relation": "isDocumentedBy",
         "scheme": "url",
-        "identifier": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/phase-11b-arc-reflection/docs/papers/universal_structure_mathematics_arxiv.md"
-      },
-      {
-        "relation": "isSupplementTo",
-        "scheme": "arxiv",
-        "identifier": "arXiv:25xx.xxxxx"
+        "identifier": "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/blob/main/docs/papers/universal_structure_mathematics_arxiv.md"
       }
     ],
     "contributors": [
