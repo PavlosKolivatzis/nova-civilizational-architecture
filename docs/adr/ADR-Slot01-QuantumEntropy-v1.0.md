@@ -127,3 +127,11 @@ ADD COLUMN entropy_source VARCHAR(32);
 - Support post-quantum signature schemes (Dilithium/Kyber) in Slot 8.
 
 **Decision Summary:** Slot 1 will now produce and record quantum-derived entropy and fidelity for every truth-anchor creation, transforming the root of Nova’s verification architecture into a physically anchored, statistically verifiable trust substrate.
+
+
+## 9. Phase 12B Addendum (2025-10-26)
+
+- Added idelity_from_bits (Wilson CI) to derive fidelity, confidence bounds, and absolute bias for each entropy batch.
+- Truth Anchor metadata persists quantum_fidelity, quantum_fidelity_ci, ntropy_abs_bias, and ntropy_n_bits regardless of backend/fallback.
+- Prometheus metrics now include slot01_entropy_fidelity_ci_width and slot01_entropy_bias_abs for continuous monitoring.
+- Slot02's Phase 12B weighting service consumes these metrics to modulate ΔTHRESH decisions based on entropy quality.

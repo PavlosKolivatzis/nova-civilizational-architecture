@@ -35,7 +35,12 @@ else:  # pragma: no cover
     # Load .env on import so env-derived config works out of the box
     load_dotenv()
 
-from ..config import ProcessingConfig, OperationalMode, ProcessingMode
+from ..config import (
+    ProcessingConfig,
+    OperationalMode,
+    ProcessingMode,
+    FidelityWeightingConfig,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -176,6 +181,8 @@ class EnhancedProcessingConfig(ProcessingConfig):
                 if nested_cls is LoggingConfig and "level" in value:
                     value = {**value, "level": LogLevel(value["level"])}
                 setattr(cfg, key, nested_cls(**value))
+            elif isinstance(current, FidelityWeightingConfig) and isinstance(value, dict):
+                setattr(cfg, key, FidelityWeightingConfig(**value))
             else:
                 # handle enum conversion for top-level fields
                 if key == "operational_mode":
@@ -203,4 +210,3 @@ class EnhancedProcessingConfig(ProcessingConfig):
             if not self.security.jwt_secret:
                 violations.append("JWT secret must be set in production")
         return (len(violations) == 0, violations)
-

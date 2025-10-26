@@ -13,10 +13,12 @@ from .config import (
     ProcessingConfig,
     ProcessingMode,
     QuarantineReasonCode,
+    FidelityWeightingConfig,
 )
 from .metrics import PerformanceTracker
 from .models import ProcessingResult
 from .patterns import PatternDetector, _word_count_fast
+from .fidelity_weighting import FidelityWeightingService
 
 
 class DeltaThreshProcessor:
@@ -36,6 +38,10 @@ class DeltaThreshProcessor:
         self.pattern_detector = PatternDetector(self.config)
         self.performance_tracker = PerformanceTracker()
         self._lock = threading.RLock()
+        self._fidelity_service = None
+        if hasattr(self.config, "fidelity_weighting"):
+            self._fidelity_service = FidelityWeightingService(self.config.fidelity_weighting)
+        self._last_fidelity_weight = 1.0
 
         self.logger.info(f"ΔTHRESH Processor v{self.VERSION} initialized")
         self.logger.info(
@@ -75,6 +81,8 @@ class DeltaThreshProcessor:
 
             tri_score = self._calculate_tri_score(content)
             layer_scores = self.pattern_detector.detect_patterns(content)
+            tri_score, layer_scores, fidelity_weight = self._apply_fidelity_weighting(tri_score, layer_scores)
+            self._last_fidelity_weight = fidelity_weight
             action, reason_codes = self._determine_action(
                 tri_score, layer_scores, content
             )
@@ -133,6 +141,29 @@ class DeltaThreshProcessor:
         uncertainty_bonus = min(0.2, (tri["uncertainty_acknowledgments"] / words) * 1.0)
         score = 0.7 - absolute_penalty + humility_bonus + uncertainty_bonus
         return max(0.0, min(1.0, score))
+
+    def _apply_fidelity_weighting(
+        self, tri_score: float, layer_scores: Dict[str, float]
+    ) -> Tuple[float, Dict[str, float], float]:
+        config = getattr(self.config, "fidelity_weighting", None)
+        if (
+            not config
+            or not getattr(config, "enabled", False)
+            or self._fidelity_service is None
+        ):
+            return tri_score, layer_scores, 1.0
+
+        weight, _sample = self._fidelity_service.compute_weight()
+        if weight == 1.0:
+            return tri_score, layer_scores, weight
+
+        adjusted_tri = max(0.0, min(1.0, tri_score * weight))
+        inv = 1.0 / weight if weight else 1.0
+        adjusted_layers = {
+            name: max(0.0, min(1.0, score * inv))
+            for name, score in layer_scores.items()
+        }
+        return adjusted_tri, adjusted_layers, weight
 
     # ------------------------------------------------------------------
     def _determine_action(

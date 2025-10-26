@@ -23,6 +23,18 @@ class QuarantineReasonCode(Enum):
     OMEGA_SOCIAL_PROOF = "OMEGA_SOCIAL_PROOF"
 
 @dataclass
+@dataclass
+class FidelityWeightingConfig:
+    enabled: bool = False
+    base: float = 1.0
+    slope: float = 0.2
+    reference: float = 0.95
+    clamp_lo: float = 0.9
+    clamp_hi: float = 1.1
+    sample_bytes: int = 32
+
+
+@dataclass
 class ProcessingConfig:
     version: str = "6.5"
     operational_mode: OperationalMode = OperationalMode.STABLE_LOCK
@@ -40,3 +52,4 @@ class ProcessingConfig:
     thresholds: Dict[str, float] = field(default_factory=lambda: {
         'delta': 0.85, 'sigma': 0.95, 'theta': 0.88, 'omega': 0.90
     })
+    fidelity_weighting: FidelityWeightingConfig = field(default_factory=FidelityWeightingConfig)
