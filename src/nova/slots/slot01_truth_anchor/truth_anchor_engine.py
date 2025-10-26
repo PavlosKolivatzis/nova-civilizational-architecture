@@ -203,8 +203,13 @@ class TruthAnchorEngine:
         metadata.setdefault("entropy_source", sample.source)
         metadata.setdefault("entropy_backend", sample.backend)
         metadata.setdefault("entropy_sha3_256", sample.digest())
+        metadata.setdefault("entropy_n_bits", 8 * len(sample.data))
         if sample.fidelity is not None:
             metadata.setdefault("quantum_fidelity", sample.fidelity)
+        if sample.fidelity_ci is not None:
+            metadata.setdefault("quantum_fidelity_ci", sample.fidelity_ci)
+        if sample.abs_bias is not None:
+            metadata.setdefault("entropy_abs_bias", sample.abs_bias)
         if sample.error:
             metadata.setdefault("entropy_error", sample.error)
 

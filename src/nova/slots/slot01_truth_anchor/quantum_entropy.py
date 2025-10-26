@@ -15,6 +15,7 @@ from nova.quantum import QuantumJob
 from nova.quantum.adapter_tfq import TFQSimAdapter, QuantumAdapterError
 from nova.quantum.utils import circuit_to_json, make_hadamard_measure_circuit
 from nova.slots.config import get_config
+from .fidelity import fidelity_from_bits
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,8 @@ class EntropySample:
     source: str
     backend: str
     fidelity: Optional[float] = None
+    fidelity_ci: Optional[tuple[float, float]] = None
+    abs_bias: Optional[float] = None
     error: Optional[str] = None
 
     def digest(self) -> str:
@@ -59,13 +62,17 @@ class QuantumEntropySource:
         entropy = _bits_to_bytes(bits, n_bytes)
 
         fidelity = result.fidelity_est
-        record_entropy_job(self.backend, True, bytes_out=len(entropy), fidelity=fidelity)
+        # Compute fidelity metrics
+        F, (ci_lo, ci_hi), abs_bias = fidelity_from_bits(entropy)
+        record_entropy_job(self.backend, True, bytes_out=len(entropy), fidelity=F, fidelity_ci=(ci_lo, ci_hi), abs_bias=abs_bias)
 
         return EntropySample(
             data=entropy,
             source="quantum",
             backend=self.backend,
-            fidelity=fidelity,
+            fidelity=F,
+            fidelity_ci=(ci_lo, ci_hi),
+            abs_bias=abs_bias,
         )
 
 
@@ -99,20 +106,28 @@ def get_entropy_sample(n_bytes: Optional[int] = None) -> EntropySample:
     if env_seed:
         digest = hashlib.sha3_256(env_seed.encode("utf-8")).digest()
         entropy = _resize_bytes(digest, requested_bytes)
+        # Compute fidelity even for deterministic seed
+        F, (ci_lo, ci_hi), abs_bias = fidelity_from_bits(entropy)
         return EntropySample(
             data=entropy,
             source="env_seed",
             backend="seed",
-            fidelity=None,
+            fidelity=F,
+            fidelity_ci=(ci_lo, ci_hi),
+            abs_bias=abs_bias,
             error=last_error,
         )
 
     entropy = secrets.token_bytes(requested_bytes)
+    # Compute fidelity for fallback entropy too
+    F, (ci_lo, ci_hi), abs_bias = fidelity_from_bits(entropy)
     return EntropySample(
         data=entropy,
         source="fallback",
         backend="os.urandom",
-        fidelity=None,
+        fidelity=F,
+        fidelity_ci=(ci_lo, ci_hi),
+        abs_bias=abs_bias,
         error=last_error,
     )
 

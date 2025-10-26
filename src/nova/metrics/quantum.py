@@ -33,6 +33,18 @@ _entropy_fidelity = Gauge(
     registry=REGISTRY,
 )
 
+_entropy_fidelity_ci_width = Gauge(
+    "slot01_entropy_fidelity_ci_width",
+    "Width of fidelity confidence interval (hi - lo)",
+    registry=REGISTRY,
+)
+
+_entropy_abs_bias = Gauge(
+    "slot01_entropy_bias_abs",
+    "Absolute bias |p_hat - 0.5| for entropy source",
+    registry=REGISTRY,
+)
+
 
 def record_entropy_job(
     backend: str,
@@ -40,6 +52,8 @@ def record_entropy_job(
     *,
     bytes_out: int = 0,
     fidelity: Optional[float] = None,
+    fidelity_ci: Optional[tuple[float, float]] = None,
+    abs_bias: Optional[float] = None,
 ) -> None:
     """Record the outcome of a quantum entropy request."""
     status = "ok" if success else "error"
@@ -50,6 +64,11 @@ def record_entropy_job(
             _entropy_bytes.inc(bytes_out)
         if fidelity is not None:
             _entropy_fidelity.set(fidelity)
+        if fidelity_ci is not None:
+            lo, hi = fidelity_ci
+            _entropy_fidelity_ci_width.set(max(0.0, hi - lo))
+        if abs_bias is not None:
+            _entropy_abs_bias.set(abs_bias)
     else:
         _entropy_failures.inc()
 

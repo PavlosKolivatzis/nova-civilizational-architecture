@@ -70,3 +70,50 @@ def test_quantum_entropy_simulator_path(monkeypatch):
     assert sample.backend == "simulator"
     assert isinstance(sample.data, bytes)
     assert len(sample.data) == 4
+    # Check fidelity metrics are computed
+    assert sample.fidelity is not None
+    assert sample.fidelity_ci is not None
+    assert sample.abs_bias is not None
+    assert 0.0 <= sample.fidelity <= 1.0
+    ci_lo, ci_hi = sample.fidelity_ci
+    assert ci_lo <= sample.fidelity <= ci_hi
+    assert 0.0 <= sample.abs_bias <= 0.5
+
+
+def test_fidelity_in_metadata(monkeypatch):
+    """Fidelity metrics should appear in anchor metadata."""
+
+    class DummySource:
+        def __init__(self, backend="simulator", adapter=None):
+            self.backend = backend
+
+        def sample(self, n_bytes=32):
+            return EntropySample(
+                data=b"\xAA" * n_bytes,
+                source="quantum",
+                backend=self.backend,
+                fidelity=0.99,
+                fidelity_ci=(0.95, 1.0),
+                abs_bias=0.01,
+            )
+
+    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "true")
+    monkeypatch.setattr(quantum_entropy, "QuantumEntropySource", DummySource)
+
+    from nova.slots.slot01_truth_anchor import truth_anchor_engine
+    engine = truth_anchor_engine.TruthAnchorEngine()
+
+    # Register an anchor to trigger entropy sampling
+    engine.register("test-anchor", "test-value")
+
+    # Check metadata contains fidelity fields
+    record = engine._anchors["test-anchor"]
+    meta = record.metadata
+    assert "quantum_fidelity" in meta
+    assert "quantum_fidelity_ci" in meta
+    assert "entropy_abs_bias" in meta
+    assert "entropy_n_bits" in meta
+    assert meta["quantum_fidelity"] == 0.99
+    assert meta["quantum_fidelity_ci"] == (0.95, 1.0)
+    assert meta["entropy_abs_bias"] == 0.01
+    assert meta["entropy_n_bits"] == 256  # 32 bytes * 8
