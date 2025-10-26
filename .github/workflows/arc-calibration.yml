@@ -1,0 +1,38 @@
+name: ARC Calibration Experiment
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"  # weekly run (Mon 03:00 UTC)
+
+jobs:
+  arc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          # add your project requirements here if not vendored
+          pip install -r requirements.txt || true
+
+      - name: Baseline + cycles + analysis
+        run: |
+          mkdir -p logs data docs/reports
+          make reproduce-arc-experiment
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: arc-experiment-results
+          path: |
+            data/arc_baseline_domains.json
+            data/arc_baseline_results.json
+            data/arc_cycle_*_results.json
+            data/arc_stability_results.json
+            data/arc_final_results.json
+            docs/reports/arc_baseline_analysis.md
+            docs/reports/arc_experiment_final.md
+            logs/arc_calibration_audit.log

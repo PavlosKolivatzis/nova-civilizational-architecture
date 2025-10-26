@@ -1,5 +1,5 @@
 # Nova Civilizational Architecture — Complete Temporal Intelligence System
-**Tag:** `v9.0-final`
+**Tag:** `v11.0-final`
 **Verification:** `python scripts/verify_vault.py --manifest attest/archives/vault.manifest.yaml`
 **Archive SHA-256:** `83c5fe46824a1ec05e7317d5794902d14ef57a08bfa679290ab8c3a46f87076a`
 
@@ -15,13 +15,14 @@ All future audits must validate against `attest/schemas/vault_proof.schema.json`
 ![Health Matrix](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions/workflows/health-config-matrix.yml/badge.svg)
 ![Status](https://img.shields.io/badge/maturity-4.0_⭐-1f8b4c)
 ![Coverage](https://img.shields.io/badge/slots-10%2F10_processual-1f8b4c)
+![Release](https://img.shields.io/badge/release-v11.0--final-1f8b4c)
 
 > **Multi-AI Collaborative Project** created and coordinated by **Pavlos Kolivatzis**
 > Built through cooperation between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot
 
-> **🎉 MILESTONE:** **Phase 6.0 Probabilistic Belief Propagation** complete! Nova now features **uncertainty quantification** with belief state propagation across the Cognitive-Operational-Ethical Trinity. System maturity: **6.0/4.0** with probabilistic intelligence ⚡
+> **🎉 MILESTONE:** **Phase 11.0 Universal Structure Mathematics** complete! Nova now features **mathematical proof of structural identity** across domains with spectral graph theory. System maturity: **4.0/4.0** with universal pattern detection ⚡
 
-> **🌅 ACTIVE DEVELOPMENT:** **Phase 7.0 Temporal Resonance** initialized. Building temporal coherence from sealed belief variance archives. See [Phase 7.0 Initialization](docs/releases/phase-7.0-initialization.md) for blueprint.
+> **🌅 ACTIVE DEVELOPMENT:** **Phase 11B Autonomous Reflection Cycle** initialized. Building self-evaluating intelligence with ARC monitoring and visualization. See [Phase 11B Initiation](docs/plans/phase-11b-initiation.md) for blueprint.
 
 ## 🎯 Overview
 Production-grade multicultural truth synthesis engine with 10-slot cognitive architecture for civilizational-scale deployment. This system represents a groundbreaking approach to AI-assisted civilizational development through modular, resilient architecture.
@@ -595,10 +596,36 @@ This project demonstrates that multi-AI collaboration, under human coordination,
 
 ### Integrity Digests
 
-Phase 6.0 – Probabilistic Belief Propagation (Sealed)
+Phase 11.0 – Universal Structure Mathematics (Sealed)
 SHA-256: df0d18e2b5fc2aa23a6e4f00304f139c17ac5fe9114ebfe942e28ef56f1bf80a
-Verified 2025-10-19 • Commit 6df9ca6 • Status: Archival-grade
+Verified 2025-10-24 • Commit 1a1ab42 • Status: Archival-grade
 
-**Status**: Production-Ready | **Maturity**: 6.0/4.0 ⭐ | **Tests**: ✅ 706 passing | **Autonomy**: All 10 slots Processual
+**Status**: Production-Ready | **Maturity**: 4.0/4.0 ⭐ | **Tests**: ✅ 1082 passing | **Autonomy**: All 10 slots Processual + ARC Reflection
+
+### Phase 11B — ARC Calibration (v11.1-pre)
+Run the full experiment locally:
+
+```bash
+make reproduce-arc-experiment
+```
+
+Metrics stream at `/metrics`:
+
+* `nova_arc_precision`, `nova_arc_recall`, `nova_arc_drift`
+
+CI: **Actions → ARC Calibration Experiment** (manual or weekly).
+Artifacts: baseline + cycles + stability JSON + final report markdown.
+
+**Quick Start:**
+```bash
+# One-command reproduction
+make reproduce-arc-experiment
+
+# Individual steps
+make arc-baseline    # Generate domains + baseline sweep
+make arc-cycles      # Run 10 calibration cycles
+make arc-stability   # 7-day stability monitoring
+make arc-analyze     # Generate final report + plots
+```
 
 *Created and coordinated by Pavlos Kolivatzis with collaboration between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot*

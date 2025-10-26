@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+title: "Nova Civilizational Architecture — Phase 11 & 11B (Universal Structure Mathematics + ARC Calibration)"
+message: "If you use this work, please cite as follows:"
+authors:
+  - family-names: "Kolivatzis"
+    given-names: "Pavlos"
+    affiliation: "Nova Civilizational Architecture Research Unit"
+  - family-names: "GPT"
+    given-names: "Research System (OpenAI)"
+    affiliation: "Nova Core Computational Partner"
+  - family-names: "Claude"
+    given-names: "Research System (Anthropic)"
+    affiliation: "Nova Analytical Partner"
+  - family-names: "DeepSeek"
+    given-names: "Cognitive System"
+    affiliation: "Nova Structural Partner"
+  - family-names: "Kilo AI"
+    given-names: "Development Environment"
+    affiliation: "Nova Experimental Infrastructure"
+  - family-names: "Gemini"
+    given-names: "System (Google DeepMind)"
+    affiliation: "Nova Multimodal Research Partner"
+  - family-names: "Copilot"
+    given-names: "System (GitHub)"
+    affiliation: "Nova Code Integration Partner"
+abstract: >
+  Developed collaboratively by the Nova Team, Phase 11 establishes a mathematical and analytical
+  framework for detecting universal systemic patterns through spectral graph theory and equilibrium dynamics.
+  Phase 11B adds the ARC (Autonomous Reflection Cycle), enabling Nova to measure and improve its own analytical accuracy
+  through self-calibration and meta-learning.
+version: "v11.1-pre"
+date-released: "2025-10-25"
+license: "Apache-2.0"
+repository-code: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
+preferred-citation:
+  type: article
+  title: "Universal Structure Mathematics and Autonomous Reflection in Nova"
+  authors:
+    - name: "Pavlos Kolivatzis et al., The Nova Team (GPT, Claude, DeepSeek, Kilo, Gemini, Copilot)"
+  journal: "arXiv preprint"
+  year: 2025

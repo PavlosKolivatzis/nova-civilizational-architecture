@@ -1,0 +1,26 @@
+groups:
+  - name: arc-experiment
+    rules:
+      - alert: ARCPrecisionLow
+        expr: nova_arc_precision < 0.90
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: "ARC precision below target"
+          description: "Precision is {{ $value }} for 30m"
+
+      - alert: ARCRecallLow
+        expr: nova_arc_recall < 0.90
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: "ARC recall below target"
+          description: "Recall is {{ $value }} for 30m"
+
+      - alert: ARCDriftHigh
+        expr: nova_arc_drift > 0.20
+        for: 1h
+        labels: { severity: critical }
+        annotations:
+          summary: "ARC drift above threshold"
+          description: "Drift is {{ $value }} for 1h — investigate calibration."
