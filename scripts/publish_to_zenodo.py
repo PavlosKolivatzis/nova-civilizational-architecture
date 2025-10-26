@@ -160,9 +160,9 @@ Date: {datetime.now().isoformat()}
 ## Expected Results
 
 After successful execution, you should observe:
-- Precision ≥ 0.90 across 80% of calibration cycles
-- Recall ≥ 0.90 across 80% of calibration cycles
-- Drift ≤ 0.20 across 90% of calibration cycles
+- Precision >= 0.90 across 80% of calibration cycles
+- Recall >= 0.90 across 80% of calibration cycles
+- Drift <= 0.20 across 90% of calibration cycles
 - Statistically significant improvement trends (p < 0.01)
 
 ## Citation

@@ -6,24 +6,16 @@ from prometheus_client import (
     Info,
     generate_latest,
     CONTENT_TYPE_LATEST,
-    CollectorRegistry,
-    ProcessCollector,
-    PlatformCollector,
-    GCCollector,
 )
 from collections import defaultdict
 from orchestrator.metrics import get_slot6_metrics
 from os import getenv
 import subprocess
 from time import strftime, gmtime
+from nova.metrics.registry import REGISTRY
 
 # Dedicated registry (avoids duplicate registration across tests/imports)
-_REGISTRY = CollectorRegistry()
-
-# Register default collectors onto the dedicated registry
-ProcessCollector(registry=_REGISTRY)
-PlatformCollector(registry=_REGISTRY)
-GCCollector(registry=_REGISTRY)
+_REGISTRY = REGISTRY
 
 # --- Build provenance metric ------------------------------------
 def _get_git_sha_short():

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
+import hashlib
 import logging
 import secrets
 
@@ -36,6 +37,9 @@ class AnchorMetrics:
 
     total_anchors: int = 0
     active_anchors: int = 0
+
+
+from .quantum_entropy import EntropySample, get_entropy_sample
 
 
 class TruthAnchorEngine:
@@ -75,7 +79,13 @@ class TruthAnchorEngine:
             self.metrics.failures = saved_metrics.get("failures", 0)
 
         # Handle secret key generation or assignment
-        self._secret_key = secret_key or secrets.token_bytes(32)
+        if secret_key is None:
+            key_entropy = self._draw_entropy_sample(32)
+            self._secret_key = key_entropy.data
+            self._secret_key_entropy = key_entropy
+        else:
+            self._secret_key = secret_key
+            self._secret_key_entropy = None
         self._establish_core_anchor()
         # Verify the core anchor exists in an initial snapshot
         if "nova.core" not in self._anchors or self.snapshot()["anchors"] < 1:
@@ -97,6 +107,9 @@ class TruthAnchorEngine:
         # Ensure backup metadata for recovery
         if "backup" not in metadata:
             metadata["backup"] = value
+
+        entropy_sample = self._draw_entropy_sample()
+        self._apply_entropy_metadata(metadata, entropy_sample)
 
         self._anchors[anchor_id] = AnchorRecord(value=value, metadata=metadata)
         self.logger.debug("Anchor registered: %s", anchor_id)
@@ -169,6 +182,31 @@ class TruthAnchorEngine:
                 self.logger.warning("Failed to save anchors to persistence")
         except Exception as exc:
             self.logger.error(f"Persistence save error: {exc}")
+
+    def _draw_entropy_sample(self, n_bytes: Optional[int] = None) -> EntropySample:
+        """Obtain entropy with quantum preference and safe fallback."""
+        try:
+            return get_entropy_sample(n_bytes)
+        except Exception as exc:  # pragma: no cover - defensive
+            self.logger.warning("Entropy sample fallback: %s", exc)
+            entropy = secrets.token_bytes(n_bytes or 32)
+            return EntropySample(
+                data=entropy,
+                source="engine_fallback",
+                backend="os.urandom",
+                fidelity=None,
+                error=str(exc),
+            )
+
+    def _apply_entropy_metadata(self, metadata: Dict[str, Any], sample: EntropySample) -> None:
+        """Attach entropy provenance to anchor metadata."""
+        metadata.setdefault("entropy_source", sample.source)
+        metadata.setdefault("entropy_backend", sample.backend)
+        metadata.setdefault("entropy_sha3_256", sample.digest())
+        if sample.fidelity is not None:
+            metadata.setdefault("quantum_fidelity", sample.fidelity)
+        if sample.error:
+            metadata.setdefault("entropy_error", sample.error)
 
     # ------------------------------------------------------------------
     # Metrics / Introspection
