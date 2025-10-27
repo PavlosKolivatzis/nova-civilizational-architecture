@@ -5,6 +5,33 @@ All notable changes to Nova Civilizational Architecture will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [13.0.0-beta] — 2025-10-27
+### Added
+- **Autonomous Verification Ledger (AVL)** — Hash-linked, append-only ledger for cross-slot trust propagation
+- SHA3-256 hash chains with prev_hash continuity for tamper detection
+- Composite trust scoring: `T = 0.5·F̄ + 0.2·pqc_rate + 0.2·verify_rate + 0.1·continuity`
+- Canonical JSON serialization for deterministic hashing
+- Merkle checkpoint support for batch verification
+- Slot emitters: Slot01 (`ANCHOR_CREATED`), Slot02 (`DELTATHRESH_APPLIED`), Slot08 (`PQC_VERIFIED`, `PQC_KEY_ROTATED`)
+- REST API: `/ledger/append`, `/ledger/chain/{id}`, `/ledger/verify/{id}`, `/ledger/stats`
+- Prometheus metrics: `ledger_appends_total`, `ledger_trust_score`, `ledger_chain_length`
+- LedgerClient singleton with shared store for cross-component visibility
+- PostgreSQL migration schema ready (`migrations/001_create_ledger_tables.sql`)
+- 60 ledger + integration tests (canon, store, verify, end-to-end)
+- Configuration: 5 `LEDGER_*` environment variables with defaults
+- ADR-13-Ledger-Final.md documenting architecture decisions
+
+### Security/Integrity
+- PQC-verifiable signatures (Dilithium2) in ledger records
+- Cryptographic tamper detection via hash chain verification
+- Fidelity metrics from quantum entropy integrated into trust scores
+- All critical events (anchor creation, PQC verification, fidelity weighting) now ledger-tracked
+
+### Next
+- Phase 14-1: PostgreSQL persistence with async writer
+- Phase 14-2: Automated Merkle checkpoint signing
+- Phase 14-3: IDS/routing integration with trust scores
+
 ## [11.1-pre] — 2025-10-25
 ### Added
 - ARC calibration experiment: full infra (CI, alerts, Grafana, schema)
