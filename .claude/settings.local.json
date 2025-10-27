@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rev-parse:*)",
+      "Bash(dos2unix:*)",
+      "Bash(unix2dos:*)",
+      "Bash(git checkout:*)",
+      "WebSearch",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
