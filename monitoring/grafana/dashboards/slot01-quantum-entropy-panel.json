@@ -1,78 +1,201 @@
 {
-  "type": "timeseries",
-  "title": "Slot01 Quantum Entropy Health",
-  "id": 1601,
-  "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
-  "fieldConfig": {
-    "defaults": {
-      "unit": "ops",
-      "decimals": 2,
-      "custom": {
-        "drawStyle": "lines",
-        "lineInterpolation": "smooth",
-        "lineWidth": 2,
-        "fillOpacity": 10,
-        "spanNulls": true
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Entropy Fidelity (mean)",
+      "id": 1600,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "slot01_entropy_fidelity_mean",
+          "legendFormat": "",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "colorMode": "value"
       },
-      "thresholds": {
-        "mode": "absolute",
-        "steps": [
-          { "color": "green", "value": null },
-          { "color": "#EAB839", "value": 0.1 },
-          { "color": "red", "value": 0.5 }
-        ]
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.95 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        },
+        "overrides": []
       }
     },
-    "overrides": [
-      {
-        "matcher": { "id": "byName", "options": "Quantum Fidelity" },
-        "properties": [
-          { "id": "unit", "value": "percentunit" },
-          { "id": "custom.transform", "value": "negative-Y" },
-          { "id": "displayName", "value": "Quantum Fidelity" }
+    {
+      "type": "stat",
+      "title": "Entropy CI Width",
+      "id": 1602,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "slot01_entropy_fidelity_ci_width",
+          "legendFormat": "",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 0.2 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Entropy Abs Bias",
+      "id": 1603,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "slot01_entropy_bias_abs",
+          "legendFormat": "",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.05 },
+              { "color": "red", "value": 0.1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Slot01 Quantum Entropy Health",
+      "id": 1601,
+      "gridPos": { "h": 10, "w": 18, "x": 0, "y": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "lines",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "#EAB839", "value": 0.1 },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Quantum Fidelity" },
+            "properties": [
+              { "id": "unit", "value": "percentunit" },
+              { "id": "displayName", "value": "Quantum Fidelity" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Entropy CI Width" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "displayName", "value": "Entropy CI Width" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Entropy Abs Bias" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "displayName", "value": "Entropy Abs Bias" }
+            ]
+          }
         ]
       },
-      {
-        "matcher": { "id": "byName", "options": "/Bytes/" },
-        "properties": [
-          { "id": "unit", "value": "bytes" }
-        ]
-      }
-    ]
-  },
-  "targets": [
-    {
-      "refId": "A",
-      "expr": "sum(rate(slot01_entropy_quantum_jobs_total{status=\"ok\"}[5m]))",
-      "legendFormat": "Jobs OK",
-      "range": true,
-      "datasource": { "type": "prometheus", "uid": "prometheus" }
-    },
-    {
-      "refId": "B",
-      "expr": "sum(rate(slot01_entropy_quantum_jobs_total{status=\"error\"}[5m]))",
-      "legendFormat": "Jobs Error",
-      "range": true,
-      "datasource": { "type": "prometheus", "uid": "prometheus" }
-    },
-    {
-      "refId": "C",
-      "expr": "sum(rate(slot01_entropy_bytes_generated_total[5m]))",
-      "legendFormat": "Entropy Bytes",
-      "range": true,
-      "datasource": { "type": "prometheus", "uid": "prometheus" }
-    },
-    {
-      "refId": "D",
-      "expr": "slot01_entropy_fidelity_mean",
-      "legendFormat": "Quantum Fidelity",
-      "range": true,
-      "datasource": { "type": "prometheus", "uid": "prometheus" }
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(slot01_entropy_quantum_jobs_total{status=\"ok\"}[5m]))",
+          "legendFormat": "Jobs OK",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(slot01_entropy_quantum_jobs_total{status=\"error\"}[5m]))",
+          "legendFormat": "Jobs Error",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate(slot01_entropy_bytes_generated_total[5m]))",
+          "legendFormat": "Entropy Bytes",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "D",
+          "expr": "slot01_entropy_fidelity_mean",
+          "legendFormat": "Quantum Fidelity",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "E",
+          "expr": "slot01_entropy_fidelity_ci_width",
+          "legendFormat": "Entropy CI Width",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "F",
+          "expr": "slot01_entropy_bias_abs",
+          "legendFormat": "Entropy Abs Bias",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "description": "Tracks Slot01 quantum entropy health: job throughput, failure rate, fidelity mean/CI/bias."
     }
   ],
-  "options": {
-    "legend": { "displayMode": "table", "placement": "bottom" },
-    "tooltip": { "mode": "multi", "sort": "desc" }
-  },
-  "description": "Tracks Slot01 quantum entropy health: job throughput, failure rate, byte generation, and fidelity estimate."
+  "title": "Slot01 Quantum Entropy Overview",
+  "description": "Dashboard for Slot01 entropy fidelity, CI width, bias, and job health."
 }
