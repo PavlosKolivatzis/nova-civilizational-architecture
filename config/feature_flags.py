@@ -102,6 +102,13 @@ META_LENS_MAX_ITERS = get_feature_flag("META_LENS_MAX_ITERS", 3)
 META_LENS_ALPHA = get_feature_flag("META_LENS_ALPHA", 0.5)
 META_LENS_EPSILON = get_feature_flag("META_LENS_EPSILON", 0.02)
 
+# Phase 13 Autonomous Verification Ledger (AVL) Configuration
+LEDGER_ENABLED = get_feature_flag("LEDGER_ENABLED", True)
+LEDGER_TRUST_WEIGHT_FIDELITY = get_feature_flag("LEDGER_TRUST_WEIGHT_FIDELITY", 0.5)
+LEDGER_TRUST_WEIGHT_PQC_RATE = get_feature_flag("LEDGER_TRUST_WEIGHT_PQC_RATE", 0.2)
+LEDGER_TRUST_WEIGHT_VERIFY_RATE = get_feature_flag("LEDGER_TRUST_WEIGHT_VERIFY_RATE", 0.2)
+LEDGER_TRUST_WEIGHT_CONTINUITY = get_feature_flag("LEDGER_TRUST_WEIGHT_CONTINUITY", 0.1)
+
 
 def get_ids_config() -> Dict[str, Any]:
     """Get complete IDS configuration"""
@@ -152,5 +159,18 @@ def get_production_controls_config() -> Dict[str, Any]:
             "enabled": FAILOVER_ENABLED,
             "backup_mode_enabled": BACKUP_MODE_ENABLED,
             "graceful_degradation_enabled": GRACEFUL_DEGRADATION_ENABLED,
+        }
+    }
+
+
+def get_ledger_config() -> Dict[str, Any]:
+    """Get complete ledger configuration (Phase 13 AVL)"""
+    return {
+        "enabled": LEDGER_ENABLED,
+        "trust_weights": {
+            "fidelity_mean": LEDGER_TRUST_WEIGHT_FIDELITY,
+            "pqc_rate": LEDGER_TRUST_WEIGHT_PQC_RATE,
+            "verify_rate": LEDGER_TRUST_WEIGHT_VERIFY_RATE,
+            "continuity": LEDGER_TRUST_WEIGHT_CONTINUITY,
         }
     }

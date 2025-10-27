@@ -22,12 +22,22 @@ class LedgerClient:
     """
 
     _instance: Optional[LedgerClient] = None
-    _store: Optional[LedgerStore] = None
+    _shared_store: Optional[LedgerStore] = None
 
     def __init__(self, store: Optional[LedgerStore] = None, logger: Optional[logging.Logger] = None):
         """Initialize ledger client."""
         self.logger = logger or logging.getLogger("ledger.client")
-        self._store = store or LedgerStore(logger=self.logger)
+
+        # Use class-level shared store if not explicitly provided
+        if store is not None:
+            self._store = store
+        elif LedgerClient._shared_store is None:
+            # First instance creates the shared store
+            LedgerClient._shared_store = LedgerStore(logger=self.logger)
+            self._store = LedgerClient._shared_store
+        else:
+            # Subsequent instances reuse the shared store
+            self._store = LedgerClient._shared_store
 
     @classmethod
     def get_instance(cls) -> LedgerClient:

@@ -114,6 +114,8 @@ class PQCVerificationService:
             record.rotated_at = datetime.now(timezone.utc)
             self.metrics["key_rotations_total"] += 1
             self.logger.info(f"Rotated PQC key: {old_key_id}")
+            # Emit to ledger (Phase 13 RUN 13-3)
+            self._emit_pqc_key_rotated(old_key_id)
         else:
             self.logger.warning(f"Attempted to rotate non-existent key: {old_key_id}")
 
@@ -160,6 +162,8 @@ class PQCVerificationService:
             if is_valid:
                 self.metrics["verifications_success"] += 1
                 self.logger.debug(f"Attestation verified successfully (key: {key_id})")
+                # Emit to ledger (Phase 13 RUN 13-3)
+                self._emit_pqc_verified(proof, key_id)
             else:
                 self.metrics["verifications_failure"] += 1
                 self.logger.warning(f"Attestation verification failed (key: {key_id})")
@@ -174,3 +178,48 @@ class PQCVerificationService:
     def get_metrics(self) -> Dict[str, int]:
         """Get current verification metrics."""
         return self.metrics.copy()
+
+    def _emit_pqc_verified(self, proof: AttestationProof, key_id: str) -> None:
+        """Emit PQC_VERIFIED event to ledger."""
+        try:
+            from nova.ledger.client import LedgerClient
+            from nova.ledger.model import RecordKind
+
+            client = LedgerClient.get_instance()
+            client.append_record(
+                anchor_id=proof.anchor_id,
+                slot="08",
+                kind=RecordKind.PQC_VERIFIED,
+                payload={
+                    "key_id": key_id,
+                    "algorithm": "Dilithium2",
+                    "verified_at": datetime.now(timezone.utc).isoformat(),
+                },
+                producer="slot08",
+                version="1.0.0",
+            )
+        except Exception as e:
+            # Don't fail verification if ledger emission fails
+            self.logger.debug(f"Failed to emit PQC_VERIFIED to ledger: {e}")
+
+    def _emit_pqc_key_rotated(self, key_id: str) -> None:
+        """Emit PQC_KEY_ROTATED event to ledger."""
+        try:
+            from nova.ledger.client import LedgerClient
+            from nova.ledger.model import RecordKind
+
+            client = LedgerClient.get_instance()
+            client.append_record(
+                anchor_id=f"pqc-key-{key_id}",
+                slot="08",
+                kind=RecordKind.PQC_KEY_ROTATED,
+                payload={
+                    "old_key_id": key_id,
+                    "rotated_at": datetime.now(timezone.utc).isoformat(),
+                },
+                producer="slot08",
+                version="1.0.0",
+            )
+        except Exception as e:
+            # Don't fail rotation if ledger emission fails
+            self.logger.debug(f"Failed to emit PQC_KEY_ROTATED to ledger: {e}")

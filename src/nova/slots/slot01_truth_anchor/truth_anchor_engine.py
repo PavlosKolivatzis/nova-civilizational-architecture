@@ -113,9 +113,12 @@ class TruthAnchorEngine:
 
         self._anchors[anchor_id] = AnchorRecord(value=value, metadata=metadata)
         self.logger.debug("Anchor registered: %s", anchor_id)
-        
+
         # Save to persistence
         self._save_to_persistence()
+
+        # Emit to ledger (Phase 13 RUN 13-3)
+        self._emit_anchor_created(anchor_id, metadata)
 
     def _establish_core_anchor(self) -> None:
         """Ensure the core ``nova.core`` anchor exists without skewing metrics."""
@@ -212,6 +215,55 @@ class TruthAnchorEngine:
             metadata.setdefault("entropy_abs_bias", sample.abs_bias)
         if sample.error:
             metadata.setdefault("entropy_error", sample.error)
+
+    # ------------------------------------------------------------------
+    # Ledger Emitters (Phase 13 RUN 13-3)
+    # ------------------------------------------------------------------
+    def _emit_anchor_created(self, anchor_id: str, metadata: Dict[str, Any]) -> None:
+        """Emit ANCHOR_CREATED event to ledger."""
+        try:
+            from nova.ledger.client import LedgerClient
+            from nova.ledger.model import RecordKind
+
+            client = LedgerClient.get_instance()
+            client.append_record(
+                anchor_id=anchor_id,
+                slot="01",
+                kind=RecordKind.ANCHOR_CREATED,
+                payload={
+                    "entropy_sha3_256": metadata.get("entropy_sha3_256", ""),
+                    "quantum_fidelity": metadata.get("quantum_fidelity"),
+                    "quantum_fidelity_ci": metadata.get("quantum_fidelity_ci"),
+                    "entropy_abs_bias": metadata.get("entropy_abs_bias"),
+                    "entropy_n_bits": metadata.get("entropy_n_bits"),
+                },
+                producer="slot01",
+                version=self.VERSION,
+            )
+        except Exception as e:
+            self.logger.warning(f"Failed to emit ANCHOR_CREATED to ledger: {e}")
+
+    def _emit_pqc_signed(self, anchor_id: str, signature: bytes, public_key_id: str) -> None:
+        """Emit PQC_SIGNED event to ledger."""
+        try:
+            from nova.ledger.client import LedgerClient
+            from nova.ledger.model import RecordKind
+
+            client = LedgerClient.get_instance()
+            client.append_record(
+                anchor_id=anchor_id,
+                slot="01",
+                kind=RecordKind.PQC_SIGNED,
+                payload={
+                    "sign_alg": "Dilithium2",
+                    "public_key_id": public_key_id,
+                },
+                producer="slot01",
+                version=self.VERSION,
+                sig=signature,
+            )
+        except Exception as e:
+            self.logger.warning(f"Failed to emit PQC_SIGNED to ledger: {e}")
 
     # ------------------------------------------------------------------
     # Metrics / Introspection
