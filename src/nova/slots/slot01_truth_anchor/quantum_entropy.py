@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_BYTES = 32
 
 
-@dataclass(slots=True)
+@dataclass
 class EntropySample:
     """Container for entropy material plus provenance data."""
 
