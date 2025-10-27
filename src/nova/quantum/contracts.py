@@ -8,7 +8,7 @@ from typing import Dict, List, Literal, Optional
 BackendT = Literal["simulator", "google_qcs"]
 
 
-@dataclass(slots=True)
+@dataclass
 class QuantumJob:
     """Description of a quantum execution request."""
 
@@ -19,7 +19,7 @@ class QuantumJob:
     params: Dict[str, float] = field(default_factory=dict)
 
 
-@dataclass(slots=True)
+@dataclass
 class QuantumResult:
     """Minimal execution result payload."""
 

@@ -44,12 +44,45 @@ class FidelityWeightingService:
         weight = self._weight_from_fidelity(fidelity)
         _weight_gauge.set(weight)
         _weight_events.labels(source=sample.source or "unknown").inc()
+
+        # Emit to ledger (Phase 13 RUN 13-3)
+        self._emit_deltathresh_applied(fidelity, weight, sample)
+
         return weight, sample
 
     def _weight_from_fidelity(self, fidelity: float) -> float:
         weight = self.config.base + self.config.slope * (fidelity - self.config.reference)
         weight = max(self.config.clamp_lo, min(self.config.clamp_hi, weight))
         return weight
+
+    def _emit_deltathresh_applied(
+        self, fidelity: float, weight: float, sample: Optional[EntropySample]
+    ) -> None:
+        """Emit DELTATHRESH_APPLIED event to ledger."""
+        try:
+            from nova.ledger.client import LedgerClient
+            from nova.ledger.model import RecordKind
+
+            client = LedgerClient.get_instance()
+            anchor_id = f"slot02-fidelity-{sample.digest()[:16] if sample else 'unknown'}"
+
+            client.append_record(
+                anchor_id=anchor_id,
+                slot="02",
+                kind=RecordKind.DELTATHRESH_APPLIED,
+                payload={
+                    "fidelity": fidelity,
+                    "weight": weight,
+                    "entropy_source": sample.source if sample else None,
+                    "entropy_backend": sample.backend if sample else None,
+                    "entropy_sha3_256": sample.digest() if sample else None,
+                },
+                producer="slot02",
+                version="1.0.0",
+            )
+        except Exception as e:
+            # Don't fail processing if ledger emission fails
+            pass
 
 
 __all__ = ["FidelityWeightingService"]

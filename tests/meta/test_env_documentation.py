@@ -26,6 +26,9 @@ def test_env_example_documents_all_env_vars():
             # Match os.getenv("VAR_NAME") or os.getenv('VAR_NAME')
             matches = re.findall(r'os\.getenv\(["\']([^"\']+)["\']', content)
             code_env_vars.update(matches)
+            # Also match get_feature_flag("VAR_NAME", ...) from config/feature_flags.py
+            flag_matches = re.findall(r'get_feature_flag\(["\']([^"\']+)["\']', content)
+            code_env_vars.update(flag_matches)
         except Exception:
             continue
 
@@ -66,6 +69,9 @@ def test_no_orphaned_env_documentation():
             content = py_file.read_text(encoding='utf-8')
             matches = re.findall(r'os\.getenv\(["\']([^"\']+)["\']', content)
             code_env_vars.update(matches)
+            # Also match get_feature_flag("VAR_NAME", ...) from config/feature_flags.py
+            flag_matches = re.findall(r'get_feature_flag\(["\']([^"\']+)["\']', content)
+            code_env_vars.update(flag_matches)
         except Exception:
             continue
 
