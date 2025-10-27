@@ -110,11 +110,15 @@ class VaultVerifier:
                 print(f"→ Executing: {name}".encode('utf-8').decode('utf-8', errors='replace'))
                 print(f"  Command: {cmd}".encode('utf-8').decode('utf-8', errors='replace'))
 
+            # Use shell=True on Windows with Git Bash tools in PATH
+            # Ensure commands run in text mode with proper encoding
             result = subprocess.run(
                 cmd,
                 shell=True,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',
                 cwd=Path(__file__).parent.parent  # Repository root
             )
 
