@@ -1,5 +1,5 @@
 *.yaml text eol=lf
 *.yml text eol=lf
-.asc text eol=lf
-.sha256 text eol=lf
-.jsonl text eol=lf
+*.asc text eol=lf
+*.sha256 text eol=lf
+*.jsonl text eol=lf
