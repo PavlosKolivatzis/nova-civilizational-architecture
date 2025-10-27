@@ -18,3 +18,4 @@ jsonschema>=4.0,<5
 # Optional FS hot-reload:
 # watchdog>=3.0.0
 prometheus_client>=0.20
+dilithium-py>=1.1.0  # Post-quantum signatures (ML-DSA / FIPS 204)

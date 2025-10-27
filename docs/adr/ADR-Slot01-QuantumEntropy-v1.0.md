@@ -135,3 +135,109 @@ ADD COLUMN entropy_source VARCHAR(32);
 - Truth Anchor metadata persists quantum_fidelity, quantum_fidelity_ci, ntropy_abs_bias, and ntropy_n_bits regardless of backend/fallback.
 - Prometheus metrics now include slot01_entropy_fidelity_ci_width and slot01_entropy_bias_abs for continuous monitoring.
 - Slot02's Phase 12B weighting service consumes these metrics to modulate ΔTHRESH decisions based on entropy quality.
+
+
+## 10. Phase 12C Addendum (2025-10-27): Post-Quantum Cryptographic Attestation
+
+**Status:** Proposed  
+**Implementation:** Phase 12C — Quantum-Verified Attestation
+
+### Context
+
+Phase 12 and 12B introduced quantum entropy generation and fidelity validation for truth anchors. However, the attestation signatures themselves remained based on classical cryptography (HMAC, SHA-256), which are vulnerable to quantum attacks (Shor's algorithm).
+
+### Decision
+
+Extend Slot01 truth anchor attestation with **post-quantum cryptographic (PQC) signatures** using **Dilithium2** (ML-DSA, FIPS 204), providing quantum-resistant tamper evidence for all entropy-derived anchor records.
+
+### Implementation
+
+#### New Components
+
+1. **PQC Keyring** (`src/nova/crypto/pqc_keyring.py`)
+   - Dilithium2 keypair generation, signing, and verification
+   - Base64 encoding/decoding for key storage/transmission
+   - Quantum-resistant signature algorithm (128-bit quantum security level)
+
+2. **Attestation Builder** (`src/nova/slots/slot01_truth_anchor/pqc_attestation.py`)
+   - `AttestationProof` dataclass: binds anchor ID, entropy hash, fidelity, timestamp
+   - `PQCAttestationBuilder`: creates signed proofs using Dilithium2 secret keys
+   - Canonical message serialization (deterministic JSON) for signature verification
+
+3. **Verification Service** (`src/nova/slots/slot08_memory_lock/pqc_verify.py`)
+   - `PQCVerificationService`: manages public key registry
+   - Verifies attestation proofs against registered public keys
+   - Supports key rotation (90-day default period)
+   - Prometheus metrics for verification success/failure rates
+
+4. **Metrics** (`src/nova/metrics/pqc.py`)
+   - `slot01_attestation_pqc_success_total`: attestation creation counter
+   - `slot08_pqc_verifications_total`: verification attempt counter
+   - `slot08_pqc_verifications_success_total`: successful verifications
+   - `slot08_pqc_verifications_failure_total`: failed verifications
+   - `slot08_pqc_key_rotations_total`: key rotation events
+   - `slot08_pqc_active_keys`: active public key count (gauge)
+
+#### Configuration
+
+```env
+# Slot01: Enable PQC attestation
+NOVA_SLOT01_PQC_ATTESTATION_ENABLED=true
+NOVA_SLOT01_PQC_ALGORITHM=dilithium2
+
+# Slot08: Key rotation and verification logging
+NOVA_SLOT08_PQC_ROTATION_DAYS=90
+NOVA_SLOT08_PQC_VERIFY_LOG=true
+```
+
+#### Attestation Proof Structure
+
+```json
+{
+  "anchor_id": "uuid",
+  "entropy_hash": "sha3-256",
+  "quantum_fidelity": 0.988,
+  "timestamp": "2025-10-27T00:00:00+00:00",
+  "sign_alg": "Dilithium2",
+  "signature": "<base64-encoded-dilithium2-signature>",
+  "public_key_id": "<key-registry-reference>",
+  "metadata": {}
+}
+```
+
+### Benefits
+
+- **Quantum-Resistant:** Dilithium2 provides security against quantum attacks (Grover, Shor)
+- **NIST-Approved:** ML-DSA (Dilithium) is a FIPS 204 standardized algorithm
+- **Tamper-Evident:** Signatures bind entropy hash + fidelity + timestamp cryptographically
+- **Key Rotation:** 90-day rotation policy mitigates long-term key exposure
+- **Observability:** Prometheus metrics track attestation/verification success rates
+
+### Testing
+
+- 8 PQC keyring tests (generation, signing, verification, encoding)
+- 11 attestation builder tests (signing, tampering, metadata)
+- 10 verification service tests (key registry, rotation, verification)
+
+All tests passing (29/29).
+
+### Migration Path
+
+1. Deploy PQC keyring and attestation builder (Slot01)
+2. Enable PQC attestation via feature flag (`NOVA_SLOT01_PQC_ATTESTATION_ENABLED`)
+3. Deploy verification service (Slot08) with initial key registration
+4. Monitor metrics: verify attestation success rate ≥99%, verification failure rate ≤1%
+5. Enable key rotation job (90-day cadence)
+
+### Rollback
+
+Set `NOVA_SLOT01_PQC_ATTESTATION_ENABLED=false` to disable PQC signing. Classical HMAC attestation remains available as fallback.
+
+### Future Work
+
+- Hybrid signatures (Dilithium + RSA) for backward compatibility
+- Kyber (PQC key encapsulation) for encrypted anchor payloads
+- Hardware Security Module (HSM) integration for production key storage
+- Batch signature verification for high-throughput scenarios
+
+**Decision Summary:** Phase 12C extends Nova's quantum entropy foundation with post-quantum cryptographic attestation, ensuring truth anchor integrity remains secure against both classical and quantum adversaries.
