@@ -1,13 +1,12 @@
-"""Pytest configuration for adding src directory to import path."""
+"""
+Pytest configuration and fixtures.
 
-from __future__ import annotations
+Phase 14-2: Merkle Checkpoints & PQC Signer
+"""
 
-import sys
-from pathlib import Path
+import pytest
+import prometheus_client
+from prometheus_client import CollectorRegistry
 
-ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "src"
-if SRC.exists():
-    src_str = str(SRC)
-    if src_str not in sys.path:
-        sys.path.insert(0, src_str)
+# Fresh registry for the entire test session to avoid cross-test pollution
+prometheus_client.REGISTRY = CollectorRegistry()
