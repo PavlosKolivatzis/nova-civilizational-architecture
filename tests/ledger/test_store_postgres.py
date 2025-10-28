@@ -49,7 +49,7 @@ async def postgres_store(mock_engine, mock_sessionmaker):
                 pool_size=5,
                 timeout=30
             )
-            return store
+            yield store
 
 
 @pytest.mark.asyncio
