@@ -244,18 +244,18 @@
     },
     {
       "type": "timeseries",
-      "title": "Continuity & Health",
+      "title": "Checkpoint Operations / sec",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "targets": [
         {
-          "expr": "increase(ledger_continuity_breaks_total[5m])",
+          "expr": "rate(ledger_checkpoints_total[5m])",
           "refId": "A",
-          "legendFormat": "Continuity Breaks"
+          "legendFormat": "Checkpoints Created"
         },
         {
-          "expr": "ledger_backend_up",
+          "expr": "rate(ledger_checkpoint_verify_failures_total[5m])",
           "refId": "B",
-          "legendFormat": "Backend Up"
+          "legendFormat": "Verify Failures"
         }
       ],
       "options": {
@@ -264,6 +264,7 @@
       },
       "fieldConfig": {
         "defaults": {
+          "unit": "ops",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "linear",
@@ -291,6 +292,62 @@
             "steps": [
               { "color": "green", "value": null },
               { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Checkpoint Latency (ms)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ledger_checkpoint_latency_ms_bucket[5m])))",
+          "refId": "A",
+          "legendFormat": "P95 Latency"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(ledger_checkpoint_latency_ms_bucket[5m])))",
+          "refId": "B",
+          "legendFormat": "P50 Latency"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "stacking": { "mode": "none", "group": "A" },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "axisColorMode": "text",
+            "scaleDistribution": { "type": "linear" },
+            "axisCenteredZero": false,
+            "hideFrom": { "vis": false, "tooltip": false, "legend": false },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1000 }
             ]
           }
         },

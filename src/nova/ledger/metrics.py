@@ -104,3 +104,19 @@ ledger_persist_fallback_total = Counter(
     "Ledger fallback to memory store",
     ["reason"]
 )
+
+# Phase 14-2: Checkpoint metrics
+ledger_checkpoints_total = Counter(
+    "ledger_checkpoints_total",
+    "Total number of checkpoints created"
+)
+
+ledger_checkpoint_verify_failures_total = Counter(
+    "ledger_checkpoint_verify_failures_total",
+    "Total number of checkpoint verification failures"
+)
+
+ledger_checkpoint_latency_ms = Summary(
+    "ledger_checkpoint_latency_ms",
+    "Checkpoint build and sign latency (ms)"
+)
