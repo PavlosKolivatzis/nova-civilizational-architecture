@@ -10,14 +10,19 @@ from typing import Optional
 from .store import LedgerStore
 from .store_postgres import PostgresLedgerStore
 from ..config.ledger_config import LedgerConfig
-from prometheus_client import Counter
+# Lazy import fallback counter to avoid registration at import time
+_fallback_counter = None
 
-# Fallback counter
-ledger_persist_fallback_total = Counter(
-    "ledger_persist_fallback_total",
-    "Ledger fallback to memory store",
-    ["reason"]
-)
+def _get_fallback_counter():
+    global _fallback_counter
+    if _fallback_counter is None:
+        from prometheus_client import Counter
+        _fallback_counter = Counter(
+            "ledger_persist_fallback_total",
+            "Ledger fallback to memory store",
+            ["reason"]
+        )
+    return _fallback_counter
 
 
 def create_ledger_store(config: Optional[LedgerConfig] = None, logger: Optional[logging.Logger] = None) -> LedgerStore:
@@ -52,7 +57,7 @@ def create_ledger_store(config: Optional[LedgerConfig] = None, logger: Optional[
             )
         except Exception as e:
             logger.error(f"Failed to create PostgreSQL store: {e}, falling back to memory store")
-            ledger_persist_fallback_total.labels(reason="connection_failed").inc()
+            _get_fallback_counter().labels(reason="connection_failed").inc()
             return LedgerStore(logger=logger)
 
     elif config.backend == "memory":
@@ -60,5 +65,5 @@ def create_ledger_store(config: Optional[LedgerConfig] = None, logger: Optional[
 
     else:
         logger.warning(f"Unknown ledger backend '{config.backend}', falling back to memory store")
-        ledger_persist_fallback_total.labels(reason="unknown_backend").inc()
+        _get_fallback_counter().labels(reason="unknown_backend").inc()
         return LedgerStore(logger=logger)

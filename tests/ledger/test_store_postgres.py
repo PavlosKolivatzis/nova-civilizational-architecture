@@ -81,18 +81,9 @@ def test_config_loading():
 
 def test_factory_fallback():
     """Test that factory falls back to memory store."""
-    from prometheus_client import REGISTRY
-
-    # Clear any previously registered collectors to prevent duplication
-    for collector in list(REGISTRY._collector_to_names.keys()):
-        try:
-            REGISTRY.unregister(collector)
-        except KeyError:
-            pass
-
     from nova.config.ledger_config import LedgerConfig
 
-    # Test with invalid backend - import factory after config to avoid metric duplication
+    # Test with invalid backend
     config = LedgerConfig(backend="invalid")
 
     from nova.ledger.factory import create_ledger_store
