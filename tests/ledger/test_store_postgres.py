@@ -82,10 +82,10 @@ def test_config_loading():
 def test_factory_fallback():
     """Test that factory falls back to memory store."""
     from nova.config.ledger_config import LedgerConfig
-    from nova.ledger.factory import create_ledger_store
 
-    # Test with invalid backend
+    # Test with invalid backend - import factory after config to avoid metric duplication
     config = LedgerConfig(backend="invalid")
+    from nova.ledger.factory import create_ledger_store
     store = create_ledger_store(config)
     assert store is not None
 
