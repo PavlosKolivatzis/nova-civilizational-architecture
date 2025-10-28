@@ -19,3 +19,8 @@ jsonschema>=4.0,<5
 # watchdog>=3.0.0
 prometheus_client>=0.20
 dilithium-py>=1.1.0  # Post-quantum signatures (ML-DSA / FIPS 204)
+
+# Phase 14-1: PostgreSQL persistence for Autonomous Verification Ledger
+SQLAlchemy>=2.0.0,<3.0.0
+asyncpg>=0.29.0
+alembic>=1.13.0
