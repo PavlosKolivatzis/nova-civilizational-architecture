@@ -85,13 +85,21 @@ def test_factory_fallback():
 
     # Test with invalid backend - import factory after config to avoid metric duplication
     config = LedgerConfig(backend="invalid")
-    from nova.ledger.factory import create_ledger_store
-    store = create_ledger_store(config)
-    assert store is not None
 
-    # Should be a memory store
-    from nova.ledger.store import LedgerStore
-    assert isinstance(store, LedgerStore)
+    # Use pytest.MonkeyPatch to avoid importing factory module at test time
+    import pytest
+    with pytest.MonkeyPatch().context() as m:
+        # Mock the metrics to avoid registration conflicts
+        mock_counter = m.MagicMock()
+        m.setattr('nova.ledger.metrics.ledger_persist_fallback_total', mock_counter)
+
+        from nova.ledger.factory import create_ledger_store
+        store = create_ledger_store(config)
+        assert store is not None
+
+        # Should be a memory store
+        from nova.ledger.store import LedgerStore
+        assert isinstance(store, LedgerStore)
 
 
 def test_metrics_import():
