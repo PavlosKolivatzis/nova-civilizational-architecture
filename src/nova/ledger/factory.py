@@ -16,12 +16,16 @@ _fallback_counter = None
 def _get_fallback_counter():
     global _fallback_counter
     if _fallback_counter is None:
-        from prometheus_client import Counter
-        _fallback_counter = Counter(
-            "ledger_persist_fallback_total",
-            "Ledger fallback to memory store",
-            ["reason"]
-        )
+        from prometheus_client import Counter, REGISTRY
+        try:
+            _fallback_counter = Counter(
+                "ledger_persist_fallback_total",
+                "Ledger fallback to memory store",
+                ["reason"]
+            )
+        except ValueError:
+            # Metric already exists, retrieve it from registry
+            _fallback_counter = REGISTRY._names_to_collectors["ledger_persist_fallback_total"]
     return _fallback_counter
 
 
