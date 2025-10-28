@@ -8,25 +8,8 @@ import asyncio
 import time
 from typing import Optional
 
-from prometheus_client import Counter, Summary
-
 from .checkpoint_signer import CheckpointSigner, Checkpoint
-
-# Metrics
-checkpoint_total = Counter(
-    "ledger_checkpoints_total",
-    "Total number of checkpoints created"
-)
-
-checkpoint_verify_failures = Counter(
-    "ledger_checkpoint_verify_failures_total",
-    "Total number of checkpoint verification failures"
-)
-
-checkpoint_latency = Summary(
-    "ledger_checkpoint_latency_ms",
-    "Checkpoint build and sign latency (ms)"
-)
+from .metrics import ledger_checkpoints_total, ledger_checkpoint_verify_failures_total, ledger_checkpoint_latency_ms
 
 
 class CheckpointService:
@@ -93,16 +76,16 @@ class CheckpointService:
                 raise ValueError(f"Checkpoint verification failed: {error}")
 
             # Update metrics
-            checkpoint_total.inc()
+            ledger_checkpoints_total.inc()
             self._last_checkpoint_ts = time.time()
 
             latency_ms = (time.perf_counter() - start_time) * 1000
-            checkpoint_latency.observe(latency_ms)
+            ledger_checkpoint_latency_ms.observe(latency_ms)
 
             return checkpoint
 
         except Exception as e:
-            checkpoint_verify_failures.inc()
+            ledger_checkpoint_verify_failures_total.inc()
             raise
 
     async def run_forever(self, stop_event: asyncio.Event):
