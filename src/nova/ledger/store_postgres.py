@@ -22,29 +22,12 @@ from .metrics import (
     ledger_query_total,
     ledger_continuity_breaks_total,
     ledger_records_total,
+    ledger_persist_latency_ms,
+    ledger_persist_errors_total,
+    ledger_backend_up,
+    ledger_persist_fallback_total,
 )
 from prometheus_client import Summary, Counter, Gauge
-
-# New metrics for PostgreSQL persistence
-ledger_persist_latency_ms = Summary(
-    "ledger_persist_latency_ms",
-    "Ledger write latency (ms)",
-    ["operation"]
-)
-ledger_persist_errors_total = Counter(
-    "ledger_persist_errors_total",
-    "Ledger persistence errors",
-    ["operation"]
-)
-ledger_backend_up = Gauge(
-    "ledger_backend_up",
-    "1 if PostgreSQL backend is reachable"
-)
-ledger_persist_fallback_total = Counter(
-    "ledger_persist_fallback_total",
-    "Ledger fallback to memory store",
-    ["reason"]
-)
 
 
 class PostgresLedgerStore:
