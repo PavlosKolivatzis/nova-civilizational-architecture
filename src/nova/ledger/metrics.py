@@ -1,10 +1,10 @@
 """
 Prometheus metrics for Autonomous Verification Ledger (AVL).
 
-Phase 13: Ledger operations observability
+Phase 13/14: Ledger operations observability + PostgreSQL persistence metrics.
 """
 
-from prometheus_client import Counter, Gauge, Histogram
+from prometheus_client import Counter, Gauge, Histogram, Summary
 
 # Append operations
 ledger_appends_total = Counter(
@@ -79,4 +79,28 @@ ledger_continuity_breaks_total = Counter(
 ledger_records_total = Gauge(
     "ledger_records_total",
     "Total number of records in the ledger",
+)
+
+# Phase 14-1: PostgreSQL persistence metrics
+ledger_persist_latency_ms = Summary(
+    "ledger_persist_latency_ms",
+    "Ledger write latency (ms)",
+    ["operation"]
+)
+
+ledger_persist_errors_total = Counter(
+    "ledger_persist_errors_total",
+    "Ledger persistence errors",
+    ["operation"]
+)
+
+ledger_backend_up = Gauge(
+    "ledger_backend_up",
+    "1 if PostgreSQL backend is reachable"
+)
+
+ledger_persist_fallback_total = Counter(
+    "ledger_persist_fallback_total",
+    "Ledger fallback to memory store",
+    ["reason"]
 )
