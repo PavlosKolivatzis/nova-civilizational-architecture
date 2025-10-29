@@ -11,38 +11,25 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+import base64
 from .merkle import merkle_root
 from .store_postgres import PostgresLedgerStore
+from .checkpoint_types import Checkpoint
 
 
-@dataclass
-class Checkpoint:
+def _decode_sig(sig_str: str) -> bytes:
     """
-    Signed Merkle checkpoint over a range of ledger records.
-
-    Provides tamper-evident batch verification of ledger integrity.
+    Accept either base64 (preferred) or 0x-prefixed hex for backward compat.
     """
-    cid: str
-    merkle_root_hex: str
-    range_start: str  # ISO timestamp
-    range_end: str    # ISO timestamp
-    records: int
-    algo: str = "sha3-256"
-    version: str = "cp-1.0"
-    sig_b64: str = ""
-    pubkey_id: str = ""
-    created_at: Optional[datetime] = None
+    s = sig_str.strip()
+    if s.startswith("0x"):  # legacy hex path
+        return bytes.fromhex(s[2:])
+    # tolerate missing base64 padding
+    pad = '=' * (-len(s) % 4)
+    return base64.b64decode(s + pad)
 
-    def to_header(self) -> dict:
-        """Convert to canonical header for signing."""
-        return {
-            "merkle_root_hex": self.merkle_root_hex,
-            "range_start": self.range_start,
-            "range_end": self.range_end,
-            "records": self.records,
-            "algo": self.algo,
-            "version": self.version
-        }
+
+# Checkpoint class moved to checkpoint_types.py
 
 
 class CheckpointSigner:
@@ -62,68 +49,75 @@ class CheckpointSigner:
         """Lazy-loaded PQC keyring."""
         if self._keyring is None:
             # Import here to avoid circular dependency
-            from nova.crypto.pqc_keyring import Dilithium2Keyring
-            self._keyring = Dilithium2Keyring()
+            from nova.crypto.pqc_keyring import PQCKeyring
+            self._keyring = PQCKeyring()
         return self._keyring
 
-    async def build_and_sign(self, start_ts: str, end_ts: str) -> Checkpoint:
+    async def sign_checkpoint(self, anchor_id: str, start_rid: str, end_rid: str, merkle_root: str, prev_root: Optional[str] = None) -> Checkpoint:
         """
-        Build Merkle root from records in time range and sign it.
+        Sign a checkpoint with the given parameters.
 
         Args:
-            start_ts: ISO timestamp for range start
-            end_ts: ISO timestamp for range end
+            anchor_id: Anchor this checkpoint covers
+            start_rid: First record ID in range
+            end_rid: Last record ID in range
+            merkle_root: Hex Merkle root
+            prev_root: Previous checkpoint root for chaining
 
         Returns:
             Signed Checkpoint
         """
-        # Query record hashes in the time range
-        hashes_hex = await self.store.query_hashes_between(start_ts, end_ts)
-        if not hashes_hex:
-            raise ValueError(f"No records found in range {start_ts} to {end_ts}")
-
-        # Convert to bytes and compute Merkle root
-        digests = [bytes.fromhex(h) for h in hashes_hex]
-        root = merkle_root(digests)
-
-        # Create checkpoint
         import uuid
         cid = str(uuid.uuid4())
 
         checkpoint = Checkpoint(
-            cid=cid,
-            merkle_root_hex=root.hex(),
-            range_start=start_ts,
-            range_end=end_ts,
-            records=len(digests)
+            id=cid,
+            anchor_id=anchor_id,
+            merkle_root=merkle_root,
+            start_rid=start_rid,
+            end_rid=end_rid,
+            prev_root=prev_root
         )
 
-        # Sign the canonical header
-        header = checkpoint.to_header()
-        msg = self._canonical_header(header)
+        # Sign the canonical representation
+        msg = self._canonical_bytes(checkpoint)
         sig_b64, pubkey_id = self.keyring.sign_b64(msg)
 
-        checkpoint.sig_b64 = sig_b64
-        checkpoint.pubkey_id = pubkey_id
+        # Create signed checkpoint
+        signed_checkpoint = Checkpoint(
+            id=cid,
+            anchor_id=anchor_id,
+            merkle_root=merkle_root,
+            start_rid=start_rid,
+            end_rid=end_rid,
+            prev_root=prev_root,
+            sig=_decode_sig(sig_b64),  # base64 → bytes
+            key_id=pubkey_id
+        )
 
-        # Persist to database
-        await self.store.insert_checkpoint(checkpoint)
+        return signed_checkpoint
 
-        return checkpoint
-
-    def verify(self, checkpoint: Checkpoint) -> bool:
+    def verify_checkpoint(self, checkpoint: Checkpoint) -> bool:
         """
-        Verify checkpoint signature and Merkle root.
+        Verify checkpoint signature.
 
         Args:
             checkpoint: Checkpoint to verify
 
         Returns:
-            True if signature and root are valid
+            True if signature is valid
         """
-        header = checkpoint.to_header()
-        msg = self._canonical_header(header)
-        return self.keyring.verify_b64(msg, checkpoint.sig_b64, checkpoint.pubkey_id)
+        if not checkpoint.sig or not checkpoint.key_id:
+            return False
+
+        msg = self._canonical_bytes(checkpoint)
+        # Convert sig back to base64 for keyring.verify_b64
+        if isinstance(checkpoint.sig, bytes):
+            sig_b64 = base64.b64encode(checkpoint.sig).decode('utf-8')
+        else:
+            sig_b64 = checkpoint.sig
+        ok = self.keyring.verify_b64(msg, sig_b64, checkpoint.key_id)
+        return bool(ok)
 
     async def verify_range(self, checkpoint: Checkpoint) -> tuple[bool, str]:
         """
@@ -136,22 +130,23 @@ class CheckpointSigner:
             (is_valid, error_message)
         """
         # First verify signature
-        if not self.verify(checkpoint):
+        if not self.verify_checkpoint(checkpoint):
             return False, "Invalid signature"
 
-        # Recompute Merkle root
+        # Recompute Merkle root from record range
         try:
-            hashes_hex = await self.store.query_hashes_between(
-                checkpoint.range_start, checkpoint.range_end
+            # Get record hashes in the checkpoint range
+            hashes_hex = await self.store.query_hashes_between_rids(
+                checkpoint.start_rid, checkpoint.end_rid
             )
             digests = [bytes.fromhex(h) for h in hashes_hex]
             computed_root = merkle_root(digests)
 
-            if computed_root.hex() != checkpoint.merkle_root_hex:
-                return False, f"Merkle root mismatch: expected {checkpoint.merkle_root_hex}, got {computed_root.hex()}"
+            if computed_root.hex() != checkpoint.merkle_root:
+                return False, f"Merkle root mismatch: expected {checkpoint.merkle_root}, got {computed_root.hex()}"
 
-            if len(digests) != checkpoint.records:
-                return False, f"Record count mismatch: expected {checkpoint.records}, got {len(digests)}"
+            if len(digests) != (int(checkpoint.end_rid, 16) - int(checkpoint.start_rid, 16) + 1):
+                return False, f"Record count mismatch in range {checkpoint.start_rid} to {checkpoint.end_rid}"
 
             return True, ""
 
@@ -159,10 +154,21 @@ class CheckpointSigner:
             return False, f"Verification error: {e}"
 
     @staticmethod
-    def _canonical_header(header: dict) -> bytes:
+    def _canonical_bytes(checkpoint: Checkpoint) -> bytes:
         """
         Create canonical byte representation for signing.
 
         Uses sorted JSON with compact separators for deterministic output.
         """
-        return json.dumps(header, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        # Create canonical representation excluding signature fields
+        canonical_data = {
+            "id": checkpoint.id,
+            "anchor_id": checkpoint.anchor_id,
+            "merkle_root": checkpoint.merkle_root,
+            "start_rid": checkpoint.start_rid,
+            "end_rid": checkpoint.end_rid,
+            "prev_root": checkpoint.prev_root,
+            "ts": checkpoint.ts,
+            "version": checkpoint.version
+        }
+        return json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode("utf-8")

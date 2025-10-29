@@ -292,10 +292,135 @@ class LedgerStore:
         last_rid = rids[-1]
         return self._records[last_rid].hash
 
+    async def span_for_checkpoint(self, anchor_id: str) -> Optional[Dict]:
+        """
+        Get span information for creating a checkpoint.
+
+        Args:
+            anchor_id: Anchor to get span for
+
+        Returns:
+            Dict with start_rid, end_rid, merkle_root, prev_root or None
+        """
+        records = self.get_chain(anchor_id)
+        if not records:
+            return None
+
+        # Get record hashes
+        from .canon import compute_record_hash
+        hashes = []
+        for record in records:
+            # Recompute hash to ensure consistency
+            h = compute_record_hash(
+                rid=record.rid,
+                anchor_id=record.anchor_id,
+                slot=record.slot,
+                kind=record.kind.value if hasattr(record.kind, 'value') else record.kind,
+                ts=record.ts,
+                prev_hash=record.prev_hash,
+                payload=record.payload,
+                producer=record.producer,
+                version=record.version,
+            )
+            hashes.append(bytes.fromhex(h))
+
+        # Compute Merkle root
+        from .merkle import merkle_root
+        root = merkle_root(hashes)
+
+        # Get previous checkpoint root for chaining
+        prev_root = None
+        if hasattr(self, '_checkpoints') and self._checkpoints:
+            # Find latest checkpoint for this anchor
+            anchor_checkpoints = [cp for cp in self._checkpoints.values() if cp.get('anchor_id') == anchor_id]
+            if anchor_checkpoints:
+                latest_cp = max(anchor_checkpoints, key=lambda cp: cp.get('created_at', ''))
+                prev_root = latest_cp.get('merkle_root')
+
+        return {
+            "start_rid": records[0].rid,
+            "end_rid": records[-1].rid,
+            "merkle_root": root.hex(),
+            "prev_root": prev_root
+        }
+
+    async def persist_checkpoint(self, checkpoint) -> None:
+        """
+        Persist a checkpoint.
+
+        Args:
+            checkpoint: Checkpoint to persist
+        """
+        if hasattr(self, '_checkpoints'):
+            cp_dict = checkpoint.to_dict() if hasattr(checkpoint, 'to_dict') else checkpoint
+            self._checkpoints[cp_dict['id']] = cp_dict
+
+    async def fetch_checkpoint(self, checkpoint_id: str):
+        """
+        Fetch a checkpoint by ID.
+
+        Args:
+            checkpoint_id: Checkpoint ID to fetch
+
+        Returns:
+            Checkpoint dict or None
+        """
+        if hasattr(self, '_checkpoints'):
+            return self._checkpoints.get(checkpoint_id)
+        return None
+
+    async def query_hashes_between_rids(self, start_rid: str, end_rid: str) -> List[str]:
+        """
+        Query record hashes between record IDs.
+
+        Args:
+            start_rid: Starting record ID
+            end_rid: Ending record ID
+
+        Returns:
+            List of hex hashes
+        """
+        # For in-memory store, find records in range
+        # This is a simplified implementation
+        all_records = []
+        for anchor_records in self._anchor_chains.values():
+            for rid in anchor_records:
+                record = self._records.get(rid)
+                if record:
+                    all_records.append(record)
+
+        # Sort by some ordering (simplified)
+        all_records.sort(key=lambda r: r.ts)
+
+        # Find range (simplified - assumes RIDs are sortable)
+        start_idx = next((i for i, r in enumerate(all_records) if r.rid >= start_rid), 0)
+        end_idx = next((i for i, r in enumerate(all_records) if r.rid > end_rid), len(all_records))
+
+        range_records = all_records[start_idx:end_idx]
+
+        # Return hashes
+        from .canon import compute_record_hash
+        hashes = []
+        for record in range_records:
+            h = compute_record_hash(
+                rid=record.rid,
+                anchor_id=record.anchor_id,
+                slot=record.slot,
+                kind=record.kind.value if hasattr(record.kind, 'value') else record.kind,
+                ts=record.ts,
+                prev_hash=record.prev_hash,
+                payload=record.payload,
+                producer=record.producer,
+                version=record.version,
+            )
+            hashes.append(h)
+
+        return hashes
+
     def get_stats(self) -> Dict:
         """Get ledger statistics."""
         return {
             "total_records": len(self._records),
             "total_anchors": len(self._anchor_chains),
-            "total_checkpoints": len(self._checkpoints),
+            "total_checkpoints": len(getattr(self, '_checkpoints', {})),
         }

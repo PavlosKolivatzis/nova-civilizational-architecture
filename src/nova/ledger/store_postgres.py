@@ -544,6 +544,176 @@ class PostgresLedgerStore:
             self.logger.error(f"Failed to get last hash for {anchor_id}: {e}")
             raise
 
+    async def span_for_checkpoint(self, anchor_id: str) -> Optional[Dict]:
+        """
+        Get span information for creating a checkpoint.
+
+        Args:
+            anchor_id: Anchor to get span for
+
+        Returns:
+            Dict with start_rid, end_rid, merkle_root, prev_root or None
+        """
+        try:
+            async with self.Session() as session:
+                # Get all records for anchor ordered by timestamp
+                result = await session.execute(
+                    text("""
+                        SELECT rid, hash FROM ledger_records
+                        WHERE anchor_id = :anchor_id
+                        ORDER BY ts ASC
+                    """),
+                    {"anchor_id": anchor_id}
+                )
+                rows = result.fetchall()
+
+                if not rows:
+                    return None
+
+                # Extract hashes and RIDs
+                rids = [row[0] for row in rows]
+                hashes_hex = [row[1] for row in rows]
+
+                # Convert to bytes and compute Merkle root
+                digests = [bytes.fromhex(h) for h in hashes_hex]
+                from .merkle import merkle_root
+                root = merkle_root(digests)
+
+                # Get previous checkpoint root for chaining
+                prev_result = await session.execute(
+                    text("""
+                        SELECT merkle_root FROM ledger_checkpoints
+                        WHERE anchor_id = :anchor_id
+                        ORDER BY ts DESC
+                        LIMIT 1
+                    """),
+                    {"anchor_id": anchor_id}
+                )
+                prev_row = prev_result.first()
+                prev_root = prev_row[0] if prev_row else None
+
+                return {
+                    "start_rid": str(rids[0]),
+                    "end_rid": str(rids[-1]),
+                    "merkle_root": root.hex(),
+                    "prev_root": prev_root
+                }
+
+        except Exception as e:
+            ledger_persist_errors_total.labels(operation="span_for_checkpoint").inc()
+            self.logger.error(f"Failed to get span for checkpoint: {e}")
+            raise
+
+    async def persist_checkpoint(self, checkpoint) -> None:
+        """
+        Persist a checkpoint.
+
+        Args:
+            checkpoint: Checkpoint to persist
+        """
+        try:
+            async with self.Session() as session:
+                cp_dict = checkpoint.to_dict() if hasattr(checkpoint, 'to_dict') else checkpoint
+                await session.execute(
+                    text("""
+                        INSERT INTO ledger_checkpoints
+                        (id, anchor_id, merkle_root, start_rid, end_rid, prev_root, ts, sig, key_id, version)
+                        VALUES (:id, :anchor_id, :merkle_root, :start_rid, :end_rid, :prev_root, :ts, :sig, :key_id, :version)
+                    """),
+                    {
+                        "id": cp_dict["id"],
+                        "anchor_id": cp_dict["anchor_id"],
+                        "merkle_root": cp_dict["merkle_root"],
+                        "start_rid": cp_dict["start_rid"],
+                        "end_rid": cp_dict["end_rid"],
+                        "prev_root": cp_dict.get("prev_root"),
+                        "ts": cp_dict["ts"],
+                        "sig": cp_dict.get("sig"),
+                        "key_id": cp_dict.get("key_id"),
+                        "version": cp_dict.get("version", "cp-v1")
+                    }
+                )
+                await session.commit()
+
+        except Exception as e:
+            ledger_persist_errors_total.labels(operation="persist_checkpoint").inc()
+            self.logger.error(f"Failed to persist checkpoint: {e}")
+            raise
+
+    async def fetch_checkpoint(self, checkpoint_id: str):
+        """
+        Fetch a checkpoint by ID.
+
+        Args:
+            checkpoint_id: Checkpoint ID to fetch
+
+        Returns:
+            Checkpoint dict or None
+        """
+        try:
+            async with self.Session() as session:
+                result = await session.execute(
+                    text("""
+                        SELECT id, anchor_id, merkle_root, start_rid, end_rid, prev_root, ts, sig, key_id, version
+                        FROM ledger_checkpoints
+                        WHERE id = :id
+                    """),
+                    {"id": checkpoint_id}
+                )
+                row = result.first()
+
+                if row:
+                    from .checkpoint_types import Checkpoint
+                    sig = bytes.fromhex(row[7]) if row[7] else None
+                    return Checkpoint(
+                        id=str(row[0]),
+                        anchor_id=str(row[1]),
+                        merkle_root=row[2],
+                        start_rid=str(row[3]),
+                        end_rid=str(row[4]),
+                        prev_root=row[5],
+                        ts=row[6],
+                        sig=sig,
+                        key_id=row[8],
+                        version=row[9] or "cp-v1"
+                    )
+                return None
+
+        except Exception as e:
+            ledger_persist_errors_total.labels(operation="fetch_checkpoint").inc()
+            self.logger.error(f"Failed to fetch checkpoint {checkpoint_id}: {e}")
+            raise
+
+    async def query_hashes_between_rids(self, start_rid: str, end_rid: str) -> List[str]:
+        """
+        Query record hashes between record IDs.
+
+        Args:
+            start_rid: Starting record ID
+            end_rid: Ending record ID
+
+        Returns:
+            List of hex hashes
+        """
+        try:
+            async with self.Session() as session:
+                # Get records in RID range (simplified - assumes RIDs are UUIDs)
+                result = await session.execute(
+                    text("""
+                        SELECT hash FROM ledger_records
+                        WHERE rid >= :start_rid AND rid <= :end_rid
+                        ORDER BY rid ASC
+                    """),
+                    {"start_rid": start_rid, "end_rid": end_rid}
+                )
+                rows = result.fetchall()
+                return [row[0] for row in rows]
+
+        except Exception as e:
+            ledger_persist_errors_total.labels(operation="query_hashes_between_rids").inc()
+            self.logger.error(f"Failed to query hashes between RIDs: {e}")
+            raise
+
     async def _count_records(self) -> int:
         """Count total records in the ledger."""
         try:

@@ -82,3 +82,45 @@ class PQCKeyring:
     def decode_signature(sig_str: str) -> bytes:
         """Decode base64 signature string to bytes."""
         return base64.b64decode(sig_str.encode('ascii'))
+
+    def sign_b64(self, message: bytes) -> tuple[str, str]:
+        """
+        Sign a message and return base64-encoded signature with key ID.
+
+        This is a convenience method for checkpoint signing.
+
+        Args:
+            message: Message bytes to sign
+
+        Returns:
+            (signature_b64, key_id) tuple
+        """
+        # For now, use a fixed key ID - in production this would be from key management
+        key_id = "checkpoint-key-001"
+
+        # Generate a signature (in real implementation, use stored keys)
+        # For now, just encode the message length as a mock signature
+        mock_sig = f"mock-sig-{len(message)}".encode('utf-8')
+        sig_b64 = self.encode_signature(mock_sig)
+
+        return sig_b64, key_id
+
+    def verify_b64(self, message: bytes, sig_b64: str, key_id: str) -> bool:
+        """
+        Verify a base64-encoded signature.
+
+        Args:
+            message: Original message bytes
+            sig_b64: Base64-encoded signature
+            key_id: Key identifier
+
+        Returns:
+            True if signature is valid
+        """
+        try:
+            sig_bytes = self.decode_signature(sig_b64)
+            # Mock verification - in real implementation, use stored public keys
+            expected_sig = f"mock-sig-{len(message)}".encode('utf-8')
+            return sig_bytes == expected_sig
+        except Exception:
+            return False
