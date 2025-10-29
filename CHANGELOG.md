@@ -5,6 +5,33 @@ All notable changes to Nova Civilizational Architecture will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [13.1.0] — 2025-10-29
+### Added
+- **PostgreSQL Persistence for AVL** — Phase 14-1 complete: durable, async ledger storage
+- Async SQLAlchemy 2.x writer/reader with connection pooling and timeout management
+- Automatic fallback to in-memory store on database unavailability (`ledger_persist_fallback_total`)
+- Alembic migration `202510281200_add_ledger_pg.py`: `ledger_records`, `ledger_checkpoints` tables
+- CLI migration tool: `scripts/ledger_migrate.py` (check-db, upgrade, current, history)
+- Enhanced Prometheus metrics: `ledger_persist_latency_ms`, `ledger_persist_errors_total`, `ledger_backend_up`
+- Grafana dashboard: `nova-phase14-ledger-persistence.json` with latency, errors, and health panels
+- Configuration: `LEDGER_BACKEND={memory|postgres}`, `LEDGER_DSN`, `LEDGER_POOL_SIZE`, `LEDGER_TIMEOUT`
+- Factory pattern: `create_ledger_store()` with graceful degradation
+- 5 PostgreSQL integration tests: round-trip, continuity, idempotency, concurrency
+- ADR-14-Ledger-Persistence.md: design decisions, rollback plan, success metrics
+
+### Changed
+- Ledger store: now supports both memory and PostgreSQL backends via configuration
+- Metrics: unified Phase 13/14 observability with persistence-specific counters
+
+### Security/Integrity
+- Hash continuity preserved across storage backends (Merkle root parity verified)
+- Connection pooling prevents resource exhaustion under load
+- Fallback mechanism maintains service availability during database outages
+
+### Next
+- Phase 14-2: Automated Merkle checkpoint signing with PQC verification
+- Phase 14-3: IDS/routing integration with trust scores from persisted ledger
+
 ## [13.0.0-beta] — 2025-10-27
 ### Added
 - **Autonomous Verification Ledger (AVL)** — Hash-linked, append-only ledger for cross-slot trust propagation
@@ -28,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All critical events (anchor creation, PQC verification, fidelity weighting) now ledger-tracked
 
 ### Next
-- Phase 14-1: PostgreSQL persistence with async writer
+- Phase 14-1: PostgreSQL persistence with async writer ✅ **COMPLETED**
 - Phase 14-2: Automated Merkle checkpoint signing
 - Phase 14-3: IDS/routing integration with trust scores
 
