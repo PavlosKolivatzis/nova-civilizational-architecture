@@ -67,10 +67,10 @@ class TestCheckpointSigner:
     @pytest.mark.asyncio
     async def test_build_and_sign_no_records(self, signer, mock_store):
         """Test checkpoint creation fails with no records."""
-        mock_store.query_hashes_between.return_value = []
+        mock_store.query_hashes_between_rids = AsyncMock(return_value=[])
 
-        with pytest.raises(ValueError, match="No records found"):
-            await signer.build_and_sign("2025-01-01T00:00:00Z", "2025-01-02T00:00:00Z")
+        checkpoint = await signer.build_and_sign(mock_store, "test-anchor", "rid-1", "rid-2")
+        assert checkpoint is None  # Returns None when no hashes
 
     def test_verify_signature(self, mock_keyring):
         """Test signature verification."""
@@ -126,64 +126,51 @@ class TestCheckpointSigner:
     @pytest.mark.asyncio
     async def test_verify_range_success(self, signer, mock_store):
         """Test successful range verification."""
-        mock_store.query_hashes_between_rids.return_value = ["a" * 64, "b" * 64]
+        # Setup hashes that will produce expected root
+        hashes = ["a" * 64, "b" * 64]
+        mock_store.query_hashes_between_rids = AsyncMock(return_value=hashes)
 
-        checkpoint = Checkpoint(
-            id="test-cid",
-            anchor_id=str(uuid.uuid4()),
-            merkle_root="abcd" * 16,  # Mock root
-            start_rid=str(uuid.uuid4()),
-            end_rid=str(uuid.uuid4()),
-            prev_root=None,
-            sig=bytes.fromhex("deadbeef"),
-            key_id="test_key"
-        )
+        # Calculate expected root from hashes
+        from nova.ledger.merkle import merkle_root_from_hashes
+        expected_root = merkle_root_from_hashes(hashes)
 
-        # Mock successful signature verification
-        with patch.object(signer, 'verify_checkpoint', return_value=True):
-            is_valid, error = await signer.verify_range(checkpoint)
+        anchor_id = str(uuid.uuid4())
+        start_rid = str(uuid.uuid4())
+        end_rid = str(uuid.uuid4())
 
-            assert is_valid is True
-            assert error == ""
+        is_valid, error = await signer.verify_range(mock_store, anchor_id, start_rid, end_rid, expected_root)
+
+        assert is_valid is True
+        assert error is None
 
     @pytest.mark.asyncio
-    async def test_verify_range_signature_fail(self, signer):
-        """Test range verification fails on bad signature."""
-        checkpoint = Checkpoint(
-            id="test-cid",
-            anchor_id=str(uuid.uuid4()),
-            merkle_root="abcd" * 16,
-            start_rid=str(uuid.uuid4()),
-            end_rid=str(uuid.uuid4()),
-            prev_root=None,
-            sig=b"bad",
-            key_id="test_key"
-        )
+    async def test_verify_range_signature_fail(self, signer, mock_store):
+        """Test range verification with wrong Merkle root."""
+        hashes = ["a" * 64, "b" * 64]
+        mock_store.query_hashes_between_rids = AsyncMock(return_value=hashes)
 
-        with patch.object(signer, 'verify_checkpoint', return_value=False):
-            is_valid, error = await signer.verify_range(checkpoint)
+        anchor_id = str(uuid.uuid4())
+        start_rid = str(uuid.uuid4())
+        end_rid = str(uuid.uuid4())
+        wrong_root = "wrong" * 16  # Won't match computed root
 
-            assert is_valid is False
-            assert "Invalid signature" in error
+        is_valid, error = await signer.verify_range(mock_store, anchor_id, start_rid, end_rid, wrong_root)
+
+        assert is_valid is False
+        assert "Merkle root mismatch" in error
 
     @pytest.mark.asyncio
     async def test_verify_range_root_mismatch(self, signer, mock_store):
-        """Test range verification fails on Merkle root mismatch."""
-        mock_store.query_hashes_between_rids.return_value = ["different" * 16]
+        """Test range verification fails on Merkle root mismatch (duplicate test, keeping for coverage)."""
+        hashes = ["different" * 16]
+        mock_store.query_hashes_between_rids = AsyncMock(return_value=hashes)
 
-        checkpoint = Checkpoint(
-            id="test-cid",
-            anchor_id=str(uuid.uuid4()),
-            merkle_root="abcd" * 16,  # Won't match computed root
-            start_rid=str(uuid.uuid4()),
-            end_rid=str(uuid.uuid4()),
-            prev_root=None,
-            sig=bytes.fromhex("deadbeef"),
-            key_id="test_key"
-        )
+        anchor_id = str(uuid.uuid4())
+        start_rid = str(uuid.uuid4())
+        end_rid = str(uuid.uuid4())
+        wrong_root = "abcd" * 16  # Won't match computed root
 
-        with patch.object(signer, 'verify_checkpoint', return_value=True):
-            is_valid, error = await signer.verify_range(checkpoint)
+        is_valid, error = await signer.verify_range(mock_store, anchor_id, start_rid, end_rid, wrong_root)
 
-            assert is_valid is False
-            assert "Merkle root mismatch" in error
+        assert is_valid is False
+        assert "Merkle root mismatch" in error

@@ -20,7 +20,7 @@ class TestMerkleRoot:
 
     def test_single_hash(self):
         """Single hash returns itself."""
-        hash_bytes = b"test_hash_32_bytes_abcdefghijk"
+        hash_bytes = b"test_hash_32_bytes_abcdefghijklm"  # Exactly 32 bytes
         assert len(hash_bytes) == 32
 
         root = merkle_root([hash_bytes])
