@@ -2,11 +2,14 @@
 Test for slot health self-check functionality.
 """
 from unittest.mock import patch, MagicMock
-from orchestrator.health import collect_slot_selfchecks
+from orchestrator.health import collect_slot_selfchecks, clear_slot_health_cache
 
 
 def test_collect_slot_selfchecks():
     """Test collection of slot self-checks."""
+    # Clear cache to ensure clean test state
+    clear_slot_health_cache()
+
     slot_registry = {
         "slot01_truth_anchor": lambda: None,
         "slot06_cultural_synthesis": lambda: None,
@@ -35,6 +38,9 @@ def test_collect_slot_selfchecks():
 
 def test_slot_health_error_handling():
     """Test error handling in slot health collection."""
+    # Clear cache to ensure clean test state
+    clear_slot_health_cache()
+
     slot_registry = {"slot01_truth_anchor": lambda: None}
 
     with patch("importlib.import_module") as mock_import:

@@ -32,34 +32,63 @@ def get_circuit_breaker_metrics(circuit_breaker):
         return metrics
 
 
+# Cache for slot health modules to avoid repeated imports
+_slot_health_module_cache: Dict[str, Any] = {}
+
+
+def clear_slot_health_cache():
+    """Clear the slot health module cache. Useful for testing."""
+    global _slot_health_module_cache
+    _slot_health_module_cache.clear()
+
+
 def collect_slot_selfchecks(slot_registry: Dict[str, Callable]) -> Dict[str, Any]:
-    """Collect self-check health from each slot's health module."""
+    """Collect self-check health from each slot's health module.
+
+    Uses module caching to avoid repeated imports and reduce overhead.
+    """
     self_checks: Dict[str, Any] = {}
 
     ensure_src_on_path()
     for slot_id in slot_registry.keys():
-        module = None
-        import_error_reason: Optional[str] = None
-        for module_path in (f"nova.slots.{slot_id}.health",):
-            try:
-                module = importlib.import_module(module_path)
-                break
-            except ImportError:
-                continue
-            except Exception as exc:  # pragma: no cover - defensive
-                import_error_reason = str(exc)
-                module = None
-                break
-        if module is None:
-            if import_error_reason:
-                self_checks[slot_id] = {"self_check": "error", "reason": import_error_reason}
-            else:
+        # Check cache first
+        if slot_id in _slot_health_module_cache:
+            module = _slot_health_module_cache[slot_id]
+            if module is None:  # Cached failure
                 self_checks[slot_id] = {
                     "self_check": "n/a",
-                    "reason": "health module not found",
+                    "reason": "health module not found (cached)",
                 }
-            continue
+                continue
+        else:
+            # Import and cache the module
+            module = None
+            import_error_reason: Optional[str] = None
+            for module_path in (f"nova.slots.{slot_id}.health",):
+                try:
+                    module = importlib.import_module(module_path)
+                    break
+                except ImportError:
+                    continue
+                except Exception as exc:  # pragma: no cover - defensive
+                    import_error_reason = str(exc)
+                    module = None
+                    break
 
+            # Cache the result (even if None)
+            _slot_health_module_cache[slot_id] = module
+
+            if module is None:
+                if import_error_reason:
+                    self_checks[slot_id] = {"self_check": "error", "reason": import_error_reason}
+                else:
+                    self_checks[slot_id] = {
+                        "self_check": "n/a",
+                        "reason": "health module not found",
+                    }
+                continue
+
+        # Call the health() function
         try:
             self_checks[slot_id] = module.health()
         except Exception as exc:  # pragma: no cover - defensive

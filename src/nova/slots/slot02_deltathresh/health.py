@@ -46,6 +46,11 @@ _CAPS = [
 ]
 _DEPS = ["semantic_mirror", "slot04_tri", "slot06_cultural_synthesis", "slot10_civilizational_deployment"]
 
+# Cache processor instance to avoid re-initialization on every health check
+_processor_instance = None
+_processor_config = None
+
+
 def health() -> Dict[str, Any]:
     """Comprehensive health check for ΔTHRESH processor with graceful fallback."""
     try:
@@ -76,11 +81,16 @@ def health() -> Dict[str, Any]:
         # Core processor module is importable — collect metrics
         metrics: Dict[str, Any] = {}
 
-        # Probe instantiation
+        # Probe instantiation (with caching to avoid repeated init)
+        global _processor_instance, _processor_config
         instance = None
         try:
-            config = ProcessingConfig()
-            instance = DeltaThreshProcessor(config)
+            # Reuse cached instance if available
+            if _processor_instance is None:
+                _processor_config = ProcessingConfig()
+                _processor_instance = DeltaThreshProcessor(_processor_config)
+            instance = _processor_instance
+
             metrics.update({
                 "processor_version": instance.VERSION,
                 "operational_mode": instance.config.operational_mode.value,
@@ -89,6 +99,7 @@ def health() -> Dict[str, Any]:
                 "performance_tracking_enabled": instance.config.performance_tracking,
                 "anchor_system_available": instance.anchor_system is not None,
                 "thread_safety": "RLock protection active",
+                "instance_cached": True,  # Indicate we're using cached instance
             })
         except Exception:
             instance = None

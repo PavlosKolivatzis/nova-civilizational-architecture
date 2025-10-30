@@ -3,12 +3,19 @@ Health check for Slot 1 - Truth Anchor.
 """
 from . import truth_anchor_engine
 
+# Cache engine instance to avoid re-initialization on every health check
+_engine_instance = None
+
 
 def health() -> dict:
     """Return health status of Truth Anchor slot."""
+    global _engine_instance
+
     try:
-        # Basic self-check - verify engine can be initialized
-        engine = truth_anchor_engine.TruthAnchorEngine()
+        # Basic self-check - verify engine can be initialized (with caching)
+        if _engine_instance is None:
+            _engine_instance = truth_anchor_engine.TruthAnchorEngine()
+        engine = _engine_instance
 
         return {
             "self_check": "ok",
