@@ -13,6 +13,44 @@ def _h(x: bytes) -> bytes:
     return hashlib.sha3_256(x).digest()
 
 
+def _normalize_leaf(value: str) -> bytes:
+    """
+    Normalize a leaf value to 32 bytes.
+
+    Accepts 64-hex (already a hash) OR arbitrary string (hash to 32B).
+    """
+    try:
+        if len(value) == 64:
+            return bytes.fromhex(value)
+    except ValueError:
+        pass
+    return _h(value.encode("utf-8"))
+
+
+def merkle_root_from_hashes(values: List[str]) -> str:
+    """
+    Compute Merkle root from a list of hash strings.
+
+    Args:
+        values: List of hash strings (64-hex or arbitrary strings)
+
+    Returns:
+        64-character hex string of Merkle root
+    """
+    if not values:
+        return "0" * 64
+
+    level = [_normalize_leaf(v) for v in values]  # 32 bytes each
+    while len(level) > 1:
+        if len(level) % 2:
+            level.append(level[-1])  # duplicate last if odd
+        nxt = []
+        for i in range(0, len(level), 2):
+            nxt.append(_h(level[i] + level[i + 1]))
+        level = nxt
+    return level[0].hex()
+
+
 def merkle_root(hashes: Iterable[bytes]) -> bytes:
     """
     Compute deterministic Merkle root from ordered hash list.

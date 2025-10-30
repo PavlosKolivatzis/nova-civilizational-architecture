@@ -4,10 +4,25 @@ Centralized Prometheus metrics registry to prevent duplicate registrations.
 Phase 14-2: Merkle Checkpoints & PQC Signer
 """
 
-from prometheus_client import REGISTRY, Counter, Gauge, Summary
+from prometheus_client import REGISTRY, Counter, Gauge, Summary, ProcessCollector, PlatformCollector, GCCollector
 
 
 _metric_cache = {}
+
+# Initialize default collectors
+_initialized = False
+
+def init_default_collectors():
+    """Initialize default Prometheus collectors."""
+    global _initialized
+    if _initialized:
+        return
+    ProcessCollector(registry=REGISTRY)
+    PlatformCollector(registry=REGISTRY)
+    GCCollector(registry=REGISTRY)
+    _initialized = True
+
+init_default_collectors()
 
 
 def _get_existing(name: str):

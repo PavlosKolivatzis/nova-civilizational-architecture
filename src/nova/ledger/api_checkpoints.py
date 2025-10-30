@@ -5,7 +5,8 @@ Phase 14-2: Merkle Checkpoints & PQC Signer
 """
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from .checkpoint_service import CheckpointService
@@ -15,21 +16,69 @@ from .checkpoint_types import Checkpoint
 router = APIRouter(prefix="/ledger/checkpoints", tags=["ledger-checkpoints"])
 
 
-class CheckpointResponse(BaseModel):
-    """API response for checkpoint data."""
-    id: str
+class CreateReq(BaseModel):
     anchor_id: str
-    merkle_root: str
     start_rid: str
     end_rid: str
-    prev_root: Optional[str]
-    ts: str
-    sig: Optional[str]
-    key_id: Optional[str]
-    version: str
 
 
-# RollRequest removed - using anchor-based checkpoint creation
+class VerifyReq(BaseModel):
+    anchor_id: str
+    start_rid: str
+    end_rid: str
+    merkle_root: str
+
+
+def get_service() -> CheckpointService:
+    """Dependency injection for CheckpointService."""
+    # Placeholder - in real implementation, this would come from DI container
+    from .store import LedgerStore
+    from .checkpoint_signer import CheckpointSigner
+    store = LedgerStore()
+    signer = CheckpointSigner(store)
+    return CheckpointService(store, signer)
+
+
+@router.post("/")
+async def create_checkpoint(req: CreateReq, svc: CheckpointService = Depends(get_service)):
+    """
+    Create and sign a checkpoint for an anchor range.
+
+    POST /ledger/checkpoints
+    Body: {"anchor_id": "...", "start_rid": "...", "end_rid": "..."}
+    """
+    try:
+        cp = await svc.create(req.anchor_id, req.start_rid, req.end_rid)
+        if cp is None:
+            return JSONResponse({"error": "No records in range"}, status_code=400)
+        return {"id": cp.id, "merkle_root": cp.merkle_root, "key_id": cp.key_id}
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
+@router.get("/{anchor_id}")
+async def get_checkpoint(anchor_id: str, svc: CheckpointService = Depends(get_service)):
+    """
+    Get the last checkpoint for an anchor.
+
+    GET /ledger/checkpoints/{anchor_id}
+    """
+    cp = await svc.get_last(anchor_id)
+    if not cp:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"id": cp.id, "merkle_root": cp.merkle_root, "key_id": cp.key_id}
+
+
+@router.post("/verify")
+async def verify(req: VerifyReq, svc: CheckpointService = Depends(get_service)):
+    """
+    Verify a checkpoint range.
+
+    POST /ledger/checkpoints/verify
+    Body: {"anchor_id": "...", "start_rid": "...", "end_rid": "...", "merkle_root": "..."}
+    """
+    ok, err = await svc.verify_range(req.anchor_id, req.start_rid, req.end_rid, req.merkle_root)
+    return {"ok": bool(ok)} if ok else {"ok": False, "error": err or "verification failed"}
 
 
 def create_checkpoint_router(service: CheckpointService) -> APIRouter:
@@ -42,56 +91,6 @@ def create_checkpoint_router(service: CheckpointService) -> APIRouter:
     Returns:
         FastAPI router
     """
-
-    @router.post("/{anchor_id}")
-    async def create_checkpoint(anchor_id: str):
-        """
-        Create and sign a checkpoint for an anchor.
-
-        POST /ledger/checkpoints/{anchor_id}
-        """
-        try:
-            checkpoint = await service.create_and_sign(anchor_id)
-            return {"checkpoint": checkpoint.to_dict()}
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Internal error: {e}")
-
-    @router.get("/{checkpoint_id}")
-    async def get_checkpoint(checkpoint_id: str):
-        """
-        Get checkpoint by ID.
-
-        GET /ledger/checkpoints/{checkpoint_id}
-        """
-        try:
-            checkpoint = await service.store.fetch_checkpoint(checkpoint_id)
-            if not checkpoint:
-                raise HTTPException(status_code=404, detail=f"Checkpoint {checkpoint_id} not found")
-
-            return {"checkpoint": checkpoint.to_dict()}
-
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to get checkpoint {checkpoint_id}: {e}")
-
-    @router.get("/{checkpoint_id}/verify")
-    async def verify_checkpoint(checkpoint_id: str):
-        """
-        Verify a checkpoint by ID.
-
-        GET /ledger/checkpoints/{checkpoint_id}/verify
-        Returns: {"valid": true}
-        """
-        try:
-            is_valid = await service.verify(checkpoint_id)
-            return {"valid": is_valid}
-
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Verification error: {e}")
-
     return router
 
 
