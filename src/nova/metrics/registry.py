@@ -13,13 +13,24 @@ _metric_cache = {}
 _initialized = False
 
 def init_default_collectors():
-    """Initialize default Prometheus collectors."""
+    """Initialize default Prometheus collectors if not already present."""
     global _initialized
     if _initialized:
         return
-    ProcessCollector(registry=REGISTRY)
-    PlatformCollector(registry=REGISTRY)
-    GCCollector(registry=REGISTRY)
+
+    # Check if process collector already registered
+    collectors = list(REGISTRY._collector_to_names.keys()) if hasattr(REGISTRY, '_collector_to_names') else []
+    has_process = any(isinstance(c, ProcessCollector) for c in collectors)
+    has_platform = any(isinstance(c, PlatformCollector) for c in collectors)
+    has_gc = any(isinstance(c, GCCollector) for c in collectors)
+
+    if not has_process:
+        ProcessCollector(registry=REGISTRY)
+    if not has_platform:
+        PlatformCollector(registry=REGISTRY)
+    if not has_gc:
+        GCCollector(registry=REGISTRY)
+
     _initialized = True
 
 init_default_collectors()
