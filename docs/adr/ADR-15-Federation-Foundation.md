@@ -53,3 +53,10 @@ Introduce a feature-flagged federation layer (`FEDERATION_ENABLED`, default `fal
 - Add trust propagation engine with gradient scores and peer reputation.
 - Build multi-node simulation with fault injection.
 - Expand Grafana dashboard and alert rules as metrics mature.
+
+## 9. Phase 15-3 Additions (2025-11-02)
+- Range proofs: bounded chunking (`NOVA_FEDERATION_RANGE_MAX` / `NOVA_FEDERATION_CHUNK_BYTES_MAX`) with hashed digests and tip continuity, exposed at `/federation/checkpoints/latest` and `/federation/range_proof`.
+- RangeSyncer client: fetches range proofs, verifies continuity, records receipts, enforces divergence threshold (`NOVA_FEDERATION_MAX_DIVERGENCE`), and emits range/divergence metrics.
+- Receipts: append-only continuity and key-rotation receipts persisted via `ReceiptsStore`; Grafana visualises `federation_range_*`, `federation_divergences_total`, and `federation_manifest_rotations_total`.
+- Discovery: Dilithium-signed peer manifests fetched with TTL control (`NOVA_FEDERATION_MANIFEST_TTL_S`), generating rotation receipts on new key IDs.
+- Telemetry: OpenTelemetry spans wrap verification, range sync, and manifest fetch paths for trace correlation.

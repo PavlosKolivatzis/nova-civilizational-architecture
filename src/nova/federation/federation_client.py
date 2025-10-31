@@ -10,7 +10,12 @@ from typing import Dict, Optional
 import httpx
 
 from nova.federation.peer_registry import PeerRecord, PeerRegistry
-from nova.federation.schemas import CheckpointEnvelope
+from nova.federation.schemas import (
+    CheckpointEnvelope,
+    PeerManifest,
+    RangeProofRequest,
+    RangeProofResponse,
+)
 from nova.metrics import federation as federation_metrics
 
 
@@ -50,7 +55,7 @@ class FederationClient:
         return {peer.id: peer for peer in self._registry.records() if peer.enabled}
 
     def fetch_latest(self, peer: PeerRecord) -> Optional[CheckpointEnvelope]:
-        url = peer.url.rstrip("/") + "/federation/checkpoint/latest"
+        url = peer.url.rstrip("/") + "/federation/checkpoints/latest"
         try:
             response = self._request("GET", url, peer.id)
         except httpx.HTTPError:
@@ -58,6 +63,25 @@ class FederationClient:
         if response.status_code == 204:
             return None
         return CheckpointEnvelope(**response.json())
+
+    def fetch_range(self, peer: PeerRecord, request: RangeProofRequest) -> RangeProofResponse:
+        url = peer.url.rstrip("/") + "/federation/range_proof"
+        response = self._request(
+            "POST",
+            url,
+            peer.id,
+            json=request.model_dump(mode="json"),
+            headers={"Content-Type": "application/json"},
+        )
+        return RangeProofResponse(**response.json())
+
+    def fetch_manifest(self, peer: PeerRecord) -> Optional[PeerManifest]:
+        url = peer.url.rstrip("/") + "/.well-known/nova-peer.json"
+        try:
+            response = self._request("GET", url, peer.id)
+        except httpx.HTTPError:
+            return None
+        return PeerManifest(**response.json())
 
     def submit_checkpoint(self, peer: PeerRecord, envelope: CheckpointEnvelope) -> Dict[str, object]:
         url = peer.url.rstrip("/") + "/federation/checkpoint"

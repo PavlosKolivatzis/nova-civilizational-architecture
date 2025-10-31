@@ -6,7 +6,7 @@ import base64
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Sequence
 from uuid import UUID
 
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
@@ -79,5 +79,116 @@ class CheckpointEnvelope(BaseModel):
     def canonical_bytes(self) -> bytes:
         return self.canonical_json().encode("ascii")
 
+class RangeProofRequest(BaseModel):
+    """Request payload for range proofs."""
 
-__all__ = ["Peer", "CheckpointEnvelope"]
+    from_height: int = Field(..., ge=0)
+    max: int = Field(256, ge=1, le=2048)
+
+
+class ProofChunk(BaseModel):
+    """Chunk of consecutive checkpoint roots with Merkle proof."""
+
+    start: int = Field(..., ge=0)
+    end: int = Field(..., ge=0)
+    roots: List[str] = Field(default_factory=list)
+    proof: List[str] = Field(default_factory=list)
+
+    @field_validator("roots", mode="after")
+    def _validate_roots(cls, values: Sequence[str]) -> List[str]:
+        normalized: List[str] = []
+        for value in values:
+            value_lower = value.lower()
+            if len(value_lower) != 64 or not all(ch in "0123456789abcdef" for ch in value_lower):
+                raise ValueError("roots must be 64-character lowercase hex strings")
+            normalized.append(value_lower)
+        return normalized
+
+    @field_validator("proof", mode="after")
+    def _validate_proof(cls, values: Sequence[str]) -> List[str]:
+        normalized: List[str] = []
+        for value in values:
+            value_lower = value.lower()
+            if len(value_lower) != 64 or not all(ch in "0123456789abcdef" for ch in value_lower):
+                raise ValueError("proof hashes must be 64-character lowercase hex strings")
+            normalized.append(value_lower)
+        return normalized
+
+
+class TipSummary(BaseModel):
+    height: int = Field(..., ge=0)
+    merkle_root: str = Field(..., min_length=64, max_length=64)
+    ts: datetime
+    producer: str
+
+
+class RangeProofResponse(BaseModel):
+    """Response containing range proof chunks and tip summary."""
+
+    chunks: List[ProofChunk]
+    tip: TipSummary
+
+
+class ContinuityReceipt(BaseModel):
+    """Receipt recording a verified range or divergence event."""
+
+    peer: str
+    range_start: int = Field(..., ge=0)
+    range_end: int = Field(..., ge=0)
+    tip_height: int = Field(..., ge=0)
+    tip_root: str = Field(..., min_length=64, max_length=64)
+    status: Literal["ok", "divergence"]
+    ts: datetime
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+
+class PeerManifestKey(BaseModel):
+    """Key descriptor published by a peer."""
+
+    kty: Literal["pq_dilithium2"]
+    kid: str
+    pub: str
+    activated_at: datetime = Field(alias="from")
+    expires_at: Optional[datetime] = None
+
+
+class PeerManifest(BaseModel):
+    """Signed manifest describing peer endpoint and active keys."""
+
+    id: str
+    endpoint: AnyHttpUrl
+    keys: List[PeerManifestKey]
+    sig: str
+    version: Literal["v1"] = "v1"
+    issued_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @field_validator("keys", mode="after")
+    def _require_keys(cls, values: Sequence[PeerManifestKey]) -> List[PeerManifestKey]:
+        if not values:
+            raise ValueError("keys list must not be empty")
+        return list(values)
+
+
+class KeyRotationReceipt(BaseModel):
+    """Receipt acknowledging manifest rotation for a peer."""
+
+    peer: str
+    key_id: str
+    activated_at: datetime
+    ts: datetime
+    manifest_version: str
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+
+__all__ = [
+    "Peer",
+    "CheckpointEnvelope",
+    "RangeProofRequest",
+    "ProofChunk",
+    "RangeProofResponse",
+    "TipSummary",
+    "ContinuityReceipt",
+    "PeerManifest",
+    "PeerManifestKey",
+    "KeyRotationReceipt",
+]

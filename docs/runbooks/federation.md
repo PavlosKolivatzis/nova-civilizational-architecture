@@ -21,6 +21,10 @@
    NOVA_FEDERATION_TRUST_W_LATENCY=0.15
    NOVA_FEDERATION_TRUST_W_AGE=0.15
    NOVA_FEDERATION_TRUST_W_CONTINUITY=0.15
+   NOVA_FEDERATION_RANGE_MAX=256
+   NOVA_FEDERATION_CHUNK_BYTES_MAX=65536
+   NOVA_FEDERATION_MAX_DIVERGENCE=2
+   NOVA_FEDERATION_MANIFEST_TTL_S=3600
    ```
 3. Restart orchestrator; confirm `/federation/health` returns `status=ok`.
 4. Monitor Grafana panels (Federation Health dashboard):
@@ -30,6 +34,10 @@
    - `federation_last_sync_seconds`
    - `federation_score_gauge`
    - `federation_client_retries_total`
+   - `federation_range_bytes_total`
+   - `sum by(peer) (increase(federation_range_chunks_total{result="ok"}[5m]))`
+   - `federation_divergences_total`
+   - `federation_manifest_rotations_total`
    - Optional: `federation_rate_limited_total`, `federation_replay_total`
 
 ## Disable / Rollback
@@ -50,6 +58,15 @@ curl -i -X POST http://localhost:8000/federation/checkpoint   -H 'Content-Type: 
 
 # Oversize payload (expect 413)
 curl -i -X POST http://localhost:8000/federation/checkpoint   -H 'Content-Type: application/json'   -H 'Content-Length: 70000' -d @big.json
+
+# Latest checkpoint tip
+curl -s http://localhost:8000/federation/checkpoints/latest | jq
+
+# Range proof (from height 120, max 64 entries)
+curl -s -X POST http://localhost:8000/federation/range_proof \
+  -H 'Content-Type: application/json' \
+  -H 'X-Nova-Peer: node-athens' \
+  -d '{"from_height":120,"max":64}' | jq
 ```
 
 ## Error codes
@@ -61,8 +78,14 @@ Responses conform to `{code, reason}`. Frequent values:
 - `replay` (409)
 - `rate_limited` (429)
 - `invalid_payload` / `invalid_json`
+- `range_too_large` (422)
+- `range_payload_too_large` (413)
+- `no_tip` (503)
 
 ## Notes
 - Phase 15-1 scaffolds interfaces only; checkpoints are not merged into the local ledger yet.
 - Keep peer public keys in Dilithium2 PEM format; future phases will automate rotation.
 - Ensure NTP is enabled on federation nodes to avoid clock-skew rejections.
+- Range proofs remain bounded by `NOVA_FEDERATION_RANGE_MAX` and `NOVA_FEDERATION_CHUNK_BYTES_MAX`; exceeding either returns the error codes above.
+- RangeSyncer records continuity/divergence receipts in the append-only receipt log; review via Grafana (`federation_divergences_total`) or inspect the receipt store path configured for the orchestrator.
+- Signed peer manifests are cached locally for `NOVA_FEDERATION_MANIFEST_TTL_S`; new key IDs emit `federation_manifest_rotations_total` and append rotation receipts.

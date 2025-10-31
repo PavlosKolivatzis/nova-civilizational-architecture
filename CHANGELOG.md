@@ -15,7 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Civilizational parameters for digital trust systems
   - Key insight: "Integrity that never meets another remains sterile; only through federation does truth become civilization."
 
-## [14.0.0-alpha] — 2025-10-31
+## [15.2.0-alpha] - 2025-11-02
+### Added
+- **Phase 15-3: Federation Range Sync & Discovery**
+  - Range proof API (`GET /federation/checkpoints/latest`, `POST /federation/range_proof`) with bounded chunks (`NOVA_FEDERATION_RANGE_MAX`, `NOVA_FEDERATION_CHUNK_BYTES_MAX`) and hashed continuity digests.
+  - Client `RangeSyncer` orchestrating range fetch/verify, divergence enforcement (`NOVA_FEDERATION_MAX_DIVERGENCE`), continuity/divergence receipts, and OpenTelemetry spans.
+  - Signed peer manifest discovery (`ManifestCache`, `ManifestVerifier`) with rotation receipts and `federation_manifest_rotations_total` metric (`NOVA_FEDERATION_MANIFEST_TTL_S`).
+  - New Prometheus metrics: `federation_range_bytes_total`, `federation_range_chunks_total{result}`, `federation_divergences_total`, `federation_manifest_rotations_total`.
+  - Grafana dashboard refresh (`monitoring/grafana/federation-health.json`) with range/divergence/manifests panels.
+  - Tests covering range proofs, sync flow, divergence policy, manifest rotation, metrics, and tracing (`tests/federation/test_*.py` additions).
+
+## [15.1.0-alpha] - 2025-10-31
+### Added
+- **Phase 15-2: Gradient Trust & Manifest Preparation**
+  - Gradient trust scoring exposed alongside boolean verification.
+  - OpenAPI documentation for federation endpoints with `{code, reason}` errors.
+  - httpx-based federation client retries + metrics.
+
+## [14.0.0-alpha] - 2025-10-31
 ### Added
 - **Phase 14-2: Merkle Checkpoints + PQC Signer** — Complete autonomous verification ledger with quantum-resistant signing
 - Merkle tree builder with SHA3-256 hashing, proof generation, and verification

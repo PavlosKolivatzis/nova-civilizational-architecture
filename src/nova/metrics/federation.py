@@ -38,6 +38,30 @@ _client_retries = Counter(
     ("peer",),
     registry=REGISTRY,
 )
+_range_bytes = Counter(
+    "federation_range_bytes_total",
+    "Total bytes transferred during range proofs",
+    ("peer",),
+    registry=REGISTRY,
+)
+_range_chunks = Counter(
+    "federation_range_chunks_total",
+    "Range proof chunks processed by result/peer",
+    ("peer", "result"),
+    registry=REGISTRY,
+)
+_divergences = Counter(
+    "federation_divergences_total",
+    "Detected divergence events per peer",
+    ("peer",),
+    registry=REGISTRY,
+)
+_manifest_rotations = Counter(
+    "federation_manifest_rotations_total",
+    "Manifest rotations recorded per peer",
+    ("peer",),
+    registry=REGISTRY,
+)
 
 
 def inc_verified(result: str, peer: str) -> None:
@@ -60,6 +84,22 @@ def inc_client_retry(peer: str) -> None:
     _client_retries.labels(peer=peer).inc()
 
 
+def add_range_bytes(peer: str, byte_count: int) -> None:
+    _range_bytes.labels(peer=peer).inc(byte_count)
+
+
+def inc_range_chunk(peer: str, result: str) -> None:
+    _range_chunks.labels(peer=peer, result=result).inc()
+
+
+def inc_divergence(peer: str) -> None:
+    _divergences.labels(peer=peer).inc()
+
+
+def inc_manifest_rotation(peer: str) -> None:
+    _manifest_rotations.labels(peer=peer).inc()
+
+
 def verifications_counter() -> Counter:
     return _verifications
 
@@ -75,6 +115,10 @@ def reset_for_tests() -> None:
     _last_sync._metrics.clear()  # type: ignore[attr-defined]
     _score_gauge._metrics.clear()  # type: ignore[attr-defined]
     _client_retries._metrics.clear()  # type: ignore[attr-defined]
+    _range_bytes._metrics.clear()  # type: ignore[attr-defined]
+    _range_chunks._metrics.clear()  # type: ignore[attr-defined]
+    _divergences._metrics.clear()  # type: ignore[attr-defined]
+    _manifest_rotations._metrics.clear()  # type: ignore[attr-defined]
 
 
 __all__ = [
@@ -83,6 +127,10 @@ __all__ = [
     "set_last_sync",
     "set_score",
     "inc_client_retry",
+    "add_range_bytes",
+    "inc_range_chunk",
+    "inc_divergence",
+    "inc_manifest_rotation",
     "verifications_counter",
     "client_retries_counter",
     "reset_for_tests",

@@ -1,27 +1,55 @@
-"""FastAPI router for federation endpoints (Phase 15-1 scaffold)."""
+"""FastAPI router for federation endpoints (Phase 15-3)."""
 
 from __future__ import annotations
 
 import os
 import time
 from collections import defaultdict, deque
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, Optional, Protocol, Sequence
 
-from pydantic import BaseModel
-
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 try:  # pragma: no cover - FastAPI optional in some environments
-    from fastapi import APIRouter, Request, status
+    from fastapi import APIRouter, Request, Response, status
     from fastapi.responses import JSONResponse
 except Exception:  # pragma: no cover
     APIRouter = None  # type: ignore
 
-from nova.federation.peer_registry import PeerRegistry
-from nova.federation.schemas import CheckpointEnvelope
-from nova.federation.trust_model import score_trust, compute_gradient_score
+try:  # pragma: no cover - optional OpenTelemetry dependency
+    from opentelemetry import trace
+except Exception:  # pragma: no cover
+    trace = None
+
+from nova.federation.peer_registry import PeerRegistry, PeerRecord
+from nova.federation.range_proofs import RangeEntry, build_range_response
+from nova.federation.schemas import (
+    CheckpointEnvelope,
+    RangeProofRequest,
+    RangeProofResponse,
+    TipSummary,
+)
+from nova.federation.trust_model import compute_gradient_score
 from nova.metrics import federation as federation_metrics
+
+
+class RangeProvider(Protocol):
+    """Protocol for accessing checkpoint ranges."""
+
+    def tip(self) -> Optional[TipSummary]:
+        ...
+
+    def range_slice(self, start: int, limit: int) -> Sequence[RangeEntry]:
+        ...
+
+
+class _NullRangeProvider:
+    def tip(self) -> Optional[TipSummary]:  # pragma: no cover - trivial
+        return None
+
+    def range_slice(self, start: int, limit: int) -> Sequence[RangeEntry]:  # pragma: no cover
+        return ()
 
 
 def _feature_enabled() -> bool:
@@ -32,11 +60,26 @@ def _error(code: str, http_status: int, reason: str) -> JSONResponse:
     return JSONResponse(status_code=http_status, content={"code": code, "reason": reason})
 
 
-def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRouter]:
+@contextmanager
+def _start_span(name: str):
+    if trace is None:  # pragma: no cover - tracing optional
+        yield None
+        return
+    tracer = trace.get_tracer("nova.federation")
+    with tracer.start_as_current_span(name) as span:
+        yield span
+
+
+def build_router(
+    peer_registry: Optional[PeerRegistry] = None,
+    *,
+    range_provider: Optional[RangeProvider] = None,
+) -> Optional[APIRouter]:
     if APIRouter is None or not _feature_enabled():
         return None
 
     registry = peer_registry or PeerRegistry()
+    provider = range_provider or _NullRangeProvider()
     router = APIRouter(prefix="/federation", tags=["federation"])
 
     class TrustPayload(BaseModel):
@@ -66,7 +109,17 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
         409: {"description": "Replay", "content": {"application/json": {"example": {"code": "replay", "reason": "Duplicate checkpoint"}}}},
         413: {"description": "Payload too large", "content": {"application/json": {"example": {"code": "too_large", "reason": "Body exceeds configured limit"}}}},
         415: {"description": "Unsupported media type", "content": {"application/json": {"example": {"code": "unsupported_media_type", "reason": "Content-Type must be application/json"}}}},
-        422: {"description": "Validation error", "content": {"application/json": {"example": {"code": "stale", "reason": "Clock skew: stale"}}}},
+        422: {
+            "description": "Validation error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "stale": {"value": {"code": "stale", "reason": "Clock skew: stale"}},
+                        "range": {"value": {"code": "range_too_large", "reason": "Requested range exceeds limit"}},
+                    }
+                }
+            },
+        },
         429: {"description": "Rate limited", "content": {"application/json": {"example": {"code": "rate_limited", "reason": "Too many requests"}}}},
     }
 
@@ -81,6 +134,9 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
     rate_buckets: defaultdict[str, Dict[str, float]] = defaultdict(
         lambda: {"t": time.monotonic(), "tokens": rate_burst}
     )
+    range_limit = int(os.getenv("NOVA_FEDERATION_RANGE_MAX", "256"))
+    chunk_size = max(1, min(range_limit, 64))
+    chunk_bytes_limit = int(os.getenv("NOVA_FEDERATION_CHUNK_BYTES_MAX", str(64 * 1024)))
 
     def _set_peer_metrics() -> None:
         for record in registry.records():
@@ -90,6 +146,36 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
 
     def _lookup_peer(peer_id: str):
         return registry.get(peer_id)
+
+    def _peer_from_request(request: Request) -> str:
+        header_peer = request.headers.get("X-Nova-Peer")
+        if header_peer:
+            return header_peer
+        return "anonymous"
+
+    def _model_size_bytes(model: BaseModel) -> int:
+        return len(model.model_dump_json(by_alias=True, exclude_none=True).encode("utf-8"))
+
+    def _normalize_entries(items: Sequence[Any]) -> Sequence[RangeEntry]:
+        normalized: list[RangeEntry] = []
+        for item in items:
+            if isinstance(item, RangeEntry):
+                normalized.append(item)
+            elif isinstance(item, dict):
+                normalized.append(RangeEntry(height=item["height"], merkle_root=item["merkle_root"]))
+            else:
+                height, root = item  # type: ignore[misc]
+                normalized.append(RangeEntry(height=height, merkle_root=root))
+        return normalized
+
+    def _normalize_tip(raw_tip: Any) -> Optional[TipSummary]:
+        if raw_tip is None:
+            return None
+        if isinstance(raw_tip, TipSummary):
+            return raw_tip
+        if isinstance(raw_tip, dict):
+            return TipSummary(**raw_tip)
+        raise TypeError("Unsupported tip payload")
 
     def _check_clock_skew(envelope: CheckpointEnvelope) -> tuple[bool, Optional[str]]:
         ts = envelope.ts.astimezone(timezone.utc) if envelope.ts.tzinfo else envelope.ts.replace(tzinfo=timezone.utc)
@@ -124,6 +210,76 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
                 envelope.producer,
             ]
         )
+
+    @router.get(
+        "/checkpoints/latest",
+        response_model=TipSummary,
+        responses={204: {"description": "No checkpoint available"}},
+        summary="Fetch latest checkpoint tip",
+    )
+    async def get_latest_checkpoint() -> Response:
+        tip = _normalize_tip(provider.tip())
+        if tip is None:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+        return JSONResponse(status_code=status.HTTP_200_OK, content=tip.model_dump(mode="json"))
+
+    @router.get("/checkpoint/latest", include_in_schema=False)
+    async def get_latest_checkpoint_legacy() -> Response:
+        return await get_latest_checkpoint()
+
+    @router.post(
+        "/range_proof",
+        response_model=RangeProofResponse,
+        responses=ERROR_RESPONSES,
+        summary="Request range proof from checkpoint height",
+    )
+    async def post_range_proof(request: Request) -> JSONResponse:
+        with _start_span("federation.range_proof"):
+            try:
+                payload = await request.json()
+            except Exception:
+                return _error("invalid_json", status.HTTP_400_BAD_REQUEST, "Malformed JSON body")
+
+            try:
+                range_request = RangeProofRequest(**payload)
+            except ValidationError:
+                return _error("invalid_payload", status.HTTP_422_UNPROCESSABLE_ENTITY, "Invalid range proof payload")
+
+            if range_request.max > range_limit:
+                return _error(
+                    "range_too_large",
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    "Requested range exceeds limit",
+                )
+
+            entries = list(_normalize_entries(provider.range_slice(range_request.from_height, range_request.max)))
+            tip = _normalize_tip(provider.tip())
+            if tip is None:
+                return _error("no_tip", status.HTTP_503_SERVICE_UNAVAILABLE, "No checkpoint tip available")
+
+            response_model = build_range_response(
+                entries,
+                range_request,
+                tip=tip,
+                max_chunk_size=chunk_size,
+            )
+            size_bytes = _model_size_bytes(response_model)
+            if size_bytes > chunk_bytes_limit:
+                return _error(
+                    "range_payload_too_large",
+                    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    "Range proof payload exceeds configured limit",
+                )
+
+            peer_id = _peer_from_request(request)
+            federation_metrics.add_range_bytes(peer_id, size_bytes)
+            for chunk in response_model.chunks:
+                federation_metrics.inc_range_chunk(peer_id, "ok")
+
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=response_model.model_dump(mode="json", by_alias=True),
+            )
 
     @router.get("/health")
     async def health() -> Dict[str, Any]:

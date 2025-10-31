@@ -81,8 +81,8 @@ def make_envelope() -> Callable[..., CheckpointEnvelope]:
 def client_factory(enable_federation):
     from nova.federation import federation_server
 
-    def _factory() -> TestClient:
-        router = federation_server.build_router()
+    def _factory(*, provider=None) -> TestClient:
+        router = federation_server.build_router(range_provider=provider)
         app = FastAPI()
         if router is not None:
             app.include_router(router)

@@ -1,9 +1,13 @@
 {
-  "title": "Federation Health (Phase 15-1)",
+  "title": "Federation Health (Phase 15-3)",
   "panels": [
     {"type": "stat", "title": "Peers Up", "targets": [{"expr": "federation_peers_up"}]},
     {"type": "stat", "title": "Last Sync Seconds", "targets": [{"expr": "federation_last_sync_seconds"}]},
-    {"type": "timeseries", "title": "Verification Results", "targets": [{"expr": "sum by (result)(increase(federation_verifications_total[5m]))"}]}
+    {"type": "timeseries", "title": "Verification Results", "targets": [{"expr": "sum by (result)(increase(federation_verifications_total[5m]))"}]},
+    {"type": "timeseries", "title": "Range Chunks (OK)", "targets": [{"expr": "sum by (peer)(increase(federation_range_chunks_total{result=\"ok\"}[5m]))"}]},
+    {"type": "timeseries", "title": "Range Bytes", "targets": [{"expr": "sum by (peer)(increase(federation_range_bytes_total[5m]))"}]},
+    {"type": "stat", "title": "Divergences", "targets": [{"expr": "sum(federation_divergences_total)"}]},
+    {"type": "stat", "title": "Manifest Rotations", "targets": [{"expr": "sum(federation_manifest_rotations_total)"}]}
   ]
 }
 
