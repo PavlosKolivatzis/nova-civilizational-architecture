@@ -1,0 +1,169 @@
+# ADR Index - Nova Civilizational Architecture
+# This index provides structured metadata for all Architecture Decision Records
+# Format: YAML for machine-readability and human-editability
+
+version: "1.0"
+last_updated: "2025-10-31"
+
+# ADR Categories
+categories:
+  - name: "technical"
+    description: "Technical architecture decisions with implementation details"
+  - name: "reflection"
+    description: "Philosophical and epistemic reflections on system evolution"
+  - name: "phase"
+    description: "Major phase-specific architectural blueprints"
+
+# ADR Records
+records:
+  - id: "ADR-13"
+    title: "Autonomous Verification Ledger - Final Architecture"
+    file: "ADR-13-Ledger-Final.md"
+    category: "technical"
+    date: "2025-10-27"
+    status: "accepted"
+    phase: "13"
+    tags:
+      - "ledger"
+      - "hash-chain"
+      - "trust-scoring"
+      - "merkle"
+      - "avl"
+    summary: "Complete architecture for hash-linked ledger with SHA3-256 continuity, composite trust scoring, and Merkle checkpoint support"
+    related:
+      - "ADR-14"
+      - "ADR-Reflection-15"
+
+  - id: "ADR-14"
+    title: "PostgreSQL Persistence for Autonomous Verification Ledger"
+    file: "ADR-14-Ledger-Persistence.md"
+    category: "technical"
+    date: "2025-10-29"
+    status: "accepted"
+    phase: "14-1"
+    tags:
+      - "ledger"
+      - "postgresql"
+      - "persistence"
+      - "async"
+      - "durability"
+    summary: "Async PostgreSQL backend for ledger records and checkpoints with automatic fallback to in-memory store"
+    related:
+      - "ADR-13"
+      - "ADR-Reflection-15"
+
+  - id: "ADR-Reflection-15"
+    title: "Federation as the Birth of Shared Truth"
+    file: "ADR-Reflection-15-Federation-Birth-of-Shared-Truth.md"
+    category: "reflection"
+    date: "2025-10-28"
+    status: "canonical"
+    phase: "15"
+    tags:
+      - "federation"
+      - "epistemic"
+      - "philosophy"
+      - "trust"
+      - "consensus"
+      - "civilization"
+    summary: "Canonical reflection on the transition from isolated attestation to federated verification - truth as dialogic coherence"
+    key_insight: "Integrity that never meets another remains sterile; only through federation does truth become civilization."
+    related:
+      - "ADR-13"
+      - "ADR-14"
+    principles:
+      - "Append-only immutability"
+      - "Quantum-resistant verifiability"
+      - "Ethical traceability"
+
+  - id: "ADR-Slot01-QuantumEntropy"
+    title: "Quantum Entropy Integration for Truth Anchor"
+    file: "ADR-Slot01-QuantumEntropy-v1.0.md"
+    category: "technical"
+    date: "2025-10-20"
+    status: "accepted"
+    phase: "12"
+    tags:
+      - "quantum"
+      - "entropy"
+      - "slot01"
+      - "cirq"
+      - "qrng"
+    summary: "Integration of quantum entropy sources (QRNG.ANU, Cirq simulation) for high-fidelity truth anchoring"
+    related:
+      - "ADR-13"
+
+  - id: "ADR-P5-001"
+    title: "Phase 5 Architecture Decisions - Part 1"
+    file: "ADR-P5-001.md"
+    category: "phase"
+    date: "2024-12-15"
+    status: "historical"
+    phase: "5"
+    tags:
+      - "phase5"
+      - "architecture"
+      - "foundational"
+    summary: "Early architectural decisions for Phase 5 system design"
+    related:
+      - "ADR-P5-002"
+
+  - id: "ADR-P5-002"
+    title: "Phase 5 Architecture Decisions - Part 2"
+    file: "ADR-P5-002.md"
+    category: "phase"
+    date: "2024-12-20"
+    status: "historical"
+    phase: "5"
+    tags:
+      - "phase5"
+      - "architecture"
+      - "continuation"
+    summary: "Continuation of Phase 5 architectural blueprint"
+    related:
+      - "ADR-P5-001"
+
+# Index Metadata
+metadata:
+  total_adrs: 6
+  categories_count: 3
+  phases_covered:
+    - "5"
+    - "12"
+    - "13"
+    - "14-1"
+    - "14-2"
+    - "15"
+
+  # Quick access by category
+  by_category:
+    technical:
+      - "ADR-13"
+      - "ADR-14"
+      - "ADR-Slot01-QuantumEntropy"
+    reflection:
+      - "ADR-Reflection-15"
+    phase:
+      - "ADR-P5-001"
+      - "ADR-P5-002"
+
+  # Quick access by phase
+  by_phase:
+    "5":
+      - "ADR-P5-001"
+      - "ADR-P5-002"
+    "12":
+      - "ADR-Slot01-QuantumEntropy"
+    "13":
+      - "ADR-13"
+    "14-1":
+      - "ADR-14"
+    "15":
+      - "ADR-Reflection-15"
+
+# Usage Notes
+usage:
+  discovery: "Use this index to find ADRs by phase, category, or tag"
+  relationships: "Follow 'related' links to understand architectural evolution"
+  reflections: "Reflection ADRs provide epistemic context for technical decisions"
+  versioning: "ADR status: proposed → accepted → deprecated → superseded → canonical"

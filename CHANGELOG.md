@@ -5,6 +5,46 @@ All notable changes to Nova Civilizational Architecture will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- **ADR-Reflection-15: Federation as the Birth of Shared Truth** — Canonical reflection on Phase 15's epistemic and architectural meaning
+  - Philosophical foundation for federated checkpoint synchronization
+  - Evolution from isolated attestation to dialogic coherence
+  - Decentralization of epistemic authority while maintaining node sovereignty
+  - Trust as measurable gradient rather than binary flag
+  - Civilizational parameters for digital trust systems
+  - Key insight: "Integrity that never meets another remains sterile; only through federation does truth become civilization."
+
+## [14.0.0-alpha] — 2025-10-31
+### Added
+- **Phase 14-2: Merkle Checkpoints + PQC Signer** — Complete autonomous verification ledger with quantum-resistant signing
+- Merkle tree builder with SHA3-256 hashing, proof generation, and verification
+- PQC checkpoint signing using Dilithium2 via shared keyring infrastructure
+- CheckpointSigner with canonical byte representation and signature verification
+- CheckpointService with configurable intervals (`every_seconds`, `min_records`) and enable/disable flag
+- REST API endpoints: `POST /ledger/checkpoints/`, `GET /ledger/checkpoints/{anchor_id}`, `POST /ledger/checkpoints/verify`
+- Checkpoint persistence in PostgreSQL (`ledger_checkpoints` table)
+- Metrics: `ledger_checkpoints_total`, `ledger_checkpoint_verify_failures_total`
+- 73 ledger tests covering Merkle operations, signing, verification, and API endpoints
+- Python 3.10-3.13 compatibility with `from __future__ import annotations`
+
+### Performance
+- **Health system caching optimization** — Eliminated 60% performance degradation under sustained load
+- Module-level caching for slot health imports
+- Instance-level caching for slot processors (TruthAnchorEngine, DeltaThreshProcessor)
+- Sustained load test now passes: performance degradation <1.5x (was 1.6x)
+- Eliminated 1000+ redundant initialization log messages
+
+### Fixed
+- Prometheus metrics: Prevented duplicate ProcessCollector registration in CI
+- Test isolation: Added `clear_slot_health_cache()` for clean test state
+- API dependency injection: Override pattern for proper mock injection in tests
+- Python 3.10 compatibility: Future annotations for union type syntax in dataclasses
+
+### Documentation
+- ADR-Reflection-15: Federation as the Birth of Shared Truth
+- Updated ledger test documentation with new API signatures
+
 ## [13.1.0] — 2025-10-29
 ### Added
 - **PostgreSQL Persistence for AVL** — Phase 14-1 complete: durable, async ledger storage
