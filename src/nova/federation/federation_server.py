@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import os
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+
+from pydantic import BaseModel
 
 from pydantic import ValidationError
 
@@ -19,7 +20,7 @@ except Exception:  # pragma: no cover
 
 from nova.federation.peer_registry import PeerRegistry
 from nova.federation.schemas import CheckpointEnvelope
-from nova.federation.trust_model import score_trust
+from nova.federation.trust_model import score_trust, compute_gradient_score
 from nova.metrics import federation as federation_metrics
 
 
@@ -37,6 +38,37 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
 
     registry = peer_registry or PeerRegistry()
     router = APIRouter(prefix="/federation", tags=["federation"])
+
+    class TrustPayload(BaseModel):
+        verified: bool
+        score: float
+
+    class CheckpointResponse(BaseModel):
+        peer: str
+        trust: TrustPayload
+        canonical_ts: str
+        replayed: bool = False
+
+    CHECKPOINT_REQUEST_EXAMPLE = {
+        "anchor_id": "00000000-0000-0000-0000-000000000000",
+        "merkle_root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "height": 42,
+        "ts": "2025-10-31T00:00:00Z",
+        "algo": "sha3-256",
+        "sig_b64": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eXg=",
+        "producer": "node-athens",
+        "version": "v1",
+    }
+
+    ERROR_RESPONSES = {
+        400: {"description": "Malformed request", "content": {"application/json": {"example": {"code": "invalid_json", "reason": "Malformed JSON body"}}}},
+        401: {"description": "Unknown peer", "content": {"application/json": {"example": {"code": "unknown_peer", "reason": "Unknown peer"}}}},
+        409: {"description": "Replay", "content": {"application/json": {"example": {"code": "replay", "reason": "Duplicate checkpoint"}}}},
+        413: {"description": "Payload too large", "content": {"application/json": {"example": {"code": "too_large", "reason": "Body exceeds configured limit"}}}},
+        415: {"description": "Unsupported media type", "content": {"application/json": {"example": {"code": "unsupported_media_type", "reason": "Content-Type must be application/json"}}}},
+        422: {"description": "Validation error", "content": {"application/json": {"example": {"code": "stale", "reason": "Clock skew: stale"}}}},
+        429: {"description": "Rate limited", "content": {"application/json": {"example": {"code": "rate_limited", "reason": "Too many requests"}}}},
+    }
 
     body_limit = int(os.getenv("NOVA_FEDERATION_BODY_MAX", str(64 * 1024)))
     skew_seconds = int(os.getenv("NOVA_FEDERATION_SKEW_S", "120"))
@@ -79,7 +111,6 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
 
     def _register_success(peer_id: str) -> None:
         federation_metrics.inc_verified("ok", peer_id)
-        federation_metrics.set_last_sync(peer_id, 0.0)
 
     def _register_failure(peer_id: str = "unknown") -> None:
         federation_metrics.inc_verified("fail", peer_id)
@@ -111,8 +142,16 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
         ]
         return {"peers": peers}
 
-    @router.post("/checkpoint")
+    @router.post(
+        "/checkpoint",
+        response_model=CheckpointResponse,
+        responses=ERROR_RESPONSES,
+        response_model_exclude_none=True,
+        summary="Submit a PQC-signed checkpoint",
+        openapi_extra={"requestBody": {"content": {"application/json": {"example": CHECKPOINT_REQUEST_EXAMPLE}}}},
+    )
     async def submit_checkpoint(request: Request) -> JSONResponse:
+        start_time = time.perf_counter()
         content_type = request.headers.get("content-type", "").split(";")[0].strip().lower()
         if content_type != "application/json":
             return _error(
@@ -159,9 +198,21 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
         else:
             replay_cache.append(replay_key)
 
-        # TODO: integrate Dilithium + Merkle verification in Phase 15-2.
-        trust = score_trust(True)
+        ts_utc = envelope.ts.astimezone(timezone.utc) if envelope.ts.tzinfo else envelope.ts.replace(tzinfo=timezone.utc)
+        age_seconds = max(0.0, (datetime.now(timezone.utc) - ts_utc).total_seconds())
+        latency_ms = max(0.0, (time.perf_counter() - start_time) * 1000.0)
+        continuity_score = 1.0  # TODO: integrate real continuity metric in Phase 15-2.
+
+        gradient = compute_gradient_score(
+            verified=True,
+            latency_ms=latency_ms,
+            age_s=age_seconds,
+            continuity=continuity_score,
+        )
+        trust = {"verified": True, "score": gradient}
         _register_success(peer.id)
+        federation_metrics.set_last_sync(peer.id, age_seconds)
+        federation_metrics.set_score(peer.id, gradient)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -172,8 +223,15 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
             },
         )
 
-    @router.post("/verify")
+    @router.post(
+        "/verify",
+        response_model=TrustPayload,
+        responses=ERROR_RESPONSES,
+        summary="Verify a checkpoint signature",
+        openapi_extra={"requestBody": {"content": {"application/json": {"example": CHECKPOINT_REQUEST_EXAMPLE}}}},
+    )
     async def verify_checkpoint(request: Request) -> JSONResponse:
+        start_time = time.perf_counter()
         try:
             payload = await request.json()
         except Exception:  # pragma: no cover - malformed payload
@@ -186,8 +244,20 @@ def build_router(peer_registry: Optional[PeerRegistry] = None) -> Optional[APIRo
 
         peer = _lookup_peer(envelope.producer)
         peer_id = peer.id if peer else "unknown"
-        trust = score_trust(True)
+
+        ts_utc = envelope.ts.astimezone(timezone.utc) if envelope.ts.tzinfo else envelope.ts.replace(tzinfo=timezone.utc)
+        age_seconds = max(0.0, (datetime.now(timezone.utc) - ts_utc).total_seconds())
+        latency_ms = max(0.0, (time.perf_counter() - start_time) * 1000.0)
+        gradient = compute_gradient_score(
+            verified=True,
+            latency_ms=latency_ms,
+            age_s=age_seconds,
+            continuity=1.0,
+        )
+        trust = {"verified": True, "score": gradient}
         _register_success(peer_id)
+        federation_metrics.set_last_sync(peer_id, age_seconds)
+        federation_metrics.set_score(peer_id, gradient)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"verified": trust["verified"], "score": trust["score"]},

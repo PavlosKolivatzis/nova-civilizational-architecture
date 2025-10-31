@@ -26,6 +26,18 @@ _last_sync = Gauge(
     ("peer",),
     registry=REGISTRY,
 )
+_score_gauge = Gauge(
+    "federation_score_gauge",
+    "Gradient trust score per peer",
+    ("peer",),
+    registry=REGISTRY,
+)
+_client_retries = Counter(
+    "federation_client_retries_total",
+    "Federation client retry attempts per peer",
+    ("peer",),
+    registry=REGISTRY,
+)
 
 
 def inc_verified(result: str, peer: str) -> None:
@@ -40,8 +52,20 @@ def set_last_sync(peer: str, seconds: float) -> None:
     _last_sync.labels(peer=peer).set(seconds)
 
 
+def set_score(peer: str, score: float) -> None:
+    _score_gauge.labels(peer=peer).set(score)
+
+
+def inc_client_retry(peer: str) -> None:
+    _client_retries.labels(peer=peer).inc()
+
+
 def verifications_counter() -> Counter:
     return _verifications
+
+
+def client_retries_counter() -> Counter:
+    return _client_retries
 
 
 def reset_for_tests() -> None:
@@ -49,12 +73,17 @@ def reset_for_tests() -> None:
     _verifications._metrics.clear()  # type: ignore[attr-defined]
     _peers_up._metrics.clear()  # type: ignore[attr-defined]
     _last_sync._metrics.clear()  # type: ignore[attr-defined]
+    _score_gauge._metrics.clear()  # type: ignore[attr-defined]
+    _client_retries._metrics.clear()  # type: ignore[attr-defined]
 
 
 __all__ = [
     "inc_verified",
     "set_peer_up",
     "set_last_sync",
+    "set_score",
+    "inc_client_retry",
     "verifications_counter",
+    "client_retries_counter",
     "reset_for_tests",
 ]

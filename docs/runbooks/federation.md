@@ -15,6 +15,12 @@
    NOVA_FEDERATION_REPLAY_CACHE_SIZE=4096
    NOVA_FEDERATION_RATE_RPS=0.5
    NOVA_FEDERATION_RATE_BURST=30
+   NOVA_FEDERATION_HTTP_TIMEOUT_S=2.5
+   NOVA_FEDERATION_RETRIES=2
+   NOVA_FEDERATION_TRUST_W_VERIFIED=0.55
+   NOVA_FEDERATION_TRUST_W_LATENCY=0.15
+   NOVA_FEDERATION_TRUST_W_AGE=0.15
+   NOVA_FEDERATION_TRUST_W_CONTINUITY=0.15
    ```
 3. Restart orchestrator; confirm `/federation/health` returns `status=ok`.
 4. Monitor Grafana panels (Federation Health dashboard):
@@ -22,6 +28,8 @@
    - `sum by(peer) (increase(federation_verifications_total{result="fail"}[5m]))`
    - `federation_peers_up`
    - `federation_last_sync_seconds`
+   - `federation_score_gauge`
+   - `federation_client_retries_total`
    - Optional: `federation_rate_limited_total`, `federation_replay_total`
 
 ## Disable / Rollback

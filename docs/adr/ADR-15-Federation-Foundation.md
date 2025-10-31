@@ -21,10 +21,11 @@ Introduce a feature-flagged federation layer (`FEDERATION_ENABLED`, default `fal
 ## 4. Implementation Outline
 - Package `src/nova/federation/` with server/client stubs, schemas (canonical UTC-Z timestamps, enforced algo/version, merkle/signature validation), peer registry loader, trust model.
 - Config loader in `src/nova/config/federation_config.py` supporting YAML + env overrides.
-- FastAPI router registered in `orchestrator/app.py` only when the flag is enabled, enforcing content-type/body limits, clock-skew window, replay cache, and per-peer rate limiting.
-- Metrics helpers (`federation_verifications_total`, `federation_peers_up`, `federation_last_sync_seconds`) with bounded peer-only labels and reset helpers.
-- Tests under `tests/federation/` covering flag behaviour, schema validation, trust scoring, registry loading.
-- Observability stubs: Grafana dashboard JSON and runbook skeleton documenting env knobs, error codes, and curl flows.
+- FastAPI router registered in `orchestrator/app.py` only when the flag is enabled, enforcing content-type/body limits, clock-skew window, replay cache, per-peer rate limiting, and gradient trust responses.
+- Outbound federation client (httpx) with configurable timeouts/jittered retries plus retry metrics (Phase 15-2, still behind the feature flag).
+- Metrics helpers (`federation_verifications_total`, `federation_peers_up`, `federation_last_sync_seconds`, `federation_score_gauge`, `federation_client_retries_total`) with bounded peer-only labels and reset helpers.
+- Tests under `tests/federation/` covering flag behaviour, schema validation, trust scoring (binary + gradient), registry loading, OpenAPI examples, metrics, and client retries.
+- Observability stubs: Grafana dashboard JSON and runbook skeleton documenting env knobs, error codes, curl flows, and recommended panels.
 
 ## 5. Risks & Mitigations
 | Risk | Mitigation |

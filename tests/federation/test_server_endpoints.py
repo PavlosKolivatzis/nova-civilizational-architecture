@@ -25,6 +25,7 @@ def test_checkpoint_accepts_known_peer(client_factory, make_envelope):
     body = res.json()
     assert body["peer"] == "node-athens"
     assert body["trust"]["verified"] is True
+    assert 0.0 <= body["trust"]["score"] <= 1.0
     assert body["canonical_ts"].endswith("Z")
 
 
