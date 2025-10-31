@@ -1,0 +1,9 @@
+{
+  "title": "Federation Health (Phase 15-1)",
+  "panels": [
+    {"type": "stat", "title": "Peers Up", "targets": [{"expr": "federation_peers_up"}]},
+    {"type": "stat", "title": "Last Sync Seconds", "targets": [{"expr": "federation_last_sync_seconds"}]},
+    {"type": "timeseries", "title": "Verification Results", "targets": [{"expr": "sum by (result)(increase(federation_verifications_total[5m]))"}]}
+  ]
+}
+

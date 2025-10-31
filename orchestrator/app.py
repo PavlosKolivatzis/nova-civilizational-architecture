@@ -301,6 +301,14 @@ if FastAPI is not None:
         app.include_router(health_router)
     if reflection_router is not None:
         app.include_router(reflection_router)
+    try:
+        from nova.federation.federation_server import build_router as build_federation_router
+    except Exception:  # pragma: no cover - federation optional
+        build_federation_router = None  # type: ignore
+    if build_federation_router is not None:
+        federation_router = build_federation_router()
+        if federation_router is not None:
+            app.include_router(federation_router)
 
     @app.get("/health")
     async def health():
@@ -502,5 +510,4 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
     if orch and slot_fn:
         return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
     return None
-
 
