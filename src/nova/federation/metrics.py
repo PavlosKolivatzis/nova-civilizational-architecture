@@ -1,9 +1,9 @@
 import threading
-from typing import Dict
+from typing import Dict, Optional
 
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
-_registry: CollectorRegistry | None = None
+_registry: Optional[CollectorRegistry] = None
 _lock = threading.Lock()
 _metrics: Dict[str, object] = {}
 

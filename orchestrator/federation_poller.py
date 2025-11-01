@@ -5,26 +5,36 @@ import threading
 import time
 import time as _t
 from contextlib import contextmanager
+from typing import Optional, Set
 
 from nova.federation.metrics import m
 
 from .federation_client import get_peer_list, get_verified_checkpoint
 
 
-def _float_env(name: str, default: float) -> float:
+def _get_interval() -> float:
+    raw = os.getenv("NOVA_FED_SCRAPE_INTERVAL", "")
     try:
-        return float(os.getenv(name, default))
+        return float(raw) if raw else 15.0
     except Exception:
-        return default
+        return 15.0
 
 
-INTERVAL = _float_env("NOVA_FED_SCRAPE_INTERVAL", 15.0)
-TIMEOUT = _float_env("NOVA_FED_SCRAPE_TIMEOUT", 2.0)
+def _get_timeout() -> float:
+    raw = os.getenv("NOVA_FED_SCRAPE_TIMEOUT", "")
+    try:
+        return float(raw) if raw else 2.0
+    except Exception:
+        return 2.0
+
+
+INTERVAL = _get_interval()
+TIMEOUT = _get_timeout()
 
 _stop = threading.Event()
-_thread: threading.Thread | None = None
+_thread: Optional[threading.Thread] = None
 _lock = threading.Lock()
-_known_peers: set[str] = set()
+_known_peers: Set[str] = set()
 
 
 @contextmanager
