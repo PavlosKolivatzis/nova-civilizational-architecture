@@ -64,3 +64,45 @@ def test_poller_loop_updates_metrics(monkeypatch):
     peer_up = metrics["peer_up"]
     assert peer_up.labels(peer="node-a")._value.get() == 1.0
     assert peer_up.labels(peer="node-b")._value.get() == 1.0
+    peer_last_seen = metrics["peer_last_seen"]
+    assert peer_last_seen.labels(peer="node-a")._value.get() > 0
+    assert peer_last_seen.labels(peer="node-b")._value.get() > 0
+    assert metrics["ready"]._value.get() == 1.0
+
+
+def test_poller_marks_not_ready_on_error(monkeypatch):
+    from orchestrator import federation_poller as poller
+
+    metrics = m()
+
+    def raise_error(timeout=None):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(poller, "get_peer_list", raise_error)
+
+    class _FakeEvent:
+        def __init__(self):
+            self._flag = False
+
+        def is_set(self) -> bool:
+            return self._flag
+
+        def set(self) -> None:
+            self._flag = True
+
+        def clear(self) -> None:
+            self._flag = False
+
+        def wait(self, interval: float) -> bool:
+            self._flag = True
+            return True
+
+    fake_event = _FakeEvent()
+    monkeypatch.setattr(poller, "_stop", fake_event, raising=False)
+    fake_event.clear()
+
+    poller._loop()
+
+    assert metrics["ready"]._value.get() == 0.0
+    last_error = metrics["last_result_ts"].labels(status="error")._value.get()
+    assert last_error > 0

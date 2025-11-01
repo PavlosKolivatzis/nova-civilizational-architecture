@@ -77,22 +77,27 @@ def _loop():
                 checkpoint = get_verified_checkpoint(timeout=TIMEOUT) or {"height": 0}
                 current_peer_ids = []
                 peer_up = metrics["peer_up"]
+                peer_last_seen = metrics["peer_last_seen"]
+                now = time.time()
                 for peer in peers:
                     peer_id = getattr(peer, "id", str(peer))
                     peer_up.labels(peer=peer_id).set(1.0)
+                    peer_last_seen.labels(peer=peer_id).set(now)
                     current_peer_ids.append(peer_id)
                 global _known_peers
                 stale_peers = _known_peers - set(current_peer_ids)
                 for peer_id in stale_peers:
                     peer_up.labels(peer=peer_id).set(0.0)
+                    peer_last_seen.labels(peer=peer_id).set(0.0)
                 _known_peers = set(current_peer_ids)
                 metrics["peers"].set(len(peers))
                 metrics["height"].set(checkpoint.get("height", 0))
-                now = time.time()
                 metrics["last_result_ts"].labels(status="success").set(now)
                 metrics["pull_result"].labels(status="success").inc()
+                metrics["ready"].set(1.0 if len(peers) > 0 else 0.0)
             except Exception:
                 now = time.time()
                 metrics["last_result_ts"].labels(status="error").set(now)
                 metrics["pull_result"].labels(status="error").inc()
+                metrics["ready"].set(0.0)
         _stop.wait(INTERVAL)

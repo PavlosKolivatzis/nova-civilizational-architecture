@@ -1,6 +1,5 @@
 from nova.federation.metrics import m
 
-
 def test_prometheus_response_includes_federation_metrics(monkeypatch):
     from orchestrator import prometheus_metrics as pm
 
@@ -15,6 +14,8 @@ def test_prometheus_response_includes_federation_metrics(monkeypatch):
     metrics = m()
     metrics["peers"].set(4)
     metrics["peer_up"].labels(peer="node-a").set(1.0)
+    metrics["peer_last_seen"].labels(peer="node-a").set(123.0)
+    metrics["ready"].set(1.0)
 
     payload, content_type = pm.get_metrics_response()
 
@@ -22,3 +23,5 @@ def test_prometheus_response_includes_federation_metrics(monkeypatch):
     assert b"nova_federation_peers" in payload
     assert b" 4" in payload
     assert b"nova_federation_peer_up" in payload
+    assert b"nova_federation_peer_last_seen" in payload
+    assert b"nova_federation_ready" in payload

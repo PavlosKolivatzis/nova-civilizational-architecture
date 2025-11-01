@@ -38,6 +38,8 @@
 - `nova_federation_pull_result_total{status="success"}` / `{status="error"}`: Federation pull outcomes
 - `nova_federation_peer_up{peer="..."}`: Per-peer liveness (1=seen in last poll)
 - `nova_federation_pull_seconds`: Poll duration histogram
+- `nova_federation_ready`: Readiness gauge (1 when peers > 0 on latest poll)
+- `nova_federation_peer_last_seen{peer="..."}`: Timestamp of most recent successful interaction per peer
 
 Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, default 15) and `NOVA_FED_SCRAPE_TIMEOUT` (per-request timeout, default 2s).
 
@@ -47,9 +49,38 @@ Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, 
 - Histogram verification: `nova_federation_pull_seconds_*` is the canonical pull latency histogram; see the Phase 15-3 verification block in the merge notes.
 - Alerting: Federation alert suite lives in `monitoring/alerts/federation.rules.yml` and is documented in `monitoring/production-setup.md`.
 - Reference: Architectural decisions are captured in `docs/adr/ADR-15-Federation-Metrics.md` for historical trace and rollout guidance.
+- Readiness gauge: `nova_federation_ready` exposes coarse health for /ready; pair with `nova_federation_peer_last_seen{peer="..."}` for per-peer recency.
 - Promtool fixtures: `monitoring/alerts/federation.rules.test.yml` exercises stalled, error-burst, and peer-low scenarios (`promtool test rules ...`).
 - Recording helpers: import `monitoring/recording/federation.recording.yml` if you want precomputed p95 and 5m aggregates.
 - CI: see `.github/workflows/monitoring.yml` template (copy from docs) for automated `promtool check/test` coverage.
+
+### Recommended PromQL Panels
+
+* **p95 pull latency**
+  ```promql
+  histogram_quantile(0.95, sum by (le) (rate(nova_federation_pull_seconds_bucket[5m])))
+  ```
+* **Pull outcomes (5m window)**
+  ```promql
+  increase(nova_federation_pull_result_total{status="success"}[5m])
+  increase(nova_federation_pull_result_total{status="error"}[5m])
+  ```
+* **Peer availability**
+  ```promql
+  avg_over_time(nova_federation_peers[10m])
+  ```
+* **Last successful pull (single stat)**
+  ```promql
+  nova_federation_last_result_timestamp{status="success"}
+  ```
+* **Federation readiness**
+  ```promql
+  nova_federation_ready
+  ```
+* **Peer freshness (minutes since last contact)**
+  ```promql
+  (time() - nova_federation_peer_last_seen) / 60
+  ```
 
 ### Dashboard Snapshots
 

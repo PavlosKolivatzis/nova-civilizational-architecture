@@ -118,6 +118,14 @@ Import `monitoring/grafana/dashboards/nova-phase15-federation.json` into the Pha
   ```promql
   nova_federation_last_result_timestamp{status="success"}
   ```
+* **Readiness (single stat)**
+  ```promql
+  nova_federation_ready
+  ```
+* **Peer freshness (minutes since last contact)**
+  ```promql
+  (time() - nova_federation_peer_last_seen) / 60
+  ```
 
 Attach dashboard screenshots to release notes when the federation board is published (Phase 15-3-b deliverable).
 

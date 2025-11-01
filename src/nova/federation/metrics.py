@@ -52,6 +52,12 @@ def m() -> Dict[str, object]:
         ("peer",),
         registry=registry,
     )
+    peer_last_seen = Gauge(
+        "nova_federation_peer_last_seen",
+        "Unix timestamp of last successful poll per peer",
+        ("peer",),
+        registry=registry,
+    )
     pull_seconds = Histogram(
         "nova_federation_pull_seconds",
         "Federation pull duration seconds",
@@ -64,6 +70,11 @@ def m() -> Dict[str, object]:
         labelnames=("status",),
         registry=registry,
     )
+    ready = Gauge(
+        "nova_federation_ready",
+        "1 when federation poller reports healthy readiness",
+        registry=registry,
+    )
 
     _metrics.update(
         {
@@ -71,11 +82,14 @@ def m() -> Dict[str, object]:
             "height": height,
             "last_result_ts": last_result_ts,
             "peer_up": peer_up,
+            "peer_last_seen": peer_last_seen,
             "pull_seconds": pull_seconds,
             "pull_result": pull_result,
+            "ready": ready,
         }
     )
     # Ensure gauges have an explicit sample on startup
     last_result_ts.labels(status="success").set(0.0)
     last_result_ts.labels(status="error").set(0.0)
+    ready.set(0.0)
     return _metrics
