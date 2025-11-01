@@ -1,6 +1,6 @@
 # Nova Production Monitoring Setup
 
-## 🎯 Complete Unlearn Pulse Observability
+## ?? Complete Unlearn Pulse Observability
 
 The Nova system now has **full observability** for the Reciprocal Contextual Unlearning system:
 
@@ -47,7 +47,9 @@ curl http://localhost:8000/metrics | grep nova_federation_
 curl -s http://localhost:9090/api/query?query="sum(nova_unlearn_pulse_to_slot_total)-nova_unlearn_pulses_sent_total"
 ```
 
-## 🚨 Alerts
+## ?? Alerts
+
+### Unlearn Pulse Suite
 
 Production-ready alerts in `nova-alerts.yml`:
 
@@ -58,16 +60,62 @@ Production-ready alerts in `nova-alerts.yml`:
 5. **DeploymentGateOpen** (info) - Gate open alert
 
 **Alert Features:**
-- ✅ Delta-based (no restart flapping)
-- ✅ Missing series detection
-- ✅ Runbook links
-- ✅ Dashboard references
+- ? Delta-based (no restart flapping)
+- ? Missing series detection
+- ? Runbook links
+- ? Dashboard references
 
-## 🔧 Operations
+### Federation Metrics Suite (Phase 15-3)
+
+Phase 15-3 adds production alerts at `monitoring/alerts/federation.rules.yml`:
+
+| Alert | Condition | Severity | Purpose |
+| --- | --- | --- | --- |
+| `NovaFederationStalled` | `time() - nova_federation_last_result_timestamp{status="success"} > 120` for `2m` | warning | Detects missing successful pulls |
+| `NovaFederationErrorBurst` | `increase(nova_federation_pull_result_total{status="error"}[5m]) > 5` | critical | Flags sustained pull failures |
+| `NovaFederationPeersLow` | `avg_over_time(nova_federation_peers[10m]) < 1` for `10m` | warning | Ensures at least one peer is reachable |
+
+Roll out instructions:
+
+```bash
+# Validate syntax
+promtool check rules monitoring/alerts/federation.rules.yml
+
+# Optional: simulate alert behaviour (if tests are present)
+promtool test rules monitoring/alerts/tests/federation.test.yml
+```
+
+> **Note:** Promtool tests are optional but recommended before promoting to staging; see ADR-15 for rationale.
+
+### Grafana & PromQL References
+
+Import `monitoring/grafana/dashboards/nova-phase15-federation.json` into the Phase-15 board. Recommended panels:
+
+* **p95 pull latency**
+  ```promql
+  histogram_quantile(0.95, sum by (le) (rate(nova_federation_pull_seconds_bucket[5m])))
+  ```
+* **Pull outcomes (5m window)**
+  ```promql
+  increase(nova_federation_pull_result_total{status="success"}[5m])
+  increase(nova_federation_pull_result_total{status="error"}[5m])
+  ```
+* **Peer availability**
+  ```promql
+  avg_over_time(nova_federation_peers[10m])
+  ```
+* **Last successful pull (single stat)**
+  ```promql
+  nova_federation_last_result_timestamp{status="success"}
+  ```
+
+Attach dashboard screenshots to release notes when the federation board is published (Phase 15-3-b deliverable).
+
+## ?? Operations
 
 **Normal Operation:**
 - Background sweeper runs every 15 seconds
-- Contexts expire → unlearn pulses sent
+- Contexts expire -> unlearn pulses sent
 - Immunity respected (no pulses to slot01/slot07)
 - Metrics updated real-time
 
@@ -81,13 +129,13 @@ Production-ready alerts in `nova-alerts.yml`:
 - Stop sweeper: Restart without `NOVA_SMEEP_INTERVAL`
 - Emergency: `NOVA_ALLOW_EXPIRE_TEST=0`
 
-## ✅ Validation
+## ? Validation
 
 The system successfully demonstrates:
-1. **Context expiry** → 1 expired entry
-2. **Multi-recipient pulses** → 2 pulses (key slot + publisher slot)
-3. **Per-slot accounting** → slot06:1, slot05:1
-4. **Immunity enforcement** → No slot01/slot07 recipients
-5. **Live metrics** → Real-time dashboard updates
+1. **Context expiry** -> 1 expired entry
+2. **Multi-recipient pulses** -> 2 pulses (key slot + publisher slot)
+3. **Per-slot accounting** -> slot06:1, slot05:1
+4. **Immunity enforcement** -> No slot01/slot07 recipients
+5. **Live metrics** -> Real-time dashboard updates
 
-**Unlearn pulse metabolism is fully observable! 🎉**
+**Unlearn pulse metabolism is fully observable! ??**

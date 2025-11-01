@@ -41,6 +41,13 @@
 
 Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, default 15) and `NOVA_FED_SCRAPE_TIMEOUT` (per-request timeout, default 2s).
 
+## Phase 15-3 Metrics Highlights
+
+- Timestamp refactor: `nova_federation_last_result_timestamp{status="success"|"error"}` replaces the deprecated `nova_federation_last_success_timestamp` gauge and the manual `pull_result_created` metric.
+- Histogram verification: `nova_federation_pull_seconds_*` is the canonical pull latency histogram; see the Phase 15-3 verification block in the merge notes.
+- Alerting: Federation alert suite lives in `monitoring/alerts/federation.rules.yml` and is documented in `monitoring/production-setup.md`.
+- Reference: Architectural decisions are captured in `docs/adr/ADR-15-Federation-Metrics.md` for historical trace and rollout guidance.
+
 ## Rollback
 
 Stop monitoring stack:
