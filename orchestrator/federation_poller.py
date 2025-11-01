@@ -72,6 +72,8 @@ def _loop():
     metrics = m()
     while not _stop.is_set():
         with _timed(metrics["pull_seconds"]):
+            peers: list = []
+            success_timestamp: float | None = None
             try:
                 peers = get_peer_list(timeout=TIMEOUT) or []
                 checkpoint = get_verified_checkpoint(timeout=TIMEOUT) or {"height": 0}
@@ -94,10 +96,16 @@ def _loop():
                 metrics["height"].set(checkpoint.get("height", 0))
                 metrics["last_result_ts"].labels(status="success").set(now)
                 metrics["pull_result"].labels(status="success").inc()
-                metrics["ready"].set(1.0 if len(peers) > 0 else 0.0)
+                success_timestamp = now
             except Exception:
-                now = time.time()
-                metrics["last_result_ts"].labels(status="error").set(now)
+                err_now = time.time()
+                metrics["last_result_ts"].labels(status="error").set(err_now)
                 metrics["pull_result"].labels(status="error").inc()
-                metrics["ready"].set(0.0)
+            finally:
+                current = time.time()
+                last_success = success_timestamp
+                if last_success is None:
+                    last_success = metrics["last_result_ts"].labels(status="success")._value.get()
+                ready = bool(peers) and last_success and (current - last_success) < 120
+                metrics["ready"].set(1.0 if ready else 0.0)
         _stop.wait(INTERVAL)

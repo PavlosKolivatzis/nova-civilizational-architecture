@@ -38,7 +38,7 @@
 - `nova_federation_pull_result_total{status="success"}` / `{status="error"}`: Federation pull outcomes
 - `nova_federation_peer_up{peer="..."}`: Per-peer liveness (1=seen in last poll)
 - `nova_federation_pull_seconds`: Poll duration histogram
-- `nova_federation_ready`: Readiness gauge (1 when peers > 0 on latest poll)
+- `nova_federation_ready`: Readiness gauge (1 when peers > 0 and last success < 120s)
 - `nova_federation_peer_last_seen{peer="..."}`: Timestamp of most recent successful interaction per peer
 
 Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, default 15) and `NOVA_FED_SCRAPE_TIMEOUT` (per-request timeout, default 2s).

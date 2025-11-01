@@ -118,7 +118,7 @@ Import `monitoring/grafana/dashboards/nova-phase15-federation.json` into the Pha
   ```promql
   nova_federation_last_result_timestamp{status="success"}
   ```
-* **Readiness (single stat)**
+* **Readiness (single stat, success within 120s)**
   ```promql
   nova_federation_ready
   ```
