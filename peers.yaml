@@ -1,0 +1,7 @@
+federation:
+  peers:
+    - id: node-athens
+      url: http://localhost:8000
+      pubkey: keys/athens_dilithium2.pem
+      weight: 1.0
+      enabled: true

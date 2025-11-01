@@ -1,5 +1,7 @@
 """Prometheus metrics export for Nova system."""
 
+import logging
+
 from prometheus_client import (
     Gauge,
     Counter,
@@ -8,14 +10,17 @@ from prometheus_client import (
     CONTENT_TYPE_LATEST,
 )
 from collections import defaultdict
-from orchestrator.metrics import get_slot6_metrics
-from os import getenv
 import subprocess
 from time import strftime, gmtime
+from os import getenv
+
+from orchestrator.metrics import get_slot6_metrics
+from nova.federation.metrics import get_registry as get_federation_registry
 from nova.metrics.registry import REGISTRY
 
 # Dedicated registry (avoids duplicate registration across tests/imports)
 _REGISTRY = REGISTRY
+logger = logging.getLogger(__name__)
 
 # --- Build provenance metric ------------------------------------
 def _get_git_sha_short():
@@ -306,11 +311,13 @@ def update_flag_metrics() -> None:
         hash_on = _env_truthy("NOVA_USE_SHARED_HASH")
 
     prom_on = _env_truthy("NOVA_ENABLE_PROMETHEUS")
+    federation_on = _env_truthy("FEDERATION_ENABLED")
 
     feature_flag_gauge.labels(flag="NOVA_ENABLE_TRI_LINK").set(1 if tri_on else 0)
     feature_flag_gauge.labels(flag="NOVA_ENABLE_LIFESPAN").set(1 if life_on else 0)
     feature_flag_gauge.labels(flag="NOVA_USE_SHARED_HASH").set(1 if hash_on else 0)
     feature_flag_gauge.labels(flag="NOVA_ENABLE_PROMETHEUS").set(1 if prom_on else 0)
+    feature_flag_gauge.labels(flag="FEDERATION_ENABLED").set(1 if federation_on else 0)
 
 
 def update_lightclock_metrics() -> None:
@@ -533,4 +540,14 @@ def get_metrics_response():
     update_lightclock_metrics()
     update_system_health_metrics()
     update_semantic_mirror_metrics()
-    return generate_latest(_REGISTRY), CONTENT_TYPE_LATEST
+    payload = generate_latest(_REGISTRY)
+    try:
+        federation_registry = get_federation_registry()
+        federation_payload = generate_latest(federation_registry)
+        if federation_payload:
+            if payload and not payload.endswith(b"\n"):
+                payload += b"\n"
+            payload += federation_payload
+    except Exception as exc:  # pragma: no cover - best-effort federation metrics
+        logger.debug("Federation metrics export failed: %s", exc)
+    return payload, CONTENT_TYPE_LATEST

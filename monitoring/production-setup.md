@@ -14,13 +14,20 @@ The Nova system now has **full observability** for the Reciprocal Contextual Unl
 - `nova_entries_expired_total`: Contexts expired from semantic mirror
 - `nova_unlearn_pulse_to_slot_total{slot="..."}`: Per-slot pulse delivery
 - `nova_deployment_gate_open`: Gate status (1=open, 0=closed)
+- `nova_federation_peers`: Enabled peer count
+- `nova_federation_checkpoint_height`: Last verified checkpoint height
+- `nova_federation_pull_result_total{status="success"}` / `{status="error"}`: Federation pull outcomes
+- `nova_federation_peer_up{peer="..."}`: Per-peer liveness (1=seen in last poll)
 
 ### Production Configuration
 
 **Required Environment Variables:**
 ```bash
-UVICORN_WORKERS=1              # Single worker (shared semantic mirror)
+UVICORN_WORKERS=1              # Single worker (shared semantic mirror + counters)
+FEDERATION_ENABLED=1           # Enable federation router + poller
 NOVA_ENABLE_PROMETHEUS=1       # Enable metrics export
+NOVA_FED_SCRAPE_INTERVAL=15    # Federation poll cadence (seconds)
+NOVA_FED_SCRAPE_TIMEOUT=2.0    # Federation poll timeout (seconds)
 NOVA_SMEEP_INTERVAL=15         # Sweeper interval (seconds)
 NOVA_ALLOW_EXPIRE_TEST=0       # Disable test context seeding in prod
 ```
@@ -32,6 +39,9 @@ curl -X POST http://localhost:8000/ops/expire-now
 
 # Check live pulse metrics
 curl http://localhost:8000/metrics | grep unlearn
+
+# Check federation poller metrics
+curl http://localhost:8000/metrics | grep nova_federation_
 
 # Test accounting invariants
 curl -s http://localhost:9090/api/query?query="sum(nova_unlearn_pulse_to_slot_total)-nova_unlearn_pulses_sent_total"
