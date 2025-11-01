@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections import defaultdict
 from contextlib import contextmanager
 from typing import Dict, Optional, Tuple
@@ -42,22 +43,43 @@ class RangeQuarantineError(RangeSyncError):
 class RangeSyncer:
     """Fetch and verify range proofs from peers, recording receipts."""
 
+def _default_manifest_cache() -> ManifestCache:
+    raw = os.getenv("NOVA_FEDERATION_MANIFEST_TTL_S", "3600")
+    try:
+        ttl = int(raw)
+    except ValueError:
+        ttl = 3600
+    return ManifestCache(ttl_seconds=ttl)
+
+
+def _default_divergence_limit() -> int:
+    raw = os.getenv("NOVA_FEDERATION_MAX_DIVERGENCE", "2")
+    try:
+        value = int(raw)
+    except ValueError:
+        value = 2
+    return max(1, value)
+
+
+class RangeSyncer:
+    """Fetch and verify range proofs from peers, recording receipts."""
+
     def __init__(
         self,
         client: FederationClient,
         receipts: ReceiptsStore,
         *,
         range_limit: int,
-        divergence_limit: int,
-        manifest_cache: ManifestCache,
-        manifest_verifier: ManifestVerifier,
+        divergence_limit: Optional[int] = None,
+        manifest_cache: Optional[ManifestCache] = None,
+        manifest_verifier: Optional[ManifestVerifier] = None,
     ) -> None:
         self._client = client
         self._receipts = receipts
         self._range_limit = range_limit
-        self._divergence_limit = max(1, divergence_limit)
-        self._manifest_cache = manifest_cache
-        self._manifest_verifier = manifest_verifier
+        self._divergence_limit = max(1, divergence_limit) if divergence_limit is not None else _default_divergence_limit()
+        self._manifest_cache = manifest_cache or _default_manifest_cache()
+        self._manifest_verifier = manifest_verifier or ManifestVerifier()
         self._divergence_counts: Dict[str, int] = defaultdict(int)
 
     def sync(self, peer: PeerRecord, start_height: int) -> RangeProofResponse:
