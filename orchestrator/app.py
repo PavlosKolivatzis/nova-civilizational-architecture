@@ -82,6 +82,8 @@ except Exception:  # pragma: no cover - orchestrator runner not available
     orch = None
 
 if FastAPI is not None:
+    _federation_metrics_thread = None
+
     async def _sm_sweeper():
         interval = int(os.getenv("NOVA_SMEEP_INTERVAL", "15"))  # seconds
         logger.info("SemanticMirror sweeper starting (interval=%ss)", interval)
@@ -277,6 +279,22 @@ if FastAPI is not None:
         except Exception as e:
             logger.warning(f"CreativityGovernor initialization failed: {e}")
 
+        prom_enabled = os.getenv("NOVA_ENABLE_PROMETHEUS", "false").strip().lower() in {"1", "true", "yes", "on"}
+        federation_enabled = os.getenv("FEDERATION_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+        if prom_enabled and federation_enabled:
+            try:
+                from orchestrator import federation_poller
+
+                global _federation_metrics_thread
+                _federation_metrics_thread = federation_poller.start()
+                logger.info(
+                    "Federation metrics poller started (interval=%ss timeout=%ss)",
+                    federation_poller.INTERVAL,
+                    federation_poller.TIMEOUT,
+                )
+            except Exception:
+                logger.exception("Failed to start federation metrics poller")
+
         # start periodic expiry in *this* process (the one Prometheus scrapes)
         asyncio.create_task(_sm_sweeper())
 
@@ -284,6 +302,18 @@ if FastAPI is not None:
         asyncio.create_task(_canary_loop())
 
     async def _shutdown() -> None:
+        global _federation_metrics_thread
+        if _federation_metrics_thread:
+            try:
+                from orchestrator import federation_poller
+
+                federation_poller.stop()
+                _federation_metrics_thread.join(timeout=1.0)
+            except Exception:
+                logger.exception("Failed to stop federation metrics poller")
+            finally:
+                _federation_metrics_thread = None
+
         from nova.slots.config import get_config_manager
         mgr = await get_config_manager()
         await mgr.shutdown()
@@ -510,4 +540,3 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
     if orch and slot_fn:
         return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
     return None
-

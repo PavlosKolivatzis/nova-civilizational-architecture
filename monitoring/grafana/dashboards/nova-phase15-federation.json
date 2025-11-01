@@ -1,0 +1,222 @@
+{
+  "id": null,
+  "uid": "nova-phase15-federation",
+  "title": "NOVA • Phase 15 Federation",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "tags": ["nova", "phase15", "federation"],
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["15s", "30s", "1m", "5m"] },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" }
+      },
+      {
+        "name": "window",
+        "label": "Window",
+        "type": "custom",
+        "query": "1m,5m,15m,1h",
+        "current": { "text": "5m", "value": "5m" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Federation Peers",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_federation_peers[$window])" }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Checkpoint Height",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_federation_checkpoint_height[$window])" }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "orange", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Last Successful Pull",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "max_over_time(nova_federation_last_success_timestamp[$window])" }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_unit"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "dateTimeAsIso"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Pull Latency p95",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 6 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(nova_federation_pull_seconds_bucket[$window])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 2 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Success vs Errors (5m)",
+      "type": "stat",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 6 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "increase(nova_federation_pull_result_total{status=\"success\"}[$window])", "legendFormat": "success" },
+        { "expr": "increase(nova_federation_pull_result_total{status=\"error\"}[$window])", "legendFormat": "errors" }
+      ],
+      "transformations": [
+        { "id": "seriesToRows", "options": {} },
+        { "id": "reduce", "options": { "reducers": ["lastNotNull"] } }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "textMode": "value_and_name"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Peer Liveness",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "nova_federation_peer_up", "legendFormat": "{{peer}}" }
+      ],
+      "transformations": [
+        { "id": "seriesToRows", "options": {} }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 0.5 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}
