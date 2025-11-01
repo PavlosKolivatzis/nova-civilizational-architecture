@@ -43,6 +43,12 @@ curl http://localhost:8000/metrics | grep unlearn
 # Check federation poller metrics
 curl http://localhost:8000/metrics | grep nova_federation_
 
+# Readiness probe
+curl -f http://localhost:8000/ready
+
+# Federation peer health JSON
+curl -s http://localhost:8000/federation/health | jq '.'
+
 # Test accounting invariants
 curl -s http://localhost:9090/api/query?query="sum(nova_unlearn_pulse_to_slot_total)-nova_unlearn_pulses_sent_total"
 ```

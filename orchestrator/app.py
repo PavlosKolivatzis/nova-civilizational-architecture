@@ -45,7 +45,8 @@ else:
 
 # Optional web framework (avoid import errors in environments without FastAPI)
 try:  # pragma: no cover - absence of FastAPI is acceptable
-    from fastapi import FastAPI, Response
+    from fastapi import FastAPI, Response, status, HTTPException
+    HTTPException
     from api.health_config import router as health_router
     from orchestrator.reflection import router as reflection_router
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
@@ -339,6 +340,11 @@ if FastAPI is not None:
         federation_router = build_federation_router()
         if federation_router is not None:
             app.include_router(federation_router)
+            # Remove legacy federation health route to allow observability override
+            for _route in list(app.router.routes):
+                if getattr(_route, "path", None) == "/federation/health" and "GET" in getattr(_route, "methods", set()):
+                    app.router.routes.remove(_route)
+                    break
 
     @app.get("/health")
     async def health():
@@ -348,6 +354,51 @@ if FastAPI is not None:
         )
         payload["status"] = "ok"
         return payload
+
+    @app.get("/ready")
+    async def ready():
+        """Readiness probe gated on federation readiness gauge."""
+        try:
+            from orchestrator.federation_health import is_ready
+        except Exception as exc:  # pragma: no cover - readiness optional
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"federation readiness unavailable: {exc}",
+            ) from exc
+
+        try:
+            readiness = is_ready()
+        except Exception as exc:  # pragma: no cover - readiness optional
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"federation readiness check failed: {exc}",
+            ) from exc
+
+        if readiness:
+            return {"status": "ready"}
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="federation not ready",
+        )
+
+    @app.get("/federation/health")
+    async def federation_health():
+        """Return current federation health telemetry."""
+        try:
+            from orchestrator.federation_health import collect_health
+        except Exception as exc:  # pragma: no cover - health optional
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"federation health unavailable: {exc}",
+            ) from exc
+
+        try:
+            return collect_health()
+        except Exception as exc:  # pragma: no cover - health optional
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"federation health collection failed: {exc}",
+            ) from exc
 
     def _update_phase10_metrics():
         """Update Phase 10 Prometheus metrics from module state."""
@@ -380,6 +431,18 @@ if FastAPI is not None:
         except Exception as e:
             logger.warning(f"Phase 10 metrics update failed: {e}")
 
+    @app.get("/federation/health")
+    async def federation_health():
+        """Return current federation health telemetry."""
+        try:
+            from orchestrator.federation_health import collect_health
+        except Exception as exc:  # pragma: no cover - health optional
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"federation health unavailable: {exc}",
+            ) from exc
+
+        return collect_health()
     @app.get("/metrics")
     async def metrics() -> Response:
         """Prometheus-compatible metrics for all slots."""

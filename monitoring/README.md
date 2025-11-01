@@ -15,10 +15,12 @@
    ```
 
 3. **Access Services**:
-   - **Nova API**: http://localhost:8000
-   - **Nova Metrics**: http://localhost:8000/metrics
-   - **Prometheus**: http://localhost:9090
-   - **Grafana**: http://localhost:3000 (admin/nova123)
+  - **Nova API**: http://localhost:8000
+  - **Nova Metrics**: http://localhost:8000/metrics
+  - **Nova Ready**: http://localhost:8000/ready
+  - **Federation Health**: http://localhost:8000/federation/health
+  - **Prometheus**: http://localhost:9090
+  - **Grafana**: http://localhost:3000 (admin/nova123)
 
 ## Services
 
@@ -50,6 +52,7 @@ Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, 
 - Alerting: Federation alert suite lives in `monitoring/alerts/federation.rules.yml` and is documented in `monitoring/production-setup.md`.
 - Reference: Architectural decisions are captured in `docs/adr/ADR-15-Federation-Metrics.md` for historical trace and rollout guidance.
 - Readiness gauge: `nova_federation_ready` exposes coarse health for /ready; pair with `nova_federation_peer_last_seen{peer="..."}` for per-peer recency.
+- Endpoints: `/ready` reflects the readiness gauge; `/federation/health` returns peer status JSON for dashboards and probes.
 - Promtool fixtures: `monitoring/alerts/federation.rules.test.yml` exercises stalled, error-burst, and peer-low scenarios (`promtool test rules ...`).
 - Recording helpers: import `monitoring/recording/federation.recording.yml` if you want precomputed p95 and 5m aggregates.
 - CI: see `.github/workflows/monitoring.yml` template (copy from docs) for automated `promtool check/test` coverage.

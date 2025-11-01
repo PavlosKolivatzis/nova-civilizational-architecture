@@ -47,6 +47,12 @@
 
 ## Common requests
 ```bash
+# Ready probe
+curl -f http://localhost:8000/ready
+
+# Peer health JSON
+curl -s http://localhost:8000/federation/health | jq '.'
+
 # Peers
 curl -s http://localhost:8000/federation/peers | jq
 
