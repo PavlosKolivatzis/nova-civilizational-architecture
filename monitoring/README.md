@@ -45,6 +45,28 @@
 
 Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, default 15) and `NOVA_FED_SCRAPE_TIMEOUT` (per-request timeout, default 2s).
 
+## Federation Endpoints
+
+- `/ready` – JSON `{ "ready": true|false }` derived from `nova_federation_ready`. Use it for Kubernetes/Compose health checks.
+- `/federation/health` – Rich peer telemetry backed by the readiness metrics.
+
+```bash
+curl -s http://localhost:8000/federation/health | jq .
+```
+
+Example:
+
+```json
+{
+  "ready": true,
+  "peers": [
+    {"id": "node-a", "state": "up", "last_seen": 1762021194.89},
+    {"id": "node-b", "state": "unknown", "last_seen": 0.0}
+  ],
+  "checkpoint": {"height": 55}
+}
+```
+
 ## Phase 15-3 Metrics Highlights
 
 - Timestamp refactor: `nova_federation_last_result_timestamp{status="success"|"error"}` replaces the deprecated `nova_federation_last_success_timestamp` gauge and the manual `pull_result_created` metric.
@@ -78,7 +100,7 @@ Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, 
   ```
 * **Federation readiness**
   ```promql
-  nova_federation_ready
+  max(nova_federation_ready)
   ```
 * **Peer freshness (minutes since last contact)**
   ```promql

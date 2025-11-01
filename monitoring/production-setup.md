@@ -53,6 +53,39 @@ curl -s http://localhost:8000/federation/health | jq '.'
 curl -s http://localhost:9090/api/query?query="sum(nova_unlearn_pulse_to_slot_total)-nova_unlearn_pulses_sent_total"
 ```
 
+### Readiness Probes
+
+Expose the new `/ready` and `/federation/health` endpoints to platform healthchecks:
+
+**Kubernetes**
+
+```yaml
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 15
+livenessProbe:
+  httpGet:
+    path: /federation/health
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 30
+```
+
+**Docker Compose**
+
+```yaml
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://nova:8000/ready"]
+  interval: 30s
+  timeout: 5s
+  retries: 3
+```
+
+`/federation/health` returns peer detail JSON that can be scraped or forwarded to Grafana dashboards.
+
 ## ?? Alerts
 
 ### Unlearn Pulse Suite
@@ -124,9 +157,9 @@ Import `monitoring/grafana/dashboards/nova-phase15-federation.json` into the Pha
   ```promql
   nova_federation_last_result_timestamp{status="success"}
   ```
-* **Readiness (single stat, success within 120s)**
+* **Readiness (single stat, success within 120s — use stat panel)**
   ```promql
-  nova_federation_ready
+  max(nova_federation_ready)
   ```
 * **Peer freshness (minutes since last contact)**
   ```promql
