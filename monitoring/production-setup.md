@@ -82,7 +82,7 @@ Roll out instructions:
 promtool check rules monitoring/alerts/federation.rules.yml
 
 # Optional: simulate alert behaviour (if tests are present)
-promtool test rules monitoring/alerts/tests/federation.test.yml
+promtool test rules monitoring/alerts/federation.rules.test.yml
 ```
 
 > **Note:** Promtool tests are optional but recommended before promoting to staging; see ADR-15 for rationale.

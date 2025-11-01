@@ -1,0 +1,21 @@
+# monitoring/alerts/federation.rules.test.yml
+rule_files:
+  - federation.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+- interval: 1m
+  # --- NovaFederationStalled fires when last_success older than 120s ---
+  input_series:
+  - series: 'nova_federation_last_result_timestamp{status="success"}'
+    values: '-120 -120 -120'
+  alert_rule_test:
+  - eval_time: 3m
+    alertname: NovaFederationStalled
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        status: success
+      exp_annotations:
+        summary: 'Federation stalled > 2m'
