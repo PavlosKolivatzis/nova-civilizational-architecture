@@ -19,3 +19,30 @@ tests:
         status: success
       exp_annotations:
         summary: 'Federation stalled > 2m'
+- interval: 1m
+  # --- NovaFederationErrorBurst fires on >5 errors in 5m ---
+  input_series:
+  - series: 'nova_federation_pull_result_total{status="error"}'
+    values: '0 1 2 3 6 7'
+  alert_rule_test:
+  - eval_time: 6m
+    alertname: NovaFederationErrorBurst
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        status: error
+      exp_annotations:
+        summary: 'Federation errors > 5 in 5m'
+- interval: 1m
+  # --- NovaFederationPeersLow fires when <1 avg over 10m ---
+  input_series:
+  - series: 'nova_federation_peers'
+    values: '0 0 0 0 0 0 0 0 0 0 0'
+  alert_rule_test:
+  - eval_time: 11m
+    alertname: NovaFederationPeersLow
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        summary: 'Peer count < 1 for 10m'

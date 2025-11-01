@@ -47,6 +47,16 @@ Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, 
 - Histogram verification: `nova_federation_pull_seconds_*` is the canonical pull latency histogram; see the Phase 15-3 verification block in the merge notes.
 - Alerting: Federation alert suite lives in `monitoring/alerts/federation.rules.yml` and is documented in `monitoring/production-setup.md`.
 - Reference: Architectural decisions are captured in `docs/adr/ADR-15-Federation-Metrics.md` for historical trace and rollout guidance.
+- Promtool fixtures: `monitoring/alerts/federation.rules.test.yml` exercises stalled, error-burst, and peer-low scenarios (`promtool test rules ...`).
+- Recording helpers: import `monitoring/recording/federation.recording.yml` if you want precomputed p95 and 5m aggregates.
+- CI: see `.github/workflows/monitoring.yml` template (copy from docs) for automated `promtool check/test` coverage.
+
+### Dashboard Snapshots
+
+![Federation peers](../docs/images/phase15/federation-peers.png)
+![Federation p95 latency](../docs/images/phase15/federation-p95.png)
+![Federation success vs error](../docs/images/phase15/federation-success-error.png)
+![Federation last success](../docs/images/phase15/federation-last-success.png)
 
 ## Rollback
 

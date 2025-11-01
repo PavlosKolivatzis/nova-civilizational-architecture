@@ -81,11 +81,21 @@ Roll out instructions:
 # Validate syntax
 promtool check rules monitoring/alerts/federation.rules.yml
 
-# Optional: simulate alert behaviour (if tests are present)
+# Simulate alert behaviour (stalled, error burst, peers low)
 promtool test rules monitoring/alerts/federation.rules.test.yml
 ```
 
 > **Note:** Promtool tests are optional but recommended before promoting to staging; see ADR-15 for rationale.
+
+### Recording Rules
+
+Optional helper rules live in `monitoring/recording/federation.recording.yml`:
+
+```bash
+promtool check rules monitoring/recording/federation.recording.yml
+```
+
+Load the file into Prometheus for precomputed p95 latency and 5m success/error deltas.
 
 ### Grafana & PromQL References
 

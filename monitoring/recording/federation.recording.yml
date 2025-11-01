@@ -1,0 +1,10 @@
+groups:
+- name: federation-recording
+  interval: 30s
+  rules:
+  - record: nova_federation_pull_seconds_p95
+    expr: histogram_quantile(0.95, sum by (le) (rate(nova_federation_pull_seconds_bucket[5m])))
+  - record: nova_federation_errors_5m
+    expr: increase(nova_federation_pull_result_total{status="error"}[5m])
+  - record: nova_federation_success_5m
+    expr: increase(nova_federation_pull_result_total{status="success"}[5m])
