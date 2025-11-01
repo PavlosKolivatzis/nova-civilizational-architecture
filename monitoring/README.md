@@ -102,6 +102,10 @@ Example:
   ```promql
   max(nova_federation_ready)
   ```
+* **Readiness over time (5m rolling window)**
+  ```promql
+  avg_over_time(nova_federation_ready[5m])
+  ```
 * **Peer freshness (minutes since last contact)**
   ```promql
   (time() - nova_federation_peer_last_seen) / 60

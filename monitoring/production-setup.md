@@ -157,9 +157,13 @@ Import `monitoring/grafana/dashboards/nova-phase15-federation.json` into the Pha
   ```promql
   nova_federation_last_result_timestamp{status="success"}
   ```
-* **Readiness (single stat, success within 120s — use stat panel)**
+* **Readiness (single stat, success within 120s - use stat panel)**
   ```promql
   max(nova_federation_ready)
+  ```
+* **Readiness over time (5m rolling window)**
+  ```promql
+  avg_over_time(nova_federation_ready[5m])
   ```
 * **Peer freshness (minutes since last contact)**
   ```promql
