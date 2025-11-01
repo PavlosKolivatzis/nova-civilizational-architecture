@@ -30,12 +30,10 @@ def test_federation_health_payload():
     assert resp.status_code == 200
     payload = resp.json()
     assert isinstance(payload, dict)
-    assert "ready" in payload, payload
     assert payload["ready"] is True
-    assert payload["peers"] == 2
-    assert payload["checkpoint_height"] == 55
-    assert payload["peer_details"][0]["peer"] == "node-a"
-    assert payload["peer_details"][0]["up"] is True
+    assert payload["checkpoint"]["height"] == 55
+    assert payload["peers"][0]["id"] == "node-a"
+    assert payload["peers"][0]["state"] == "up"
 
 
 def test_federation_health_handles_exception(monkeypatch):
@@ -44,6 +42,6 @@ def test_federation_health_handles_exception(monkeypatch):
     def boom():
         raise RuntimeError("broken")
 
-    monkeypatch.setattr(federation_health, "collect_health", boom)
+    monkeypatch.setattr(federation_health, "get_peer_health", boom)
     resp = _client().get("/federation/health")
     assert resp.status_code == 503

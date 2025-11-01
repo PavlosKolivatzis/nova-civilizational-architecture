@@ -28,7 +28,7 @@ def test_ready_when_metric_ready(monkeypatch):
 
     resp = _client().get("/ready")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "ready"
+    assert resp.json()["ready"] is True
 
 
 def test_ready_when_metric_absent(monkeypatch):
@@ -37,10 +37,11 @@ def test_ready_when_metric_absent(monkeypatch):
     def boom():
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(federation_health, "is_ready", boom)
+    monkeypatch.setattr(federation_health, "get_peer_health", boom)
 
     resp = _client().get("/ready")
     assert resp.status_code == 503
+    assert resp.json()["ready"] is False
 
 
 def test_ready_when_gauge_not_ready():
@@ -51,3 +52,4 @@ def test_ready_when_gauge_not_ready():
 
     resp = _client().get("/ready")
     assert resp.status_code == 503
+    assert resp.json()["ready"] is False

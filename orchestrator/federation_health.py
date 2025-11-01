@@ -13,20 +13,15 @@ def _label_map(gauge, labels) -> Dict[str, str]:
     return dict(zip(gauge._labelnames, labels))  # type: ignore[attr-defined]
 
 
-def collect_health() -> Dict[str, object]:
+def get_peer_health() -> Dict[str, object]:
     """Return current federation metrics in a JSON-friendly form."""
     metrics = m()
     ready_gauge = metrics.get("ready")
     ready_value = ready_gauge._value.get() if ready_gauge else 0.0
-
-    peers_gauge = metrics.get("peers")
-    peer_count = int(peers_gauge._value.get()) if peers_gauge else 0
+    ready = ready_value >= 1.0
 
     height_gauge = metrics.get("height")
     height = int(height_gauge._value.get()) if height_gauge else 0
-
-    last_success = metrics["last_result_ts"].labels(status="success")._value.get()
-    last_error = metrics["last_result_ts"].labels(status="error")._value.get()
 
     peer_up = metrics.get("peer_up")
     peer_last_seen = metrics.get("peer_last_seen")
@@ -46,36 +41,27 @@ def collect_health() -> Dict[str, object]:
                     last_seen_value = 0.0
             peers.append(
                 {
-                    "peer": peer_id,
-                    "up": up_value >= 1.0,
+                    "id": peer_id,
+                    "state": "up" if up_value >= 1.0 else "unknown",
                     "last_seen": last_seen_value,
                 }
             )
 
-    enabled = os.getenv("FEDERATION_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
-    now = time()
-    freshness = now - last_success if last_success else None
-
     return {
-        "enabled": enabled,
-        "ready": ready_value >= 1.0,
-        "peers": peer_count,
-        "checkpoint_height": height,
-        "last_success": last_success,
-        "last_error": last_error,
-        "freshness_seconds": freshness,
-        "peer_details": peers,
+        "ready": ready,
+        "peers": peers,
+        "checkpoint": {"height": height},
     }
 
 
 def is_ready(threshold_seconds: float = 120.0) -> bool:
     """Return True when federation is considered ready for traffic."""
-    info = collect_health()
-    if not info["enabled"]:
-        return False
+    info = get_peer_health()
     if not info["ready"]:
         return False
-    last_success = info.get("last_success") or 0.0
+    if not info["peers"]:
+        return False
+    last_success = m()["last_result_ts"].labels(status="success")._value.get()
     if not last_success:
         return False
-    return (time() - last_success) < threshold_seconds and info["peers"] > 0
+    return (time() - last_success) < threshold_seconds

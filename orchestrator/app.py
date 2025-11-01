@@ -46,7 +46,7 @@ else:
 # Optional web framework (avoid import errors in environments without FastAPI)
 try:  # pragma: no cover - absence of FastAPI is acceptable
     from fastapi import FastAPI, Response, status, HTTPException
-    HTTPException
+    from fastapi.responses import JSONResponse
     from api.health_config import router as health_router
     from orchestrator.reflection import router as reflection_router
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
@@ -359,7 +359,7 @@ if FastAPI is not None:
     async def ready():
         """Readiness probe gated on federation readiness gauge."""
         try:
-            from orchestrator.federation_health import is_ready
+            from orchestrator.federation_health import get_peer_health
         except Exception as exc:  # pragma: no cover - readiness optional
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -367,25 +367,26 @@ if FastAPI is not None:
             ) from exc
 
         try:
-            readiness = is_ready()
-        except Exception as exc:  # pragma: no cover - readiness optional
-            raise HTTPException(
+            health = get_peer_health()
+        except Exception:  # pragma: no cover - readiness optional
+            logger.exception("readiness check failed")
+            return JSONResponse(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"federation readiness check failed: {exc}",
-            ) from exc
+                content={"ready": False},
+            )
 
-        if readiness:
-            return {"status": "ready"}
-        raise HTTPException(
+        if health.get("ready"):
+            return {"ready": True}
+        return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="federation not ready",
+            content={"ready": False},
         )
 
     @app.get("/federation/health")
     async def federation_health():
         """Return current federation health telemetry."""
         try:
-            from orchestrator.federation_health import collect_health
+            from orchestrator.federation_health import get_peer_health
         except Exception as exc:  # pragma: no cover - health optional
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -393,7 +394,7 @@ if FastAPI is not None:
             ) from exc
 
         try:
-            return collect_health()
+            return get_peer_health()
         except Exception as exc:  # pragma: no cover - health optional
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -435,7 +436,7 @@ if FastAPI is not None:
     async def federation_health():
         """Return current federation health telemetry."""
         try:
-            from orchestrator.federation_health import collect_health
+            from orchestrator.federation_health import get_peer_health
         except Exception as exc:  # pragma: no cover - health optional
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
