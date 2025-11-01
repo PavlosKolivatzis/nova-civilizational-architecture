@@ -88,8 +88,11 @@ def _loop():
                 _known_peers = set(current_peer_ids)
                 metrics["peers"].set(len(peers))
                 metrics["height"].set(checkpoint.get("height", 0))
-                metrics["last_ts"].set(time.time())
+                now = time.time()
+                metrics["last_result_ts"].labels(status="success").set(now)
                 metrics["pull_result"].labels(status="success").inc()
             except Exception:
+                now = time.time()
+                metrics["last_result_ts"].labels(status="error").set(now)
                 metrics["pull_result"].labels(status="error").inc()
         _stop.wait(INTERVAL)

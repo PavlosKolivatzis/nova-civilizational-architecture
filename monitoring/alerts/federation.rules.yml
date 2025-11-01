@@ -1,0 +1,24 @@
+groups:
+- name: federation
+  rules:
+  - alert: NovaFederationStalled
+    expr: time() - nova_federation_last_result_timestamp{status="success"} > 120
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Federation stalled > 2m"
+  - alert: NovaFederationErrorBurst
+    expr: increase(nova_federation_pull_result_total{status="error"}[5m]) > 5
+    for: 0m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Federation errors > 5 in 5m"
+  - alert: NovaFederationPeersLow
+    expr: avg_over_time(nova_federation_peers[10m]) < 1
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Peer count < 1 for 10m"

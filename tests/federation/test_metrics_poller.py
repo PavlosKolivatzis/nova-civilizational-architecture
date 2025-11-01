@@ -55,6 +55,10 @@ def test_poller_loop_updates_metrics(monkeypatch):
 
     assert metrics["peers"]._value.get() == 2
     assert metrics["height"]._value.get() == 42
+    last_success = metrics["last_result_ts"].labels(status="success")._value.get()
+    assert last_success > 0
+    last_error = metrics["last_result_ts"].labels(status="error")._value.get()
+    assert last_error == 0
     assert success_counter._value.get() == pytest.approx(initial_success + 1)
     assert error_counter._value.get() == pytest.approx(initial_errors)
     peer_up = metrics["peer_up"]

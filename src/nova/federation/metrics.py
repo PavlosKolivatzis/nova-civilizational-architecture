@@ -23,6 +23,12 @@ def m() -> Dict[str, object]:
         return _metrics
 
     registry = get_registry()
+    # Remove legacy gauge from registry when upgrading from previous releases
+    try:
+        legacy = registry._names_to_collectors["nova_federation_last_success_timestamp"]  # type: ignore[attr-defined]
+        registry.unregister(legacy)
+    except Exception:
+        pass
 
     peers = Gauge(
         "nova_federation_peers",
@@ -34,9 +40,10 @@ def m() -> Dict[str, object]:
         "Latest verified checkpoint height",
         registry=registry,
     )
-    last_ts = Gauge(
-        "nova_federation_last_success_timestamp",
-        "Unix ts of last successful pull",
+    last_result_ts = Gauge(
+        "nova_federation_last_result_timestamp",
+        "Unix timestamp of last federation pull result by status",
+        ("status",),
         registry=registry,
     )
     peer_up = Gauge(
@@ -62,10 +69,13 @@ def m() -> Dict[str, object]:
         {
             "peers": peers,
             "height": height,
-            "last_ts": last_ts,
+            "last_result_ts": last_result_ts,
             "peer_up": peer_up,
             "pull_seconds": pull_seconds,
             "pull_result": pull_result,
         }
     )
+    # Ensure gauges have an explicit sample on startup
+    last_result_ts.labels(status="success").set(0.0)
+    last_result_ts.labels(status="error").set(0.0)
     return _metrics
