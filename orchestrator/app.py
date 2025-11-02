@@ -84,6 +84,7 @@ except Exception:  # pragma: no cover - orchestrator runner not available
 
 if FastAPI is not None:
     _federation_metrics_thread = None
+    _federation_remediator = None
 
     async def _sm_sweeper():
         interval = int(os.getenv("NOVA_SMEEP_INTERVAL", "15"))  # seconds
@@ -286,8 +287,26 @@ if FastAPI is not None:
             try:
                 from orchestrator import federation_poller
 
-                global _federation_metrics_thread
+                global _federation_metrics_thread, _federation_remediator
                 _federation_metrics_thread = federation_poller.start()
+                auto_remediate = os.getenv("NOVA_FEDERATION_AUTOREMEDIATE", "1").strip().lower() in {
+                    "1",
+                    "true",
+                    "yes",
+                    "on",
+                }
+                if auto_remediate:
+                    try:
+                        from orchestrator.federation_remediator import FederationRemediator
+
+                        _federation_remediator = FederationRemediator(federation_poller)
+                        _federation_remediator.start()
+                    except Exception:
+                        _federation_remediator = None
+                        logger.exception("Failed to start federation remediator")
+                else:
+                    _federation_remediator = None
+                    logger.info("Federation auto-remediation disabled via NOVA_FEDERATION_AUTOREMEDIATE")
                 logger.info(
                     "Federation metrics poller started (interval=%ss timeout=%ss)",
                     federation_poller.INTERVAL,
@@ -303,7 +322,14 @@ if FastAPI is not None:
         asyncio.create_task(_canary_loop())
 
     async def _shutdown() -> None:
-        global _federation_metrics_thread
+        global _federation_metrics_thread, _federation_remediator
+        if _federation_remediator:
+            try:
+                _federation_remediator.stop()
+            except Exception:
+                logger.exception("Failed to stop federation remediator")
+            finally:
+                _federation_remediator = None
         if _federation_metrics_thread:
             try:
                 from orchestrator import federation_poller

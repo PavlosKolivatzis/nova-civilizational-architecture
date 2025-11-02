@@ -18,6 +18,9 @@ The Nova system now has **full observability** for the Reciprocal Contextual Unl
 - `nova_federation_checkpoint_height`: Last verified checkpoint height
 - `nova_federation_pull_result_total{status="success"}` / `{status="error"}`: Federation pull outcomes
 - `nova_federation_peer_up{peer="..."}`: Per-peer liveness (1=seen in last poll)
+- `nova_federation_ready`: Readiness gauge (1 when peers > 0 and the most recent pull <120s old)
+- `nova_federation_peer_last_seen{peer="..."}`: Per-peer freshness in Unix seconds
+- `nova_federation_remediation_events_total{reason}` / `nova_federation_backoff_seconds`: Auto-remediation activity and adaptive poll interval
 
 ### Production Configuration
 
@@ -30,6 +33,7 @@ NOVA_FED_SCRAPE_INTERVAL=15    # Federation poll cadence (seconds)
 NOVA_FED_SCRAPE_TIMEOUT=2.0    # Federation poll timeout (seconds)
 NOVA_SMEEP_INTERVAL=15         # Sweeper interval (seconds)
 NOVA_ALLOW_EXPIRE_TEST=0       # Disable test context seeding in prod
+NOVA_FEDERATION_AUTOREMEDIATE=1 # Enable auto-remediation hooks
 ```
 
 **Verification Commands:**
@@ -85,6 +89,12 @@ healthcheck:
 ```
 
 `/federation/health` returns peer detail JSON that can be scraped or forwarded to Grafana dashboards.
+
+### Auto-Remediation
+
+- Controlled by `NOVA_FEDERATION_AUTOREMEDIATE` (default `1`). Set to `0` to disable automated restarts/back-off.
+- The remediator doubles the poll interval on repeated failures up to `NOVA_FED_SCRAPE_MAX_INTERVAL` (default 120 s) and enforces a 5 min cooldown before the next automated action.
+- Monitor `nova_federation_remediation_events_total{reason}` and `nova_federation_backoff_seconds` to track corrective activity. Latest action metadata is also exposed via `/federation/health` → `remediation`.
 
 ## ?? Alerts
 
@@ -168,6 +178,10 @@ Import `monitoring/grafana/dashboards/nova-phase15-federation.json` into the Pha
 * **Peer freshness (minutes since last contact)**
   ```promql
   (time() - nova_federation_peer_last_seen) / 60
+  ```
+* **Remediation events (1h window)**
+  ```promql
+  increase(nova_federation_remediation_events_total[1h])
   ```
 
 Attach dashboard screenshots to release notes when the federation board is published (Phase 15-3-b deliverable).

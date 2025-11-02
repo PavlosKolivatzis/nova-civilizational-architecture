@@ -47,10 +47,27 @@ def get_peer_health() -> Dict[str, object]:
                 }
             )
 
+    remediation = {
+        "reason": "none",
+        "timestamp": 0.0,
+        "interval": metrics.get("remediation_backoff", None)._value.get() if metrics.get("remediation_backoff") else 0.0,
+        "context": {},
+    }
+    try:
+        from orchestrator.federation_remediator import get_last_event
+
+        remediation = get_last_event()
+        if "interval" not in remediation:
+            backoff_metric = metrics.get("remediation_backoff")
+            remediation["interval"] = backoff_metric._value.get() if backoff_metric else 0.0
+    except Exception:
+        pass
+
     return {
         "ready": ready,
         "peers": peers,
         "checkpoint": {"height": height},
+        "remediation": remediation,
     }
 
 

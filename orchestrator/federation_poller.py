@@ -30,11 +30,42 @@ def _get_timeout() -> float:
 
 INTERVAL = _get_interval()
 TIMEOUT = _get_timeout()
+_BASE_INTERVAL = INTERVAL
+_MIN_INTERVAL = max(1.0, INTERVAL)
+_MAX_INTERVAL = float(os.getenv("NOVA_FED_SCRAPE_MAX_INTERVAL", str(max(_MIN_INTERVAL * 8, _MIN_INTERVAL))))
+if _MAX_INTERVAL < _MIN_INTERVAL:
+    _MAX_INTERVAL = _MIN_INTERVAL
+_CURRENT_INTERVAL = INTERVAL
 
 _stop = threading.Event()
 _thread: Optional[threading.Thread] = None
 _lock = threading.Lock()
 _known_peers: Set[str] = set()
+
+
+def get_interval() -> float:
+    with _lock:
+        return _CURRENT_INTERVAL
+
+
+def get_base_interval() -> float:
+    return _BASE_INTERVAL
+
+
+def set_interval(seconds: float) -> float:
+    global _CURRENT_INTERVAL
+    bounded = max(_MIN_INTERVAL, min(seconds, _MAX_INTERVAL))
+    with _lock:
+        _CURRENT_INTERVAL = bounded
+    try:
+        m()["remediation_backoff"].set(bounded)
+    except Exception:
+        pass
+    return bounded
+
+
+def reset_interval() -> None:
+    set_interval(_BASE_INTERVAL)
 
 
 @contextmanager
@@ -54,7 +85,11 @@ def start():
         _stop.clear()
         _thread = threading.Thread(target=_loop, name="federation-metrics", daemon=True)
         _thread.start()
-        return _thread
+    try:
+        m()["remediation_backoff"].set(get_interval())
+    except Exception:
+        pass
+    return _thread
 
 
 def stop() -> None:
@@ -66,6 +101,7 @@ def stop() -> None:
         _known_peers.clear()
     if thread and thread.is_alive():
         thread.join(timeout=1.0)
+    reset_interval()
 
 
 def _loop():
@@ -108,4 +144,6 @@ def _loop():
                     last_success = metrics["last_result_ts"].labels(status="success")._value.get()
                 ready = bool(peers) and last_success and (current - last_success) < 120
                 metrics["ready"].set(1.0 if ready else 0.0)
-        _stop.wait(INTERVAL)
+        with _lock:
+            wait_interval = _CURRENT_INTERVAL
+        _stop.wait(wait_interval)

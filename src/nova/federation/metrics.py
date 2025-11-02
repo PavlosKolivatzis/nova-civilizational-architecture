@@ -1,7 +1,7 @@
 import threading
 from typing import Dict, Optional
 
-from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
+from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram, Info
 
 _registry: Optional[CollectorRegistry] = None
 _lock = threading.Lock()
@@ -75,6 +75,27 @@ def m() -> Dict[str, object]:
         "1 when federation poller reports healthy readiness",
         registry=registry,
     )
+    remediation_events = Counter(
+        "nova_federation_remediation_events_total",
+        "Auto-remediation events by reason",
+        labelnames=("reason",),
+        registry=registry,
+    )
+    remediation_last_action = Gauge(
+        "nova_federation_remediation_last_action_timestamp",
+        "Unix timestamp of the last federation remediation action",
+        registry=registry,
+    )
+    remediation_backoff = Gauge(
+        "nova_federation_backoff_seconds",
+        "Current federation poll interval after backoff adjustments",
+        registry=registry,
+    )
+    remediation_last_event = Info(
+        "nova_federation_remediation_last_event",
+        "Information about the most recent remediation action",
+        registry=registry,
+    )
 
     _metrics.update(
         {
@@ -86,10 +107,17 @@ def m() -> Dict[str, object]:
             "pull_seconds": pull_seconds,
             "pull_result": pull_result,
             "ready": ready,
+            "remediation_events": remediation_events,
+            "remediation_last_action": remediation_last_action,
+            "remediation_backoff": remediation_backoff,
+            "remediation_last_event": remediation_last_event,
         }
     )
     # Ensure gauges have an explicit sample on startup
     last_result_ts.labels(status="success").set(0.0)
     last_result_ts.labels(status="error").set(0.0)
     ready.set(0.0)
+    remediation_last_action.set(0.0)
+    remediation_backoff.set(0.0)
+    remediation_last_event.info({"reason": "none", "interval": "0", "timestamp": "0"})
     return _metrics

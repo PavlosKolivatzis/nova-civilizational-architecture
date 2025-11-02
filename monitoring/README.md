@@ -42,6 +42,9 @@
 - `nova_federation_pull_seconds`: Poll duration histogram
 - `nova_federation_ready`: Readiness gauge (1 when peers > 0 and last success < 120s)
 - `nova_federation_peer_last_seen{peer="..."}`: Timestamp of most recent successful interaction per peer
+- `nova_federation_remediation_events_total{reason="..."}`: Auto-remediation actions grouped by trigger reason
+- `nova_federation_backoff_seconds`: Current poll interval after adaptive back-off adjustments
+- `nova_federation_remediation_last_action_timestamp`: Unix timestamp of the most recent remediation event
 
 Tune federation polling with `NOVA_FED_SCRAPE_INTERVAL` (seconds between polls, default 15) and `NOVA_FED_SCRAPE_TIMEOUT` (per-request timeout, default 2s).
 
@@ -63,9 +66,24 @@ Example:
     {"id": "node-a", "state": "up", "last_seen": 1762021194.89},
     {"id": "node-b", "state": "unknown", "last_seen": 0.0}
   ],
-  "checkpoint": {"height": 55}
+  "checkpoint": {"height": 55},
+  "remediation": {
+    "reason": "error_spike",
+    "interval": 30.0,
+    "timestamp": 1762021250,
+    "context": {"delta_errors": 3}
+  }
 }
 ```
+
+## Auto-Remediation Hooks
+
+- Toggle with `NOVA_FEDERATION_AUTOREMEDIATE=0|1` (default `1`). When enabled, the poller applies exponential back-off after consecutive failures and restarts itself once per cooldown window (5 min by default).
+- Key metrics:
+  - `nova_federation_remediation_events_total{reason}` – action counts (e.g., `error_spike`, `readiness_zero`).
+  - `nova_federation_backoff_seconds` – current poll interval after back-off.
+  - `nova_federation_remediation_last_action_timestamp` – Unix timestamp of the last automated action.
+- `/federation/health` → `remediation` mirrors the latest action (reason, interval, timestamp, context) for dashboards and audit logs.
 
 ## Phase 15-3 Metrics Highlights
 
@@ -109,6 +127,10 @@ Example:
 * **Peer freshness (minutes since last contact)**
   ```promql
   (time() - nova_federation_peer_last_seen) / 60
+  ```
+* **Remediation events (1h window)**
+  ```promql
+  increase(nova_federation_remediation_events_total[1h])
   ```
 
 ### Dashboard Snapshots

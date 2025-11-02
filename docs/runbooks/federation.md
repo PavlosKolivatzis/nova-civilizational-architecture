@@ -45,6 +45,16 @@
 2. Restart orchestrator to remove routes and client tasks.
 3. Verify `/federation/health` returns `status=disabled` and metrics flatten to zero.
 
+## Auto-Remediation Hooks
+- Toggle via `NOVA_FEDERATION_AUTOREMEDIATE=0|1` (default `1`) to enable/disable automated recovery.
+- Monitor `nova_federation_remediation_events_total{reason}` and `nova_federation_backoff_seconds` for corrective actions.
+- `/federation/health` → `remediation` details expose the last action (reason, timestamp, interval, context).
+- If automated recovery loops, disable temporarily, restart the orchestrator, and inspect alert context before re-enabling.
+
+```promql
+increase(nova_federation_remediation_events_total[1h])
+```
+
 ## Common requests
 ```bash
 # Ready probe
