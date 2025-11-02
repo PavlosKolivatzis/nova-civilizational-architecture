@@ -49,6 +49,7 @@ class FederationRemediator:
         self._thread: Optional[threading.Thread] = None
         self._last_action_ts = 0.0
         self._ready_failures = 0
+        self._last_config_error_ts = 0.0
 
         self._error_counter = self.metrics["pull_result"].labels(status="error")
         self._success_counter = self.metrics["pull_result"].labels(status="success")
@@ -99,6 +100,11 @@ class FederationRemediator:
         self._prev_errors = errors
         self._prev_success = success
 
+        peer_count_metric = self.metrics.get("peers")
+        peer_count = peer_count_metric._value.get() if peer_count_metric else 0
+        if peer_count == 0 and self._can_log_config_error():
+            self._record_config_error({"peer_count": peer_count})
+
         if self._ready_failures >= self.max_ready_failures and self._can_trigger():
             self._trigger("readiness_zero", {"ready_failures": self._ready_failures})
             return
@@ -126,6 +132,9 @@ class FederationRemediator:
 
     def _can_trigger(self) -> bool:
         return (time.time() - self._last_action_ts) >= self.cooldown
+
+    def _can_log_config_error(self) -> bool:
+        return (time.time() - self._last_config_error_ts) >= self.cooldown
 
     def _trigger(self, reason: str, context: Dict[str, Any]) -> None:
         with self._lock:
@@ -155,6 +164,19 @@ class FederationRemediator:
                 new_interval,
                 context,
             )
+
+    def _record_config_error(self, context: Dict[str, Any]) -> None:
+        with self._lock:
+            timestamp = time.time()
+            self._record_event(
+                "config_error",
+                self.poller.get_interval(),
+                timestamp=timestamp,
+                context=context,
+                update_last=False,
+            )
+            self._last_config_error_ts = timestamp
+        log.warning("Federation configuration issue detected: no peers configured")
 
     def _record_event(
         self,
