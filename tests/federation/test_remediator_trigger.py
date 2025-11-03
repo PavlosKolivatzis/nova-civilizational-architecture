@@ -70,3 +70,31 @@ def test_remediator_triggers_and_restarts_poller():
         events_counter._value.get() >= baseline_events + 1
     ), "Remediation counter should increment"
     assert metrics["remediation_backoff"]._value.get() >= poller.get_base_interval()
+
+
+def test_remediator_logs_config_error_without_restart():
+    from orchestrator.federation_remediator import FederationRemediator
+
+    metrics = m()
+    poller = DummyPoller()
+    remediator = FederationRemediator(
+        poller,
+        max_errors=5,
+        ready_failures=999,
+        cooldown_seconds=0.0,
+        check_period=0.05,
+        restart_sleep=0.01,
+        max_backoff=poller.get_base_interval() * 2,
+    )
+
+    metrics["peers"].set(0.0)  # simulate misconfiguration with no peers
+    counter = metrics["remediation_events"].labels(reason="config_error")
+    baseline = counter._value.get()
+
+    remediator.start()
+    time.sleep(0.12)
+    remediator.stop()
+
+    assert poller.stop_calls == 0, "Config error should not restart poller"
+    assert counter._value.get() >= baseline + 1
+

@@ -42,7 +42,8 @@
 - `nova_federation_pull_seconds`: Poll duration histogram
 - `nova_federation_ready`: Readiness gauge (1 when peers > 0 and last success < 120s)
 - `nova_federation_peer_last_seen{peer="..."}`: Timestamp of most recent successful interaction per peer
-- `nova_federation_remediation_events_total{reason="..."}`: Auto-remediation actions grouped by trigger reason
+- `nova_federation_remediation_events_total{reason="..."}`: Auto-remediation actions grouped by trigger reason (e.g. error_spike, 
+eadiness_zero, config_error)
 - `nova_federation_backoff_seconds`: Current poll interval after adaptive back-off adjustments
 - `nova_federation_remediation_last_action_timestamp`: Unix timestamp of the most recent remediation event
 
@@ -80,7 +81,7 @@ Example:
 
 - Toggle with `NOVA_FEDERATION_AUTOREMEDIATE=0|1` (default `1`). When enabled, the poller applies exponential back-off after consecutive failures and restarts itself once per cooldown window (5 min by default).
 - Key metrics:
-  - `nova_federation_remediation_events_total{reason}` – action counts (e.g., `error_spike`, `readiness_zero`).
+  - `nova_federation_remediation_events_total{reason}` — action counts (e.g., `error_spike`, `readiness_zero`, `config_error` when no peers are configured).
   - `nova_federation_backoff_seconds` – current poll interval after back-off.
   - `nova_federation_remediation_last_action_timestamp` – Unix timestamp of the last automated action.
 - `/federation/health` → `remediation` mirrors the latest action (reason, interval, timestamp, context) for dashboards and audit logs.
