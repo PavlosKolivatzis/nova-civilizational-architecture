@@ -387,31 +387,21 @@ if FastAPI is not None:
         return payload
 
     @app.get("/ready")
-    async def ready():
-        """Readiness probe gated on federation readiness gauge."""
+    async def ready_probe():
+        """Readiness probe that mirrors the federation readiness gauge."""
         try:
-            from orchestrator.federation_health import get_peer_health
-        except Exception as exc:  # pragma: no cover - readiness optional
+            from nova.federation.metrics import m
+        except Exception as exc:  # pragma: no cover - should never happen
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"federation readiness unavailable: {exc}",
+                detail=f"federation metrics unavailable: {exc}",
             ) from exc
 
-        try:
-            health = get_peer_health()
-        except Exception:  # pragma: no cover - readiness optional
-            logger.exception("readiness check failed")
-            return JSONResponse(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content={"ready": False},
-            )
-
-        if health.get("ready"):
-            return {"ready": True}
-        return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={"ready": False},
-        )
+        mets = m()
+        ready_gauge = mets.get("ready")
+        is_ready = bool(ready_gauge._value.get() == 1.0) if ready_gauge else False
+        status_code = status.HTTP_200_OK if is_ready else status.HTTP_503_SERVICE_UNAVAILABLE
+        return JSONResponse(content={"ready": is_ready}, status_code=status_code)
 
     @app.get("/federation/health")
     async def federation_health():

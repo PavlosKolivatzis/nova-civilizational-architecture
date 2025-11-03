@@ -63,7 +63,7 @@ curl -s http://localhost:9090/api/query?query="sum(nova_unlearn_pulse_to_slot_to
 
 ### Readiness Probes
 
-Expose the new `/ready` and `/federation/health` endpoints to platform healthchecks:
+Expose the new `/ready` and `/federation/health` endpoints to platform healthchecks (the readiness probe now returns **503** while the federation gauge is false and **200** once healthy):
 
 **Kubernetes**
 
