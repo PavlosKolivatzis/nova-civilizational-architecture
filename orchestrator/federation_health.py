@@ -25,6 +25,9 @@ def get_peer_health() -> Dict[str, object]:
 
     peer_up = metrics.get("peer_up")
     peer_last_seen = metrics.get("peer_last_seen")
+    peer_quality = metrics.get("peer_quality")
+    peer_p95 = metrics.get("peer_p95")
+    peer_success = metrics.get("peer_success")
     peers: List[Dict[str, object]] = []
     if peer_up and getattr(peer_up, "_metrics", None):
         for labels in peer_up._metrics.keys():  # type: ignore[attr-defined]
@@ -39,11 +42,32 @@ def get_peer_health() -> Dict[str, object]:
                     last_seen_value = peer_last_seen.labels(**label_map)._value.get()
                 except KeyError:
                     last_seen_value = 0.0
+            quality_value = 0.0
+            p95_value = 0.0
+            success_rate_value = 0.0
+            if peer_quality:
+                try:
+                    quality_value = peer_quality.labels(**label_map)._value.get()
+                except KeyError:
+                    quality_value = 0.0
+            if peer_p95:
+                try:
+                    p95_value = peer_p95.labels(**label_map)._value.get()
+                except KeyError:
+                    p95_value = 0.0
+            if peer_success:
+                try:
+                    success_rate_value = peer_success.labels(**label_map)._value.get()
+                except KeyError:
+                    success_rate_value = 0.0
             peers.append(
                 {
                     "id": peer_id,
                     "state": "up" if up_value >= 1.0 else "unknown",
                     "last_seen": last_seen_value,
+                    "quality": quality_value,
+                    "success_rate": success_rate_value,
+                    "p95": p95_value,
                 }
             )
 

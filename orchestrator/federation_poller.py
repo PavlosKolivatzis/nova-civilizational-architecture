@@ -1,15 +1,17 @@
 """Federation metrics background poller."""
 
+import math
 import os
 import threading
 import time
 import time as _t
+from collections import deque
 from contextlib import contextmanager
-from typing import Optional, Set
+from typing import Deque, Dict, Optional, Set, Tuple
 
 from nova.federation.metrics import m
 
-from .federation_client import get_peer_list, get_verified_checkpoint
+from .federation_client import get_peer_metrics
 
 
 def _get_interval() -> float:
@@ -50,6 +52,130 @@ try:
     NO_PEERS_COOLDOWN = int(_NO_PEERS_COOLDOWN_RAW)
 except Exception:
     NO_PEERS_COOLDOWN = 600
+
+_QUALITY_WINDOW = 20
+_PEER_WINDOWS: Dict[str, Dict[str, Deque[float]]] = {}
+_PEER_LAST_SUCCESS_TS: Dict[str, float] = {}
+
+
+def _float_env(name: str, default: float) -> float:
+    raw = os.getenv(name, "")
+    if not raw.strip():
+        return default
+    try:
+        return float(raw)
+    except Exception:
+        return default
+
+
+def _quality_params() -> Tuple[float, float, float, float, float]:
+    w1 = _float_env("NOVA_FED_QUALITY_W1", 0.5)
+    w2 = _float_env("NOVA_FED_QUALITY_W2", 0.3)
+    w3 = _float_env("NOVA_FED_QUALITY_W3", 0.2)
+    total = w1 + w2 + w3
+    if total <= 0:
+        w1, w2, w3 = 0.5, 0.3, 0.2
+        total = 1.0
+    w1, w2, w3 = (w1 / total, w2 / total, w3 / total)
+    lat_cap = max(_float_env("NOVA_FED_QUALITY_LAT_CAP_SEC", 2.0), 1e-6)
+    tau = max(_float_env("NOVA_FED_QUALITY_TAU_SEC", 300.0), 1e-6)
+    return w1, w2, w3, lat_cap, tau
+
+
+def _quality_gate_config() -> Optional[Tuple[float, int]]:
+    threshold_raw = os.getenv("NOVA_FED_MIN_PEER_QUALITY", "").strip()
+    if not threshold_raw:
+        return None
+    try:
+        threshold = float(threshold_raw)
+    except Exception:
+        return None
+    min_peers_raw = os.getenv("NOVA_FED_MIN_GOOD_PEERS", "").strip()
+    try:
+        min_good = int(min_peers_raw) if min_peers_raw else 1
+    except Exception:
+        min_good = 1
+    return threshold, max(min_good, 1)
+
+
+def _peer_window(peer_id: str) -> Dict[str, Deque[float]]:
+    window = _PEER_WINDOWS.get(peer_id)
+    if window is None:
+        window = {
+            "durations": deque(maxlen=_QUALITY_WINDOW),
+            "success": deque(maxlen=_QUALITY_WINDOW),
+        }
+        _PEER_WINDOWS[peer_id] = window
+    return window
+
+
+def _percentile(values, percentile: float) -> float:
+    if not values:
+        return 0.0
+    sorted_values = sorted(values)
+    idx = max(
+        0,
+        min(len(sorted_values) - 1, int(math.ceil(percentile * len(sorted_values)) - 1)),
+    )
+    return sorted_values[idx]
+
+
+def _compute_quality(
+    successes: Deque[float],
+    durations: Deque[float],
+    last_success_ts: float,
+    now: float,
+    params: Tuple[float, float, float, float, float],
+) -> Tuple[float, float, float, float]:
+    w1, w2, w3, lat_cap, tau = params
+    success_rate = sum(successes) / len(successes) if successes else 0.0
+    if durations:
+        p95 = _percentile(list(durations), 0.95)
+        lat_score = max(0.0, min(1.0, 1.0 - (p95 / lat_cap)))
+    else:
+        p95 = 0.0
+        lat_score = 0.0
+    freshness = 0.0
+    if last_success_ts:
+        freshness = math.exp(-max(0.0, now - last_success_ts) / tau)
+    quality = max(0.0, min(1.0, w1 * success_rate + w2 * lat_score + w3 * freshness))
+    return quality, success_rate, p95, freshness
+
+
+def _update_quality_metrics(metrics_map: Dict[str, object], params: Tuple[float, float, float, float, float]) -> Dict[str, float]:
+    now = time.time()
+    quality_scores: Dict[str, float] = {}
+    for peer_id, window in _PEER_WINDOWS.items():
+        quality, success_rate, p95, _ = _compute_quality(
+            window["success"],
+            window["durations"],
+            _PEER_LAST_SUCCESS_TS.get(peer_id, 0.0),
+            now,
+            params,
+        )
+        metrics_map["peer_quality"].labels(peer=peer_id).set(quality)
+        metrics_map["peer_p95"].labels(peer=peer_id).set(p95)
+        metrics_map["peer_success"].labels(peer=peer_id).set(success_rate)
+        quality_scores[peer_id] = quality
+    return quality_scores
+
+
+def _apply_quality_gate(base_ready: bool, quality_scores: Dict[str, float], metrics_map: Dict[str, object]) -> bool:
+    gate = _quality_gate_config()
+    ready = base_ready
+    if gate:
+        threshold, min_good = gate
+        good_peers = sum(1 for score in quality_scores.values() if score >= threshold)
+        if good_peers < min_good:
+            ready = False
+    metrics_map["ready"].set(1.0 if ready else 0.0)
+    return ready
+
+
+def reset_peer_quality_state() -> None:
+    """Testing helper to clear peer quality rolling state."""
+    _PEER_WINDOWS.clear()
+    _PEER_LAST_SUCCESS_TS.clear()
 
 _stop = threading.Event()
 _thread: Optional[threading.Thread] = None
@@ -122,43 +248,64 @@ def _loop():
     metrics = m()
     while not _stop.is_set():
         with _timed(metrics["pull_seconds"]):
-            peers: list = []
+            params = _quality_params()
+            peer_ids: list[str] = []
             success_timestamp: float | None = None
             try:
-                peers = get_peer_list(timeout=TIMEOUT) or []
-                checkpoint = get_verified_checkpoint(timeout=TIMEOUT) or {"height": 0}
-                _update_empty_peers(peers, metrics)
-                current_peer_ids = []
+                peers, checkpoint, peer_stats = get_peer_metrics(timeout=TIMEOUT)
+                peer_ids = [getattr(peer, "id", str(peer)) for peer in peers]
+                _update_empty_peers(peer_ids, metrics)
                 peer_up = metrics["peer_up"]
                 peer_last_seen = metrics["peer_last_seen"]
                 now = time.time()
                 for peer in peers:
                     peer_id = getattr(peer, "id", str(peer))
-                    peer_up.labels(peer=peer_id).set(1.0)
-                    peer_last_seen.labels(peer=peer_id).set(now)
-                    current_peer_ids.append(peer_id)
+                    stats = peer_stats.get(peer_id, {})
+                    success = bool(stats.get("success"))
+                    duration = float(stats.get("duration", 0.0))
+                    window = _peer_window(peer_id)
+                    window["durations"].append(duration)
+                    window["success"].append(1.0 if success else 0.0)
+                    peer_up.labels(peer=peer_id).set(1.0 if success else 0.0)
+                    if success:
+                        peer_last_seen.labels(peer=peer_id).set(now)
+                        _PEER_LAST_SUCCESS_TS[peer_id] = stats.get("last_success_ts", now)
                 global _known_peers
-                stale_peers = _known_peers - set(current_peer_ids)
+                stale_peers = _known_peers - set(peer_ids)
                 for peer_id in stale_peers:
                     peer_up.labels(peer=peer_id).set(0.0)
+                    window = _peer_window(peer_id)
+                    window["durations"].append(float(TIMEOUT))
+                    window["success"].append(0.0)
                     peer_last_seen.labels(peer=peer_id).set(0.0)
-                _known_peers = set(current_peer_ids)
-                metrics["peers"].set(len(peers))
-                metrics["height"].set(checkpoint.get("height", 0))
-                metrics["last_result_ts"].labels(status="success").set(now)
+                _known_peers = set(peer_ids)
+                metrics["peers"].set(len(peer_ids))
+                metrics["height"].set((checkpoint or {}).get("height", 0))
+                now_success = time.time()
+                metrics["last_result_ts"].labels(status="success").set(now_success)
                 metrics["pull_result"].labels(status="success").inc()
-                success_timestamp = now
+                success_timestamp = now_success
             except Exception:
+                peer_up = metrics.get("peer_up")
+                if peer_up:
+                    for peer_id in list(_known_peers):
+                        peer_up.labels(peer=peer_id).set(0.0)
+                        window = _peer_window(peer_id)
+                        window["durations"].append(float(TIMEOUT))
+                        window["success"].append(0.0)
+                _update_empty_peers([], metrics)
                 err_now = time.time()
                 metrics["last_result_ts"].labels(status="error").set(err_now)
                 metrics["pull_result"].labels(status="error").inc()
+                peer_ids = []
             finally:
+                quality_scores = _update_quality_metrics(metrics, params)
                 current = time.time()
                 last_success = success_timestamp
                 if last_success is None:
                     last_success = metrics["last_result_ts"].labels(status="success")._value.get()
-                ready = bool(peers) and last_success and (current - last_success) < 120
-                metrics["ready"].set(1.0 if ready else 0.0)
+                base_ready = bool(_known_peers) and last_success and (current - last_success) < 120
+                _apply_quality_gate(bool(base_ready), quality_scores, metrics)
         with _lock:
             wait_interval = _CURRENT_INTERVAL
         _stop.wait(wait_interval)
