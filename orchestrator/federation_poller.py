@@ -39,16 +39,17 @@ _CURRENT_INTERVAL = INTERVAL
 _EMPTY_PEERS_STREAK = 0
 _LAST_EMPTY_PEERS_SIGNAL = 0.0
 
+_NO_PEERS_THRESHOLD_RAW = os.getenv("NOVA_FEDERATION_NO_PEER_THRESHOLD", "5")
+try:
+    NO_PEERS_THRESHOLD = int(_NO_PEERS_THRESHOLD_RAW)
+except Exception:
+    NO_PEERS_THRESHOLD = 5
 
-def _int_env(name: str, default: int) -> int:
-    try:
-        return int(os.getenv(name, str(default)))
-    except Exception:
-        return default
-
-
-NO_PEERS_THRESHOLD = _int_env("NOVA_FEDERATION_NO_PEER_THRESHOLD", 5)
-NO_PEERS_COOLDOWN = _int_env("NOVA_FEDERATION_NO_PEER_COOLDOWN", 600)
+_NO_PEERS_COOLDOWN_RAW = os.getenv("NOVA_FEDERATION_NO_PEER_COOLDOWN", "600")
+try:
+    NO_PEERS_COOLDOWN = int(_NO_PEERS_COOLDOWN_RAW)
+except Exception:
+    NO_PEERS_COOLDOWN = 600
 
 _stop = threading.Event()
 _thread: Optional[threading.Thread] = None

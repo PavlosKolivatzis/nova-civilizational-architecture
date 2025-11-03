@@ -390,16 +390,33 @@ if FastAPI is not None:
     async def ready_probe():
         """Readiness probe that mirrors the federation readiness gauge."""
         try:
-            from nova.federation.metrics import m
-        except Exception as exc:  # pragma: no cover - should never happen
+            from orchestrator.federation_health import get_peer_health
+        except Exception as exc:  # pragma: no cover - readiness optional
+            logger.exception("failed to import federation health probe")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"federation metrics unavailable: {exc}",
+                detail=f"federation readiness unavailable: {exc}",
             ) from exc
 
-        mets = m()
-        ready_gauge = mets.get("ready")
-        is_ready = bool(ready_gauge._value.get() == 1.0) if ready_gauge else False
+        try:
+            health = get_peer_health()
+        except Exception:
+            logger.exception("readiness health probe failed")
+            return JSONResponse(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                content={"ready": False},
+            )
+
+        is_ready = bool(health.get("ready"))
+
+        try:
+            from nova.federation.metrics import m
+            ready_gauge = m().get("ready")
+            if ready_gauge is not None:
+                is_ready = bool(ready_gauge._value.get() == 1.0)
+        except Exception:
+            logger.exception("failed to read readiness gauge")
+
         status_code = status.HTTP_200_OK if is_ready else status.HTTP_503_SERVICE_UNAVAILABLE
         return JSONResponse(content={"ready": is_ready}, status_code=status_code)
 
