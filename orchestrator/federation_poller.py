@@ -304,6 +304,8 @@ def _loop():
                 last_success = success_timestamp
                 if last_success is None:
                     last_success = metrics["last_result_ts"].labels(status="success")._value.get()
+                _known_peers.clear()
+                _known_peers.update(peer_ids)
                 base_ready = bool(_known_peers) and last_success and (current - last_success) < 120
                 _apply_quality_gate(bool(base_ready), quality_scores, metrics)
         with _lock:
