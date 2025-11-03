@@ -58,27 +58,44 @@ _PEER_WINDOWS: Dict[str, Dict[str, Deque[float]]] = {}
 _PEER_LAST_SUCCESS_TS: Dict[str, float] = {}
 
 
-def _float_env(name: str, default: float) -> float:
-    raw = os.getenv(name, "")
-    if not raw.strip():
-        return default
-    try:
-        return float(raw)
-    except Exception:
-        return default
-
-
 def _quality_params() -> Tuple[float, float, float, float, float]:
-    w1 = _float_env("NOVA_FED_QUALITY_W1", 0.5)
-    w2 = _float_env("NOVA_FED_QUALITY_W2", 0.3)
-    w3 = _float_env("NOVA_FED_QUALITY_W3", 0.2)
+    raw_w1 = os.getenv("NOVA_FED_QUALITY_W1", "")
+    raw_w2 = os.getenv("NOVA_FED_QUALITY_W2", "")
+    raw_w3 = os.getenv("NOVA_FED_QUALITY_W3", "")
+
+    try:
+        w1 = float(raw_w1) if raw_w1.strip() else 0.5
+    except Exception:
+        w1 = 0.5
+    try:
+        w2 = float(raw_w2) if raw_w2.strip() else 0.3
+    except Exception:
+        w2 = 0.3
+    try:
+        w3 = float(raw_w3) if raw_w3.strip() else 0.2
+    except Exception:
+        w3 = 0.2
+
     total = w1 + w2 + w3
     if total <= 0:
         w1, w2, w3 = 0.5, 0.3, 0.2
         total = 1.0
     w1, w2, w3 = (w1 / total, w2 / total, w3 / total)
-    lat_cap = max(_float_env("NOVA_FED_QUALITY_LAT_CAP_SEC", 2.0), 1e-6)
-    tau = max(_float_env("NOVA_FED_QUALITY_TAU_SEC", 300.0), 1e-6)
+
+    raw_lat_cap = os.getenv("NOVA_FED_QUALITY_LAT_CAP_SEC", "")
+    try:
+        lat_cap = float(raw_lat_cap) if raw_lat_cap.strip() else 2.0
+    except Exception:
+        lat_cap = 2.0
+    lat_cap = max(lat_cap, 1e-6)
+
+    raw_tau = os.getenv("NOVA_FED_QUALITY_TAU_SEC", "")
+    try:
+        tau = float(raw_tau) if raw_tau.strip() else 300.0
+    except Exception:
+        tau = 300.0
+    tau = max(tau, 1e-6)
+
     return w1, w2, w3, lat_cap, tau
 
 
