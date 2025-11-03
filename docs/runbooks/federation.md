@@ -46,10 +46,21 @@
 3. Verify `/federation/health` returns `status=disabled` and metrics flatten to zero.
 
 ## Auto-Remediation Hooks
-- Toggle via `NOVA_FEDERATION_AUTOREMEDIATE=0|1` (default `1`) to enable/disable automated recovery.
+- Toggle via `NOVA_FEDERATION_AUTOREMEDIATE=0|1` (default `1`) to enable/disable automated recovery. `FEDERATION_AUTOREMEDIATE` remains supported for legacy manifests, but the NOVA-prefixed knob wins when both are present.
+- Empty-peer streak remediation (Option B) emits a single `no_peers` remediation event after `NOVA_FEDERATION_NO_PEER_THRESHOLD` consecutive empty polls and rate-limits repeats with `NOVA_FEDERATION_NO_PEER_COOLDOWN` seconds (defaults: 5 intervals, 600s). A synthetic pull error is emitted alongside the event for telemetry.
 - Monitor `nova_federation_remediation_events_total{reason}` and `nova_federation_backoff_seconds` for corrective actions.
 - `/federation/health` → `remediation` details expose the last action (reason, timestamp, interval, context).
 - If automated recovery loops, disable temporarily, restart the orchestrator, and inspect alert context before re-enabling.
+- DEV ONLY: set `NOVA_FED_FORCE_ERRORS=1` to force federation client fetch paths to raise when exercising remediations; unset before promoting to shared environments.
+
+### Investigate `no_peers` remediation events
+
+1. Confirm `NOVA_FEDERATION_NO_PEER_THRESHOLD` and `NOVA_FEDERATION_NO_PEER_COOLDOWN` values are appropriate for the deployment cadence.
+2. Verify the peer registry (`config/federation_peers.yaml` or remote source) is present and mounted with correct secrets.
+3. Check DNS resolution and TLS/materialized credentials for each configured peer (ensure certificates and keys are valid).
+4. Inspect firewalls, security groups, and service mesh policies for blocks on outbound federation ports.
+5. Review recent federation peer logs for readiness issues or authentication failures.
+6. After remediation, clear the forced error flag (if used) and monitor `nova_federation_remediation_events_total{reason="no_peers"}` for stability.
 
 ```promql
 increase(nova_federation_remediation_events_total[1h])
@@ -105,3 +116,4 @@ Responses conform to `{code, reason}`. Frequent values:
 - Range proofs remain bounded by `NOVA_FEDERATION_RANGE_MAX` and `NOVA_FEDERATION_CHUNK_BYTES_MAX`; exceeding either returns the error codes above.
 - RangeSyncer records continuity/divergence receipts in the append-only receipt log; review via Grafana (`federation_divergences_total`) or inspect the receipt store path configured for the orchestrator.
 - Signed peer manifests are cached locally for `NOVA_FEDERATION_MANIFEST_TTL_S`; new key IDs emit `federation_manifest_rotations_total` and append rotation receipts.
+

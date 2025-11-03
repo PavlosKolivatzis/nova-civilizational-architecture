@@ -34,6 +34,10 @@ NOVA_FED_SCRAPE_TIMEOUT=2.0    # Federation poll timeout (seconds)
 NOVA_SMEEP_INTERVAL=15         # Sweeper interval (seconds)
 NOVA_ALLOW_EXPIRE_TEST=0       # Disable test context seeding in prod
 NOVA_FEDERATION_AUTOREMEDIATE=1 # Enable auto-remediation hooks
+NOVA_FEDERATION_NO_PEER_THRESHOLD=5 # Consecutive empty polls before remediation
+NOVA_FEDERATION_NO_PEER_COOLDOWN=600 # Cooldown window between no_peers remediations
+# DEV ONLY: set to 1 to force federation client failures and exercise remediation paths
+# NOVA_FED_FORCE_ERRORS=0
 ```
 
 **Verification Commands:**
@@ -93,6 +97,7 @@ healthcheck:
 ### Auto-Remediation
 
 - Controlled by `NOVA_FEDERATION_AUTOREMEDIATE` (default `1`). Set to `0` to disable automated restarts/back-off.
+- Tune empty-peer tracking via `NOVA_FEDERATION_NO_PEER_THRESHOLD` (default `5`) and `NOVA_FEDERATION_NO_PEER_COOLDOWN` (default `600` seconds). Use `NOVA_FED_FORCE_ERRORS=1` in dev to force the poller into remediation paths.
 - The remediator doubles the poll interval on repeated failures up to `NOVA_FED_SCRAPE_MAX_INTERVAL` (default 120 s) and enforces a 5 min cooldown before the next automated action.
 - Monitor `nova_federation_remediation_events_total{reason}` and `nova_federation_backoff_seconds` to track corrective activity. Latest action metadata is also exposed via `/federation/health` → `remediation`.
 

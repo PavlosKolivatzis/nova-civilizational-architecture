@@ -79,11 +79,17 @@ Example:
 
 ## Auto-Remediation Hooks
 
+### Sustained empty peers (no_peers)
+
+```
+increase(nova_federation_remediation_events_total{reason="no_peers"}[1h])
+```
+
 - Toggle with `NOVA_FEDERATION_AUTOREMEDIATE=0|1` (default `1`). When enabled, the poller applies exponential back-off after consecutive failures and restarts itself once per cooldown window (5 min by default).
 - Key metrics:
-  - `nova_federation_remediation_events_total{reason}` — action counts (e.g., `error_spike`, `readiness_zero`, `config_error` when no peers are configured).
-  - `nova_federation_backoff_seconds` – current poll interval after back-off.
-  - `nova_federation_remediation_last_action_timestamp` – Unix timestamp of the last automated action.
+  - `nova_federation_remediation_events_total{reason}` - action counts (e.g., `error_spike`, `readiness_zero`, `config_error` when no peers are configured).
+  - `nova_federation_backoff_seconds` - current poll interval after back-off.
+  - `nova_federation_remediation_last_action_timestamp` - Unix timestamp of the last automated action.
 - `/federation/health` → `remediation` mirrors the latest action (reason, interval, timestamp, context) for dashboards and audit logs.
 
 ## Phase 15-3 Metrics Highlights

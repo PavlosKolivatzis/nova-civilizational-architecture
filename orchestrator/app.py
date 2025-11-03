@@ -289,7 +289,10 @@ if FastAPI is not None:
 
                 global _federation_metrics_thread, _federation_remediator
                 _federation_metrics_thread = federation_poller.start()
-                auto_remediate = os.getenv("NOVA_FEDERATION_AUTOREMEDIATE", "1").strip().lower() in {
+                auto_remediate_env = os.getenv("NOVA_FEDERATION_AUTOREMEDIATE")
+                if auto_remediate_env is None:
+                    auto_remediate_env = os.getenv("FEDERATION_AUTOREMEDIATE", "1")
+                auto_remediate = auto_remediate_env.strip().lower() in {
                     "1",
                     "true",
                     "yes",
@@ -306,7 +309,9 @@ if FastAPI is not None:
                         logger.exception("Failed to start federation remediator")
                 else:
                     _federation_remediator = None
-                    logger.info("Federation auto-remediation disabled via NOVA_FEDERATION_AUTOREMEDIATE")
+                    logger.info(
+                        "Federation auto-remediation disabled via NOVA_FEDERATION_AUTOREMEDIATE/FEDERATION_AUTOREMEDIATE"
+                    )
                 logger.info(
                     "Federation metrics poller started (interval=%ss timeout=%ss)",
                     federation_poller.INTERVAL,

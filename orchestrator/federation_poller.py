@@ -36,6 +36,19 @@ _MAX_INTERVAL = float(os.getenv("NOVA_FED_SCRAPE_MAX_INTERVAL", str(max(_MIN_INT
 if _MAX_INTERVAL < _MIN_INTERVAL:
     _MAX_INTERVAL = _MIN_INTERVAL
 _CURRENT_INTERVAL = INTERVAL
+_EMPTY_PEERS_STREAK = 0
+_LAST_EMPTY_PEERS_SIGNAL = 0.0
+
+
+def _int_env(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except Exception:
+        return default
+
+
+NO_PEERS_THRESHOLD = _int_env("NOVA_FEDERATION_NO_PEER_THRESHOLD", 5)
+NO_PEERS_COOLDOWN = _int_env("NOVA_FEDERATION_NO_PEER_COOLDOWN", 600)
 
 _stop = threading.Event()
 _thread: Optional[threading.Thread] = None
@@ -113,6 +126,7 @@ def _loop():
             try:
                 peers = get_peer_list(timeout=TIMEOUT) or []
                 checkpoint = get_verified_checkpoint(timeout=TIMEOUT) or {"height": 0}
+                _update_empty_peers(peers, metrics)
                 current_peer_ids = []
                 peer_up = metrics["peer_up"]
                 peer_last_seen = metrics["peer_last_seen"]
@@ -147,3 +161,20 @@ def _loop():
         with _lock:
             wait_interval = _CURRENT_INTERVAL
         _stop.wait(wait_interval)
+
+
+def _update_empty_peers(peers: list[str], mets: dict) -> None:
+    global _EMPTY_PEERS_STREAK, _LAST_EMPTY_PEERS_SIGNAL
+    now = time.time()
+    if not peers:
+        _EMPTY_PEERS_STREAK += 1
+        should_fire = (
+            _EMPTY_PEERS_STREAK >= NO_PEERS_THRESHOLD
+            and (now - _LAST_EMPTY_PEERS_SIGNAL) >= NO_PEERS_COOLDOWN
+        )
+        if should_fire:
+            mets["remediation_events"].labels(reason="no_peers").inc()
+            mets["pull_result"].labels(status="error").inc()
+            _LAST_EMPTY_PEERS_SIGNAL = now
+    else:
+        _EMPTY_PEERS_STREAK = 0
