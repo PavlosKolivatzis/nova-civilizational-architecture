@@ -58,6 +58,24 @@ def m() -> Dict[str, object]:
         ("peer",),
         registry=registry,
     )
+    peer_quality = Gauge(
+        "nova_federation_peer_quality",
+        "Composite peer quality score (0-1)",
+        ("peer",),
+        registry=registry,
+    )
+    peer_p95 = Gauge(
+        "nova_federation_peer_last_p95_seconds",
+        "Rolling p95 latency in seconds per peer",
+        ("peer",),
+        registry=registry,
+    )
+    peer_success = Gauge(
+        "nova_federation_peer_success_rate",
+        "Rolling success rate (0-1) per peer",
+        ("peer",),
+        registry=registry,
+    )
     pull_seconds = Histogram(
         "nova_federation_pull_seconds",
         "Federation pull duration seconds",
@@ -104,6 +122,9 @@ def m() -> Dict[str, object]:
             "last_result_ts": last_result_ts,
             "peer_up": peer_up,
             "peer_last_seen": peer_last_seen,
+            "peer_quality": peer_quality,
+            "peer_p95": peer_p95,
+            "peer_success": peer_success,
             "pull_seconds": pull_seconds,
             "pull_result": pull_result,
             "ready": ready,

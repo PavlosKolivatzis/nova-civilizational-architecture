@@ -8,3 +8,7 @@ groups:
     expr: increase(nova_federation_pull_result_total{status="error"}[5m])
   - record: nova_federation_success_5m
     expr: increase(nova_federation_pull_result_total{status="success"}[5m])
+  - record: nova_federation_peer_quality_avg_5m
+    expr: avg_over_time(nova_federation_peer_quality[5m])
+  - record: nova_federation_peer_quality_median_5m
+    expr: quantile_over_time(0.5, nova_federation_peer_quality[5m])

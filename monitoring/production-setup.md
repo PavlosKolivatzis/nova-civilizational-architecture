@@ -37,6 +37,14 @@ NOVA_FEDERATION_AUTOREMEDIATE=1 # Enable auto-remediation hooks
 NOVA_FEDERATION_NO_PEER_THRESHOLD=5 # Consecutive empty polls before remediation
 NOVA_FEDERATION_NO_PEER_COOLDOWN=600 # Cooldown window between no_peers remediations
 # DEV ONLY: set to 1 to force federation client failures and exercise remediation paths
+NOVA_FED_QUALITY_W1=0.5        # Peer quality weight: success rate
+NOVA_FED_QUALITY_W2=0.3        # Peer quality weight: latency score
+NOVA_FED_QUALITY_W3=0.2        # Peer quality weight: freshness
+NOVA_FED_QUALITY_LAT_CAP_SEC=2.0 # Latency soft cap for quality scoring
+NOVA_FED_QUALITY_TAU_SEC=300    # Freshness decay constant (seconds)
+# Optional readiness gate (uncomment to require peer quality)
+# NOVA_FED_MIN_PEER_QUALITY=0.6
+# NOVA_FED_MIN_GOOD_PEERS=1
 # NOVA_FED_FORCE_ERRORS=0
 ```
 
@@ -97,6 +105,10 @@ healthcheck:
 ### Auto-Remediation
 
 - Controlled by `NOVA_FEDERATION_AUTOREMEDIATE` (default `1`). Set to `0` to disable automated restarts/back-off.
+- Peer quality metrics (
+ova_federation_peer_quality, 
+ova_federation_peer_last_p95_seconds, 
+ova_federation_peer_success_rate) feed the optional readiness gate; configure weights with NOVA_FED_QUALITY_W1/2/3, caps with NOVA_FED_QUALITY_LAT_CAP_SEC, NOVA_FED_QUALITY_TAU_SEC, and enable gating via NOVA_FED_MIN_PEER_QUALITY + NOVA_FED_MIN_GOOD_PEERS.
 - Tune empty-peer tracking via `NOVA_FEDERATION_NO_PEER_THRESHOLD` (default `5`) and `NOVA_FEDERATION_NO_PEER_COOLDOWN` (default `600` seconds). Use `NOVA_FED_FORCE_ERRORS=1` in dev to force the poller into remediation paths.
 - The remediator doubles the poll interval on repeated failures up to `NOVA_FED_SCRAPE_MAX_INTERVAL` (default 120 s) and enforces a 5 min cooldown before the next automated action.
 - Monitor `nova_federation_remediation_events_total{reason}` and `nova_federation_backoff_seconds` to track corrective activity. Latest action metadata is also exposed via `/federation/health` → `remediation`.

@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from nova.federation.metrics import m
@@ -26,8 +28,18 @@ def test_poller_loop_updates_metrics(monkeypatch):
         def __init__(self, id_):
             self.id = id_
 
-    monkeypatch.setattr(poller, "get_peer_list", lambda timeout=None: [Peer("node-a"), Peer("node-b")])
-    monkeypatch.setattr(poller, "get_verified_checkpoint", lambda timeout=None: {"height": 42})
+    now = time.time()
+
+    def fake_peer_metrics(timeout=None):
+        peers = [Peer("node-a"), Peer("node-b")]
+        checkpoint = {"height": 42}
+        stats = {
+            "node-a": {"duration": 0.1, "success": True, "last_success_ts": now},
+            "node-b": {"duration": 0.2, "success": True, "last_success_ts": now},
+        }
+        return peers, checkpoint, stats
+
+    monkeypatch.setattr(poller, "get_peer_metrics", fake_peer_metrics)
 
     class _FakeEvent:
         def __init__(self):
@@ -48,6 +60,7 @@ def test_poller_loop_updates_metrics(monkeypatch):
 
     fake_event = _FakeEvent()
     monkeypatch.setattr(poller, "_stop", fake_event, raising=False)
+    poller.reset_peer_quality_state()
     poller._known_peers.clear()
     fake_event.clear()
 
@@ -78,7 +91,8 @@ def test_poller_marks_not_ready_on_error(monkeypatch):
     def raise_error(timeout=None):
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(poller, "get_peer_list", raise_error)
+    poller.reset_peer_quality_state()
+    monkeypatch.setattr(poller, "get_peer_metrics", raise_error)
 
     class _FakeEvent:
         def __init__(self):
@@ -133,10 +147,13 @@ def test_poller_not_ready_when_no_peers(monkeypatch):
 
     fake_event = _FakeEvent()
     monkeypatch.setattr(poller, "_stop", fake_event, raising=False)
+    poller.reset_peer_quality_state()
     poller._known_peers = {"node-a"}
     metrics["peer_last_seen"].labels(peer="node-a").set(123.0)
-    monkeypatch.setattr(poller, "get_peer_list", lambda timeout=None: [])
-    monkeypatch.setattr(poller, "get_verified_checkpoint", lambda timeout=None: {"height": 12})
+    def fake_peer_metrics(timeout=None):
+        return [], {"height": 12}, {}
+
+    monkeypatch.setattr(poller, "get_peer_metrics", fake_peer_metrics)
     fake_event.clear()
 
     poller._loop()

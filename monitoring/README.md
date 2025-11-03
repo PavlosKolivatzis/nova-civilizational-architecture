@@ -42,8 +42,10 @@
 - `nova_federation_pull_seconds`: Poll duration histogram
 - `nova_federation_ready`: Readiness gauge (1 when peers > 0 and last success < 120s)
 - `nova_federation_peer_last_seen{peer="..."}`: Timestamp of most recent successful interaction per peer
-- `nova_federation_remediation_events_total{reason="..."}`: Auto-remediation actions grouped by trigger reason (e.g. error_spike, 
-eadiness_zero, config_error)
+- `nova_federation_peer_quality{peer="..."}`: Composite 0–1 peer quality (success, latency, freshness)
+- `nova_federation_peer_last_p95_seconds{peer="..."}`: Rolling per-peer p95 fetch latency (seconds)
+- `nova_federation_peer_success_rate{peer="..."}`: Rolling per-peer success rate (0–1)
+- `nova_federation_remediation_events_total{reason="..."}`: Auto-remediation actions grouped by trigger reason (e.g. error_spike, readiness_zero, config_error)
 - `nova_federation_backoff_seconds`: Current poll interval after adaptive back-off adjustments
 - `nova_federation_remediation_last_action_timestamp`: Unix timestamp of the most recent remediation event
 
@@ -76,6 +78,35 @@ Example:
   }
 }
 ```
+
+## Peer Quality Scoring
+
+Peer quality combines recent success rate, latency, and freshness within a 20-sample rolling window:
+```
+q = w1*s + w2*lat_score + w3*fresh
+lat_score = clamp(1 - p95 / L, 0, 1)
+fresh = exp(-Δt / τ)
+```
+
+Defaults: w1=0.5 (success), w2=0.3 (latency), w3=0.2 (freshness), L=2s, τ=300s. Configure via `NOVA_FED_QUALITY_W1/2/3`, `NOVA_FED_QUALITY_LAT_CAP_SEC`, and `NOVA_FED_QUALITY_TAU_SEC`.
+Optional readiness gating (leave blank to disable) uses `NOVA_FED_MIN_PEER_QUALITY` and `NOVA_FED_MIN_GOOD_PEERS`.
+
+PromQL references:
+```promql
+# Worst peers by quality (last 10m)
+topk(5, 1 - max_over_time(nova_federation_peer_quality[10m]))
+
+# Insufficient good peers (gate at 0.6)
+sum(max_over_time(nova_federation_peer_quality[5m]) >= 0.6)
+
+# Latency watch
+max_over_time(nova_federation_peer_last_p95_seconds[10m])
+
+# Success rate trend
+avg_over_time(nova_federation_peer_success_rate[15m])
+```
+Grafana: add a table/heatmap combining peer ID, quality, p95, and success rate to spot regressions quickly.
+
 
 ## Auto-Remediation Hooks
 

@@ -22,3 +22,17 @@ groups:
       severity: warning
     annotations:
       summary: "Peer count < 1 for 10m"
+  - alert: NovaFederationPeerQualityLow
+    expr: max_over_time(nova_federation_peer_quality[10m]) < 0.6
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Peer quality below 0.6 for 10m"
+  - alert: NovaFederationInsufficientGoodPeers
+    expr: sum(max_over_time(nova_federation_peer_quality[5m]) >= 0.6) < 1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Fewer than 1 peers above quality threshold"
