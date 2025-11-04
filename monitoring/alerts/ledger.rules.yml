@@ -1,0 +1,29 @@
+groups:
+  - name: nova_ledger_alerts
+    interval: 30s
+    rules:
+      - alert: NovaLedgerFederationDivergence
+        expr: abs(nova_ledger_federation_gap) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: ledger
+        annotations:
+          summary: "Ledger-federation height divergence detected"
+          description: >
+            Federation checkpoint height differs from ledger height by {{ $value }} blocks.
+            Federation height: {{ with query "nova_federation_checkpoint_height" }}{{ . | first | value }}{{ end }}.
+            Ledger height: {{ with query "nova_ledger_height" }}{{ . | first | value }}{{ end }}.
+            Review sync lag or peer trust discrepancies.
+
+      - alert: NovaLedgerHeadStalled
+        expr: nova_ledger_head_age_seconds > 300
+        for: 5m
+        labels:
+          severity: critical
+          component: ledger
+        annotations:
+          summary: "Ledger head has not advanced for {{ $value }}s"
+          description: >
+            Ledger head timestamp is {{ $value }} seconds old.
+            Check ledger writer health and upstream data flow.
