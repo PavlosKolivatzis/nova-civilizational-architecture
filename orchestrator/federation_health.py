@@ -23,6 +23,15 @@ def get_peer_health() -> Dict[str, object]:
     height_gauge = metrics.get("height")
     height = int(height_gauge._value.get()) if height_gauge else 0
 
+    # Ledger correlation
+    ledger_info = {"height": 0, "head_age": 0.0, "gap": 0}
+    try:
+        from orchestrator.federation_poller import get_last_ledger
+
+        ledger_info = get_last_ledger()
+    except Exception:
+        pass
+
     peer_up = metrics.get("peer_up")
     peer_last_seen = metrics.get("peer_last_seen")
     peer_quality = metrics.get("peer_quality")
@@ -91,6 +100,7 @@ def get_peer_health() -> Dict[str, object]:
         "ready": ready,
         "peers": peers,
         "checkpoint": {"height": height},
+        "ledger": ledger_info,
         "remediation": remediation,
     }
 

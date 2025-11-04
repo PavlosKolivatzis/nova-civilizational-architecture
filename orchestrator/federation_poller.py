@@ -12,6 +12,7 @@ from typing import Deque, Dict, Optional, Set, Tuple
 from nova.federation.metrics import m
 
 from .federation_client import get_peer_metrics
+from .ledger_reader import get_ledger_status
 
 
 def _get_interval() -> float:
@@ -56,6 +57,7 @@ except Exception:
 _QUALITY_WINDOW = 20
 _PEER_WINDOWS: Dict[str, Dict[str, Deque[float]]] = {}
 _PEER_LAST_SUCCESS_TS: Dict[str, float] = {}
+_LAST_LEDGER: Dict[str, float] = {"height": 0, "head_age": 0.0, "gap": 0}
 
 
 def _quality_params() -> Tuple[float, float, float, float, float]:
@@ -194,6 +196,11 @@ def reset_peer_quality_state() -> None:
     _PEER_WINDOWS.clear()
     _PEER_LAST_SUCCESS_TS.clear()
 
+
+def get_last_ledger() -> Dict[str, float]:
+    """Return the last ledger status snapshot."""
+    return dict(_LAST_LEDGER)
+
 _stop = threading.Event()
 _thread: Optional[threading.Thread] = None
 _lock = threading.Lock()
@@ -297,7 +304,22 @@ def _loop():
                     peer_last_seen.labels(peer=peer_id).set(0.0)
                 _known_peers = set(peer_ids)
                 metrics["peers"].set(len(peer_ids))
-                metrics["height"].set((checkpoint or {}).get("height", 0))
+                checkpoint_height = (checkpoint or {}).get("height", 0)
+                metrics["height"].set(checkpoint_height)
+
+                # Ledger correlation
+                ledger = get_ledger_status(timeout=TIMEOUT)
+                ledger_height = ledger.get("height", 0)
+                ledger_head_age = ledger.get("head_age", 0.0)
+                gap = checkpoint_height - ledger_height
+                gap_abs = abs(gap)
+                metrics["ledger_height"].set(ledger_height)
+                metrics["ledger_head_age"].set(ledger_head_age)
+                metrics["ledger_federation_gap"].set(gap)
+                metrics["ledger_federation_gap_abs"].set(gap_abs)
+                global _LAST_LEDGER
+                _LAST_LEDGER = {"height": ledger_height, "head_age": ledger_head_age, "gap": gap}
+
                 now_success = time.time()
                 metrics["last_result_ts"].labels(status="success").set(now_success)
                 metrics["pull_result"].labels(status="success").inc()

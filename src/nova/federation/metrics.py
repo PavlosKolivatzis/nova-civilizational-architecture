@@ -114,6 +114,26 @@ def m() -> Dict[str, object]:
         "Information about the most recent remediation action",
         registry=registry,
     )
+    ledger_height = Gauge(
+        "nova_ledger_height",
+        "Current ledger checkpoint height",
+        registry=registry,
+    )
+    ledger_head_age = Gauge(
+        "nova_ledger_head_age_seconds",
+        "Age of ledger head in seconds",
+        registry=registry,
+    )
+    ledger_federation_gap = Gauge(
+        "nova_ledger_federation_gap",
+        "Signed difference: federation checkpoint height - ledger height",
+        registry=registry,
+    )
+    ledger_federation_gap_abs = Gauge(
+        "nova_ledger_federation_gap_abs",
+        "Absolute gap between federation and ledger heights",
+        registry=registry,
+    )
 
     _metrics.update(
         {
@@ -132,6 +152,10 @@ def m() -> Dict[str, object]:
             "remediation_last_action": remediation_last_action,
             "remediation_backoff": remediation_backoff,
             "remediation_last_event": remediation_last_event,
+            "ledger_height": ledger_height,
+            "ledger_head_age": ledger_head_age,
+            "ledger_federation_gap": ledger_federation_gap,
+            "ledger_federation_gap_abs": ledger_federation_gap_abs,
         }
     )
     # Ensure gauges have an explicit sample on startup
@@ -141,4 +165,8 @@ def m() -> Dict[str, object]:
     remediation_last_action.set(0.0)
     remediation_backoff.set(0.0)
     remediation_last_event.info({"reason": "none", "interval": "0", "timestamp": "0"})
+    ledger_height.set(0)
+    ledger_head_age.set(0.0)
+    ledger_federation_gap.set(0)
+    ledger_federation_gap_abs.set(0)
     return _metrics

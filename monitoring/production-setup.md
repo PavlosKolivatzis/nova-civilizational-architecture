@@ -153,6 +153,66 @@ promtool test rules monitoring/alerts/federation.rules.test.yml
 
 > **Note:** Promtool tests are optional but recommended before promoting to staging; see ADR-15 for rationale.
 
+### Ledger Correlation Suite (Phase 15-7)
+
+Track alignment between federation checkpoints and local ledger state with `monitoring/alerts/ledger.rules.yml`:
+
+| Alert | Condition | Severity | Purpose |
+| --- | --- | --- | --- |
+| `NovaLedgerFederationDivergence` | `abs(nova_ledger_federation_gap) > 10` for `5m` | warning | Federation and ledger heights diverging |
+| `NovaLedgerHeadStalled` | `nova_ledger_head_age_seconds > 300` for `5m` | critical | Ledger head not advancing |
+
+**Configuration:**
+
+Provide ledger status via HTTP endpoint or shell command:
+
+```bash
+# HTTP endpoint returning {"height": int, "head_ts": unix_timestamp}
+NOVA_LEDGER_STATUS_URL=http://localhost:8080/ledger/status
+
+# Or shell command emitting same JSON
+NOVA_LEDGER_STATUS_CMD='curl -sf http://localhost:8080/ledger/status'
+```
+
+**Validation:**
+
+```bash
+# Check ledger metrics
+curl http://localhost:8000/metrics | grep nova_ledger_
+
+# Verify health JSON includes ledger field
+curl -s http://localhost:8000/federation/health | jq '.ledger'
+
+# Validate alert rules
+promtool check rules monitoring/alerts/ledger.rules.yml
+```
+
+**Grafana Queries:**
+
+```promql
+# Current gap
+nova_ledger_federation_gap
+
+# Ledger staleness
+nova_ledger_head_age_seconds
+
+# 5-minute average gap magnitude
+avg_over_time(nova_ledger_federation_gap_abs[5m])
+```
+
+PowerShell verification (Windows):
+```powershell
+# Test ledger status command
+$cmd = 'python -c "import json,time; print(json.dumps({\"height\": 100, \"head_ts\": time.time()}))"'
+Invoke-Expression $cmd | ConvertFrom-Json
+
+# Check metrics endpoint
+(Invoke-WebRequest http://localhost:8000/metrics).Content | Select-String "nova_ledger"
+
+# Verify health JSON
+(Invoke-WebRequest http://localhost:8000/federation/health).Content | ConvertFrom-Json | Select-Object -ExpandProperty ledger
+```
+
 ### Recording Rules
 
 Optional helper rules live in `monitoring/recording/federation.recording.yml`:

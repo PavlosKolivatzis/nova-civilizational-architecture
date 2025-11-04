@@ -107,6 +107,62 @@ avg_over_time(nova_federation_peer_success_rate[15m])
 ```
 Grafana: add a table/heatmap combining peer ID, quality, p95, and success rate to spot regressions quickly.
 
+## Ledger Correlation (Phase 15-7)
+
+Track alignment between federation checkpoint height and local ledger state:
+
+**Metrics:**
+- `nova_ledger_height` – Current ledger checkpoint height
+- `nova_ledger_head_age_seconds` – Time since ledger head timestamp
+- `nova_ledger_federation_gap` – Signed difference (federation height - ledger height)
+- `nova_ledger_federation_gap_abs` – Absolute gap magnitude
+
+**Configuration:**
+
+Provide ledger status via HTTP or shell command (see `.env.example`):
+```bash
+# Option 1: HTTP endpoint returning {"height": int, "head_ts": unix_timestamp}
+NOVA_LEDGER_STATUS_URL=http://localhost:8080/ledger/status
+
+# Option 2: Shell command emitting same JSON
+NOVA_LEDGER_STATUS_CMD='python -c "import json,time; print(json.dumps({\"height\": 100, \"head_ts\": time.time()}))"'
+```
+
+On error or missing config, metrics default to zero (non-fatal).
+
+**Health JSON:**
+
+`/federation/health` includes ledger snapshot:
+```json
+{
+  "ready": true,
+  "peers": [...],
+  "checkpoint": {"height": 120},
+  "ledger": {"height": 100, "head_age": 42.0, "gap": 20},
+  "remediation": {...}
+}
+```
+
+**PromQL Queries:**
+```promql
+# Current gap
+nova_ledger_federation_gap
+
+# Ledger head staleness
+nova_ledger_head_age_seconds
+
+# Gap magnitude over 5m
+avg_over_time(nova_ledger_federation_gap_abs[5m])
+
+# Divergence detection (gap > 10 for 5m)
+abs(nova_ledger_federation_gap) > 10
+```
+
+**Alerts:**
+- `NovaLedgerFederationDivergence` – Triggers when `abs(gap) > 10` for 5 minutes
+- `NovaLedgerHeadStalled` – Triggers when head age exceeds 300s for 5 minutes
+
+See `monitoring/alerts/ledger.rules.yml` and `monitoring/recording/ledger.recording.yml`.
 
 ## Auto-Remediation Hooks
 

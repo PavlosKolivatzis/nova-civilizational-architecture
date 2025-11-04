@@ -1,0 +1,9 @@
+groups:
+  - name: nova_ledger_recording
+    interval: 30s
+    rules:
+      - record: nova_ledger_federation_gap_abs:5m_avg
+        expr: avg_over_time(nova_ledger_federation_gap_abs[5m])
+
+      - record: nova_ledger_head_age_seconds:5m_avg
+        expr: avg_over_time(nova_ledger_head_age_seconds[5m])
