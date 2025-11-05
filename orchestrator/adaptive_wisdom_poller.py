@@ -53,7 +53,7 @@ _lock = threading.Lock()
 _current_state: Dict[str, float] = {
     "gamma": 0.7,
     "S": 0.05,
-    "eta": 0.10,
+    "eta": float(os.getenv("NOVA_WISDOM_ETA_DEFAULT", "0.10")),
     "rho": 0.0,
     "H": float("inf"),
     "G": 0.0,
@@ -136,7 +136,8 @@ def _loop():
 
     eta_min = float(os.getenv("NOVA_WISDOM_ETA_MIN", "0.05"))
     eta_max = float(os.getenv("NOVA_WISDOM_ETA_MAX", "0.18"))
-    governor = AdaptiveWisdomGovernor(eta=0.10, eta_min=eta_min, eta_max=eta_max)
+    eta_default = float(os.getenv("NOVA_WISDOM_ETA_DEFAULT", "0.10"))
+    governor = AdaptiveWisdomGovernor(eta=eta_default, eta_min=eta_min, eta_max=eta_max)
 
     # Quality target for gamma learning
     Q = params.Q
