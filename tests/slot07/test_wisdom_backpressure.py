@@ -134,6 +134,7 @@ def test_public_api():
         "get_backpressure_config",
         "get_backpressure_status",
         "__all__",
+        "annotations",  # from __future__ import annotations
         "os",
         "Tuple",
         "governor_state",

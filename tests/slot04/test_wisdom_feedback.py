@@ -126,6 +126,7 @@ def test_public_api():
         "get_feedback_config",
         "get_feedback_status",
         "__all__",
+        "annotations",  # from __future__ import annotations
         "os",
         "Optional",
     }
