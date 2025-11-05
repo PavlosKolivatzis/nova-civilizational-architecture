@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- **Phase 15-8.2: Adaptive Wisdom Governor Integration** (v15.8.2) — Wisdom governor wired into operational nervous system: Slot 4 (TRI) contributes coherence-based learning caps; Slot 7 (Production Controls) adjusts concurrency via stability-driven backpressure; GovernorState provides single source of truth for η across all training loops. Nova becomes self-tuning: sensing stability margins in real time, scaling learning and exertion autonomously.
 - **ADR-Reflection-15: Federation as the Birth of Shared Truth** — Canonical reflection on Phase 15's epistemic and architectural meaning
   - Philosophical foundation for federated checkpoint synchronization
   - Evolution from isolated attestation to dialogic coherence
