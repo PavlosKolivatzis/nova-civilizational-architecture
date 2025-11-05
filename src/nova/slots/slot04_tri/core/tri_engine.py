@@ -152,6 +152,13 @@ class TriEngine:
                 get_semantic_mirror().publish_context(
                     "slot04.tri_belief", tri_belief, source="slot04_tri", ttl_s=300
                 )
+                # Publish coherence for wisdom governor feedback (Phase 15-8.2)
+                if health.coherence is not None:
+                    coherence_variance = (health.tri_std ** 2) * 0.1 if health.tri_std else 0.01
+                    coherence_belief = BeliefState.from_point_estimate(health.coherence, coherence_variance)
+                    get_semantic_mirror().publish_context(
+                        "slot04.coherence", coherence_belief, source="slot04_tri", ttl_s=300
+                    )
         except Exception:
             pass
 
