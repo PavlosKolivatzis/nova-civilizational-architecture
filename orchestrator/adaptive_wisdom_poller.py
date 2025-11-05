@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 import threading
 import time
+from collections import deque
 from contextlib import contextmanager
 from typing import Dict, Optional
 
@@ -24,6 +25,12 @@ from nova.bifurcation_monitor import BifurcationMonitor
 from nova.governor import state as governor_state
 from nova.governor.adaptive_wisdom import AdaptiveWisdomGovernor
 from nova.metrics import wisdom_metrics
+from nova.wisdom.generativity_core import (
+    GenerativityParams,
+    compute_components,
+    compute_gstar,
+    eta_bias as compute_eta_bias,
+)
 
 __all__ = ["start", "stop", "get_current_state", "get_interval"]
 
@@ -41,6 +48,33 @@ def _get_enabled() -> bool:
     """Check if wisdom governor is enabled."""
     raw = os.getenv("NOVA_WISDOM_GOVERNOR_ENABLED", "").lower()
     return raw in ("1", "true", "yes", "on")
+
+
+def _parse_generativity_params() -> GenerativityParams:
+    """Parse generativity parameters from environment."""
+    # Parse weights (α, β, γ)
+    weights_raw = os.getenv("NOVA_WISDOM_G_WEIGHTS", "0.4,0.3,0.3")
+    try:
+        parts = [float(x.strip()) for x in weights_raw.split(",")]
+        if len(parts) >= 3:
+            alpha, beta, gamma = parts[0], parts[1], parts[2]
+        else:
+            alpha, beta, gamma = 0.4, 0.3, 0.3
+    except Exception:
+        alpha, beta, gamma = 0.4, 0.3, 0.3
+
+    # Parse target and gain
+    g0 = float(os.getenv("NOVA_WISDOM_G_TARGET", "0.6"))
+    kappa = float(os.getenv("NOVA_WISDOM_G_KAPPA", "0.02"))
+
+    return GenerativityParams(alpha=alpha, beta=beta, gamma=gamma, g0=g0, kappa=kappa)
+
+
+def _get_generativity_gates() -> tuple[float, float]:
+    """Get gating thresholds for G* bias."""
+    min_s = float(os.getenv("NOVA_WISDOM_G_MIN_S", "0.03"))
+    min_h = float(os.getenv("NOVA_WISDOM_G_MIN_H", "0.02"))
+    return (min_s, min_h)
 
 
 # Configuration
@@ -116,17 +150,27 @@ def stop() -> None:
         thread.join(timeout=1.0)
 
 
-def _compute_generativity(state: State3D, analysis) -> float:
-    """Compute generativity score G* = f(gamma, S, H).
-
-    Simple linear combination for MVS.
-    Can be enhanced to full C*ρ*S - α*H formula later.
+def _get_peer_qualities() -> list[float]:
     """
-    # Simple approximation: high gamma + high S + low H → high generativity
-    # G* ≈ γ + S - 0.1*min(H, 1.0)
-    H_clamped = min(analysis.H, 1.0)
-    G = state.gamma + analysis.S - 0.1 * H_clamped
-    return max(0.0, min(1.0, G))
+    Attempt to read per-peer quality scores from federation metrics.
+
+    Returns:
+        list[float]: Per-peer quality scores, or empty list if unavailable
+    """
+    try:
+        from nova.metrics.registry import REGISTRY
+        from prometheus_client import REGISTRY as prom_registry
+
+        # Try to find nova_federation_peer_quality metric
+        for collector in REGISTRY._collector_to_names:
+            if hasattr(collector, "_metrics"):
+                for metric_name, metric in collector._metrics.items():
+                    if "nova_federation_peer_quality" in str(metric_name):
+                        if hasattr(metric, "_samples"):
+                            return [sample[2] for sample in metric._samples() if sample[2] is not None]
+        return []
+    except Exception:
+        return []
 
 
 def _loop():
@@ -146,6 +190,17 @@ def _loop():
     # Quality target for gamma learning
     Q = params.Q
 
+    # Generativity computation setup
+    gen_params = _parse_generativity_params()
+    min_s_gate, min_h_gate = _get_generativity_gates()
+
+    # Rolling buffers for generativity computation
+    # 1m window = ~4 samples at 15s interval, 5m = ~20 samples
+    gamma_buffer_1m = deque(maxlen=4)
+    gamma_buffer_5m = deque(maxlen=20)
+    eta_buffer_1m = deque(maxlen=4)
+    peer_quality_buffer_1m = deque(maxlen=4)
+
     while not _stop.is_set():
         try:
             # Get current state
@@ -161,8 +216,41 @@ def _loop():
             jacobian = provider.jacobian(current)
             analysis = monitor.analyze(jacobian)
 
-            # Compute generativity
-            G = _compute_generativity(current, analysis)
+            # Update rolling buffers for generativity
+            gamma_buffer_1m.append(current.gamma)
+            gamma_buffer_5m.append(current.gamma)
+            eta_buffer_1m.append(current.eta)
+
+            # Get peer qualities (novelty component)
+            peer_qualities = _get_peer_qualities()
+            if peer_qualities:
+                peer_quality_buffer_1m.extend(peer_qualities)
+
+            # Compute generativity components (P, N, Cc)
+            if gamma_buffer_1m and gamma_buffer_5m:
+                gamma_avg_1m = sum(gamma_buffer_1m) / len(gamma_buffer_1m)
+                gamma_avg_5m = sum(gamma_buffer_5m) / len(gamma_buffer_5m)
+                eta_series = list(eta_buffer_1m)
+                peer_quality_series = list(peer_quality_buffer_1m)
+
+                P, N, Cc = compute_components(
+                    gamma_avg_1m=gamma_avg_1m,
+                    gamma_avg_5m=gamma_avg_5m,
+                    eta_series_1m=eta_series,
+                    peer_quality_series_1m=peer_quality_series,
+                )
+                G = compute_gstar(gen_params, P, N, Cc)
+                bias = compute_eta_bias(gen_params, G)
+
+                # Publish generativity components
+                wisdom_metrics.publish_generativity_components(
+                    progress=P, novelty=N, consistency=Cc, eta_bias=bias
+                )
+            else:
+                # Insufficient data, use fallback
+                G = 0.6  # Target value
+                bias = 0.0
+                P, N, Cc = 0.0, 0.0, 0.0
 
             # Update metrics
             wisdom_metrics.publish_wisdom_telemetry(
@@ -192,6 +280,13 @@ def _loop():
                     # Normal operation: Use governor
                     telemetry = governor.step(margin=analysis.S, G=G)
                     new_eta = telemetry.eta
+
+            # Apply generativity bias (gated by stability)
+            # Gate out when S < min_s or H < min_h
+            if not frozen and analysis.S >= min_s_gate and analysis.H >= min_h_gate:
+                new_eta += bias
+                # Clamp to global bounds
+                new_eta = max(eta_min, min(eta_max, new_eta))
 
             # Apply TRI feedback cap (optional, if enabled)
             if os.getenv("NOVA_TRI_ETA_CAP_ENABLED", "1") == "1":
