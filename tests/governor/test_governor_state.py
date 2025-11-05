@@ -111,7 +111,7 @@ def test_thread_safety_concurrent_writes():
 
     # Final state should be one of the written values (not corrupted)
     final_eta = module.get_eta()
-    assert final_eta in {pytest.approx(0.10), pytest.approx(0.15), pytest.approx(0.18)}
+    assert final_eta in [pytest.approx(0.10), pytest.approx(0.15), pytest.approx(0.18)]
 
 
 def test_thread_safety_read_write_mixed():
@@ -189,6 +189,7 @@ def test_public_api():
         "reset_for_tests",
         "MODULE_STATE",
         "__all__",
+        "annotations",  # from __future__ import annotations
         "dataclass",
         "threading",
         "Tuple",
