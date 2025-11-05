@@ -87,3 +87,35 @@ groups:
             Wisdom γ = {{ $value }} < 0.3 for 5+ minutes.
             Learning effectiveness severely degraded.
             Check for sustained errors or coherence loss in TRI.
+
+      - alert: NovaWisdomLowGenerativity
+        expr: avg_over_time(nova_wisdom_generativity[10m]) < 0.4
+        for: 10m
+        labels:
+          severity: info
+          component: wisdom_governor
+        annotations:
+          summary: "Low generativity score"
+          description: >
+            G* under 0.4 for 10+ minutes.
+            System creativity/novelty degraded.
+            Progress: {{ with query "nova_wisdom_generativity_components{component=\"progress\"}" }}{{ . | first | value }}{{ end }}.
+            Novelty: {{ with query "nova_wisdom_generativity_components{component=\"novelty\"}" }}{{ . | first | value }}{{ end }}.
+            Consistency: {{ with query "nova_wisdom_generativity_components{component=\"consistency\"}" }}{{ . | first | value }}{{ end }}.
+            η may need manual guidance or parameter tuning.
+
+      - alert: NovaWisdomHighBias
+        expr: abs(avg_over_time(nova_wisdom_eta_bias_from_generativity[5m])) > 0.015
+        for: 5m
+        labels:
+          severity: warning
+          component: wisdom_governor
+        annotations:
+          summary: "Large η bias from generativity"
+          description: >
+            Controller bias |Δη| = {{ $value }} > 0.015 for 5+ minutes.
+            Controller relies heavily on generativity feedback.
+            Current G*: {{ with query "nova_wisdom_generativity" }}{{ . | first | value }}{{ end }}.
+            Stability margin S: {{ with query "nova_wisdom_stability_margin" }}{{ . | first | value }}{{ end }}.
+            Hopf distance H: {{ with query "nova_wisdom_hopf_distance" }}{{ . | first | value }}{{ end }}.
+            Check S/H gating and TRI cap effectiveness.

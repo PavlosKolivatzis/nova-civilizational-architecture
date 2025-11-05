@@ -40,6 +40,10 @@ groups:
   - record: nova_wisdom_generativity_avg_5m
     expr: avg_over_time(nova_wisdom_generativity[5m])
 
+  # Generativity bias (Δη from G*)
+  - record: nova_wisdom_eta_bias_from_generativity_avg_5m
+    expr: avg_over_time(nova_wisdom_eta_bias_from_generativity[5m])
+
   # Clamp monitoring (η near min for too long)
   - record: nova_wisdom_eta_clamped_ratio_5m
     expr: avg_over_time((nova_wisdom_eta_current <= 0.051)[5m:])
