@@ -85,6 +85,7 @@ except Exception:  # pragma: no cover - orchestrator runner not available
 if FastAPI is not None:
     _federation_metrics_thread = None
     _federation_remediator = None
+    _wisdom_poller_thread = None
 
     async def _sm_sweeper():
         interval = int(os.getenv("NOVA_SMEEP_INTERVAL", "15"))  # seconds
@@ -320,6 +321,26 @@ if FastAPI is not None:
             except Exception:
                 logger.exception("Failed to start federation metrics poller")
 
+        # Adaptive wisdom governor (Phase 15-8)
+        wisdom_enabled = os.getenv("NOVA_WISDOM_GOVERNOR_ENABLED", "false").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        if prom_enabled and wisdom_enabled:
+            try:
+                from orchestrator import adaptive_wisdom_poller
+
+                global _wisdom_poller_thread
+                _wisdom_poller_thread = adaptive_wisdom_poller.start()
+                logger.info(
+                    "Adaptive wisdom poller started (interval=%ss)",
+                    adaptive_wisdom_poller.get_interval(),
+                )
+            except Exception:
+                logger.exception("Failed to start adaptive wisdom poller")
+
         # start periodic expiry in *this* process (the one Prometheus scrapes)
         asyncio.create_task(_sm_sweeper())
 
@@ -327,7 +348,7 @@ if FastAPI is not None:
         asyncio.create_task(_canary_loop())
 
     async def _shutdown() -> None:
-        global _federation_metrics_thread, _federation_remediator
+        global _federation_metrics_thread, _federation_remediator, _wisdom_poller_thread
         if _federation_remediator:
             try:
                 _federation_remediator.stop()
@@ -345,6 +366,16 @@ if FastAPI is not None:
                 logger.exception("Failed to stop federation metrics poller")
             finally:
                 _federation_metrics_thread = None
+        if _wisdom_poller_thread:
+            try:
+                from orchestrator import adaptive_wisdom_poller
+
+                adaptive_wisdom_poller.stop()
+                _wisdom_poller_thread.join(timeout=1.0)
+            except Exception:
+                logger.exception("Failed to stop adaptive wisdom poller")
+            finally:
+                _wisdom_poller_thread = None
 
         from nova.slots.config import get_config_manager
         mgr = await get_config_manager()
