@@ -1,0 +1,45 @@
+groups:
+- name: wisdom-recording
+  interval: 15s
+  rules:
+  # η — short/medium windows for control tuning
+  - record: nova_wisdom_eta_current_avg_5m
+    expr: avg_over_time(nova_wisdom_eta_current[5m])
+  - record: nova_wisdom_eta_current_max_5m
+    expr: max_over_time(nova_wisdom_eta_current[5m])
+  - record: nova_wisdom_eta_current_min_5m
+    expr: min_over_time(nova_wisdom_eta_current[5m])
+
+  # Stability margin S
+  - record: nova_wisdom_stability_margin_mean_5m
+    expr: avg_over_time(nova_wisdom_stability_margin[5m])
+  - record: nova_wisdom_stability_margin_min_1m
+    expr: min_over_time(nova_wisdom_stability_margin[1m])
+  - record: nova_wisdom_stability_margin_min_5m
+    expr: min_over_time(nova_wisdom_stability_margin[5m])
+
+  # Hopf proximity (worst distance)
+  - record: nova_wisdom_hopf_distance_min_5m
+    expr: min_over_time(nova_wisdom_hopf_distance[5m])
+  - record: nova_wisdom_hopf_distance_avg_5m
+    expr: avg_over_time(nova_wisdom_hopf_distance[5m])
+
+  # Spectral radius ρ
+  - record: nova_wisdom_spectral_radius_max_5m
+    expr: max_over_time(nova_wisdom_spectral_radius[5m])
+  - record: nova_wisdom_spectral_radius_avg_5m
+    expr: avg_over_time(nova_wisdom_spectral_radius[5m])
+
+  # Wisdom γ
+  - record: nova_wisdom_gamma_avg_5m
+    expr: avg_over_time(nova_wisdom_gamma[5m])
+  - record: nova_wisdom_gamma_min_5m
+    expr: min_over_time(nova_wisdom_gamma[5m])
+
+  # Generativity G*
+  - record: nova_wisdom_generativity_avg_5m
+    expr: avg_over_time(nova_wisdom_generativity[5m])
+
+  # Clamp monitoring (η near min for too long)
+  - record: nova_wisdom_eta_clamped_ratio_5m
+    expr: avg_over_time((nova_wisdom_eta_current <= 0.051)[5m:])
