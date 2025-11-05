@@ -363,6 +363,140 @@ pytest tests/integration/test_tri_eta_cap.py -v
 
 ---
 
+## Generativity as Soft Stability Driver (Phase 15-8.4)
+
+### Overview
+
+**Generativity (G\*)** measures system creative output and novelty, providing a soft bias to the learning rate based on progress, peer diversity, and consistency.
+
+**Integration:** Adds bias term `Δη = κ·(G* - G₀)` to controller output, gated by stability thresholds.
+
+### Formula
+
+```
+G* = α·P + β·N + γ·Cc
+```
+
+**Components:**
+- **P** (Progress): Recent growth in wisdom γ
+- **N** (Novelty): Structural change in peer landscape
+- **Cc** (Consistency): Steadiness of learning rate η
+
+### Component Definitions
+
+#### Progress (P)
+
+Measures recent wisdom growth:
+
+```
+P = clip((γ̄_1m - γ̄_5m) / max(γ̄_5m, ε), 0, 1)
+```
+
+- **High P** (>0.5): Wisdom growing rapidly → encourage higher learning
+- **Low P** (<0.2): Wisdom stagnant → reduce learning aggression
+
+#### Novelty (N)
+
+Measures structural change in peer quality landscape:
+
+```
+N = clip(std_peers(q)_1m / 0.5, 0, 1)
+```
+
+where `q = nova_federation_peer_quality{peer}`
+
+- **High N** (>0.5): High diversity in peer qualities → system exploring new states
+- **Low N** (<0.2): Homogeneous peers → system in local equilibrium
+
+#### Consistency (Cc)
+
+Measures steadiness of learning rate:
+
+```
+Cc = 1 - clip(std(η)_1m / max(η̄_1m, ε), 0, 1)
+```
+
+- **High Cc** (>0.8): Stable learning rate → predictable dynamics
+- **Low Cc** (<0.5): Volatile learning rate → controller thrashing
+
+### Controller Integration
+
+**Bias Application:**
+
+```python
+# After governor step:
+new_eta = governor.step(margin=S, G=G)
+
+# Apply generativity bias (if stable):
+if S >= min_s and H >= min_h:
+    Δη = κ·(G* - G₀)
+    new_eta += Δη
+    new_eta = clip(new_eta, eta_min, eta_max)
+
+# Apply TRI cap, then publish to GovernorState
+```
+
+**Gating Rules:**
+- **Disabled** when `frozen=True` (critical instability)
+- **Zeroed** when `S < 0.03` (low stability margin)
+- **Zeroed** when `H < 0.02` (Hopf bifurcation near)
+
+### Configuration
+
+**Environment Variables:**
+
+```bash
+# Component weights (α, β, γ)
+NOVA_WISDOM_G_WEIGHTS=0.4,0.3,0.3
+
+# Target and gain
+NOVA_WISDOM_G_TARGET=0.6     # G₀ (neutral point)
+NOVA_WISDOM_G_KAPPA=0.02     # Bias strength κ
+
+# Safety gates
+NOVA_WISDOM_G_MIN_S=0.03     # Minimum S for bias
+NOVA_WISDOM_G_MIN_H=0.02     # Minimum H for bias
+```
+
+### Metrics
+
+**Prometheus Gauges:**
+- `nova_wisdom_generativity` - Current G* score
+- `nova_wisdom_generativity_components{component="progress|novelty|consistency"}` - P, N, Cc
+- `nova_wisdom_eta_bias_from_generativity` - Current bias Δη
+
+**Alerts:**
+- `NovaWisdomLowGenerativity` - G* < 0.4 for 10m (info)
+- `NovaWisdomHighBias` - |Δη| > 0.015 for 5m (warning)
+
+### Interpretation
+
+**High Generativity (G* > 0.7):**
+- System is learning effectively (high P)
+- Exploring diverse states (high N)
+- Controller stable (high Cc)
+- → Bias increases η, encouraging further exploration
+
+**Low Generativity (G* < 0.4):**
+- Wisdom stagnant or declining
+- Peers homogeneous (low novelty)
+- Controller volatile or stuck
+- → Bias decreases η, promoting stability
+
+**Target Generativity (G* ≈ 0.6):**
+- Balanced progress/exploration/consistency
+- Zero bias applied
+- System at equilibrium
+
+### Operational Notes
+
+1. **Complementary to stability control:** G* bias is additive, applied *after* governor step but *before* TRI cap
+2. **Safety-first gating:** Bias disabled under any instability (S, H, frozen)
+3. **Tuning κ:** Start with `κ=0.02` (~1% max bias). Increase cautiously if system too conservative.
+4. **Weights (α, β, γ):** Default 0.4/0.3/0.3 balances recent growth with diversity and consistency. Adjust based on operational priorities.
+
+---
+
 ## Operational Phases
 
 ### Phase 1: Calibration (Week 1)
