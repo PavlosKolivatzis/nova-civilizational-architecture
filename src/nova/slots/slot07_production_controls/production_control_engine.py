@@ -182,16 +182,27 @@ class ResourceProtector:
         return True
     
     def check_concurrency(self) -> bool:
-        """Check if concurrency limit allows new request."""
+        """Check if concurrency limit allows new request (wisdom-aware)."""
         if not self.config["enabled"]:
             return True
-            
+
+        # Determine effective max_concurrent_requests
+        # If wisdom integration enabled, use adaptive backpressure
+        max_requests = self.max_concurrent_requests
+        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "1") == "1":
+            try:
+                from .wisdom_backpressure import compute_max_concurrent_jobs
+                max_requests = compute_max_concurrent_jobs()
+            except (ImportError, Exception):
+                # Fallback to static config if wisdom integration unavailable
+                pass
+
         with self._lock:
-            if self.active_requests >= self.max_concurrent_requests:
+            if self.active_requests >= max_requests:
                 raise ResourceLimitExceededError(
-                    f"Concurrent requests {self.active_requests} exceeds limit of {self.max_concurrent_requests}"
+                    f"Concurrent requests {self.active_requests} exceeds limit of {max_requests}"
                 )
-            
+
             self.active_requests += 1
             return True
     
@@ -214,10 +225,23 @@ class ResourceProtector:
                     logger.warning(f"Processing time {processing_time:.2f}s exceeded limit of {self.max_processing_time}s")
     
     def get_metrics(self) -> Dict[str, Any]:
-        """Get resource protector metrics."""
+        """Get resource protector metrics (includes wisdom-aware backpressure)."""
+        # Compute effective max_concurrent_requests with wisdom integration
+        effective_max = self.max_concurrent_requests
+        wisdom_enabled = False
+        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "1") == "1":
+            try:
+                from .wisdom_backpressure import compute_max_concurrent_jobs
+                effective_max = compute_max_concurrent_jobs()
+                wisdom_enabled = True
+            except (ImportError, Exception):
+                pass
+
         return {
             "active_requests": self.active_requests,
-            "max_concurrent_requests": self.max_concurrent_requests,
+            "max_concurrent_requests": self.max_concurrent_requests,  # Config baseline
+            "effective_max_concurrent_requests": effective_max,  # Wisdom-adjusted
+            "wisdom_backpressure_enabled": wisdom_enabled,
             "max_payload_size_mb": self.max_payload_size_mb,
             "max_processing_time_seconds": self.max_processing_time,
             "enabled": self.config["enabled"]

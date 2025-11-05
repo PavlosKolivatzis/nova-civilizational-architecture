@@ -21,6 +21,7 @@ from typing import Dict, Optional
 
 from nova.adaptive_wisdom_core import Params3D, State3D, ThreeDProvider
 from nova.bifurcation_monitor import BifurcationMonitor
+from nova.governor import state as governor_state
 from nova.governor.adaptive_wisdom import AdaptiveWisdomGovernor
 from nova.metrics import wisdom_metrics
 
@@ -50,14 +51,13 @@ ENABLED = _get_enabled()
 _stop = threading.Event()
 _thread: Optional[threading.Thread] = None
 _lock = threading.Lock()
+# Note: eta and frozen now managed by governor_state (GovernorState singleton)
 _current_state: Dict[str, float] = {
     "gamma": 0.7,
     "S": 0.05,
-    "eta": float(os.getenv("NOVA_WISDOM_ETA_DEFAULT", "0.10")),
     "rho": 0.0,
     "H": float("inf"),
     "G": 0.0,
-    "frozen": False,
 }
 
 
@@ -74,7 +74,11 @@ def _timed(summary):
 def get_current_state() -> Dict[str, float]:
     """Get current wisdom state snapshot (thread-safe)."""
     with _lock:
-        return dict(_current_state)
+        state = dict(_current_state)
+        # Add eta and frozen from GovernorState
+        state["eta"] = governor_state.get_eta()
+        state["frozen"] = governor_state.is_frozen()
+        return state
 
 
 def get_interval() -> float:
@@ -149,9 +153,9 @@ def _loop():
                 current = State3D(
                     gamma=_current_state["gamma"],
                     S=_current_state["S"],
-                    eta=_current_state["eta"],
+                    eta=governor_state.get_eta(),  # Read from GovernorState
                 )
-                frozen = _current_state["frozen"]
+            frozen = governor_state.is_frozen()  # Read from GovernorState
 
             # Compute Jacobian and analyze
             jacobian = provider.jacobian(current)
@@ -189,6 +193,18 @@ def _loop():
                     telemetry = governor.step(margin=analysis.S, G=G)
                     new_eta = telemetry.eta
 
+            # Apply TRI feedback cap (optional, if enabled)
+            if os.getenv("NOVA_TRI_ETA_CAP_ENABLED", "1") == "1":
+                try:
+                    from nova.slots.slot04_tri.wisdom_feedback import get_tri_coherence, compute_tri_eta_cap
+                    coherence = get_tri_coherence()
+                    if coherence is not None:
+                        tri_cap = compute_tri_eta_cap(coherence)
+                        new_eta = min(new_eta, tri_cap)
+                except (ImportError, Exception):
+                    # TRI feedback unavailable, continue without cap
+                    pass
+
             # Evolve gamma (simplified: dγ/dt = η(Q - γ))
             # Euler step with dt = INTERVAL
             dt = INTERVAL
@@ -200,11 +216,13 @@ def _loop():
             with _lock:
                 _current_state["gamma"] = new_gamma
                 _current_state["S"] = analysis.S
-                _current_state["eta"] = new_eta
                 _current_state["rho"] = analysis.rho
                 _current_state["H"] = analysis.H
                 _current_state["G"] = G
-                _current_state["frozen"] = new_frozen
+
+            # Update GovernorState (single source of truth for eta and frozen)
+            governor_state.set_eta(new_eta)
+            governor_state.set_frozen(new_frozen)
 
         except Exception as e:
             # Log error but continue

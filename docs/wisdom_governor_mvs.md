@@ -234,17 +234,132 @@ python orchestrator/adaptive_wisdom_poller.py
 
 ## Integration with Nova Slots
 
-### Current State (MVS)
+### Phase 15-8.2: Operational Integration (COMPLETE)
 
-- **Standalone poller**: Runs independently, publishes metrics
-- **No slot dependencies**: Self-contained dynamics
+**Status:** Integrated with Slot 4 (TRI) and Slot 7 (Production Controls)
 
-### Planned Integration (Future)
+#### 1. GovernorState — Single Source of Truth
 
-- **Slot 4 (TRI)**: Provide coherence C for quality function
-- **Slot 7 (Production Controls)**: Receive stability margins, trigger circuit breakers when S < threshold
-- **Semantic Mirror**: Publish `nova.stability.margin`, `nova.wisdom.eta_current`
+**Module:** `src/nova/governor/state.py`
+
+- Thread-safe singleton for η and frozen state
+- Training loops MUST use `get_training_eta()` (returns 0.0 when frozen)
+- Poller writes via `set_eta()` and `set_frozen()`
+
+**Usage (training loop):**
+```python
+from nova.governor import get_training_eta
+eta = get_training_eta()  # Always use this, never hardcode η
+```
+
+#### 2. Slot 7 Backpressure — Adaptive Job Parallelism
+
+**Module:** `src/nova/slots/slot07_production_controls/wisdom_backpressure.py`
+
+- Reduces `max_concurrent_jobs` when frozen or S < threshold
+- Integrated into `ResourceProtector.check_concurrency()`
+
+**Behavior:**
+- `frozen=True` → minimal parallelism (2 jobs, survival mode)
+- `S < 0.03` → reduced parallelism (6 jobs, 50% capacity)
+- `S >= 0.03` → baseline parallelism (16 jobs, full capacity)
+
+**Configuration:**
+```bash
+export NOVA_WISDOM_BACKPRESSURE_ENABLED=true
+export NOVA_SLOT07_MAX_JOBS_BASELINE=16
+export NOVA_SLOT07_MAX_JOBS_FROZEN=2
+export NOVA_SLOT07_MAX_JOBS_REDUCED=6
+export NOVA_SLOT07_STABILITY_THRESHOLD=0.03
+```
+
+#### 3. Slot 4 TRI Feedback — Coherence-Based η Cap
+
+**Module:** `src/nova/slots/slot04_tri/wisdom_feedback.py`
+
+- Maps TRI coherence C → η_cap
+- High coherence (stable tokens) → allow higher learning rates
+- Low coherence (unstable tokens) → cap η lower for safety
+
+**Mapping:**
+- `C > 0.85` (very stable) → `η_cap = 0.18` (high exploration)
+- `C < 0.40` (unstable) → `η_cap = 0.08` (conservative)
+- `0.40 ≤ C ≤ 0.85` → linear interpolation
+
+**Configuration:**
+```bash
+export NOVA_TRI_ETA_CAP_ENABLED=true
+export NOVA_TRI_COHERENCE_HIGH=0.85
+export NOVA_TRI_COHERENCE_LOW=0.40
+export NOVA_TRI_ETA_CAP_HIGH=0.18
+export NOVA_TRI_ETA_CAP_LOW=0.08
+```
+
+**TRI Coherence Formula:**
+```
+C = 1 / (1 + cv)
+where cv = std / mean (coefficient of variation)
+```
+
+TRI publishes coherence to semantic mirror (`slot04.coherence`) for consumption by poller.
+
+### Data Flow
+
+```
+┌─────────────┐
+│ TRI Engine  │ Computes coherence C = 1/(1+cv)
+│ (Slot 4)    │ Publishes to semantic mirror
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────┐        ┌──────────────┐
+│ Adaptive Wisdom     │◄───────┤ Bifurcation  │ Eigenvalue analysis
+│ Poller              │        │ Monitor      │ (ρ, S, H)
+│                     │        └──────────────┘
+│ 1. Read S, H, ρ     │
+│ 2. Compute G        │        ┌──────────────┐
+│ 3. Governor step    │◄───────┤ Governor     │ 5 operating modes
+│ 4. Apply TRI cap    │        │ Controller   │ (CRITICAL, SAFE, ...)
+│ 5. Publish to State │        └──────────────┘
+└──────┬──────────────┘
+       │
+       ▼
+┌─────────────────┐
+│ GovernorState   │ Thread-safe singleton
+│ (Single Source) │ η ∈ [0.05, 0.18], frozen ∈ {true, false}
+└──────┬──────────┘
+       │
+       ├─────────────────────────┬──────────────────────┐
+       ▼                         ▼                      ▼
+┌──────────────┐      ┌──────────────────┐   ┌──────────────┐
+│ Training     │      │ Slot 7           │   │ Metrics      │
+│ Loops        │      │ Backpressure     │   │ Export       │
+│              │      │                  │   │              │
+│ get_training │      │ max_concurrent   │   │ Prometheus   │
+│ _eta()       │      │ _jobs()          │   │ gauges       │
+└──────────────┘      └──────────────────┘   └──────────────┘
+```
+
+### Integration Tests
+
+**Location:** `tests/integration/`
+
+- `test_eta_source_of_truth.py`: Verify GovernorState as single source
+- `test_job_policy_wisdom_gate.py`: Verify Slot 7 backpressure
+- `test_tri_eta_cap.py`: Verify TRI feedback loop
+
+**Run:**
+```bash
+pytest tests/integration/test_eta_source_of_truth.py -v
+pytest tests/integration/test_job_policy_wisdom_gate.py -v
+pytest tests/integration/test_tri_eta_cap.py -v
+```
+
+### Future Integration (Phase 2+)
+
+- **Semantic Mirror**: Direct subscription model for cross-slot consumption
 - **FLE-II (Federation)**: Share stability patterns across network
+- **Full 5×5 dynamics**: Implement complete state vector [ρ, S, C, H, γ]
 
 ---
 
