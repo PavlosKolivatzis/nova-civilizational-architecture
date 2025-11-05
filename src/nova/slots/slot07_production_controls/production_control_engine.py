@@ -189,7 +189,7 @@ class ResourceProtector:
         # Determine effective max_concurrent_requests
         # If wisdom integration enabled, use adaptive backpressure
         max_requests = self.max_concurrent_requests
-        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "1") == "1":
+        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "0") == "1":
             try:
                 from .wisdom_backpressure import compute_max_concurrent_jobs
                 max_requests = compute_max_concurrent_jobs()
@@ -229,7 +229,7 @@ class ResourceProtector:
         # Compute effective max_concurrent_requests with wisdom integration
         effective_max = self.max_concurrent_requests
         wisdom_enabled = False
-        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "1") == "1":
+        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "0") == "1":
             try:
                 from .wisdom_backpressure import compute_max_concurrent_jobs
                 effective_max = compute_max_concurrent_jobs()
