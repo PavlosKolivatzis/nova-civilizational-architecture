@@ -180,6 +180,20 @@ class KeyRotationReceipt(BaseModel):
     details: Dict[str, Any] = Field(default_factory=dict)
 
 
+class PeerSummary(BaseModel):
+    """
+    Summary of peer metrics for federation novelty calculation (Phase 16-1).
+
+    Used by MockPeerService for offline testing and by live federation
+    services for real peer diversity measurement.
+    """
+
+    peer_id: str
+    peer_quality: float = Field(..., ge=0.0, le=1.0)
+    stability_margin: float = Field(..., ge=0.0, le=1.0)
+    generativity: float = Field(..., ge=0.0, le=1.0)
+
+
 __all__ = [
     "Peer",
     "CheckpointEnvelope",
@@ -191,4 +205,5 @@ __all__ = [
     "PeerManifest",
     "PeerManifestKey",
     "KeyRotationReceipt",
+    "PeerSummary",
 ]

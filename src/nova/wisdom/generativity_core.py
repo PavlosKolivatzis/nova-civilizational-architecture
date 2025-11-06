@@ -34,6 +34,7 @@ __all__ = [
     "GenerativityParams",
     "compute_components",
     "compute_gstar",
+    "compute_novelty",
     "eta_bias",
 ]
 
@@ -55,6 +56,41 @@ class GenerativityParams:
 def _clip(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
     """Clip value to [lo, hi] range."""
     return max(lo, min(hi, x))
+
+
+def compute_novelty(peers: Sequence) -> float:
+    """
+    Compute Novelty (N) component from peer diversity.
+
+    Measures structural change in peer landscape via standard deviation
+    of peer generativity values.
+
+    Args:
+        peers: Sequence of PeerSummary objects with .generativity attribute
+
+    Returns:
+        float: Novelty score N ∈ [0,1]
+               Returns 0.0 if < 2 peers (no diversity)
+
+    Formula:
+        N = std_dev([p.generativity for p in peers]) if len(peers) >= 2 else 0.0
+
+    Notes:
+        - Single-node deployments: N = 0 (no peer diversity)
+        - Multi-peer federations: N > 0 (reflects peer variance)
+        - Normalized to [0,1] range via clipping std_dev / 0.5
+    """
+    if len(peers) < 2:
+        return 0.0
+
+    generativities = [p.generativity for p in peers]
+    mean = sum(generativities) / len(generativities)
+    variance = sum((g - mean) ** 2 for g in generativities) / len(generativities)
+    std_dev = math.sqrt(variance)
+
+    # Normalize to [0,1] assuming typical std_dev ~0.15-0.25
+    # Clip at 0.5 to map [0, 0.5] → [0, 1]
+    return _clip(std_dev / 0.5)
 
 
 def compute_components(
