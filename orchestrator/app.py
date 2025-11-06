@@ -86,6 +86,8 @@ if FastAPI is not None:
     _federation_metrics_thread = None
     _federation_remediator = None
     _wisdom_poller_thread = None
+    _peer_store = None
+    _peer_sync = None
 
     async def _sm_sweeper():
         interval = int(os.getenv("NOVA_SMEEP_INTERVAL", "15"))  # seconds
@@ -341,6 +343,24 @@ if FastAPI is not None:
             except Exception:
                 logger.exception("Failed to start adaptive wisdom poller")
 
+        # Phase 16-2: Peer synchronization
+        peer_sync_enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
+        if peer_sync_enabled:
+            try:
+                from orchestrator.federation_synchronizer import PeerStore, PeerSync
+
+                global _peer_store, _peer_sync
+                _peer_store = PeerStore()
+                _peer_sync = PeerSync(_peer_store)
+                _peer_sync.start()
+                logger.info(
+                    "Peer sync started (peers=%d, interval=%ss)",
+                    len(_peer_sync._peers),
+                    _peer_sync._interval,
+                )
+            except Exception:
+                logger.exception("Failed to start peer sync")
+
         # start periodic expiry in *this* process (the one Prometheus scrapes)
         asyncio.create_task(_sm_sweeper())
 
@@ -348,7 +368,7 @@ if FastAPI is not None:
         asyncio.create_task(_canary_loop())
 
     async def _shutdown() -> None:
-        global _federation_metrics_thread, _federation_remediator, _wisdom_poller_thread
+        global _federation_metrics_thread, _federation_remediator, _wisdom_poller_thread, _peer_sync
         if _federation_remediator:
             try:
                 _federation_remediator.stop()
@@ -376,6 +396,15 @@ if FastAPI is not None:
                 logger.exception("Failed to stop adaptive wisdom poller")
             finally:
                 _wisdom_poller_thread = None
+
+        # Phase 16-2: Peer synchronization
+        if _peer_sync:
+            try:
+                _peer_sync.stop()
+            except Exception:
+                logger.exception("Failed to stop peer sync")
+            finally:
+                _peer_sync = None
 
         from nova.slots.config import get_config_manager
         mgr = await get_config_manager()
@@ -407,6 +436,15 @@ if FastAPI is not None:
                 if getattr(_route, "path", None) == "/federation/health" and "GET" in getattr(_route, "methods", set()):
                     app.router.routes.remove(_route)
                     break
+
+    # Phase 16-2: Peer sync route
+    try:
+        from orchestrator.routes.peer_sync import create_peer_sync_router
+        peer_sync_router = create_peer_sync_router()
+        if peer_sync_router is not None:
+            app.include_router(peer_sync_router)
+    except Exception:
+        logger.warning("Failed to add peer sync router")
 
     @app.get("/health")
     async def health():
