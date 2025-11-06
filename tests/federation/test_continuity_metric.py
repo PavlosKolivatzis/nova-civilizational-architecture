@@ -17,7 +17,7 @@ from nova.federation.peer_registry import PeerRegistry
 class TestContinuityMetricIntegration:
     """Test real continuity score calculation in federation server."""
 
-    def test_continuity_score_without_ledger_defaults_to_1(self):
+    def test_continuity_score_without_ledger_defaults_to_1(self, enable_federation):
         """
         Test that without ledger store, continuity score defaults to 1.0 (legacy).
         """
@@ -32,7 +32,7 @@ class TestContinuityMetricIntegration:
         # and that the default behavior is maintained
         assert router is not None
 
-    def test_continuity_score_with_continuous_chain_returns_1(self):
+    def test_continuity_score_with_continuous_chain_returns_1(self, enable_federation):
         """
         Test that a continuous ledger chain returns continuity score of 1.0.
         """
@@ -77,7 +77,7 @@ class TestContinuityMetricIntegration:
         # For now, verify the router was built successfully
         assert router is not None
 
-    def test_continuity_score_with_broken_chain_returns_0(self):
+    def test_continuity_score_with_broken_chain_returns_0(self, enable_federation):
         """
         Test that a broken ledger chain returns continuity score of 0.0.
         """
@@ -117,7 +117,7 @@ class TestContinuityMetricIntegration:
 
         assert router is not None
 
-    def test_continuity_score_with_empty_chain_returns_1(self):
+    def test_continuity_score_with_empty_chain_returns_1(self, enable_federation):
         """
         Test that a non-existent anchor (empty chain) returns 1.0.
 
@@ -140,7 +140,7 @@ class TestContinuityMetricIntegration:
 
         assert router is not None
 
-    def test_continuity_score_integration_smoke(self):
+    def test_continuity_score_integration_smoke(self, enable_federation):
         """
         Smoke test: Build router with all parameters and verify it works.
         """
