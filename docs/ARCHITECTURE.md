@@ -326,3 +326,169 @@ The system uses the Enhanced Configuration Manager with the following capabiliti
 - **Metrics Collection**: Prometheus-compatible metrics export
 - **Circuit Breaker Integration**: Automatic failure detection and isolation
 
+## Adaptive Wisdom Governor (Phase 15-8)
+
+### Overview
+
+The Adaptive Wisdom Governor is a bifurcation-aware control system that dynamically adjusts the learning rate (η) based on system stability and creative output. Introduced in Phase 15-8, it replaces static η configuration with a real-time controller that:
+
+- **Prevents instability**: Detects approaching Hopf bifurcations and reduces η to stabilize
+- **Enables exploration**: Increases η when system is stable and generative
+- **Integrates with production**: Modulates job parallelism via Slot 7 backpressure
+
+**Key Innovation**: Wisdom (γ) acts as the observation variable, with eigenvalue analysis providing early warning of instability 1-2 seconds before chaos onset.
+
+### Control Flow
+
+```mermaid
+graph TD
+    subgraph "Data Collection (15s interval)"
+        M[Metrics Poller] --> Q[Quality Scores<br/>from Slots]
+        Q --> W[Wisdom γ<br/>calculation]
+    end
+
+    subgraph "Stability Analysis"
+        W --> J[Jacobian Matrix<br/>3×3 reduced dynamics]
+        J --> E[Eigenvalue Analysis]
+        E --> S[Stability Margin S]
+        E --> H[Hopf Distance H]
+        E --> R[Spectral Radius ρ]
+    end
+
+    subgraph "Generativity Measurement"
+        W --> P[Progress P<br/>γ growth]
+        M --> N[Novelty N<br/>peer diversity]
+        C[Controller η] --> Cc[Consistency Cc<br/>η steadiness]
+        P --> G[G* Score]
+        N --> G
+        Cc --> G
+    end
+
+    subgraph "Adaptive Controller"
+        S --> MODE[Operating Mode<br/>CRITICAL/STABILIZING/<br/>EXPLORING/OPTIMAL/SAFE]
+        H --> MODE
+        MODE --> CTRL[Controller Step<br/>Δη = f(S, H, ρ)]
+        G --> BIAS[Generativity Bias<br/>κ·(G* - G₀)]
+        CTRL --> COMBINE[Combine<br/>η_new = η + Δη + bias]
+        BIAS --> COMBINE
+        COMBINE --> GATE[Safety Gates<br/>S ≥ 0.03<br/>H ≥ 0.02]
+    end
+
+    subgraph "Production Integration"
+        GATE --> C
+        C --> TRI[TRI Cap<br/>Slot 4 coherence]
+        TRI --> BP[Backpressure<br/>Slot 7 parallelism]
+        BP --> JOB[Job Processing]
+    end
+
+    JOB --> M
+```
+
+### Generativity Components (G*)
+
+The Generativity Score (G*) measures creative output through three components:
+
+**Formula**: `G* = α·P + β·N + γ·Cc` (default weights: α=0.4, β=0.3, γ=0.3)
+
+#### Progress (P)
+
+**Definition**: Recent wisdom growth
+**Formula**: `P = clip((γ̄_1m - γ̄_5m) / max(γ̄_5m, ε), 0, 1)`
+**Interpretation**:
+- **P → 1**: System is rapidly improving wisdom (learning effectively)
+- **P → 0**: Wisdom stagnant or declining
+- **Window**: Compares 1-minute average vs 5-minute average
+
+#### Novelty (N)
+
+**Definition**: Structural diversity in peer quality landscape
+**Formula**: `N = clip(σ_peers(q)_1m / 0.5, 0, 1)`
+**Interpretation**:
+- **N → 1**: High peer quality variance (encountering diverse challenges)
+- **N → 0**: Homogeneous peer landscape (limited stimulus)
+- **Window**: Standard deviation of peer quality scores over 1 minute
+
+#### Consistency (Cc)
+
+**Definition**: Learning rate steadiness (ability to consolidate)
+**Formula**: `Cc = 1 - clip(cv(η)_1m, 0, 1)` where `cv = σ/μ` (coefficient of variation)
+**Interpretation**:
+- **Cc → 1**: Stable η (consolidating learning)
+- **Cc → 0**: Volatile η (unstable adaptation)
+- **Window**: Coefficient of variation of η over 1 minute
+
+**Bias Application**: `Δη = κ·(G* - G₀)` (κ=0.02, G₀=0.6)
+- **G* > G₀**: Positive bias → encourage exploration
+- **G* < G₀**: Negative bias → encourage consolidation
+- **Gating**: Disabled when `S < 0.03` OR `H < 0.02` OR `frozen=True`
+
+### Operating Modes
+
+The governor transitions between 5 operating modes based on stability metrics:
+
+| Mode | Trigger | Controller Behavior | η Direction | Use Case |
+|------|---------|-------------------|-------------|----------|
+| **CRITICAL** | `H < 0.05` | Aggressive reduction | ⬇️ Decrease | Near-Hopf: prevent oscillation |
+| **STABILIZING** | `S < S_ref` | Moderate reduction | ⬇️ Decrease | Below target stability |
+| **EXPLORING** | `S > S_ref` AND `ρ < 0.95` | Gentle increase | ⬆️ Increase | Safe to push boundaries |
+| **OPTIMAL** | `S ≈ S_ref` AND `H > 0.1` | Hold steady | ⟷ Maintain | Near-optimal operating point |
+| **SAFE** | `frozen=True` | No adaptation | ⟷ Freeze | Manual override |
+
+**Mode Transitions**: Hysteresis prevents rapid mode switching
+
+### Deployment Constraints
+
+#### Single-Node Limitations
+
+**Generativity Structural Cap**: `G* ≤ 0.30` in single-node deployments
+
+**Reason**: Novelty (N) requires peer diversity. With only one node:
+- **N = 0** (no peer quality variance)
+- **P** can reach ~0.2-0.3 (progress from local learning)
+- **Cc** can reach ~1.0 (consistency when stable)
+- **Maximum G***: `0.4×0.3 + 0.3×0 + 0.3×1.0 = 0.30`
+
+**Mitigation**: Multi-peer federation (Phase 16+) enables full G* range
+
+#### Multi-Peer Requirements (Future)
+
+For `G* > 0.30`, system requires:
+- **Federation enabled**: Peer-to-peer checkpoints exchanged
+- **Diverse peer landscape**: Minimum 3-5 active peers with varying quality
+- **Ledger continuity**: Unbroken chain integrity across peers
+
+**Configuration**:
+```bash
+# Required for multi-peer generativity
+FEDERATION_ENABLED=true
+NOVA_WISDOM_GOVERNOR_ENABLED=true
+NOVA_WISDOM_G_KAPPA=0.02  # Enable G* bias
+```
+
+### Monitoring and Observability
+
+**Prometheus Metrics**:
+- `nova_wisdom_eta_current`: Current learning rate
+- `nova_wisdom_stability_margin`: Stability margin (S)
+- `nova_wisdom_hopf_distance`: Hopf bifurcation distance (H)
+- `nova_wisdom_spectral_radius`: Largest eigenvalue magnitude (ρ)
+- `nova_wisdom_gamma`: Current wisdom score
+- `nova_wisdom_generativity`: Generativity score (G*)
+- `nova_wisdom_generativity_components{component="progress|novelty|consistency"}`: Individual P, N, Cc values
+- `nova_wisdom_eta_bias_from_generativity`: Current bias term (Δη)
+- `nova_wisdom_mode`: Operating mode (encoded as integer)
+
+**Grafana Dashboards** (Recommended):
+1. **Stability Overview**: S, H, ρ time series with alert thresholds
+2. **Generativity Breakdown**: P, N, Cc components as stacked area chart
+3. **Learning Rate Evolution**: η with bias overlay and TRI cap ceiling
+4. **Mode Transitions**: Heatmap showing mode changes over time
+
+### Related Documentation
+
+- **Design Document**: `docs/wisdom_governor_mvs.md` (Phase 15-8 detailed specification)
+- **Reflection**: `docs/reflections/phase15-8.4_generativity_integration.md` (philosophical analysis)
+- **Calibration**: `scripts/calibrate_wisdom_governor.py` (parameter sweep tool)
+- **Monitoring**: `monitoring/alerts/wisdom.rules.yml` (Prometheus alert rules)
+
+
