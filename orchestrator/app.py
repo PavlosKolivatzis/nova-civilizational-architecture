@@ -550,7 +550,7 @@ if FastAPI is not None:
                 detail=f"federation health unavailable: {exc}",
             ) from exc
 
-        return collect_health()
+        return get_peer_health()
     @app.get("/metrics")
     async def metrics() -> Response:
         """Prometheus-compatible metrics for all slots."""
