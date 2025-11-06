@@ -72,6 +72,11 @@ class PeerSample:
     g_star: float
     g_components: Dict[str, float]
 
+    @property
+    def generativity(self) -> float:
+        """Alias for g_star to match compute_novelty() interface."""
+        return self.g_star
+
 
 # -------------------------------------------------------------------------
 # PeerStore
