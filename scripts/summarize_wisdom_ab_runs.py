@@ -35,7 +35,7 @@ def summarize(csv_path: str, md_out: str):
         (agg.S_mean >= 0.03)
         & (agg.H_min >= 0.02)
         & (agg.bias_abs_mean <= 0.01)
-        & (agg.G_mean >= 0.6)
+        & (agg.G_mean >= 0.25)
         & (agg.G_std < 0.05)
         & (agg.clamp_ratio < 0.10)
     )
