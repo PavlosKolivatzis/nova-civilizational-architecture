@@ -9,7 +9,9 @@ Two modes:
       KAPPA and G0 substituted (e.g., 'pwsh -Command "$env:NOVA_WISDOM_G_KAPPA=''{{KAPPA}}''; ...; Stop-Process ...; python -m uvicorn ..."').
 
 CSV schema:
-ts_utc, combo_id, kappa, g0, t, eta, S, H, rho, Gstar, bias, clamp, tri_C, eta_cap, slot7_jobs
+ts_utc, combo_id, kappa, g0, t, eta, S, H, rho, Gstar, P, N, Cc, bias, clamp, tri_C, eta_cap, slot7_jobs
+
+Phase 15-9: Added P (Progress), N (Novelty), Cc (Consistency) component columns for generativity diagnostics.
 """
 
 from __future__ import annotations
@@ -54,6 +56,19 @@ def scrape(url: str, timeout=3.0):
                 vals[name] = float(m.group(1))
             except Exception:
                 pass
+
+    # Phase 15-9: Extract generativity components (P, N, Cc) from labeled metrics
+    for component in ["progress", "novelty", "consistency"]:
+        pattern = rf'^nova_wisdom_generativity_components\{{component="{component}"\}}\s+([+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?)$'
+        m = re.search(pattern, text, flags=re.MULTILINE | re.IGNORECASE)
+        if m:
+            try:
+                # Map to short names: progress→P, novelty→N, consistency→Cc
+                short_name = {"progress": "P", "novelty": "N", "consistency": "Cc"}[component]
+                vals[short_name] = float(m.group(1))
+            except Exception:
+                pass
+
     return vals
 
 
@@ -99,6 +114,9 @@ def main():
                     "H",
                     "rho",
                     "Gstar",
+                    "P",  # Progress component
+                    "N",  # Novelty component
+                    "Cc",  # Consistency component
                     "bias",
                     "clamp",
                     "tri_C",
@@ -127,6 +145,9 @@ def main():
                         vals.get("nova_wisdom_hopf_distance"),
                         vals.get("nova_wisdom_spectral_radius"),
                         vals.get("nova_wisdom_generativity"),
+                        vals.get("P"),  # Progress component
+                        vals.get("N"),  # Novelty component
+                        vals.get("Cc"),  # Consistency component
                         vals.get("nova_wisdom_eta_bias_from_generativity"),
                         1.0 if (vals.get("nova_wisdom_eta_current", 1.0) <= 0.051) else 0.0,
                         vals.get("nova_tri_coherence"),

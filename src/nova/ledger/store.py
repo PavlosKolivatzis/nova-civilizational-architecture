@@ -7,12 +7,12 @@ Phase 13: Autonomous Verification Ledger
 from __future__ import annotations
 
 import logging
-import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from .model import LedgerRecord, RecordKind, Checkpoint
 from .canon import compute_record_hash, verify_record_hash, compute_merkle_root
+from .id_gen import generate_record_id, generate_checkpoint_id
 from .metrics import (
     ledger_appends_total,
     ledger_append_duration_seconds,
@@ -73,7 +73,7 @@ class LedgerStore:
         """
         with ledger_append_duration_seconds.time():
             # Generate record ID (UUIDv7 for time-ordering)
-            rid = str(uuid.uuid4())  # TODO: Use UUIDv7 when available
+            rid = generate_record_id()
             ts = datetime.now(timezone.utc)
 
             # Get previous record hash for this anchor
@@ -259,7 +259,7 @@ class LedgerStore:
 
         # Create checkpoint
         checkpoint = Checkpoint(
-            cid=str(uuid.uuid4()),
+            cid=generate_checkpoint_id(),
             range_start=range_start_rid,
             range_end=range_end_rid,
             merkle_root=merkle_root,

@@ -21,6 +21,14 @@ from .metrics import (
     ledger_chain_length,
 )
 
+# Optional import for PQC verification integration
+try:
+    from nova.crypto.pqc_keyring import PQCKeyring
+    from nova.slots.slot08_memory_lock.pqc_verify import PQCVerificationService
+    PQC_AVAILABLE = True
+except ImportError:
+    PQC_AVAILABLE = False
+
 
 @dataclass
 class VerificationResult:
@@ -104,10 +112,20 @@ class ChainVerifier:
         self,
         trust_weights: Optional[TrustWeights] = None,
         logger: Optional[logging.Logger] = None,
+        pqc_service: Optional['PQCVerificationService'] = None,
     ):
-        """Initialize chain verifier."""
+        """
+        Initialize chain verifier.
+
+        Args:
+            trust_weights: Weights for trust score computation
+            logger: Logger instance
+            pqc_service: Optional PQC verification service for real signature validation
+                        (Phase 15-9: If provided, performs actual Dilithium signature verification)
+        """
         self.trust_weights = trust_weights or TrustWeights()
         self.logger = logger or logging.getLogger("ledger.verify")
+        self.pqc_service = pqc_service
 
     def verify_chain(self, records: List[LedgerRecord]) -> VerificationResult:
         """
@@ -218,13 +236,55 @@ class ChainVerifier:
         """
         Check PQC signature presence and validity.
 
-        Note: Actual signature verification requires PQC public keys,
-        which would come from Slot08 registry. For now, we just count
-        presence of signatures.
+        Phase 15-9: If pqc_service is provided, performs actual Dilithium signature
+        verification. Otherwise, assumes all signed records are valid (legacy behavior).
         """
         signed_count = sum(1 for r in records if r.sig is not None)
-        # TODO: Integrate with Slot08 PQC verification service for actual validation
-        verified_count = signed_count  # Assume valid for now
+        verified_count = 0
+
+        if self.pqc_service and PQC_AVAILABLE:
+            # Phase 15-9: Real signature verification via Slot08
+            for record in records:
+                if record.sig is None:
+                    continue
+
+                # Extract public key ID from payload (if present)
+                key_id = record.payload.get("public_key_id") or record.payload.get("key_id")
+
+                if not key_id:
+                    self.logger.debug(f"Record {record.rid}: No key_id in payload, skipping verification")
+                    continue
+
+                # Get public key from registry
+                key_record = self.pqc_service.get_key(key_id)
+                if not key_record:
+                    self.logger.warning(f"Record {record.rid}: Public key {key_id} not found in registry")
+                    continue
+
+                # Verify signature over payload content
+                # The signature is over the canonical JSON representation of the payload
+                try:
+                    import json
+                    # Canonical JSON representation (sorted keys, no spaces)
+                    payload_canonical = json.dumps(record.payload, sort_keys=True, separators=(',', ':')).encode('utf-8')
+                    is_valid = PQCKeyring.verify(
+                        public_key=key_record.public_key,
+                        message=payload_canonical,
+                        signature=record.sig
+                    )
+
+                    if is_valid:
+                        verified_count += 1
+                        self.logger.debug(f"Record {record.rid}: Signature verified successfully")
+                    else:
+                        self.logger.warning(f"Record {record.rid}: Signature verification failed")
+
+                except Exception as e:
+                    self.logger.error(f"Record {record.rid}: Verification error: {e}")
+
+        else:
+            # Legacy behavior: Assume all signed records are valid
+            verified_count = signed_count
 
         success_rate = verified_count / signed_count if signed_count > 0 else 0.0
 
