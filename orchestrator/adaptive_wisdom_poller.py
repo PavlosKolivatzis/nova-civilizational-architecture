@@ -32,7 +32,7 @@ from nova.wisdom.generativity_core import (
     compute_novelty,
     eta_bias as compute_eta_bias,
 )
-from nova.wisdom.generativity_context import get_context, current_g0
+from nova.wisdom.generativity_context import get_context, current_g0, ContextState
 
 __all__ = ["start", "stop", "get_current_state", "get_state", "get_interval"]
 
@@ -289,6 +289,22 @@ def _loop():
                 hopf_distance=analysis.H,
                 spectral_radius=analysis.rho,
             )
+
+            # Phase 16-2: Publish peer sync metrics
+            try:
+                from orchestrator.prometheus_metrics import (
+                    wisdom_peer_count_gauge,
+                    wisdom_novelty_gauge,
+                    wisdom_context_gauge,
+                )
+                wisdom_peer_count_gauge.set(len(live_peers))
+                wisdom_novelty_gauge.set(N)
+                # Convert context state to numeric (0=solo, 1=federated)
+                context_value = 1.0 if context_state == ContextState.FEDERATED else 0.0
+                wisdom_context_gauge.set(context_value)
+            except ImportError:
+                # Prometheus metrics not available
+                pass
 
             # Controller logic (if not frozen)
             new_eta = current.eta

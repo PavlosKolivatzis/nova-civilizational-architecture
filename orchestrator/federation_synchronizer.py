@@ -231,22 +231,56 @@ class PeerSync:
                 g_components=payload.metrics.g_components,
             )
 
-            # Emit metrics (Phase 16-2 will add prometheus metrics here)
+            # Emit metrics
             self._logger.debug(
                 f"Synced peer {payload.node_id} from {peer_url} "
                 f"(g*={payload.metrics.g_star:.3f}, latency={duration:.3f}s)"
             )
 
+            # Phase 16-2: Record prometheus metrics
+            try:
+                from orchestrator.prometheus_metrics import (
+                    federation_sync_latency_histogram,
+                    federation_peer_last_seen_gauge,
+                )
+                federation_sync_latency_histogram.observe(duration)
+                federation_peer_last_seen_gauge.labels(peer_id=payload.node_id).set(sample.last_seen)
+            except ImportError:
+                # Prometheus metrics not available
+                pass
+
             return sample
 
         except httpx.HTTPError as e:
             self._logger.warning(f"HTTP error fetching {endpoint}: {e}")
+            # Record error metric
+            try:
+                from orchestrator.prometheus_metrics import federation_sync_errors_counter
+                # Extract peer_id from URL for labeling (use hostname)
+                peer_id = peer_url.replace("http://", "").replace("https://", "").split(":")[0]
+                federation_sync_errors_counter.labels(peer_id=peer_id, error_type="http_error").inc()
+            except ImportError:
+                pass
             return None
         except ValidationError as e:
             self._logger.warning(f"Schema validation error for {endpoint}: {e}")
+            # Record error metric
+            try:
+                from orchestrator.prometheus_metrics import federation_sync_errors_counter
+                peer_id = peer_url.replace("http://", "").replace("https://", "").split(":")[0]
+                federation_sync_errors_counter.labels(peer_id=peer_id, error_type="validation_error").inc()
+            except ImportError:
+                pass
             return None
         except Exception as e:
             self._logger.error(f"Unexpected error fetching {endpoint}: {e}")
+            # Record error metric
+            try:
+                from orchestrator.prometheus_metrics import federation_sync_errors_counter
+                peer_id = peer_url.replace("http://", "").replace("https://", "").split(":")[0]
+                federation_sync_errors_counter.labels(peer_id=peer_id, error_type="unexpected_error").inc()
+            except ImportError:
+                pass
             return None
 
     async def _sync_loop(self) -> None:

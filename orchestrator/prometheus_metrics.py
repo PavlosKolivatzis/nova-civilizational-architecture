@@ -5,6 +5,7 @@ import logging
 from prometheus_client import (
     Gauge,
     Counter,
+    Histogram,
     Info,
     generate_latest,
     CONTENT_TYPE_LATEST,
@@ -238,6 +239,46 @@ anomaly_score_gauge = Gauge(
 anomaly_multiplier_gauge = Gauge(
     "nova_unlearn_anomaly_multiplier",
     "Current anomaly pulse weight multiplier",
+    registry=_REGISTRY,
+)
+
+# Phase 16-2: Live Peer Synchronization & Context Auto-Switch metrics
+wisdom_peer_count_gauge = Gauge(
+    "nova_wisdom_peer_count",
+    "Number of live peers (for generativity context)",
+    registry=_REGISTRY,
+)
+
+wisdom_novelty_gauge = Gauge(
+    "nova_wisdom_novelty",
+    "Current Novelty (N) component from peer diversity",
+    registry=_REGISTRY,
+)
+
+wisdom_context_gauge = Gauge(
+    "nova_wisdom_context",
+    "Generativity context state (0=solo, 1=federated)",
+    registry=_REGISTRY,
+)
+
+federation_sync_latency_histogram = Histogram(
+    "nova_federation_sync_latency_seconds",
+    "Peer sync request latency distribution",
+    buckets=[0.1, 0.5, 1.0, 2.5, 5.0, 10.0],
+    registry=_REGISTRY,
+)
+
+federation_sync_errors_counter = Counter(
+    "nova_federation_sync_errors_total",
+    "Total peer sync errors",
+    ["peer_id", "error_type"],
+    registry=_REGISTRY,
+)
+
+federation_peer_last_seen_gauge = Gauge(
+    "nova_federation_peer_last_seen_timestamp",
+    "Last seen timestamp for each peer (unix timestamp)",
+    ["peer_id"],
     registry=_REGISTRY,
 )
 
