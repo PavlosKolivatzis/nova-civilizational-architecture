@@ -16,6 +16,7 @@ import sqlalchemy.exc
 
 from .model import LedgerRecord, RecordKind, Checkpoint
 from .canon import compute_record_hash, verify_record_hash, compute_merkle_root
+from .id_gen import generate_record_id, generate_checkpoint_id
 from .metrics import (
     ledger_appends_total,
     ledger_append_duration_seconds,
@@ -96,9 +97,8 @@ class PostgresLedgerStore:
         start_time = time.perf_counter()
 
         try:
-            # Generate record ID (UUIDv4 for now, TODO: UUIDv7)
-            import uuid
-            rid = str(uuid.uuid4())
+            # Generate record ID (UUIDv7 for time-sortable ordering)
+            rid = generate_record_id()
             ts = time.time()  # Use float timestamp for SQL
 
             # Get previous record hash for this anchor
@@ -369,9 +369,8 @@ class PostgresLedgerStore:
         merkle_root = compute_merkle_root(hashes)
 
         # Create checkpoint
-        import uuid
         checkpoint = Checkpoint(
-            cid=str(uuid.uuid4()),
+            cid=generate_checkpoint_id(),
             range_start=range_start_rid,
             range_end=range_end_rid,
             merkle_root=merkle_root,
