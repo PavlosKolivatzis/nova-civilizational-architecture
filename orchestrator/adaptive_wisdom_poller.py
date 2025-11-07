@@ -231,9 +231,9 @@ def _loop():
             # Phase 16-2: Get live peers from peer sync (if enabled)
             live_peers = []
             try:
-                from orchestrator.app import _peer_store
-                if _peer_store:
-                    live_peers = _peer_store.get_live_peers(max_age_seconds=90)
+                import orchestrator.app as app_module
+                if hasattr(app_module, '_peer_store') and app_module._peer_store:
+                    live_peers = app_module._peer_store.get_live_peers(max_age_seconds=90)
             except (ImportError, AttributeError):
                 # Peer sync not available or not started
                 pass
