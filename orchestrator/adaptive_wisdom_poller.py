@@ -29,10 +29,12 @@ from nova.wisdom.generativity_core import (
     GenerativityParams,
     compute_components,
     compute_gstar,
+    compute_novelty,
     eta_bias as compute_eta_bias,
 )
+from nova.wisdom.generativity_context import get_context, current_g0, ContextState
 
-__all__ = ["start", "stop", "get_current_state", "get_interval"]
+__all__ = ["start", "stop", "get_current_state", "get_state", "get_interval"]
 
 
 def _get_interval() -> float:
@@ -113,6 +115,11 @@ def get_current_state() -> Dict[str, float]:
         state["eta"] = governor_state.get_eta()
         state["frozen"] = governor_state.is_frozen()
         return state
+
+
+def get_state() -> Dict[str, float]:
+    """Alias for get_current_state() (for peer sync endpoint compatibility)."""
+    return get_current_state()
 
 
 def get_interval() -> float:
@@ -221,24 +228,44 @@ def _loop():
             gamma_buffer_5m.append(current.gamma)
             eta_buffer_1m.append(current.eta)
 
-            # Get peer qualities (novelty component)
+            # Phase 16-2: Get live peers from peer sync (if enabled)
+            live_peers = []
+            try:
+                from orchestrator.app import _peer_store
+                if _peer_store:
+                    live_peers = _peer_store.get_live_peers(max_age_seconds=90)
+            except (ImportError, AttributeError):
+                # Peer sync not available or not started
+                pass
+
+            # Calculate Novelty from live peer diversity
+            N = compute_novelty(live_peers) if live_peers else 0.0
+
+            # Get generativity context (solo vs federated)
+            context_state = get_context(len(live_peers))
+            g0_target = current_g0()
+
+            # Get peer qualities (legacy fallback for peer_quality metric)
             peer_qualities = _get_peer_qualities()
             if peer_qualities:
                 peer_quality_buffer_1m.extend(peer_qualities)
 
-            # Compute generativity components (P, N, Cc)
+            # Compute generativity components (P, Cc)
             if gamma_buffer_1m and gamma_buffer_5m:
                 gamma_avg_1m = sum(gamma_buffer_1m) / len(gamma_buffer_1m)
                 gamma_avg_5m = sum(gamma_buffer_5m) / len(gamma_buffer_5m)
                 eta_series = list(eta_buffer_1m)
-                peer_quality_series = list(peer_quality_buffer_1m)
 
-                P, N, Cc = compute_components(
+                # Compute P (Progress) and Cc (Consistency) only
+                # N is now calculated from live peers above
+                peer_quality_series = list(peer_quality_buffer_1m)
+                P, _N_unused, Cc = compute_components(
                     gamma_avg_1m=gamma_avg_1m,
                     gamma_avg_5m=gamma_avg_5m,
                     eta_series_1m=eta_series,
                     peer_quality_series_1m=peer_quality_series,
                 )
+                # Use real N from live peers, not the one from compute_components
                 G = compute_gstar(gen_params, P, N, Cc)
                 bias = compute_eta_bias(gen_params, G)
 
@@ -250,7 +277,8 @@ def _loop():
                 # Insufficient data, use fallback
                 G = 0.6  # Target value
                 bias = 0.0
-                P, N, Cc = 0.0, 0.0, 0.0
+                # N is already calculated from live peers (line 237), preserve it
+                P, Cc = 0.0, 0.0
 
             # Update metrics
             wisdom_metrics.publish_wisdom_telemetry(
@@ -261,6 +289,22 @@ def _loop():
                 hopf_distance=analysis.H,
                 spectral_radius=analysis.rho,
             )
+
+            # Phase 16-2: Publish peer sync metrics
+            try:
+                from orchestrator.prometheus_metrics import (
+                    wisdom_peer_count_gauge,
+                    wisdom_novelty_gauge,
+                    wisdom_context_gauge,
+                )
+                wisdom_peer_count_gauge.set(len(live_peers))
+                wisdom_novelty_gauge.set(N)
+                # Convert context state to numeric (0=solo, 1=federated)
+                context_value = 1.0 if context_state == ContextState.FEDERATED else 0.0
+                wisdom_context_gauge.set(context_value)
+            except ImportError:
+                # Prometheus metrics not available
+                pass
 
             # Controller logic (if not frozen)
             new_eta = current.eta
@@ -314,6 +358,14 @@ def _loop():
                 _current_state["rho"] = analysis.rho
                 _current_state["H"] = analysis.H
                 _current_state["G"] = G
+                # Phase 16-2: Store generativity components and peer info
+                _current_state["g_components"] = {
+                    "progress": P,
+                    "novelty": N,
+                    "consistency": Cc,
+                }
+                _current_state["g_star"] = G
+                _current_state["peer_quality"] = sum(p.peer_quality for p in live_peers) / len(live_peers) if live_peers else 0.7
 
             # Update GovernorState (single source of truth for eta and frozen)
             governor_state.set_eta(new_eta)

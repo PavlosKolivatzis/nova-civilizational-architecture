@@ -96,12 +96,45 @@ def get_peer_health() -> Dict[str, object]:
     except Exception:
         pass
 
+    # Phase 16-2: Add peer sync status
+    peer_sync_info = {
+        "enabled": False,
+        "peer_count": 0,
+        "context": "solo",
+        "novelty": 0.0,
+    }
+    try:
+        from orchestrator.app import _peer_store
+        from orchestrator import adaptive_wisdom_poller
+        from nova.wisdom.generativity_context import ContextState
+
+        sync_enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
+        if sync_enabled and _peer_store:
+            live_peers = _peer_store.get_live_peers(max_age_seconds=90)
+            state = adaptive_wisdom_poller.get_state()
+
+            # Get context state
+            context_state = state.get("context", "solo")
+            if hasattr(context_state, "value"):
+                context_state = context_state.value
+
+            peer_sync_info = {
+                "enabled": True,
+                "peer_count": len(live_peers),
+                "context": context_state if isinstance(context_state, str) else "solo",
+                "novelty": state.get("g_components", {}).get("novelty", 0.0),
+            }
+    except (ImportError, AttributeError):
+        # Peer sync not available
+        pass
+
     return {
         "ready": ready,
         "peers": peers,
         "checkpoint": {"height": height},
         "ledger": ledger_info,
         "remediation": remediation,
+        "peer_sync": peer_sync_info,
     }
 
 
