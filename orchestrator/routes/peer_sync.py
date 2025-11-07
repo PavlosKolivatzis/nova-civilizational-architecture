@@ -21,6 +21,22 @@ except ImportError:
 
 __all__ = ["create_peer_sync_router"]
 
+# Module-level cached node_id (generated once, not per-request)
+_cached_node_id: str | None = None
+
+
+def _get_node_id() -> str:
+    """Get or generate stable node_id (cached at module level)."""
+    global _cached_node_id
+    if _cached_node_id is None:
+        # Try environment variable first
+        _cached_node_id = os.getenv("NOVA_NODE_ID")
+        if not _cached_node_id:
+            # Generate stable ID based on hostname + random suffix (once)
+            hostname = os.getenv("HOSTNAME", "localhost")
+            _cached_node_id = f"nova-{hostname}-{str(uuid.uuid4())[:8]}"
+    return _cached_node_id
+
 
 def create_peer_sync_router():
     """
@@ -59,12 +75,8 @@ def create_peer_sync_router():
             "sig": str | null
         }
         """
-        # Get node ID from environment or generate stable ID
-        node_id = os.getenv("NOVA_NODE_ID")
-        if not node_id:
-            # Generate stable ID based on hostname/config
-            hostname = os.getenv("HOSTNAME", "localhost")
-            node_id = f"nova-{hostname}-{str(uuid.uuid4())[:8]}"
+        # Get stable node ID (cached at module level)
+        node_id = _get_node_id()
 
         # Collect metrics from wisdom governor state
         metrics = _collect_metrics()
