@@ -87,7 +87,9 @@ def test_remediator_triggers_on_readiness_drop():
 
     remediator.start()
     metrics["ready"].set(0.0)
-    time.sleep(0.12)
+    # Allow enough evaluation cycles for readiness failure detection even when
+    # configuration warnings (e.g., zero peers) add slight latency.
+    time.sleep(0.2)
     remediator.stop()
 
     assert metrics["remediation_events"].labels(reason="readiness_zero")._value.get() >= 1

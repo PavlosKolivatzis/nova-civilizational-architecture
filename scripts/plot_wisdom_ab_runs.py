@@ -62,7 +62,7 @@ def load_pass_fail(md_report: Path) -> pd.DataFrame:
         if not line.strip().startswith("|") or "Verdict" in line or "---" in line:
             continue
         cols = [c.strip() for c in line.strip("|").split("|")]
-        if len(cols) < 10:
+        if len(cols) < 4:
             continue
         try:
             kappa = float(cols[0])

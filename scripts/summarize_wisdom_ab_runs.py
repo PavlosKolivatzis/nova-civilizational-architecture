@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Summarize A/B soak runs (.artifacts/wisdom_ab_runs.csv)
-→ outputs Markdown table + CSV summary for docs/reflections/phase_15_8_5_ab_report.md
+-> outputs Markdown table + CSV summary for docs/reflections/phase_15_8_5_ab_report.md
 """
 
 from __future__ import annotations
@@ -11,6 +11,15 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+
+def _safe_print(text: str) -> None:
+    """Print text but degrade to ASCII when console encoding cannot represent it."""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        encoded = text.encode("ascii", "replace").decode("ascii")
+        print(encoded)
 
 
 def summarize(csv_path: str, md_out: str):
@@ -39,7 +48,7 @@ def summarize(csv_path: str, md_out: str):
         & (agg.G_std < 0.05)
         & (agg.clamp_ratio < 0.10)
     )
-    agg["verdict"] = np.where(ok, "✅ PASS", "❌ FAIL")
+    agg["verdict"] = np.where(ok, "PASS", "FAIL")
 
     # Write Markdown
     md_table = "| κ | G₀ | S_mean | H_min | |Δη|_mean | G*_mean | σ(G*) | clamp_ratio | η_p95 | Verdict |\n"
@@ -62,8 +71,8 @@ def summarize(csv_path: str, md_out: str):
     )
     out_path.write_text(text, encoding="utf-8")
 
-    print(f"✅ Summary written to {md_out}")
-    print(md_table)
+    print(f"[ok] Summary written to {md_out}")
+    _safe_print(md_table)
 
 
 def main():
