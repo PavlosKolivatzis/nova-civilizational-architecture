@@ -1,6 +1,6 @@
 """Tests for fidelity validation service."""
 
-from src.nova.slots.slot01_truth_anchor.fidelity import fidelity_from_bits
+from nova.slots.slot01_truth_anchor.fidelity import fidelity_from_bits
 
 
 def test_fidelity_balanced_bytes():

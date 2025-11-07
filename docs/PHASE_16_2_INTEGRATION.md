@@ -83,8 +83,8 @@ if _peer_sync:
 ### 2.1 Add imports at top of file
 
 ```python
-from src.nova.wisdom.generativity_core import compute_novelty
-from src.nova.wisdom.generativity_context import get_context, current_g0, ContextState
+from nova.wisdom.generativity_core import compute_novelty
+from nova.wisdom.generativity_context import get_context, current_g0, ContextState
 ```
 
 ### 2.2 Access PeerStore in poller loop
@@ -233,7 +233,7 @@ def get_peer_health():
     # Phase 16-2: Add peer sync status
     try:
         from orchestrator.app import _peer_store, _peer_sync
-        from src.nova.wisdom.generativity_context import get_context
+        from nova.wisdom.generativity_context import get_context
 
         peer_count = 0
         context_state = "solo"
@@ -244,7 +244,7 @@ def get_peer_health():
             peer_count = len(peers)
 
             if peers:
-                from src.nova.wisdom.generativity_core import compute_novelty
+                from nova.wisdom.generativity_core import compute_novelty
                 novelty = compute_novelty(peers)
 
             context = get_context(peer_count)

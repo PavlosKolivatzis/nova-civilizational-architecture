@@ -20,7 +20,7 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
         self._config = config
         
         try:
-            from nova.slots.slot02_deltathresh.processor import DeltaThreshProcessor
+            from .core import DeltaThreshProcessor
             self._processor = DeltaThreshProcessor()
             print(f"🎯 ΔTHRESH Manager started (v{self.version})")
         except ImportError:
@@ -46,7 +46,7 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
             """Generate detection report for content."""
             try:
                 if not self._processor:
-                    from nova.slots.slot02_deltathresh.processor import DeltaThreshProcessor
+                    from .core import DeltaThreshProcessor
                     self._processor = DeltaThreshProcessor()
 
                 # Extract content

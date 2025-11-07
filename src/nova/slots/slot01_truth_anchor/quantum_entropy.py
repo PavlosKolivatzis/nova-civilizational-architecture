@@ -61,7 +61,6 @@ class QuantumEntropySource:
         bits = _collect_bits(result.bitstrings or {}, "r", n_bytes * 8)
         entropy = _bits_to_bytes(bits, n_bytes)
 
-        fidelity = result.fidelity_est
         # Compute fidelity metrics
         F, (ci_lo, ci_hi), abs_bias = fidelity_from_bits(entropy)
         record_entropy_job(self.backend, True, bytes_out=len(entropy), fidelity=F, fidelity_ci=(ci_lo, ci_hi), abs_bias=abs_bias)

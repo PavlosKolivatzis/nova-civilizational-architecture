@@ -293,6 +293,9 @@ class ProductionControlEngine:
         # Phase-lock belief state for probabilistic contracts
         self._phase_lock_belief = BeliefState.from_point_estimate(0.5, 0.1)
 
+        # Lazy-wired reflex emitter (Slot 7 reflex bus)
+        self._reflex_emitter = None
+
         # Avoid potential logging issues during initialization
         # logger.info(f"ProductionControlEngine v{self.__version__} initialized")
     
@@ -403,22 +406,21 @@ class ProductionControlEngine:
         # logger.error(f"Operation {operation_id} failed after {processing_time:.3f}s: {exception}")
     
     def _record_safeguard_violation(self, exception: Exception, operation_id: str, processing_time: float):
-        """Record metrics for safeguard violations."""
-        if not self._monitoring_enabled:
-            return
-            
-        with self._metrics_lock:
-            self.metrics.total_requests += 1
-            
-            if isinstance(exception, CircuitBreakerOpenError):
-                self.metrics.circuit_breaker_trips += 1
-                if self._alert_on_cb_trip:
-                    logger.critical(f"ALERT: Circuit breaker tripped for operation {operation_id}")
-            elif isinstance(exception, RateLimitExceededError):
-                self.metrics.rate_limit_violations += 1
-            elif isinstance(exception, ResourceLimitExceededError):
-                self.metrics.resource_limit_violations += 1
-        
+        """Record metrics for safeguard violations and emit reflex signals."""
+        if self._monitoring_enabled:
+            with self._metrics_lock:
+                self.metrics.total_requests += 1
+
+                if isinstance(exception, CircuitBreakerOpenError):
+                    self.metrics.circuit_breaker_trips += 1
+                    if self._alert_on_cb_trip:
+                        logger.critical(f"ALERT: Circuit breaker tripped for operation {operation_id}")
+                elif isinstance(exception, RateLimitExceededError):
+                    self.metrics.rate_limit_violations += 1
+                elif isinstance(exception, ResourceLimitExceededError):
+                    self.metrics.resource_limit_violations += 1
+
+        self._emit_reflex_signal(exception, operation_id)
         logger.warning(f"Safeguard violation for operation {operation_id}: {exception}")
     
     def _graceful_degradation_response(self, payload: dict, operation_id: str, error_reason: str) -> dict:
@@ -518,7 +520,7 @@ class ProductionControlEngine:
         
         if not health_issues:
             health_status = "healthy"
-        
+
         return {
             "status": health_status,
             "issues": health_issues,
@@ -527,6 +529,71 @@ class ProductionControlEngine:
             "version": self.__version__,
             "phase_lock": metrics.get("phase_lock", 0.0),
         }
+
+    def _get_reflex_emitter(self):
+        """Lazily resolve the Slot 7 reflex emitter."""
+        if self._reflex_emitter is False:
+            return None
+        if self._reflex_emitter is None:
+            try:
+                from nova.slots.slot07_production_controls.reflex_emitter import get_reflex_emitter
+
+                self._reflex_emitter = get_reflex_emitter()
+            except Exception:
+                # Cache failure sentinel to avoid repeated imports
+                self._reflex_emitter = False
+                logger.debug("Reflex emitter unavailable; skipping emission", exc_info=True)
+                return None
+        return self._reflex_emitter
+
+    def _emit_reflex_signal(self, exception: Exception, operation_id: str) -> None:
+        """Emit Slot 7 reflex signals when safeguards trigger."""
+        emitter = self._get_reflex_emitter()
+        if emitter is None:
+            return
+
+        try:
+            if isinstance(exception, CircuitBreakerOpenError):
+                circuit_metrics = self.circuit_breaker.get_metrics()
+                circuit_state = circuit_metrics.get("state", self.circuit_breaker.state)
+                failure_ratio = circuit_metrics.get("failure_count", 0) / max(
+                    1, circuit_metrics.get("failure_threshold", 1)
+                )
+                # Bias pressure upward when breaker is already open/half-open
+                state_bias = 1.0 if circuit_state == "open" else 0.8 if circuit_state == "half-open" else 0.0
+                raw_pressure = min(1.0, max(failure_ratio, state_bias))
+                emitter.emit_breaker_pressure(
+                    circuit_state, raw_pressure, cause="circuit_breaker_violation", trace_id=operation_id
+                )
+
+            elif isinstance(exception, ResourceLimitExceededError):
+                resource_metrics = self.resource_protector.get_metrics()
+                active = resource_metrics.get("active_requests", 0)
+                max_requests = resource_metrics.get("effective_max_concurrent_requests") or resource_metrics.get(
+                    "max_concurrent_requests", 1
+                )
+                emitter.emit_memory_pressure(
+                    active_requests=active,
+                    max_requests=max(1, int(max_requests)),
+                    resource_violations=self.metrics.resource_limit_violations,
+                    cause="resource_limit_violation",
+                    trace_id=operation_id,
+                )
+
+            elif isinstance(exception, RateLimitExceededError):
+                rate_metrics = self.rate_limiter.get_metrics()
+                tokens = rate_metrics.get("current_tokens", 0.0)
+                burst = rate_metrics.get("burst_size", getattr(self.rate_limiter, "burst_size", 1))
+                deficit = 1.0 - min(1.0, tokens / max(1.0, float(burst)))
+                raw_pressure = min(1.0, max(0.0, deficit))
+                emitter.emit_breaker_pressure(
+                    self.circuit_breaker.state,
+                    raw_pressure,
+                    cause="rate_limit_violation",
+                    trace_id=operation_id,
+                )
+        except Exception:
+            logger.debug("Failed to emit reflex signal", exc_info=True)
     
 
     def compute_phase_lock(self) -> float:

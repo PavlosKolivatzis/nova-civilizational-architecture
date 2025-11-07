@@ -198,13 +198,22 @@ class ARCResultsAnalyzer:
         # Executive Summary
         report.append("## Executive Summary\n")
         final_metrics = self.cycle_results[-1]['metrics']
-        report.append(".3f"        report.append(".3f"        report.append(".3f"        report.append(".3f"        report.append("")
+        report.append("Final-cycle metrics:")
+        report.append(f"- Precision: {final_metrics.get('precision', 0.0):.3f}")
+        report.append(f"- Recall: {final_metrics.get('recall', 0.0):.3f}")
+        report.append(f"- F1 Score: {final_metrics.get('f1_score', 0.0):.3f}")
+        report.append(f"- Drift: {final_metrics.get('drift', 0.0):.3f}")
+        if 'overall' in trends:
+            report.append(f"- Overall improvement score: {trends['overall'].get('score', 0.0):+.4f}")
+            overall_flag = trends['overall'].get('significant_improvement', False)
+            report.append(f"- Significant improvement: {'yes' if overall_flag else 'no'}")
+        report.append("")
 
         # Success Status
         report.append("### Success Criteria\n")
         for criterion, met in success_criteria.items():
-            status = "✅" if met else "❌"
-            report.append(f"- **{criterion.replace('_', ' ').title()}**: {status}")
+            status = "[PASS]" if met else "[FAIL]"
+            report.append(f"- {status} {criterion.replace('_', ' ').title()}")
         report.append("")
 
         # Detailed Results
@@ -227,14 +236,20 @@ class ARCResultsAnalyzer:
             if metric == 'overall':
                 continue
             report.append(f"**{metric.replace('_', ' ').title()}**:")
-            report.append(".4f"            report.append(".4f"            report.append(f"  - Significant: {'Yes' if trend['significant'] else 'No'}")
+            report.append(f"  - Slope: {trend['slope']:+.4f} per cycle")
+            report.append(f"  - R^2: {trend['r_squared']:.4f}")
+            report.append(f"  - p-value: {trend['p_value']:.4f}")
+            report.append(f"  - Significant: {'Yes' if trend['significant'] else 'No'}")
             report.append("")
 
         # Parameter Evolution
         report.append("### Parameter Evolution\n")
         for param, evolution in param_evolution.items():
             report.append(f"**{param.upper()}**:")
-            report.append(".3f"            report.append(".3f"            report.append(".3f"            report.append(f"  - Converged: {'Yes' if evolution['converged'] else 'No'}")
+            report.append(f"  - Initial: {evolution['initial']:.3f}")
+            report.append(f"  - Final: {evolution['final']:.3f}")
+            report.append(f"  - Change: {evolution['change']:+.3f}")
+            report.append(f"  - Converged: {'Yes' if evolution['converged'] else 'No'}")
             report.append("")
 
         # Statistical Analysis
@@ -267,14 +282,14 @@ class ARCResultsAnalyzer:
         report.append("## Conclusions\n")
 
         if success_criteria.get('overall_success', False):
-            report.append("### 🎉 SUCCESS: ARC Self-Improvement Demonstrated\n")
+            report.append("### SUCCESS: ARC Self-Improvement Demonstrated\n")
             report.append("The experiment successfully demonstrated Nova's ability to:")
             report.append("- Improve analytical precision through iterative calibration")
             report.append("- Maintain stable performance metrics over extended cycles")
             report.append("- Converge on optimal detection parameters")
             report.append("- Reduce measurement drift and improve consistency")
         else:
-            report.append("### ⚠️ PARTIAL SUCCESS: Areas for Improvement\n")
+            report.append("### PARTIAL SUCCESS: Areas for Improvement\n")
             failed_criteria = [k for k, v in success_criteria.items() if not v and k != 'overall_success']
             if failed_criteria:
                 report.append("The following success criteria were not met:")

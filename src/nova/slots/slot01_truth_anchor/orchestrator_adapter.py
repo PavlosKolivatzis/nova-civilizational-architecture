@@ -27,7 +27,7 @@ logger = logging.getLogger("slot1_adapter")
 
 # Import actual engine (or stub for testing)
 try:
-    from .core import TruthAnchorEngine
+    from .truth_anchor_engine import TruthAnchorEngine
 except ImportError:
     class TruthAnchorEngine:
         async def analyze_content(self, content: str, request_id: str, domain: str):

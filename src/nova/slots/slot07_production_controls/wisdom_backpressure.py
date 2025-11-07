@@ -20,9 +20,22 @@ from __future__ import annotations
 import os
 from typing import Tuple
 
+from prometheus_client import Gauge
 from nova.governor import state as governor_state
+from nova.metrics.registry import REGISTRY
 
-__all__ = ["compute_max_concurrent_jobs", "get_backpressure_config"]
+__all__ = ["compute_max_concurrent_jobs", "decide_job_cap", "get_backpressure_config"]
+
+_slot7_jobs_current = Gauge(
+    "nova_slot07_jobs_current",
+    "Current Slot7 max concurrent jobs after wisdom backpressure",
+    registry=REGISTRY,
+)
+_slot7_jobs_reason = Gauge(
+    "nova_slot07_jobs_reason",
+    "Slot7 backpressure reason code (0=baseline, 1=stability reduced, 2=frozen)",
+    registry=REGISTRY,
+)
 
 
 def get_backpressure_config() -> Tuple[int, int, int, float]:
@@ -44,6 +57,35 @@ def get_backpressure_config() -> Tuple[int, int, int, float]:
     return (baseline, frozen, reduced, threshold)
 
 
+def decide_job_cap(stability_margin: float | None = None) -> int:
+    """
+    Decide Slot 7 job cap, emitting Prometheus gauges for observability.
+
+    Args:
+        stability_margin: Optional stability margin override (S). If None, reads poller state.
+
+    Returns:
+        int: Chosen concurrency cap.
+    """
+    baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
+    cap, reason = baseline, 0
+
+    if governor_state.is_frozen():
+        cap, reason = frozen_jobs, 2
+    else:
+        S = stability_margin if stability_margin is not None else _try_read_stability_from_poller()
+        if S is None:
+            cap, reason = baseline, 0
+        elif S < threshold:
+            cap, reason = reduced_jobs, 1
+        else:
+            cap, reason = baseline, 0
+
+    _slot7_jobs_current.set(cap)
+    _slot7_jobs_reason.set(reason)
+    return cap
+
+
 def compute_max_concurrent_jobs(stability_margin: float | None = None) -> int:
     """
     Compute adaptive max concurrent jobs based on wisdom governor state.
@@ -62,28 +104,7 @@ def compute_max_concurrent_jobs(stability_margin: float | None = None) -> int:
         - S < threshold (default 0.03) → reduced_jobs (50% capacity, ~6)
         - S >= threshold → baseline_jobs (full capacity, ~16)
     """
-    baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
-
-    # Check if learning is frozen due to critical instability or Hopf risk
-    if governor_state.is_frozen():
-        return frozen_jobs
-
-    # Get stability margin (try parameter, then poller, then assume safe)
-    S = stability_margin
-    if S is None:
-        S = _try_read_stability_from_poller()
-
-    # If we can't determine S, default to safe baseline
-    if S is None:
-        return baseline
-
-    # Adaptive backpressure based on stability margin
-    if S < threshold:
-        # Low stability: reduce parallelism
-        return reduced_jobs
-    else:
-        # Stable: normal operation
-        return baseline
+    return decide_job_cap(stability_margin=stability_margin)
 
 
 def _try_read_stability_from_poller() -> float | None:
@@ -119,7 +140,7 @@ def get_backpressure_status() -> dict:
     baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
     is_frozen = governor_state.is_frozen()
     S = _try_read_stability_from_poller()
-    max_jobs = compute_max_concurrent_jobs(stability_margin=S)
+    max_jobs = decide_job_cap(stability_margin=S)
 
     mode = "FROZEN" if is_frozen else ("REDUCED" if S and S < threshold else "BASELINE")
 

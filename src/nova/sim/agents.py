@@ -346,7 +346,7 @@ class MultiAgentSimulator:
 
                 # Exchange beliefs on random topic
                 topic = np.random.choice(self.config.topics)
-                belief_exchange = await self._belief_exchange(agent1, agent2, topic, influence_strength)
+                await self._belief_exchange(agent1, agent2, topic, influence_strength)
 
                 # Update memories
                 if self.config.enable_memory:

@@ -147,7 +147,7 @@ def build_router(
                 # (Could be made fractional: 1.0 - (len(errors) / len(chain)))
                 return 0.0
 
-        except Exception as e:
+        except Exception:
             # Verification failed (ledger error, etc.): default to legacy behavior
             # Log error but don't fail the federation request
             return 1.0
