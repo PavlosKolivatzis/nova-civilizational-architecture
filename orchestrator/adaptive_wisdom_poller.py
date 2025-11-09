@@ -21,7 +21,7 @@ from collections import deque
 from contextlib import contextmanager
 from typing import Any, Deque, Dict, Iterator, Optional
 
-from orchestrator.app import get_peer_store
+from orchestrator.peer_store_singleton import get_peer_store
 from nova.adaptive_wisdom_core import Params3D, State3D, ThreeDProvider
 from nova.bifurcation_monitor import BifurcationMonitor
 from nova.governor import state as governor_state
@@ -237,11 +237,6 @@ def _loop() -> None:
             live_peers = []
             peer_store = get_peer_store()
             if peer_store:
-                peer_count = peer_store.get_peer_count()
-                log.info("wisdom_poller: store_id=%s, peer_count=%d", hex(id(peer_store)), peer_count)
-            else:
-                log.info("wisdom_poller: store_id=None")
-            if peer_store:
                 try:
                     live_peers = peer_store.get_live_peers(max_age_seconds=90)
                 except Exception:
@@ -380,17 +375,37 @@ def _loop() -> None:
             break
 
 
-if __name__ == "__main__":
-    # Quick test
-    print(f"Wisdom governor enabled: {ENABLED}")
-    print(f"Polling interval: {INTERVAL}s")
+# --------------------------------------------------------
+# Single entry-point – brings the poller to life
+# --------------------------------------------------------
+if __name__ == "__main__":  # noqa: D401
+    import logging
+    import sys
+    import time
 
-    if ENABLED:
-        start()
-        print("Poller started. Monitoring for 30s...")
-        for i in range(6):
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(name)-18s %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    enabled = _get_enabled()
+    interval = _get_interval()
+
+    if not enabled:
+        logging.warning("NOVA_WISDOM_GOVERNOR_ENABLED is not true; exiting.")
+        sys.exit(0)
+
+    logging.info("Wisdom governor enabled: %s", enabled)
+    logging.info("Polling interval: %ss", interval)
+
+    start()
+    logging.info("Adaptive wisdom poller started. Press Ctrl+C to stop.")
+
+    try:
+        while True:
             time.sleep(5)
-            state = get_current_state()
-            print(f"[{i*5}s] γ={state['gamma']:.3f} S={state['S']:.3f} η={state['eta']:.3f} H={state['H']:.3f}")
+    except KeyboardInterrupt:
+        logging.info("Shutdown requested, stopping poller…")
         stop()
-        print("Poller stopped.")
+        logging.info("Poller stopped.")

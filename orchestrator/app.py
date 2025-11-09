@@ -13,6 +13,7 @@ import asyncio
 import logging
 import os
 import pkgutil
+import sys
 import time
 from contextlib import asynccontextmanager
 
@@ -87,8 +88,14 @@ _peer_sync = None
 
 
 def get_peer_store():
-    """Expose the current PeerStore instance (if initialized)."""
-    return _peer_store
+    """
+    Expose the current PeerStore instance (if initialized).
+
+    Deprecated: Use orchestrator.peer_store_singleton.get_peer_store() instead.
+    This remains for backward compatibility only.
+    """
+    from orchestrator.peer_store_singleton import get_peer_store as get_singleton
+    return get_singleton()
 
 if FastAPI is not None:
     _federation_metrics_thread = None
@@ -345,8 +352,11 @@ if FastAPI is not None:
             try:
                 from orchestrator.federation_synchronizer import PeerStore, PeerSync
 
+                from orchestrator.peer_store_singleton import init_peer_store
+
                 global _peer_store, _peer_sync
                 _peer_store = PeerStore()
+                init_peer_store(_peer_store)  # Register singleton
                 _peer_sync = PeerSync(_peer_store)
                 _peer_sync.start()
                 logger.info(

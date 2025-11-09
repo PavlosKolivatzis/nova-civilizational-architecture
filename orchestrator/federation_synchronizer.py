@@ -232,9 +232,11 @@ class PeerSync:
             )
 
             # Emit metrics
-            self._logger.info(
-                f"peersync: stored peer {payload.node_id}, store_id={hex(id(self._peer_store))}, "
-                f"peer_count={self._peer_store.get_peer_count()}, g*={payload.metrics.g_star:.3f}"
+            self._logger.debug(
+                "peersync: stored peer %s, peer_count=%s, g*=%.3f",
+                payload.node_id,
+                self.peer_store.get_peer_count(),
+                payload.metrics.g_star,
             )
 
             # Phase 16-2: Record prometheus metrics
