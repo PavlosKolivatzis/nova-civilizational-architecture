@@ -17,6 +17,31 @@
 - **Synthesis Engine**: 99.95% success rate
 - **Contract Compliance**: 100% (zero schema violations)
 
+## Adaptive Wisdom Governor SLOs
+
+Phase 15 introduced the Adaptive Wisdom Governor with Prometheus gauges exported via `nova_wisdom_*`.
+
+### Stability & Generativity Targets
+- **Stability Margin (`nova_wisdom_stability_margin`)**: ≥ 0.05 (p95), alert at < 0.03 for >5m
+- **Hopf Distance (`nova_wisdom_hopf_distance`)**: ≥ 0.02; values < 0.02 trigger freeze protocol
+- **Generativity (`nova_wisdom_generativity`)**: ≥ 0.65 (p90) with rolling window of 10m
+- **Learning Rate Adjustments (`nova_wisdom_eta_current`)**: ≤ 4 major clamps per hour (alert if `rate(nova_wisdom_eta_current[1h]) > 0.06`)
+
+### Monitoring Queries
+```promql
+# Stability trend
+nova_wisdom_stability_margin
+
+# Hopf risk
+nova_wisdom_hopf_distance < 0.02
+
+# Generativity health
+histogram_quantile(0.9, nova_wisdom_generativity_bucket)
+```
+
+### Runbook Hook
+- When any governor SLO degrades, follow [`ops/runbook/wisdom-governor-stability.md`](../ops/runbook/wisdom-governor-stability.md) before resuming Slot10 deployments.
+
 ## Alert Thresholds
 
 ```yaml
@@ -67,11 +92,8 @@ curl /health/config | jq '.slot6 | {
 ```
 
 ## Runbook References
-See `ops/runbooks/README.md` for available runbooks.
+- Slot 6 residual risk spikes: [`ops/runbook/slot6-residual-risk.md`](../ops/runbook/slot6-residual-risk.md)
+- Adaptive Wisdom Governor stability: [`ops/runbook/wisdom-governor-stability.md`](../ops/runbook/wisdom-governor-stability.md)
+- Federation / ledger continuity: [`ops/runbook/continuity-engine.md`](../ops/runbook/continuity-engine.md)
 
-Planned runbooks (not yet created):
-- Blocked Deployment Remediation
-- Legacy Gate Remediation
-- Contract Violation Response
-
-For immediate assistance, consult `/metrics` endpoint and `agents/nova_ai_operating_framework.md`.
+For immediate assistance, consult `/metrics`, `/health`, and `agents/nova_ai_operating_framework.md`.

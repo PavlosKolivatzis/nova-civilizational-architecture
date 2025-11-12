@@ -191,7 +191,7 @@ class CreativityGovernor:
 
         Returns best hypothesis and exploration telemetry.
         """
-        start_time = time.time()
+        start_time = time.perf_counter()
         exploration_telemetry = {
             "depth_reached": 0,
             "hypotheses_generated": 0,
@@ -304,7 +304,8 @@ class CreativityGovernor:
                 exploration_telemetry["exit_reason"] = "fallback_used"
 
             # Update telemetry
-            exploration_telemetry["duration_ms"] = (time.time() - start_time) * 1000
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            exploration_telemetry["duration_ms"] = max(elapsed_ms, 0.01)
             self._update_metrics(exploration_telemetry)
 
             return final_hypothesis, exploration_telemetry

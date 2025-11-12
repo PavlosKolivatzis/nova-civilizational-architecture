@@ -2,6 +2,7 @@
 
 import json
 import os
+import warnings
 import pytest
 from collections.abc import Mapping
 
@@ -20,11 +21,13 @@ pytestmark = pytest.mark.skipif(
 
 # Conditional imports to avoid ImportError during test collection
 if not _env_truthy("NOVA_BLOCK_LEGACY_SLOT6"):
-    from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
-        ProfileWrapper,
-        AdaptiveSynthesisEngine, 
-        MulticulturalTruthSynthesisAdapter
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+            ProfileWrapper,
+            AdaptiveSynthesisEngine, 
+            MulticulturalTruthSynthesisAdapter,
+        )
 else:
     # Define stubs for when legacy is blocked
     ProfileWrapper = None

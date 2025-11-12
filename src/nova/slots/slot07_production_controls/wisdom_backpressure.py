@@ -19,22 +19,23 @@ from __future__ import annotations
 
 import os
 from typing import Tuple
+import typing as _typing
 
-from prometheus_client import Gauge
+from prometheus_client import Gauge as _Gauge
 from nova.governor import state as governor_state
-from nova.metrics.registry import REGISTRY
+from nova.metrics.registry import REGISTRY as _REGISTRY
 
-__all__ = ["compute_max_concurrent_jobs", "decide_job_cap", "get_backpressure_config"]
+__all__ = ["compute_max_concurrent_jobs", "get_backpressure_config"]
 
-_slot7_jobs_current = Gauge(
+_slot7_jobs_current = _Gauge(
     "nova_slot07_jobs_current",
     "Current Slot7 max concurrent jobs after wisdom backpressure",
-    registry=REGISTRY,
+    registry=_REGISTRY,
 )
-_slot7_jobs_reason = Gauge(
+_slot7_jobs_reason = _Gauge(
     "nova_slot07_jobs_reason",
     "Slot7 backpressure reason code (0=baseline, 1=stability reduced, 2=frozen)",
-    registry=REGISTRY,
+    registry=_REGISTRY,
 )
 
 
@@ -57,7 +58,7 @@ def get_backpressure_config() -> Tuple[int, int, int, float]:
     return (baseline, frozen, reduced, threshold)
 
 
-def decide_job_cap(stability_margin: float | None = None) -> int:
+def _decide_job_cap(stability_margin: float | None = None) -> Tuple[int, int]:
     """
     Decide Slot 7 job cap, emitting Prometheus gauges for observability.
 
@@ -65,7 +66,7 @@ def decide_job_cap(stability_margin: float | None = None) -> int:
         stability_margin: Optional stability margin override (S). If None, reads poller state.
 
     Returns:
-        int: Chosen concurrency cap.
+        Tuple[int, int]: (cap, reason_code)
     """
     baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
     cap, reason = baseline, 0
@@ -83,7 +84,7 @@ def decide_job_cap(stability_margin: float | None = None) -> int:
 
     _slot7_jobs_current.set(cap)
     _slot7_jobs_reason.set(reason)
-    return cap
+    return cap, reason
 
 
 def compute_max_concurrent_jobs(stability_margin: float | None = None) -> int:
@@ -104,7 +105,8 @@ def compute_max_concurrent_jobs(stability_margin: float | None = None) -> int:
         - S < threshold (default 0.03) → reduced_jobs (50% capacity, ~6)
         - S >= threshold → baseline_jobs (full capacity, ~16)
     """
-    return decide_job_cap(stability_margin=stability_margin)
+    cap, _ = _decide_job_cap(stability_margin=stability_margin)
+    return cap
 
 
 def _try_read_stability_from_poller() -> float | None:
@@ -130,7 +132,7 @@ def _try_read_stability_from_poller() -> float | None:
         return None
 
 
-def get_backpressure_status() -> dict:
+def get_backpressure_status(stability_margin: float | None = None) -> _typing.Dict[str, _typing.Any]:
     """
     Get current backpressure status for monitoring/debugging.
 
@@ -138,17 +140,14 @@ def get_backpressure_status() -> dict:
         dict: Status including current max_jobs, frozen state, stability margin
     """
     baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
-    is_frozen = governor_state.is_frozen()
-    S = _try_read_stability_from_poller()
-    max_jobs = decide_job_cap(stability_margin=S)
-
-    mode = "FROZEN" if is_frozen else ("REDUCED" if S and S < threshold else "BASELINE")
+    observed_stability = stability_margin if stability_margin is not None else _try_read_stability_from_poller()
+    max_jobs, reason = _decide_job_cap(stability_margin=observed_stability)
 
     return {
         "max_concurrent_jobs": max_jobs,
-        "mode": mode,
-        "frozen": is_frozen,
-        "stability_margin": S,
+        "mode": _describe_mode(max_jobs, reason, baseline, reduced_jobs, frozen_jobs),
+        "frozen": governor_state.is_frozen(),
+        "stability_margin": observed_stability,
         "config": {
             "baseline_jobs": baseline,
             "frozen_jobs": frozen_jobs,
@@ -156,3 +155,32 @@ def get_backpressure_status() -> dict:
             "stability_threshold": threshold,
         },
     }
+
+
+def _describe_mode(
+    max_jobs: int,
+    reason: int,
+    baseline: int,
+    reduced_jobs: int,
+    frozen_jobs: int,
+) -> str:
+    if reason == 2 or max_jobs <= frozen_jobs:
+        return "FROZEN"
+    if reason == 1 or max_jobs == reduced_jobs or (reason == 0 and max_jobs < baseline):
+        return "REDUCED"
+    return "BASELINE"
+
+
+def __getattr__(name: str):
+    if name == "decide_job_cap":
+        def _compat_decide_job_cap(*args, **kwargs):
+            cap, _ = _decide_job_cap(*args, **kwargs)
+            return cap
+
+        _compat_decide_job_cap.__name__ = "decide_job_cap"
+        _compat_decide_job_cap.__doc__ = (
+            "Compatibility shim returning only the job cap. "
+            "Use compute_max_concurrent_jobs instead."
+        )
+        return _compat_decide_job_cap
+    raise AttributeError(name)

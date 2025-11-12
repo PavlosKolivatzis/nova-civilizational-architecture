@@ -2,8 +2,9 @@
 """Health monitoring and aggregation for the NOVA system."""
 
 import importlib
-from typing import Any, Callable, Dict, Optional
+import threading
 import time
+from typing import Any, Callable, Dict, Optional
 
 from src_bootstrap import ensure_src_on_path
 
@@ -34,12 +35,17 @@ def get_circuit_breaker_metrics(circuit_breaker):
 
 # Cache for slot health modules to avoid repeated imports
 _slot_health_module_cache: Dict[str, Any] = {}
+_selfcheck_cache: Dict[str, tuple[float, Dict[str, Any]]] = {}
+_SELF_CHECK_TTL = 1.0  # seconds
+_timestamp_lock = threading.Lock()
+_last_timestamp = 0.0
 
 
 def clear_slot_health_cache():
     """Clear the slot health module cache. Useful for testing."""
     global _slot_health_module_cache
     _slot_health_module_cache.clear()
+    _selfcheck_cache.clear()
 
 
 def collect_slot_selfchecks(slot_registry: Dict[str, Callable]) -> Dict[str, Any]:
@@ -51,6 +57,12 @@ def collect_slot_selfchecks(slot_registry: Dict[str, Callable]) -> Dict[str, Any
 
     ensure_src_on_path()
     for slot_id in slot_registry.keys():
+        cached_result = _selfcheck_cache.get(slot_id)
+        now = time.time()
+        if cached_result and now - cached_result[0] < _SELF_CHECK_TTL:
+            self_checks[slot_id] = cached_result[1]
+            continue
+
         # Check cache first
         if slot_id in _slot_health_module_cache:
             module = _slot_health_module_cache[slot_id]
@@ -96,16 +108,20 @@ def collect_slot_selfchecks(slot_registry: Dict[str, Callable]) -> Dict[str, Any
                 "self_check": "error",
                 "reason": str(exc),
             }
+        else:
+            _selfcheck_cache[slot_id] = (now, self_checks[slot_id])
 
     return self_checks
 
-
-
-
-
-
-
-
+def _unique_timestamp() -> float:
+    """Return a monotonically increasing timestamp (seconds)."""
+    global _last_timestamp
+    now = time.time()
+    with _timestamp_lock:
+        if now <= _last_timestamp:
+            now = _last_timestamp + 0.001  # 1ms step ensures uniqueness within float precision
+        _last_timestamp = now
+    return now
 def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict[str, Any]:
     """Generate comprehensive health payload for the system."""
     cb_metrics = get_circuit_breaker_metrics(circuit_breaker)
@@ -130,7 +146,7 @@ def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict
             "timeout_cap_s": getattr(router, "timeout_cap", None),
         },
         "circuit_breaker": cb_metrics,
-        "timestamp": time.time(),
+        "timestamp": _unique_timestamp(),
         "version": "1.0.0",
     }
     

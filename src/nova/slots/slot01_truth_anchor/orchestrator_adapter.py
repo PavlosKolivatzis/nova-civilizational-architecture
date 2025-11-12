@@ -4,8 +4,9 @@ High-performance adapter for Truth Anchor Engine integration
 """
 
 import asyncio
+import inspect
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Type
 import logging
 
 # Import from orchestrator contracts
@@ -14,6 +15,7 @@ try:
 except ImportError:
     # Fallback for testing
     from dataclasses import dataclass
+
     @dataclass
     class SlotResult:
         status: str
@@ -25,39 +27,49 @@ except ImportError:
 
 logger = logging.getLogger("slot1_adapter")
 
-# Import actual engine (or stub for testing)
+# Engine imports -------------------------------------------------------------
 try:
-    from .truth_anchor_engine import TruthAnchorEngine
+    from .truth_anchor_engine import TruthAnchorEngine as BasicTruthAnchorEngine
+except ImportError:  # pragma: no cover - defensive
+    BasicTruthAnchorEngine = None
+
+try:  # pragma: no cover - optional dependency
+    from .enhanced_truth_anchor_engine import TruthAnchorEngine as EnhancedTruthAnchorEngine
+except ImportError:  # pragma: no cover - optional dependency
+    EnhancedTruthAnchorEngine = None
+
+try:  # pragma: no cover - compatibility shim for tests
+    from .core import TruthAnchorEngine as LegacyTruthAnchorEngine  # type: ignore
 except ImportError:
-    class TruthAnchorEngine:
-        async def analyze_content(self, content: str, request_id: str, domain: str):
-            return {
-                "truth_score": 0.8,
-                "anchor_stable": True,
-                "anchor_used": domain,
-                "timestamp": time.time(),
-            }
-        
-        def establish_anchor(self, domain: str, facts: list) -> str:
-            return domain
-        
-        def verify_anchor(self, domain: str) -> dict:
-            return {"exists": True, "verified": True, "domain": domain}
-        
-        def cleanup(self) -> int:
-            return 0
+    LegacyTruthAnchorEngine = None
+
+
+class _FallbackTruthAnchorEngine:
+    """Minimal stub used when real engines are unavailable."""
+
+    async def analyze_content(self, content: str, request_id: str, domain: str):
+        return {
+            "truth_score": 0.8,
+            "anchor_stable": True,
+            "anchor_used": domain,
+            "timestamp": time.time(),
+        }
+
+    def establish_anchor(self, domain: str, facts: list) -> str:
+        return domain
+
+    def verify_anchor(self, domain: str) -> dict:
+        return {"exists": True, "verified": True, "domain": domain}
+
+    def cleanup(self) -> int:
+        return 0
 
 class Slot1Adapter:
     """High-performance adapter for Truth Anchor Engine integration."""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.engine = TruthAnchorEngine(
-            cache_max=self.config.get("cache_max", 2048),
-            cache_ttl=self.config.get("cache_ttl", 120.0),
-            stable_threshold=self.config.get("stable_threshold", 0.7),
-            secret_key=self.config.get("secret_key"),
-        )
+        self.engine = self._build_engine()
 
         # Performance metrics
         self._total_requests = 0
@@ -67,6 +79,56 @@ class Slot1Adapter:
         self._shutdown = False
 
         logger.info("Slot 1 adapter initialized")
+
+    # ------------------------------------------------------------------
+    # Engine helpers
+    # ------------------------------------------------------------------
+    def _build_engine(self):
+        engine_cls = self._select_engine_class()
+        kwargs = self._collect_engine_kwargs(engine_cls)
+        return engine_cls(**kwargs)
+
+    def _select_engine_class(self) -> Type:
+        preferred = (self.config.get("engine") or "auto").lower()
+
+        custom_cls = self.config.get("engine_cls")
+        if custom_cls:
+            return custom_cls
+        if LegacyTruthAnchorEngine:
+            return LegacyTruthAnchorEngine
+
+        if preferred == "basic" and BasicTruthAnchorEngine:
+            return BasicTruthAnchorEngine
+        if preferred == "enhanced" and EnhancedTruthAnchorEngine:
+            return EnhancedTruthAnchorEngine
+
+        if EnhancedTruthAnchorEngine and preferred in {"auto", "enhanced"}:
+            return EnhancedTruthAnchorEngine
+        if BasicTruthAnchorEngine:
+            return BasicTruthAnchorEngine
+
+        logger.warning("Falling back to stub TruthAnchorEngine implementation")
+        return _FallbackTruthAnchorEngine
+
+    def _collect_engine_kwargs(self, engine_cls: Type) -> Dict[str, Any]:
+        params = inspect.signature(engine_cls.__init__).parameters
+        accepts_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+        candidates = {
+            "cache_max": self.config.get("cache_max", 2048),
+            "cache_ttl": self.config.get("cache_ttl", 120.0),
+            "stable_threshold": self.config.get("stable_threshold", 0.7),
+            "secret_key": self.config.get("secret_key"),
+            "storage_path": self.config.get("storage_path"),
+            "logger": self.config.get("logger", logger),
+        }
+
+        kwargs: Dict[str, Any] = {}
+        for key, value in candidates.items():
+            if value is None:
+                continue
+            if key in params or accepts_var_kw:
+                kwargs[key] = value
+        return kwargs
 
     async def run(self, payload: dict, *, request_id: str) -> SlotResult:
         """Execute truth analysis with robust error handling."""
