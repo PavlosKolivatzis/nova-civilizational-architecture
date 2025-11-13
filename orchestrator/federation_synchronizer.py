@@ -233,8 +233,10 @@ class PeerSync:
 
             # Emit metrics
             self._logger.debug(
-                f"Synced peer {payload.node_id} from {peer_url} "
-                f"(g*={payload.metrics.g_star:.3f}, latency={duration:.3f}s)"
+                "peersync: stored peer %s, peer_count=%s, g*=%.3f",
+                payload.node_id,
+                self.peer_store.get_peer_count(),
+                payload.metrics.g_star,
             )
 
             # Phase 16-2: Record prometheus metrics

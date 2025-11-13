@@ -143,9 +143,9 @@ class PublicationValidator:
         warnings = []
 
         # Check required fields
-        for field in self.required_fields:
-            if field not in results:
-                errors.append(f"Missing required field: {field}")
+        for field_name in self.required_fields:
+            if field_name not in results:
+                errors.append(f"Missing required field: {field_name}")
 
         if not results:
             return False, ["Empty results provided"]
@@ -189,9 +189,9 @@ class PublicationValidator:
         errors = []
 
         required_method_fields = ['consensus_model', 'num_agents', 'max_steps', 'topics']
-        for field in required_method_fields:
-            if field not in methodology:
-                errors.append(f"Missing methodology field: {field}")
+        for field_name in required_method_fields:
+            if field_name not in methodology:
+                errors.append(f"Missing methodology field: {field_name}")
 
         # Validate agent count
         num_agents = methodology.get('num_agents', 0)

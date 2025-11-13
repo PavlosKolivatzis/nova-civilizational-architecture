@@ -1,3 +1,4 @@
+import warnings
 from fastapi import APIRouter
 from typing import Any, Dict, List
 from nova.slots.config import get_config_manager  # EnhancedConfigManager global
@@ -65,7 +66,11 @@ def _get_slot6_metrics() -> Dict[str, Any]:
     except ImportError:
         # Fall back to legacy-only metrics
         try:
-            from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import get_legacy_usage_count
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+                    get_legacy_usage_count,
+                )
             legacy_calls = get_legacy_usage_count()
         except (ImportError, AttributeError):
             # Legacy module blocked or not available

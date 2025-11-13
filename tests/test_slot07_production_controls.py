@@ -10,9 +10,54 @@ from nova.slots.slot07_production_controls.production_control_engine import (
     RateLimiter,
     ResourceProtector,
     CircuitBreakerOpenError,
-    ResourceLimitExceededError
+    RateLimitExceededError,
+    ResourceLimitExceededError,
 )
 from config.feature_flags import get_production_controls_config
+
+class DummyReflexEmitter:
+    """Test double that records Slot 7 reflex calls."""
+
+    def __init__(self):
+        self.breaker_calls = []
+        self.memory_calls = []
+        self.integrity_calls = []
+
+    def emit_breaker_pressure(self, circuit_state, raw_pressure, cause="test", trace_id=None, metadata=None):
+        self.breaker_calls.append(
+            {
+                "state": circuit_state,
+                "pressure": raw_pressure,
+                "cause": cause,
+                "trace_id": trace_id,
+            }
+        )
+        return True
+
+    def emit_memory_pressure(
+        self, active_requests, max_requests, resource_violations, cause="test", trace_id=None, metadata=None
+    ):
+        self.memory_calls.append(
+            {
+                "active": active_requests,
+                "max": max_requests,
+                "violations": resource_violations,
+                "cause": cause,
+                "trace_id": trace_id,
+            }
+        )
+        return True
+
+    def emit_integrity_violation(self, violation_severity, violation_type, cause="test", trace_id=None, metadata=None):
+        self.integrity_calls.append(
+            {
+                "severity": violation_severity,
+                "type": violation_type,
+                "cause": cause,
+                "trace_id": trace_id,
+            }
+        )
+        return True
 
 
 class TestProductionControlsCircuitBreaker:
@@ -473,6 +518,36 @@ class TestProductionControlEngine:
         assert "rate_limiter" in metrics
         assert "resource_protector" in metrics
         assert "safeguards_active" in metrics
+
+    def test_reflex_emission_on_circuit_breaker_violation(self):
+        """Ensure breaker trips emit reflex signals."""
+        engine = ProductionControlEngine(self.config)
+        engine._reflex_emitter = DummyReflexEmitter()
+        engine._record_safeguard_violation(CircuitBreakerOpenError("open"), "op-breaker", 0.0)
+        assert engine._reflex_emitter.breaker_calls
+        call = engine._reflex_emitter.breaker_calls[0]
+        assert call["cause"] == "circuit_breaker_violation"
+        assert call["trace_id"] == "op-breaker"
+
+    def test_reflex_emission_on_resource_violation(self):
+        """Ensure resource limit violations emit memory pressure reflex."""
+        engine = ProductionControlEngine(self.config)
+        engine._reflex_emitter = DummyReflexEmitter()
+        engine.resource_protector.active_requests = 5
+        engine.resource_protector.max_concurrent_requests = 5
+        engine._record_safeguard_violation(ResourceLimitExceededError("limit"), "op-resource", 0.0)
+        assert engine._reflex_emitter.memory_calls
+        call = engine._reflex_emitter.memory_calls[0]
+        assert call["cause"] == "resource_limit_violation"
+        assert call["trace_id"] == "op-resource"
+
+    def test_reflex_emission_on_rate_limit_violation(self):
+        """Ensure rate limit violations emit breaker pressure reflex."""
+        engine = ProductionControlEngine(self.config)
+        engine._reflex_emitter = DummyReflexEmitter()
+        engine._record_safeguard_violation(RateLimitExceededError("rate"), "op-rate", 0.0)
+        assert engine._reflex_emitter.breaker_calls
+        assert engine._reflex_emitter.breaker_calls[-1]["cause"] == "rate_limit_violation"
     
     def test_health_check(self):
         """Test health check functionality."""

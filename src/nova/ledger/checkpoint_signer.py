@@ -12,7 +12,6 @@ from datetime import datetime
 from typing import Optional
 
 import base64
-from .merkle import merkle_root
 from .store_postgres import PostgresLedgerStore
 from .checkpoint_types import Checkpoint
 

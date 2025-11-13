@@ -206,8 +206,13 @@ def get_default_persistence(storage_path: Optional[str] = None) -> AnchorPersist
     global _default_persistence
 
     with _persistence_lock:
+        # Always honour an explicit storage_path by creating
+        # a dedicated persistence instance for that location.
+        if storage_path:
+            return AnchorPersistence(storage_path)
+
         if _default_persistence is None:
-            _default_persistence = AnchorPersistence(storage_path)
+            _default_persistence = AnchorPersistence()
         return _default_persistence
 
 

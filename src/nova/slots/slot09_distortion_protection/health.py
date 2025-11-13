@@ -1,5 +1,6 @@
 """Health monitoring for Slot09 Distortion Protection (Hybrid v3.1.0)."""
 from typing import Dict, Any
+import threading
 
 # --- import healthkit (with graceful fallback) --------------------------------
 try:
@@ -34,6 +35,9 @@ except Exception:
 
 NAME = "slot09_distortion_protection"
 VERSION = "3.1.0-hybrid"
+
+_HYBRID_PROBE_RESULT: Dict[str, Any] | None = None
+_HYBRID_PROBE_LOCK = threading.Lock()
 
 _CAPS = [
     "distortion_detection",
@@ -74,19 +78,8 @@ def health() -> Dict[str, Any]:
         # Core components available - collect metrics
         metrics: Dict[str, Any] = {}
 
-        # Test hybrid API instantiation
-        try:
-            HybridDistortionDetectionAPI()
-            metrics.update({
-                "hybrid_api_available": True,
-                "distortion_detection_ready": True,
-                "api_version": "3.1.0-hybrid",
-            })
-        except Exception:
-            metrics.update({
-                "hybrid_api_available": False,
-                "distortion_detection_ready": False,
-            })
+        # Test hybrid API instantiation (cached probe)
+        metrics.update(_probe_hybrid_api(HybridDistortionDetectionAPI))
 
         # Check IDS integration
         try:
@@ -186,3 +179,23 @@ def health() -> Dict[str, Any]:
             capabilities=["distortion_detection"],
             deps=["semantic_mirror"],
         )
+
+
+def _probe_hybrid_api(api_cls) -> Dict[str, Any]:
+    """Instantiate the hybrid API once per process and reuse the result."""
+    global _HYBRID_PROBE_RESULT
+    with _HYBRID_PROBE_LOCK:
+        if _HYBRID_PROBE_RESULT is None:
+            try:
+                api_cls()
+                _HYBRID_PROBE_RESULT = {
+                    "hybrid_api_available": True,
+                    "distortion_detection_ready": True,
+                    "api_version": "3.1.0-hybrid",
+                }
+            except Exception:
+                _HYBRID_PROBE_RESULT = {
+                    "hybrid_api_available": False,
+                    "distortion_detection_ready": False,
+                }
+        return dict(_HYBRID_PROBE_RESULT)

@@ -2,6 +2,7 @@
 """Health check for Slot 6 - Cultural Synthesis."""
 from __future__ import annotations
 import time
+import warnings
 
 def health() -> dict:
     """
@@ -17,7 +18,11 @@ def health() -> dict:
     
     try:
         # Test basic cultural synthesis functionality
-        from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import get_legacy_usage_count
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
+                get_legacy_usage_count,
+            )
         legacy_calls = get_legacy_usage_count()
         result["legacy_calls_total"] = legacy_calls
         result["basic_synthesis"] = "functional"

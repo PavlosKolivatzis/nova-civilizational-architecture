@@ -13,7 +13,7 @@ Exports:
 
 from __future__ import annotations
 
-from prometheus_client import Gauge
+from prometheus_client import Counter, Gauge
 
 from .registry import REGISTRY
 
@@ -29,6 +29,9 @@ __all__ = [
     "wisdom_hopf_distance_gauge",
     "wisdom_spectral_radius_gauge",
     "reset_for_tests",
+    "nova_wisdom_poller_heartbeat_unix",
+    "nova_wisdom_poller_errors_total",
+    "nova_wisdom_poller_last_error_unix",
 ]
 
 # Core wisdom metrics
@@ -79,6 +82,25 @@ _wisdom_hopf_distance = Gauge(
 _wisdom_spectral_radius = Gauge(
     "nova_wisdom_spectral_radius",
     "Spectral radius rho = max |lambda|",
+    registry=REGISTRY,
+)
+
+# Poller liveness/error tracking
+nova_wisdom_poller_heartbeat_unix = Gauge(
+    "nova_wisdom_poller_heartbeat_unix",
+    "Last successful wisdom poller tick (unix seconds)",
+    registry=REGISTRY,
+)
+
+nova_wisdom_poller_last_error_unix = Gauge(
+    "nova_wisdom_poller_last_error_unix",
+    "Timestamp of last unhandled wisdom poller error (unix seconds)",
+    registry=REGISTRY,
+)
+
+nova_wisdom_poller_errors_total = Counter(
+    "nova_wisdom_poller_errors_total",
+    "Total unhandled exceptions within the wisdom poller loop",
     registry=REGISTRY,
 )
 

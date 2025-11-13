@@ -13,6 +13,8 @@ import hashlib
 import logging
 import secrets
 
+from .quantum_entropy import EntropySample, get_entropy_sample
+
 
 @dataclass
 class AnchorRecord:
@@ -37,9 +39,6 @@ class AnchorMetrics:
 
     total_anchors: int = 0
     active_anchors: int = 0
-
-
-from .quantum_entropy import EntropySample, get_entropy_sample
 
 
 class TruthAnchorEngine:

@@ -61,7 +61,13 @@ class BanditStore:
         if np is None or not os.path.exists(self.path):
             return
         with self._lock, open(self.path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            raw = f.read().strip()
+            if not raw:
+                return
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                return
         for r, s in data.items():
             if r in self.models:
                 m = self.models[r]

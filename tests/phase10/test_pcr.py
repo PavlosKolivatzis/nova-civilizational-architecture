@@ -1,7 +1,7 @@
 """Tests for Provenance & Consensus Registry (PCR)."""
 
 import pytest
-from src.nova.phase10.pcr import LedgerEntry, ProvenanceConsensusRegistry
+from nova.phase10.pcr import LedgerEntry, ProvenanceConsensusRegistry
 
 
 def test_ledger_entry_creation():

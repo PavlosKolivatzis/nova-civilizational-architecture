@@ -1,7 +1,7 @@
 """Tests for Federated Ethical Protocol (FEP)."""
 
 import pytest
-from src.nova.phase10.fep import (
+from nova.phase10.fep import (
     Vote,
     FEPDecision,
     FederatedEthicalProtocol,
