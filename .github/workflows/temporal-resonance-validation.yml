@@ -28,8 +28,7 @@ jobs:
 
       - name: Verify Phase 6.0 archive integrity
         run: |
-          cd attest/archives
-          sha256sum -c phase-6.0-archive.sha256
+          sha256sum -c attest/archives/phase-6.0-archive.sha256
 
       - name: Extract temporal variance dataset
         run: |
