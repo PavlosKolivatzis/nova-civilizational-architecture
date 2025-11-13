@@ -1,0 +1,134 @@
+src/nova/slot_loader.py
+    F 43:0 find_file - C (12)
+src/nova/slots/slot05_constellation/constellation_engine.py
+    M 315:4 ConstellationEngine._determine_link_type - C (17)
+    M 32:4 ConstellationEngine._get_tri_signals - C (13)
+src/nova/slots/slot06_cultural_synthesis/context_aware_synthesis.py
+    M 85:4 ContextAwareCulturalSynthesis._get_system_context - C (11)
+    M 384:4 ContextAwareCulturalSynthesis._get_applied_adaptations - C (11)
+src/nova/slots/slot06_cultural_synthesis/adapter.py
+    M 76:4 CulturalSynthesisAdapter.validate_cultural_deployment - C (20)
+src/nova/slots/slot10_civilizational_deployment/health.py
+    F 52:0 health - C (13)
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py
+    M 50:4 LightClockCanaryController.evaluate_stage - C (11)
+src/nova/slots/slot10_civilizational_deployment/core/canary.py
+    M 104:4 CanaryController.evaluate_stage - C (11)
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_gatekeeper.py
+    M 47:4 LightClockGatekeeper._read_epistemic_signals - D (21)
+    M 112:4 LightClockGatekeeper.evaluate_deploy_gate - C (17)
+    C 33:0 LightClockGatekeeper - C (12)
+src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py
+    M 27:4 Gatekeeper.evaluate_deploy_gate - C (11)
+src/nova/slots/slot10_civilizational_deployment/core/health_feed.py
+    M 142:4 LiveHealthFeed.get_slot4_health - C (11)
+src/nova/slots/slot10_civilizational_deployment/core/audit.py
+    M 75:4 AuditLog.record - C (13)
+src/nova/slots/slot10_civilizational_deployment/tests/test_e2e_rollback.py
+    F 10:0 test_e2e_canary_rollback_coordination - C (17)
+src/nova/slots/slot01_truth_anchor/orchestrator_adapter.py
+    M 91:4 Slot1Adapter._select_engine_class - C (11)
+src/nova/slots/slot03_emotional_matrix/emotional_matrix_engine.py
+    M 154:4 EmotionalMatrixEngine.analyze - F (41)
+src/nova/slots/slot03_emotional_matrix/escalation.py
+    M 52:4 EmotionalEscalationManager.classify_threat - C (11)
+src/nova/slots/slot03_emotional_matrix/health/__init__.py
+    F 18:0 health - C (12)
+src/nova/slots/config/enhanced_manager.py
+    M 92:4 SlotMetadata.from_dict - C (11)
+    M 144:4 EnhancedConfigManager.__init__ - C (11)
+src/nova/slots/slot09_distortion_protection/health.py
+    F 56:0 health - C (12)
+src/nova/slots/slot09_distortion_protection/ids_policy.py
+    F 47:0 apply_phase_lock_policy_adjustments - C (11)
+src/nova/slots/slot09_distortion_protection/hybrid_api.py
+    M 1299:4 HybridDistortionDetectionAPI.get_comprehensive_system_health - C (11)
+src/nova/slots/slot02_deltathresh/health.py
+    F 54:0 health - C (13)
+src/nova/slots/slot02_deltathresh/core.py
+    M 169:4 DeltaThreshProcessor._determine_action - C (14)
+src/nova/slots/slot02_deltathresh/plugin_meta_lens_addition.py
+    F 3:0 _meta_lens_analyze - C (15)
+src/nova/slots/slot02_deltathresh/enhanced/config.py
+    M 172:4 EnhancedProcessingConfig.from_dict - C (12)
+src/nova/slots/slot07_production_controls/reflex_emitter.py
+    M 222:4 ReflexEmitter._emit_signal - C (11)
+src/nova/slots/slot07_production_controls/context_publisher.py
+    M 71:4 ProductionControlContextPublisher.publish_context - C (11)
+src/nova/slots/slot07_production_controls/temporal_resonance.py
+    M 146:4 TemporalResonanceEngine.analyze_temporal_patterns - C (11)
+src/nova/slots/slot04_tri_engine/engine.py
+    M 281:4 TRIEngine._detect_patterns - C (16)
+src/nova/slots/slot08_memory_lock/health.py
+    F 52:0 health - C (11)
+src/nova/slots/slot08_memory_lock/core/metrics.py
+    M 82:4 Slot8MetricsCollector.get_slo_compliance - C (12)
+src/nova/slots/slot08_memory_lock/core/repair_planner.py
+    M 115:4 RepairPlanner._analyze_corruption - C (15)
+    M 284:4 RepairPlanner._score_repair_option - C (14)
+    M 474:4 RepairPlanner.get_performance_metrics - C (12)
+src/nova/slots/slot08_memory_lock/core/quarantine.py
+    M 424:4 QuarantineSystem.get_metrics - C (11)
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py
+    M 81:4 SelfHealingOrchestrator.monitor_and_heal - C (13)
+    M 214:4 SelfHealingOrchestrator._execute_autonomous_repair - C (13)
+src/nova/sim/agents.py
+    M 382:4 MultiAgentSimulator._consensus_step - C (11)
+src/nova/sim/governance.py
+    M 107:4 GovernanceProposal.get_decision - C (13)
+src/nova/arc/analyze_results.py
+    M 175:4 ARCResultsAnalyzer.generate_report - D (22)
+    M 318:4 ARCResultsAnalyzer.generate_plots - C (14)
+    M 66:4 ARCResultsAnalyzer.analyze_improvement_trends - C (13)
+src/nova/arc/run_calibration_cycle.py
+    M 204:4 ARCCalibrationRunner.calculate_metrics - D (25)
+    M 126:4 ARCCalibrationRunner.run_detection_cycle - D (22)
+src/nova/arc/reflection_engine.py
+    M 101:4 AccuracyTracker.calculate_precision_recall - C (11)
+src/nova/ledger/verify.py
+    M 297:4 ChainVerifier._extract_fidelity_metrics - C (17)
+    M 235:4 ChainVerifier._check_pqc_signatures - C (13)
+orchestrator/health_pulse.py
+    F 148:0 run_morning_routine - C (14)
+orchestrator/health.py
+    F 51:0 collect_slot_selfchecks - C (13)
+orchestrator/prometheus_metrics.py
+    F 387:0 update_semantic_mirror_metrics - C (20)
+    F 496:0 update_system_health_metrics - C (13)
+orchestrator/anr_mutex.py
+    F 26:0 file_lock - C (11)
+orchestrator/reflection.py
+    F 51:0 _get_system_reflection - D (28)
+orchestrator/federation_health.py
+    F 16:0 get_peer_health - D (26)
+orchestrator/federation_remediator.py
+    M 89:4 FederationRemediator._evaluate - C (14)
+orchestrator/adaptive_wisdom_poller.py
+    F 192:0 _loop - D (24)
+orchestrator/app.py
+    F 227:4 _startup - C (15)
+    F 105:4 _sm_sweeper - C (14)
+orchestrator/federation_poller.py
+    F 271:0 _loop - C (15)
+    F 63:0 _quality_params - C (12)
+orchestrator/semantic_creativity.py
+    M 186:4 CreativityGovernor.explore_semantic_space - D (21)
+    M 486:4 CreativityGovernor._score_candidates_topk - C (15)
+orchestrator/flow_metrics.py
+    M 84:4 FlowMetrics.get_flow_health_summary - C (20)
+orchestrator/adaptive_connections.py
+    F 245:0 get_flow_health_summary - C (13)
+orchestrator/router/anr.py
+    M 104:4 AdaptiveNeuralRouter._policy - D (21)
+    M 159:4 AdaptiveNeuralRouter.decide - C (15)
+    M 254:4 AdaptiveNeuralRouter.credit_deployment - C (12)
+orchestrator/plugins/loader.py
+    M 38:4 PluginLoader.discover - C (18)
+orchestrator/adapters/slot3_emotional.py
+    M 44:4 Slot3EmotionalAdapter.analyze - C (12)
+orchestrator/adapters/enhanced_slot5_constellation.py
+    M 162:4 EnhancedSlot5ConstellationAdapter.update_configuration - C (14)
+    M 263:4 EnhancedSlot5ConstellationAdapter.health_check - C (12)
+
+75 blocks (classes, functions, methods) analyzed.
+Average complexity: C (14.786666666666667)
