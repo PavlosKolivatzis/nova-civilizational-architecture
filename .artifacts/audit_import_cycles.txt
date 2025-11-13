@@ -1,0 +1,20 @@
+Quantum entropy fallback activated: Cirq is not available to build circuits
+2025-11-13 16:44:05,447 - SLOT2-INFO - ΔTHRESH Processor v1.0.0 initialized
+2025-11-13 16:44:05,447 - SLOT2-INFO - Operational Mode: stable_lock
+2025-11-13 16:44:05,447 - SLOT2-INFO - Processing Mode: hybrid_processing
+Failed to import Slot 7 production control engine: No module named 'config.feature_flags'; 'config' is not a package
+Traceback (most recent call last):
+  File "/home/user/nova-civilizational-architecture/orchestrator/adapters/slot7_production_controls.py", line 8, in <module>
+    from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
+  File "/home/user/nova-civilizational-architecture/src/nova/slots/slot07_production_controls/__init__.py", line 1, in <module>
+    from .production_control_engine import ProductionControlEngine
+  File "/home/user/nova-civilizational-architecture/src/nova/slots/slot07_production_controls/production_control_engine.py", line 10, in <module>
+    from config.feature_flags import get_production_controls_config
+ModuleNotFoundError: No module named 'config.feature_flags'; 'config' is not a package
+WARNING:root:python-dotenv not installed — skipping .env loading.
+2025-11-13 16:44:05,541 - SLOT2-INFO - ΔTHRESH Processor v1.0.0 initialized
+INFO:slot2_deltathresh:ΔTHRESH Processor v1.0.0 initialized
+2025-11-13 16:44:05,541 - SLOT2-INFO - Operational Mode: stable_lock
+INFO:slot2_deltathresh:Operational Mode: stable_lock
+2025-11-13 16:44:05,541 - SLOT2-INFO - Processing Mode: hybrid_processing
+INFO:slot2_deltathresh:Processing Mode: hybrid_processing

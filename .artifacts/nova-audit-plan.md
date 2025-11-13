@@ -97,3 +97,44 @@ diff requirements.txt .artifacts/audit_installed.txt > .artifacts/audit_dep_drif
 ```
 
 **Output**: CVE findings, version drift
+
+---
+
+### 1.4 Import Cycle Detection
+
+**Goal**: Find circular imports (like the orchestrator.app issue we just fixed)
+
+**Commands**:
+```bash
+# Install pydeps
+pip install pydeps
+
+# Generate dependency graph (will show cycles)
+pydeps src/nova --max-bacon=2 --cluster --show-cycles \
+  -o .artifacts/audit_import_cycles.svg 2>&1 | grep -i cycle || echo "No cycles detected"
+
+# Manual check with Python
+python -c "
+import sys
+sys.path.insert(0, 'src')
+sys.path.insert(0, 'orchestrator')
+import importlib
+import pkgutil
+
+def find_cycles(package_name):
+    try:
+        pkg = importlib.import_module(package_name)
+        for importer, modname, ispkg in pkgutil.walk_packages(pkg.__path__, pkg.__name__ + '.'):
+            try:
+                importlib.import_module(modname)
+            except ImportError as e:
+                if 'circular' in str(e).lower():
+                    print(f'Cycle: {modname} - {e}')
+    except Exception as e:
+        print(f'Error scanning {package_name}: {e}')
+
+find_cycles('nova')
+" > .artifacts/audit_import_cycles.txt 2>&1
+```
+
+**Output**: List of circular import risks
