@@ -178,3 +178,23 @@ for var, info in sorted(flags.items()):
 ```
 
 **Output**: `.artifacts/audit_config_inventory.md` - Full flag inventory
+
+---
+
+### 2.2 Threshold Review
+
+**Goal**: Validate all hardcoded thresholds have rationale
+
+**Files to audit**:
+- `src/nova/slots/slot07_production_controls/wisdom_backpressure.py` - Job caps (16/6/2), threshold (0.03)
+- `src/nova/governor/adaptive_wisdom_governor.py` - Learning rates, stability margins
+- `orchestrator/federation_remediator.py` - Backoff intervals
+- All `rules.yaml` files - Reflex thresholds
+
+**Questions for each threshold**:
+1. What happens if doubled? Halved?
+2. Is it configurable via env var?
+3. Is there a Prometheus metric for it?
+4. Is it documented?
+
+**Output**: `.artifacts/audit_thresholds.md` - Threshold inventory with risk assessment
