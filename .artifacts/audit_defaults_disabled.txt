@@ -1,0 +1,42 @@
+src/nova/config/flags.py:41:    peers_str = os.getenv("NOVA_FED_MOCK_PEERS", "0")
+src/nova/slots/slot03_emotional_matrix/emotional_matrix_engine.py:95:        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+src/nova/slots/slot09_distortion_protection/ids_policy.py:13:    if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+src/nova/slots/slot09_distortion_protection/health.py:119:            shared_hash_enabled = os.getenv("NOVA_USE_SHARED_HASH", "0") == "1"
+src/nova/slots/slot02_deltathresh/plugin_meta_lens_addition.py:9:    if os.getenv("NOVA_ENABLE_META_LENS", "0") not in ("1", "true", "TRUE"):
+src/nova/slots/slot02_deltathresh/plugin_meta_lens_addition.py:24:        strict_validation = os.getenv("META_LENS_STRICT_VALIDATION", "0") in ("1", "true", "TRUE")
+src/nova/slots/slot02_deltathresh/plugin_meta_lens_addition.py:79:        enforce_real = os.getenv("NOVA_META_LENS_TEST_ENFORCE_REAL", "0") in ("1", "true", "TRUE")
+src/nova/slots/slot08_memory_lock/core/repair_planner.py:40:        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+src/nova/slots/slot04_tri/health.py:91:        tri_link_enabled = os.getenv("NOVA_ENABLE_TRI_LINK", "0") == "1"
+src/nova/slots/slot04_tri/core/tri_engine.py:101:        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+src/nova/slots/slot10_civilizational_deployment/health.py:157:            shared_hash_enabled = os.getenv("NOVA_USE_SHARED_HASH", "0") == "1"
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py:146:        if os.getenv("NOVA_LIGHTCLOCK_GATING", "1") == "0" or gate_result.phase_lock_value is None:
+src/nova/slots/slot10_civilizational_deployment/core/factory.py:83:    if os.getenv("NOVA_LIGHTCLOCK_GATING", "1") == "0":
+src/nova/slots/slot07_production_controls/production_control_engine.py:192:        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "0") == "1":
+src/nova/slots/slot07_production_controls/production_control_engine.py:232:        if os.getenv("NOVA_WISDOM_BACKPRESSURE_ENABLED", "0") == "1":
+src/nova/slots/slot07_production_controls/production_control_engine.py:605:        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+src/nova/slots/slot05_constellation/constellation_engine.py:36:        if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
+orchestrator/federation_client.py:92:    return os.getenv("NOVA_FED_FORCE_ERRORS", "0").strip() == "1"
+orchestrator/semantic_creativity.py:675:    early_stop_val = os.getenv("NOVA_CREATIVITY_EARLY_STOP", "0")
+orchestrator/semantic_creativity.py:676:    two_phase_val = os.getenv("NOVA_CREATIVITY_TWO_PHASE", "0")
+orchestrator/semantic_creativity.py:677:    bnb_val = os.getenv("NOVA_CREATIVITY_BNB", "0")
+orchestrator/unlearn_weighting.py:163:    if os.getenv("NOVA_UNLEARN_ANOMALY", "0") != "1":
+orchestrator/unlearn_weighting.py:183:    if os.getenv("NOVA_UNLEARN_ANOMALY", "0") != "1":
+orchestrator/flow_fabric_init.py:122:if __name__ != "__main__" and os.getenv("NOVA_FLOW_FABRIC_LAZY_INIT", "1") == "0":
+orchestrator/health_pulse.py:53:        enabled = os.getenv("NOVA_ENABLE_META_LENS", "0") in ("1", "true", "TRUE")
+orchestrator/arc.py:30:    return os.getenv("NOVA_ARC_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+orchestrator/app.py:123:                if update_anomaly_inputs and os.getenv("NOVA_UNLEARN_ANOMALY", "0") == "1":
+orchestrator/app.py:175:        if os.getenv("NOVA_UNLEARN_CANARY", "0") != "1":
+orchestrator/app.py:350:        peer_sync_enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
+orchestrator/router/anr.py:42:        self.enabled = os.getenv("NOVA_ANR_ENABLED", "0") == "1"  # keep 0 for 5.0 shadow
+orchestrator/router/anr.py:164:        if os.getenv("NOVA_ANR_KILL", "0") == "1":
+orchestrator/prometheus_metrics.py:464:        canary_enabled_gauge.set(1.0 if _os.getenv("NOVA_UNLEARN_CANARY", "0") == "1" else 0.0)
+orchestrator/reflection.py:115:        "NOVA_ENABLE_PROMETHEUS": os.getenv("NOVA_ENABLE_PROMETHEUS", "0"),
+orchestrator/reflection.py:116:        "NOVA_ANR_ENABLED": os.getenv("NOVA_ANR_ENABLED", "0"),
+orchestrator/reflection.py:118:        "NOVA_ANR_LEARN_SHADOW": os.getenv("NOVA_ANR_LEARN_SHADOW", "0"),
+orchestrator/reflection.py:119:        "NOVA_ANR_STRICT_ON_ANOMALY": os.getenv("NOVA_ANR_STRICT_ON_ANOMALY", "0"),
+orchestrator/reflection.py:120:        "NOVA_ENABLE_PROBABILISTIC_CONTRACTS": os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "0"),
+orchestrator/reflection.py:122:        "NOVA_ENABLE_META_LENS": os.getenv("NOVA_ENABLE_META_LENS", "0"),
+orchestrator/reflection.py:123:        "NOVA_UNLEARN_ANOMALY": os.getenv("NOVA_UNLEARN_ANOMALY", "0"),
+orchestrator/reflection.py:223:            if os.getenv("NOVA_CREATIVITY_DEBUG", "0") == "1":
+orchestrator/federation_health.py:111:        sync_enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
+orchestrator/federation_synchronizer.py:185:        self._enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
