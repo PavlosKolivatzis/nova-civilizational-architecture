@@ -1,0 +1,132 @@
+src/nova/sim/agents.py:325:        # Final evaluation
+src/nova/sim/agents.py:326:        final_results = self._evaluate_simulation()
+src/nova/sim/agents.py:436:        # TRI and cultural evaluation
+src/nova/sim/agents.py:464:    def _evaluate_simulation(self) -> Dict[str, Any]:
+src/nova/sim/agents.py:465:        """Final simulation evaluation"""
+src/nova/quantum/contracts.py:13:    """Description of a quantum execution request."""
+src/nova/quantum/contracts.py:24:    """Minimal execution result payload."""
+src/nova/ledger/store_postgres.py:170:                result = await session.execute(
+src/nova/ledger/store_postgres.py:296:                result = await session.execute(
+src/nova/ledger/store_postgres.py:354:            result = await session.execute(
+src/nova/ledger/store_postgres.py:394:                result = await session.execute(
+src/nova/ledger/store_postgres.py:425:                result = await session.execute(
+src/nova/ledger/store_postgres.py:457:                result = await session.execute(text("SELECT COUNT(*) FROM ledger_records"))
+src/nova/ledger/store_postgres.py:461:                result = await session.execute(text("SELECT COUNT(DISTINCT anchor_id) FROM ledger_records"))
+src/nova/ledger/store_postgres.py:465:                result = await session.execute(text("SELECT COUNT(*) FROM ledger_checkpoints"))
+src/nova/ledger/store_postgres.py:482:            await session.execute(
+src/nova/ledger/store_postgres.py:508:            await session.execute(
+src/nova/ledger/store_postgres.py:529:                result = await session.execute(
+src/nova/ledger/store_postgres.py:559:                result = await session.execute(
+src/nova/ledger/store_postgres.py:582:                prev_result = await session.execute(
+src/nova/ledger/store_postgres.py:616:                await session.execute(
+src/nova/ledger/store_postgres.py:654:                result = await session.execute(
+src/nova/ledger/store_postgres.py:700:                result = await session.execute(
+src/nova/ledger/store_postgres.py:720:                result = await session.execute(text("SELECT COUNT(*) FROM ledger_records"))
+src/nova/metrics/quantum.py:13:    "Total quantum entropy jobs executed",
+src/nova/arc/reflection_engine.py:31:    # Fallback for direct execution
+src/nova/slots/slot01_truth_anchor/README.md:28:- **`TruthAnchorEngine`**: Core anchor storage and retrieval with persistence
+src/nova/slots/slot06_cultural_synthesis/README.md:256:- **Context Retrieval**: Cached system context with 30s TTL
+src/nova/slots/slot06_cultural_synthesis/README.md:261:- **Semantic Mirror**: Context retrieval timing and cache efficiency
+src/nova/slots/slot02_deltathresh/README.md:217:- **Threat Assessment**: Multi-layer security evaluation
+src/nova/slots/slot02_deltathresh/enhanced/tri_calculator.py:16:        content: Input text to evaluate.
+src/nova/slots/slot04_tri/health.py:40:    "truth_evaluation",
+src/nova/slots/slot04_tri/README.md:6:Truth Resonance Index calculation engine for content evaluation with adaptive recovery and flow mesh integration. **Central node in Nova's active flow mesh architecture.**
+src/nova/slots/slot04_tri/README.md:11:- **TRI Calculation**: Real-time Truth Resonance Index scoring for content evaluation
+src/nova/slots/slot04_tri/README.md:230:score = engine.calculate("Content to evaluate")
+src/nova/slots/slot04_tri/meta.yaml:4:description: Truth Resonance Index calculation engine for content evaluation
+src/nova/slots/slot10_civilizational_deployment/tests/test_backout.py:25:    assert isinstance(getattr(result, "execution_time_s", 0.0), float)
+src/nova/slots/slot10_civilizational_deployment/tests/test_gates.py:15:    res = gk.evaluate_deploy_gate(m["slot08"], m["slot04"])
+src/nova/slots/slot10_civilizational_deployment/tests/test_gates.py:23:    res = gk.evaluate_deploy_gate(m["slot08"], m["slot04"])
+src/nova/slots/slot10_civilizational_deployment/tests/test_slot10_lightclock_gate.py:11:    res = g.evaluate_deploy_gate(slot08={}, slot04={"tri_score": 0.8})
+src/nova/slots/slot10_civilizational_deployment/tests/test_slot10_lightclock_gate.py:19:    res = g.evaluate_deploy_gate(slot08={}, slot04={"tri_score": 0.5})
+src/nova/slots/slot10_civilizational_deployment/tests/test_slot10_lightclock_gate.py:27:    res = g.evaluate_deploy_gate(slot08={}, slot04={"tri_score": 0.8})
+src/nova/slots/slot10_civilizational_deployment/tests/test_slot10_lightclock_gate.py:34:    res = g.evaluate_deploy_gate(slot08={}, slot04={"tri_score": 0.8})
+src/nova/slots/slot10_civilizational_deployment/tests/test_canary.py:29:        out = ctrl.evaluate_stage(current_green(), s8_ok(), s4_ok())
+src/nova/slots/slot10_civilizational_deployment/tests/test_canary.py:40:    out = ctrl.evaluate_stage(current_bad(), s8_ok(), s4_ok())
+src/nova/slots/slot10_civilizational_deployment/tests/test_acceptance.py:32:    assert rb.execution_time_s <= policy.rollback_timeout_s
+src/nova/slots/slot10_civilizational_deployment/tests/test_e2e_rollback.py:75:    assert rollback_result.execution_time_s <= policy.rollback_timeout_s
+src/nova/slots/slot10_civilizational_deployment/tests/test_e2e_rollback.py:139:    assert result.execution_time_s > policy.rollback_timeout_s
+src/nova/slots/slot10_civilizational_deployment/README.md:93:    def execute_canary_stage(self, stage_percentage: float) -> CanaryResult:
+src/nova/slots/slot10_civilizational_deployment/README.md:199:    result = canary.execute_canary_stage(stage_pct)
+src/nova/slots/slot10_civilizational_deployment/README.md:333:- **AsyncIO**: Asynchronous deployment pipeline execution
+src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py:16:    evaluation_time_s: float = 0.0
+src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py:27:    def evaluate_deploy_gate(self, slot08: Optional[Dict[str, Any]] = None, slot04: Optional[Dict[str, Any]] = None) -> GateResult:
+src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py:76:        evaluation_time = time.time() - start_time
+src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py:79:            logger.warning("Gate HOLD: %s (eval_time=%.3fs)", fails, evaluation_time)
+src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py:81:            logger.debug("Gate PASS (eval_time=%.3fs)", evaluation_time)
+src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py:86:            evaluation_time_s=evaluation_time,
+src/nova/slots/slot10_civilizational_deployment/core/snapshot_backout.py:25:    execution_time_s: float
+src/nova/slots/slot10_civilizational_deployment/core/snapshot_backout.py:69:                execution_time_s=0.0,
+src/nova/slots/slot10_civilizational_deployment/core/snapshot_backout.py:100:            execution_time_s=dt,
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py:50:    def evaluate_stage(
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py:56:        """Enhanced stage evaluation with Light-Clock coherence considerations."""
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py:69:        lightclock_gate_result = self.lightclock_gatekeeper.evaluate_deploy_gate(slot08_metrics, slot04_metrics)
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py:272:        """Light-Clock enhanced tick with coherence-aware evaluation."""
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py:278:        # Make plain dicts for evaluator
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_canary.py:298:        result = self.evaluate_stage(current, slot08, slot04)
+src/nova/slots/slot10_civilizational_deployment/core/metrics.py:163:            "# HELP slot10_gate_status Gate evaluation status (1=pass, 0=fail)",
+src/nova/slots/slot10_civilizational_deployment/core/factory.py:90:        # Get dummy gate evaluation to see current state
+src/nova/slots/slot10_civilizational_deployment/core/factory.py:91:        dummy_result = gatekeeper.evaluate_deploy_gate({}, {})
+src/nova/slots/slot10_civilizational_deployment/core/canary.py:103:    # Internal evaluator if the caller passes metrics explicitly
+src/nova/slots/slot10_civilizational_deployment/core/canary.py:104:    def evaluate_stage(
+src/nova/slots/slot10_civilizational_deployment/core/canary.py:120:        gate_result = self.gatekeeper.evaluate_deploy_gate(slot08_metrics, slot04_metrics)
+src/nova/slots/slot10_civilizational_deployment/core/canary.py:283:        """Pull live health + metrics, evaluate current stage, and act."""
+src/nova/slots/slot10_civilizational_deployment/core/canary.py:289:        # Make plain dicts for evaluator
+src/nova/slots/slot10_civilizational_deployment/core/canary.py:307:        result = self.evaluate_stage(current, slot08, slot04)
+src/nova/slots/slot10_civilizational_deployment/core/policy.py:14:    """Baseline chaos drills executed during weekly exercises."""
+src/nova/slots/slot10_civilizational_deployment/core/policy.py:31:    rollback_timeout_s: float = 10.0  # Max time for rollback execution
+src/nova/slots/slot10_civilizational_deployment/core/lightclock_gatekeeper.py:112:    def evaluate_deploy_gate(self, slot08: dict, slot04: dict) -> LightClockGateResult:
+src/nova/slots/slot04_tri_engine/slot04_tri_engine.meta.yaml:7:description: "Truth Risk Index calculation engine for content evaluation"
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:4:1. Threat detection → 2. Quarantine → 3. Repair planning → 4. Recovery execution
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:16:# Handle imports for both pytest and direct execution
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:27:    # Add the slot08 directory to the path for pytest execution from repo root
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:118:                        await self._execute_autonomous_repair(health, threats)
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:214:    async def _execute_autonomous_repair(self, health: HealthMetrics, threats: list[IDSEvent]):
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:291:            print(f"Repair execution failed: {e}")
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:388:        print(f"  • Recoveries executed: {metrics.get('total_recoveries', 0)}")
+src/nova/slots/slot08_memory_lock/tests/test_self_healing_integration.py:538:        sys.executable, "-m", "pytest", __file__, "-v", "--tb=short", "-s"
+src/nova/slots/slot08_memory_lock/tests/test_processual_capabilities.py:17:# Handle imports for both pytest and direct execution
+src/nova/slots/slot08_memory_lock/tests/test_processual_capabilities.py:28:    # Add the slot08 directory to the path for pytest execution from repo root
+src/nova/slots/slot08_memory_lock/tests/test_processual_capabilities.py:389:        sys.executable, "-m", "pytest", __file__, "-v", "--tb=short"
+src/nova/slots/slot08_memory_lock/tests/test_entropy_monitor_small_samples.py:6:# Handle imports for both pytest and direct execution
+src/nova/slots/slot08_memory_lock/README.md:75:    repair_options = self._evaluate_repair_options(available_snapshots, corruption_analysis)
+src/nova/slots/slot08_memory_lock/ci/validate_processual.py:45:                sys.executable, "-m", "pytest",
+src/nova/slots/slot08_memory_lock/core/metrics.py:114:            "deploy_gate_status": self._evaluate_deploy_gate()
+src/nova/slots/slot08_memory_lock/core/metrics.py:117:    def _evaluate_deploy_gate(self) -> Dict[str, Any]:
+src/nova/slots/slot08_memory_lock/core/quarantine.py:214:                recovery_success = self._execute_recovery_procedures(context)
+src/nova/slots/slot08_memory_lock/core/quarantine.py:260:    def _execute_recovery_procedures(self, context: Dict[str, Any]) -> bool:
+src/nova/slots/slot08_memory_lock/core/repair_planner.py:91:        repair_options = self._evaluate_repair_options(available_snapshots, corruption_analysis)
+src/nova/slots/slot08_memory_lock/core/repair_planner.py:191:    def _evaluate_repair_options(self, available_snapshots: List[SnapshotMeta],
+src/nova/slots/slot08_memory_lock/ids/detectors.py:9:# Handle imports for both pytest and direct execution
+src/nova/slots/slot03_emotional_matrix/README.md:76:# Cross-slot escalation execution (escalation.py:95-107)
+src/nova/slots/slot03_emotional_matrix/emotional_matrix_engine.py:23:    # default policy hooks executed after analysis
+src/nova/slots/slot09_distortion_protection/SLOT 9_ INFRASTRUCTURE-AWARE DISTORTION DETECTION.txt:623:            'execution_timeline': self._calculate_timeline(urgency, infrastructure_level),
+src/nova/slots/slot09_distortion_protection/hybrid_api.py:553:            policy_future = loop.run_in_executor(
+src/nova/slots/slot05_constellation/README.md:15:- **Layer Analysis**: Multi-layer content evaluation and positioning
+src/nova/slots/slot05_constellation/README.md:25:- **`LayerAnalyzer`**: Content layer evaluation and scoring (127 lines)
+src/nova/slots/slot05_constellation/README.md:201:- **Memory Usage**: Optimized coordinate storage and retrieval
+src/nova/slots/slot05_constellation/README.md:326:- **Layer Analysis**: Content evaluation across multiple spatial layers
+src/runtime/memory_ethics_api.py:16:    def execute_command(command: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+orchestrator/simulate_agents.py:292:        # Final evaluation
+orchestrator/simulate_agents.py:293:        final_results = simulator._evaluate_simulation()
+orchestrator/bus.py:22:    handler execution time and a total error counter. Errors include
+orchestrator/router/routes.py:1:"""Slot execution route definitions for Nova ANR."""
+orchestrator/router/routes.py:19:def _tri_eval(strict: bool = False, **kw):
+orchestrator/router/routes.py:20:    from orchestrator.adapters.slot4_tri import evaluate as tri_evaluate
+orchestrator/router/routes.py:21:    return tri_evaluate(strict=strict, **kw)
+orchestrator/router/routes.py:44:            Step("tri.evaluate", _tri_eval, {"strict": False, "ctx": ctx}),
+orchestrator/router/routes.py:57:            Step("tri.evaluate", _tri_eval, {"strict": True, "ctx": ctx}),
+orchestrator/router/routes.py:69:            Step("tri.evaluate", _tri_eval, {"strict": False, "ctx": ctx}),
+orchestrator/router/routes.py:77:    """Guardrail route: Explainable stop with no slot execution."""
+orchestrator/router/routes.py:85:            Step("tri.evaluate", _tri_eval, {"strict": True, "ctx": ctx}),
+orchestrator/router/anr.py:228:        """Convert decision to concrete execution plan."""
+orchestrator/federation_remediator.py:84:                self._evaluate()
+orchestrator/federation_remediator.py:86:                log.exception("Federation remediator evaluation failed")
+orchestrator/federation_remediator.py:89:    def _evaluate(self) -> None:
+orchestrator/plugins/filepython.py:10:    """Load and execute a function from a Python file.
+orchestrator/plugins/filepython.py:15:    version is executed.
+orchestrator/plugins/filepython.py:29:        spec.loader.exec_module(module)
+orchestrator/reflection.py:256:    # Direct CLI execution
+orchestrator/health_pulse.py:104:                sys.executable, "-m", "pytest", test_path, "-q", "--tb=no"
+orchestrator/contracts/emitter.py:77:    Returns number of handlers successfully scheduled/executed.
+orchestrator/contracts/emitter.py:89:                    # no loop running; fall back to synchronous execution
