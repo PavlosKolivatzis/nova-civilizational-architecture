@@ -75,3 +75,25 @@ with open('.artifacts/audit_coverage.json') as f:
 **Output**:
 - `.artifacts/audit_dead_code.txt` - Unused code candidates
 - `.artifacts/audit_low_coverage.txt` - Files needing more tests
+
+---
+
+### 1.3 Dependency Audit
+
+**Goal**: Find vulnerable dependencies, outdated packages
+
+**Commands**:
+```bash
+# Audit dependencies for known vulnerabilities
+pip install pip-audit
+pip-audit --format json > .artifacts/audit_dependencies.json
+
+# Check for outdated packages
+pip list --outdated --format json > .artifacts/audit_outdated.json
+
+# Verify requirements.txt matches installed
+pip freeze > .artifacts/audit_installed.txt
+diff requirements.txt .artifacts/audit_installed.txt > .artifacts/audit_dep_drift.txt || true
+```
+
+**Output**: CVE findings, version drift
