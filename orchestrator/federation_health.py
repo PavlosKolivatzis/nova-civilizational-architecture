@@ -104,13 +104,14 @@ def get_peer_health() -> Dict[str, object]:
         "novelty": 0.0,
     }
     try:
-        import orchestrator.app as app_module
+        from orchestrator.peer_store_singleton import get_peer_store
         from orchestrator import adaptive_wisdom_poller
         from nova.wisdom.generativity_context import ContextState
 
         sync_enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
-        if sync_enabled and hasattr(app_module, '_peer_store') and app_module._peer_store:
-            live_peers = app_module._peer_store.get_live_peers(max_age_seconds=90)
+        peer_store = get_peer_store()
+        if sync_enabled and peer_store:
+            live_peers = peer_store.get_live_peers(max_age_seconds=90)
             state = adaptive_wisdom_poller.get_state()
 
             # Get context state
