@@ -198,3 +198,25 @@ for var, info in sorted(flags.items()):
 4. Is it documented?
 
 **Output**: `.artifacts/audit_thresholds.md` - Threshold inventory with risk assessment
+
+---
+
+### 2.3 Default State Audit
+
+**Goal**: Verify safe defaults (fail-closed, not fail-open)
+
+**Check**:
+```bash
+# Find all default="1" (enabled by default - risky)
+grep -rn 'getenv.*default.*"1"' src/ orchestrator/ > .artifacts/audit_defaults_enabled.txt
+
+# Find all default="0" (disabled by default - safe)
+grep -rn 'getenv.*default.*"0"' src/ orchestrator/ > .artifacts/audit_defaults_disabled.txt
+
+# Count ratio
+wc -l .artifacts/audit_defaults_*.txt
+```
+
+**Principle**: New features should default OFF, require explicit enable
+
+**Output**: List of features enabled by default (review for safety)
