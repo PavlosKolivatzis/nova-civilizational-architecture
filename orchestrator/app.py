@@ -46,14 +46,19 @@ else:
 
 # Optional web framework (avoid import errors in environments without FastAPI)
 try:  # pragma: no cover - absence of FastAPI is acceptable
-    from fastapi import FastAPI, Response, status, HTTPException
+    from fastapi import FastAPI, Response, status, HTTPException, Request
     from fastapi.responses import JSONResponse
     from api.health_config import router as health_router
     from orchestrator.reflection import router as reflection_router
+    # Phase 17: Rate limiting for DoS protection (CR-3)
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
     FastAPI = None  # type: ignore[assignment]
     health_router = None  # type: ignore[assignment]
     reflection_router = None  # type: ignore[assignment]
+    Limiter = None  # type: ignore[assignment]
 # Monitor, bus and router are created once and reused across requests
 monitor = PerformanceMonitor()
 bus = EventBus(monitor=monitor)
@@ -445,6 +450,19 @@ if FastAPI is not None:
             await _shutdown()
 
     app = FastAPI(lifespan=lifespan)
+
+    # Phase 17: Rate limiting for DoS protection (CR-3)
+    if Limiter is not None:
+        limiter = Limiter(
+            key_func=get_remote_address,
+            default_limits=["1000/hour", "100/minute"],  # Global baseline
+            enabled=os.getenv("NOVA_RATE_LIMITING_ENABLED", "1") == "1"  # Default ON
+        )
+        app.state.limiter = limiter
+        app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    else:
+        limiter = None
+
     if health_router is not None:
         app.include_router(health_router)
     if reflection_router is not None:
@@ -601,7 +619,8 @@ if FastAPI is not None:
 
     # Phase 10: FEP (Federated Ethical Protocol) endpoints
     @app.post("/phase10/fep/proposal")
-    async def fep_submit_proposal(payload: dict):
+    @limiter.limit("10/minute") if limiter else lambda f: f  # CR-3: DoS protection
+    async def fep_submit_proposal(request: Request, payload: dict):
         """Submit ethical decision proposal for federated voting."""
         from orchestrator.phase10_manager import get_phase10_manager
         mgr = get_phase10_manager()
@@ -613,7 +632,8 @@ if FastAPI is not None:
         return result
 
     @app.post("/phase10/fep/vote")
-    async def fep_vote(payload: dict):
+    @limiter.limit("100/hour") if limiter else lambda f: f  # CR-3: DoS protection
+    async def fep_vote(request: Request, payload: dict):
         """Cast vote on FEP proposal."""
         from orchestrator.phase10_manager import get_phase10_manager
         mgr = get_phase10_manager()
@@ -628,7 +648,8 @@ if FastAPI is not None:
         return result
 
     @app.post("/phase10/fep/finalize")
-    async def fep_finalize(payload: dict):
+    @limiter.limit("1/minute") if limiter else lambda f: f  # CR-3: DoS protection
+    async def fep_finalize(request: Request, payload: dict):
         """Finalize FEP decision and record in PCR."""
         from orchestrator.phase10_manager import get_phase10_manager
         mgr = get_phase10_manager()
@@ -676,7 +697,8 @@ if FastAPI is not None:
         }
 
     @app.post("/ops/expire-now")
-    async def force_expire():
+    @limiter.limit("1/10minutes") if limiter else lambda f: f  # CR-3: DoS protection
+    async def force_expire(request: Request):
         """Force semantic mirror cleanup for testing."""
         try:
             from types import SimpleNamespace
