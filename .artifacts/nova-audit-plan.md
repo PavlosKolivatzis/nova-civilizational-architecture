@@ -138,3 +138,43 @@ find_cycles('nova')
 ```
 
 **Output**: List of circular import risks
+
+---
+
+## Phase 2: Configuration Audit
+
+### 2.1 Environment Variable Documentation
+
+**Goal**: Document every NOVA_* flag with default, purpose, impact
+
+**Method**: Generate inventory table
+
+**Script**:
+```python
+# .artifacts/audit_config_inventory.py
+import os
+import re
+from pathlib import Path
+
+flags = {}
+
+# Scan all Python files
+for fpath in Path('src').rglob('*.py'):
+    content = fpath.read_text(encoding='utf-8', errors='ignore')
+    matches = re.finditer(r'os\.getenv\(["\']([A-Z_]+)["\']\s*,\s*["\']([^"\']+)["\']', content)
+    for m in matches:
+        var, default = m.groups()
+        if var.startswith('NOVA_'):
+            if var not in flags:
+                flags[var] = {'default': default, 'files': []}
+            flags[var]['files'].append(str(fpath))
+
+# Output as markdown table
+print("| Flag | Default | Files | Documented? |")
+print("|------|---------|-------|-------------|")
+for var, info in sorted(flags.items()):
+    files = ', '.join(set(info['files']))
+    print(f"| {var} | `{info['default']}` | {files[:50]}... | ❌ |")
+```
+
+**Output**: `.artifacts/audit_config_inventory.md` - Full flag inventory
