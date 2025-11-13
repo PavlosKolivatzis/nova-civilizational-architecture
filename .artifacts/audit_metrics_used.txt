@@ -1,0 +1,15 @@
+nova_federation_peer_last_seen
+nova_ledger_federation_gap
+nova_ledger_federation_gap_abs
+nova_ledger_height
+nova_lightclock_phase_lock
+nova_phase10_cgc
+nova_phase10_eai
+nova_phase10_pis
+nova_slot6_p95_residual_risk
+nova_slot_phase_lock_belief_mean
+nova_slot_phase_lock_belief_variance
+nova_tri_coherence
+nova_wisdom_context
+nova_wisdom_novelty
+nova_wisdom_peer_count
