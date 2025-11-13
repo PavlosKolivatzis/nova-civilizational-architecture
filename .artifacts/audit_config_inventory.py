@@ -16,19 +16,19 @@ from typing import Dict, List, Set, Tuple
 
 # Patterns to match various os.getenv styles
 GETENV_PATTERNS = [
-    # Pattern 1: os.getenv("VAR", "default")
+    # Pattern 1: os.getenv with string default
     r'os\.getenv\(\s*["\']([A-Z_]+)["\']\s*,\s*["\']([^"\']*)["\']',
-    # Pattern 2: os.getenv("VAR", default_value)
+    # Pattern 2: os.getenv with variable default
     r'os\.getenv\(\s*["\']([A-Z_]+)["\']\s*,\s*([^)]+?)\)',
-    # Pattern 3: os.getenv("VAR") without default
+    # Pattern 3: os.getenv without default
     r'os\.getenv\(\s*["\']([A-Z_]+)["\']',
-    # Pattern 4: os.environ.get("VAR", "default")
+    # Pattern 4: os.environ.get with string default
     r'os\.environ\.get\(\s*["\']([A-Z_]+)["\']\s*,\s*["\']([^"\']*)["\']',
-    # Pattern 5: os.environ.get("VAR", default_value)
+    # Pattern 5: os.environ.get with variable default
     r'os\.environ\.get\(\s*["\']([A-Z_]+)["\']\s*,\s*([^)]+?)\)',
-    # Pattern 6: os.environ.get("VAR")
+    # Pattern 6: os.environ.get without default
     r'os\.environ\.get\(\s*["\']([A-Z_]+)["\']',
-    # Pattern 7: os.environ["VAR"]
+    # Pattern 7: os.environ dict access
     r'os\.environ\[\s*["\']([A-Z_]+)["\']\s*\]',
 ]
 
