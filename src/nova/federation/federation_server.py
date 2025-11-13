@@ -7,6 +7,7 @@ import time
 from collections import defaultdict, deque
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from http import HTTPStatus
 from typing import Any, Dict, Iterable, Optional, Protocol, Sequence
 
 from pydantic import BaseModel, ValidationError
@@ -32,6 +33,20 @@ from nova.federation.schemas import (
 )
 from nova.federation.trust_model import compute_gradient_score
 from nova.metrics import federation as federation_metrics
+
+HTTP_413_CONTENT_TOO_LARGE = HTTPStatus.REQUEST_ENTITY_TOO_LARGE.value
+HTTP_422_UNPROCESSABLE_CONTENT = HTTPStatus.UNPROCESSABLE_ENTITY.value
+if 'status' in globals():
+    HTTP_413_CONTENT_TOO_LARGE = getattr(
+        status,
+        "HTTP_413_CONTENT_TOO_LARGE",
+        HTTP_413_CONTENT_TOO_LARGE,
+    )
+    HTTP_422_UNPROCESSABLE_CONTENT = getattr(
+        status,
+        "HTTP_422_UNPROCESSABLE_CONTENT",
+        HTTP_422_UNPROCESSABLE_CONTENT,
+    )
 
 # Phase 15-9: Import for continuity metric calculation
 try:
@@ -147,7 +162,7 @@ def build_router(
                 # (Could be made fractional: 1.0 - (len(errors) / len(chain)))
                 return 0.0
 
-        except Exception as e:
+        except Exception:
             # Verification failed (ledger error, etc.): default to legacy behavior
             # Log error but don't fail the federation request
             return 1.0
@@ -313,12 +328,12 @@ def build_router(
             try:
                 range_request = RangeProofRequest(**payload)
             except ValidationError:
-                return _error("invalid_payload", status.HTTP_422_UNPROCESSABLE_ENTITY, "Invalid range proof payload")
+                return _error("invalid_payload", HTTP_422_UNPROCESSABLE_CONTENT, "Invalid range proof payload")
 
             if range_request.max > range_limit:
                 return _error(
                     "range_too_large",
-                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    HTTP_422_UNPROCESSABLE_CONTENT,
                     "Requested range exceeds limit",
                 )
 
@@ -337,7 +352,7 @@ def build_router(
             if size_bytes > chunk_bytes_limit:
                 return _error(
                     "range_payload_too_large",
-                    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    HTTP_413_CONTENT_TOO_LARGE,
                     "Range proof payload exceeds configured limit",
                 )
 
@@ -388,7 +403,7 @@ def build_router(
 
         content_length = request.headers.get("content-length")
         if content_length and content_length.isdigit() and int(content_length) > body_limit:
-            return _error("too_large", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Body exceeds configured limit")
+            return _error("too_large", HTTP_413_CONTENT_TOO_LARGE, "Body exceeds configured limit")
 
         try:
             payload = await request.json()
@@ -398,11 +413,11 @@ def build_router(
         try:
             envelope = CheckpointEnvelope(**payload)
         except ValidationError:
-            return _error("invalid_payload", status.HTTP_422_UNPROCESSABLE_ENTITY, "Invalid checkpoint payload")
+            return _error("invalid_payload", HTTP_422_UNPROCESSABLE_CONTENT, "Invalid checkpoint payload")
 
         ok_skew, skew_reason = _check_clock_skew(envelope)
         if not ok_skew:
-            return _error(skew_reason or "skew", status.HTTP_422_UNPROCESSABLE_ENTITY, f"Clock skew: {skew_reason}")
+            return _error(skew_reason or "skew", HTTP_422_UNPROCESSABLE_CONTENT, f"Clock skew: {skew_reason}")
 
         peer = _lookup_peer(envelope.producer)
         if peer is None:
@@ -468,7 +483,7 @@ def build_router(
         try:
             envelope = CheckpointEnvelope(**payload)
         except ValidationError:
-            return _error("invalid_payload", status.HTTP_422_UNPROCESSABLE_ENTITY, "Invalid checkpoint payload")
+            return _error("invalid_payload", HTTP_422_UNPROCESSABLE_CONTENT, "Invalid checkpoint payload")
 
         peer = _lookup_peer(envelope.producer)
         peer_id = peer.id if peer else "unknown"

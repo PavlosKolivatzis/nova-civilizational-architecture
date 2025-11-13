@@ -5,7 +5,9 @@ Full DP-noise injection requires crypto library (Phase 11+ scope).
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
+import hashlib
+import json
 import random
 
 
@@ -52,7 +54,6 @@ class FederatedLearningEngine:
             }
 
         # Stub: hash gradient data (production would use actual crypto)
-        import hashlib, json
         gradient_hash = hashlib.sha256(
             json.dumps(gradient_data, sort_keys=True).encode()
         ).hexdigest()[:16]

@@ -63,7 +63,7 @@ class ManifestCache:
         entry = self._cache.get(peer_id)
         if not entry:
             return None
-        if time.time() - entry.fetched_at > self._ttl:
+        if time.time() - entry.fetched_at >= self._ttl:
             self._cache.pop(peer_id, None)
             return None
         return entry.manifest

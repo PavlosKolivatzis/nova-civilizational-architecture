@@ -40,9 +40,6 @@ class RangeQuarantineError(RangeSyncError):
     """Raised when divergence exceeds configured limit."""
 
 
-class RangeSyncer:
-    """Fetch and verify range proofs from peers, recording receipts."""
-
 def _default_manifest_cache() -> ManifestCache:
     raw = os.getenv("NOVA_FEDERATION_MANIFEST_TTL_S", "3600")
     try:

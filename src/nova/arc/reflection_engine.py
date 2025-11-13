@@ -22,8 +22,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 
-import logging
-
 try:
     from nova.math.relations_pattern import StructuralAnalyzer, SystemGraph
     from nova.logging_config import configure_logging

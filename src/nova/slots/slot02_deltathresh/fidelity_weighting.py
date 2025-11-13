@@ -80,7 +80,7 @@ class FidelityWeightingService:
                 producer="slot02",
                 version="1.0.0",
             )
-        except Exception as e:
+        except Exception:
             # Don't fail processing if ledger emission fails
             pass
 

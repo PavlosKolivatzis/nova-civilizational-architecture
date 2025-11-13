@@ -121,8 +121,6 @@ class GovernanceProposal:
         approve_count = sum(1 for v in self.votes if v.decision == GovernanceDecision.APPROVE)
         conditional_count = sum(1 for v in self.votes if v.decision == GovernanceDecision.APPROVE_WITH_CONDITIONS)
         deny_count = sum(1 for v in self.votes if v.decision == GovernanceDecision.DENY)
-        escalate_count = sum(1 for v in self.votes if v.decision == GovernanceDecision.ESCALATE)
-
         total_votes = len(self.votes)
 
         # Decision logic

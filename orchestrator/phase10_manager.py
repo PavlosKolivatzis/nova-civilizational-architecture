@@ -1,11 +1,11 @@
 """Phase 10 module manager (singleton) for orchestrator."""
 
 from typing import Optional
-from src.nova.phase10.fep import FederatedEthicalProtocol
-from src.nova.phase10.pcr import ProvenanceConsensusRegistry
-from src.nova.phase10.ag import AutonomyGovernor
-from src.nova.phase10.cig import CivilizationalIntelligenceGraph
-from src.nova.phase10.fle import FederatedLearningEngine
+from nova.phase10.fep import FederatedEthicalProtocol
+from nova.phase10.pcr import ProvenanceConsensusRegistry
+from nova.phase10.ag import AutonomyGovernor
+from nova.phase10.cig import CivilizationalIntelligenceGraph
+from nova.phase10.fle import FederatedLearningEngine
 
 
 class Phase10Manager:

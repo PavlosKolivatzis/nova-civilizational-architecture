@@ -106,7 +106,7 @@ class FederationClient:
                     continue
                 response.raise_for_status()
                 return response
-            except (httpx.TimeoutException, httpx.RequestError) as exc:
+            except (httpx.TimeoutException, httpx.RequestError):
                 if attempt >= self._retries:
                     raise
                 attempt += 1

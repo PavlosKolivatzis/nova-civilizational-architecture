@@ -132,7 +132,6 @@ class StructuralAnalyzer:
 
         # Degree matrix
         degrees = np.sum(A, axis=1)
-        D = np.diag(degrees)
 
         # Handle isolated nodes
         nonzero_degrees = degrees > 0
@@ -153,7 +152,7 @@ class StructuralAnalyzer:
             # Pad with zeros if needed
             if len(eigenvals) < k:
                 eigenvals = np.pad(eigenvals, (0, k - len(eigenvals)), 'constant')
-        except:
+        except Exception:
             # Fallback for small or problematic matrices
             eigenvals = np.zeros(k)
 

@@ -1,7 +1,7 @@
 """Tests for Autonomy Governor (AG)."""
 
 import pytest
-from src.nova.phase10.ag import BoundaryEvent, AutonomyGovernor
+from nova.phase10.ag import BoundaryEvent, AutonomyGovernor
 
 
 def test_ag_initialization():

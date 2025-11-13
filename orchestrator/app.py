@@ -13,6 +13,7 @@ import asyncio
 import logging
 import os
 import pkgutil
+import sys
 import time
 from contextlib import asynccontextmanager
 
@@ -82,12 +83,24 @@ try:  # pragma: no cover - illustrative orchestrator wiring
 except Exception:  # pragma: no cover - orchestrator runner not available
     orch = None
 
+_peer_store = None
+_peer_sync = None
+
+
+def get_peer_store():
+    """
+    Expose the current PeerStore instance (if initialized).
+
+    Deprecated: Use orchestrator.peer_store_singleton.get_peer_store() instead.
+    This remains for backward compatibility only.
+    """
+    from orchestrator.peer_store_singleton import get_peer_store as get_singleton
+    return get_singleton()
+
 if FastAPI is not None:
     _federation_metrics_thread = None
     _federation_remediator = None
     _wisdom_poller_thread = None
-    _peer_store = None
-    _peer_sync = None
 
     async def _sm_sweeper():
         interval = int(os.getenv("NOVA_SMEEP_INTERVAL", "15"))  # seconds
@@ -215,6 +228,8 @@ if FastAPI is not None:
         from nova.slots.config import get_config_manager
         await get_config_manager()
 
+        logging.getLogger("wisdom_poller").setLevel(logging.DEBUG)
+
         # --- UNLEARN_PULSE emitter wiring ---
         import os
         import json
@@ -273,6 +288,14 @@ if FastAPI is not None:
         from nova.slots.slot06_cultural_synthesis.receiver import register_slot06_receiver
         register_slot06_receiver()
 
+        # Wire Slot 7 production controls reflex bus into adaptive links
+        try:
+            from orchestrator.reflex_signals import setup_slot7_reflex_integration
+
+            setup_slot7_reflex_integration()
+        except Exception as exc:
+            logger.warning("Slot7 reflex integration skipped: %s", exc)
+
         # Phase 2: Initialize creativity governor and log config
         try:
             from orchestrator.semantic_creativity import get_creativity_governor
@@ -323,6 +346,27 @@ if FastAPI is not None:
             except Exception:
                 logger.exception("Failed to start federation metrics poller")
 
+        # Phase 16-2: Peer synchronization (before wisdom poller to ensure _peer_store available)
+        peer_sync_enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
+        if peer_sync_enabled:
+            try:
+                from orchestrator.federation_synchronizer import PeerStore, PeerSync
+
+                from orchestrator.peer_store_singleton import init_peer_store
+
+                global _peer_store, _peer_sync
+                _peer_store = PeerStore()
+                init_peer_store(_peer_store)  # Register singleton
+                _peer_sync = PeerSync(_peer_store)
+                _peer_sync.start()
+                logger.info(
+                    "Peer sync started (peers=%d, interval=%ss)",
+                    len(_peer_sync._peers),
+                    _peer_sync._interval,
+                )
+            except Exception:
+                logger.exception("Failed to start peer sync")
+
         # Adaptive wisdom governor (Phase 15-8)
         wisdom_enabled = os.getenv("NOVA_WISDOM_GOVERNOR_ENABLED", "false").strip().lower() in {
             "1",
@@ -342,24 +386,6 @@ if FastAPI is not None:
                 )
             except Exception:
                 logger.exception("Failed to start adaptive wisdom poller")
-
-        # Phase 16-2: Peer synchronization
-        peer_sync_enabled = os.getenv("NOVA_FED_SYNC_ENABLED", "0") == "1"
-        if peer_sync_enabled:
-            try:
-                from orchestrator.federation_synchronizer import PeerStore, PeerSync
-
-                global _peer_store, _peer_sync
-                _peer_store = PeerStore()
-                _peer_sync = PeerSync(_peer_store)
-                _peer_sync.start()
-                logger.info(
-                    "Peer sync started (peers=%d, interval=%ss)",
-                    len(_peer_sync._peers),
-                    _peer_sync._interval,
-                )
-            except Exception:
-                logger.exception("Failed to start peer sync")
 
         # start periodic expiry in *this* process (the one Prometheus scrapes)
         asyncio.create_task(_sm_sweeper())
