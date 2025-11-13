@@ -37,3 +37,41 @@ comm -23 .artifacts/audit_flags_found.txt .artifacts/audit_flags_documented.txt
 ```
 
 **Output**: List of undocumented flags requiring documentation
+
+---
+
+### 1.2 Dead Code Detection
+
+**Goal**: Find unused imports, functions, classes
+
+**Tools**:
+- `vulture` - Detects unused code
+- `coverage` - Identifies untested code paths
+
+**Commands**:
+```bash
+# Install tools
+pip install vulture coverage
+
+# Run vulture (detects unused code)
+vulture src/ orchestrator/ --min-confidence 80 > .artifacts/audit_dead_code.txt
+
+# Check test coverage
+pytest --cov=src --cov=orchestrator --cov-report=term-missing \
+  --cov-report=json:.artifacts/audit_coverage.json -q
+
+# Find files with <80% coverage
+python -c "
+import json
+with open('.artifacts/audit_coverage.json') as f:
+    data = json.load(f)
+    for file, metrics in data['files'].items():
+        pct = metrics['summary']['percent_covered']
+        if pct < 80:
+            print(f'{file}: {pct:.1f}%')
+" > .artifacts/audit_low_coverage.txt
+```
+
+**Output**:
+- `.artifacts/audit_dead_code.txt` - Unused code candidates
+- `.artifacts/audit_low_coverage.txt` - Files needing more tests
