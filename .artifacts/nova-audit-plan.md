@@ -220,3 +220,60 @@ wc -l .artifacts/audit_defaults_*.txt
 **Principle**: New features should default OFF, require explicit enable
 
 **Output**: List of features enabled by default (review for safety)
+
+---
+
+## Phase 3: Security Scan (OWASP Top 10)
+
+### 3.1 Dependency Vulnerabilities
+
+**Already covered in Phase 1.3** (pip-audit)
+
+---
+
+### 3.2 Authentication & Authorization
+
+**Goal**: Verify JWT handling, no hardcoded secrets
+
+**Checks**:
+```bash
+# Find hardcoded secrets (patterns)
+grep -rn -E "(password|secret|token|key)\s*=\s*['\"][^'\"]{8,}" src/ orchestrator/ \
+  --exclude-dir=__pycache__ > .artifacts/audit_hardcoded_secrets.txt || echo "None found"
+
+# Verify JWT_SECRET not hardcoded
+grep -rn "JWT_SECRET.*=" src/ orchestrator/ | grep -v "getenv" || echo "Safe"
+
+# Check for weak crypto
+grep -rn "md5\|sha1" src/ orchestrator/ > .artifacts/audit_weak_crypto.txt || echo "None found"
+```
+
+**Output**: Potential secret leaks, weak algorithms
+
+---
+
+### 3.3 Input Validation
+
+**Goal**: Prevent injection attacks (SQL, command, XSS)
+
+**Manual review files**:
+- `orchestrator/app.py` - All FastAPI endpoints
+- `src/nova/slots/*/endpoints.py` - Slot-specific APIs
+- Any `subprocess.run()` or `os.system()` calls
+
+**Checks**:
+```bash
+# Find dangerous patterns
+grep -rn "os.system\|subprocess.call\|eval\|exec" src/ orchestrator/ \
+  > .artifacts/audit_dangerous_calls.txt || echo "None found"
+
+# Find SQL (we don't use SQL, but check anyway)
+grep -rn "execute.*SELECT\|INSERT\|UPDATE" src/ orchestrator/ \
+  > .artifacts/audit_sql.txt || echo "None found (expected)"
+
+# Find user input passed to shell
+grep -rn "subprocess.*shell=True" src/ orchestrator/ \
+  > .artifacts/audit_shell_injection_risk.txt || echo "None found"
+```
+
+**Output**: Injection risk points requiring validation
