@@ -250,6 +250,7 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+- Alternatively, run `scripts/bootstrap_dev_env.sh` to install tooling, install the hook, and warm caches in one step.
 - Secret scanning relies on `.secrets.baseline`. Regenerate it with `detect-secrets scan --all-files > .secrets.baseline` if you intentionally allow new secrets (for example, documented test fixtures).
 - Hooks run locally the same way CI enforces linting/security gates.
 
