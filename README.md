@@ -239,6 +239,20 @@ python -c "from nova.slots.slot09_distortion_protection.hybrid_api import create
 
 
 
+### Git Hooks (Pre-commit)
+
+```bash
+# one-time setup
+pip install pre-commit detect-secrets
+pre-commit install
+
+# run on demand before large pushes
+pre-commit run --all-files
+```
+
+- Secret scanning relies on `.secrets.baseline`. Regenerate it with `detect-secrets scan --all-files > .secrets.baseline` if you intentionally allow new secrets (for example, documented test fixtures).
+- Hooks run locally the same way CI enforces linting/security gates.
+
 ### Vault Audit Workflow
 
 To keep the repository lightweight, audit tooling (cosign, sha256sum paths) is fetched on demand. Run:
@@ -753,7 +767,7 @@ export NOVA_SLOTS="slot02,slot04,slot06,slot10"
 
 - `TRI_REPORT@1` (slot04 → slot02/slot05)
 
-- `CULTURAL_PROFILE@1` (slot06 → slot10) 
+- `CULTURAL_PROFILE@1` (slot06 → slot10)
 
 - `DETECTION_REPORT@1` (slot02 → slot05/slot09)
 
@@ -881,7 +895,7 @@ npm run maturity
 
 
 
-# Quick testing  
+# Quick testing
 
 pytest -q
 
@@ -1001,7 +1015,7 @@ import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)
 
 ### Health Test Strategy
 
-- **Health Matrix**: Runs lightweight smoke tests (`@pytest.mark.health`) across Python 3.10/3.11/3.12 
+- **Health Matrix**: Runs lightweight smoke tests (`@pytest.mark.health`) across Python 3.10/3.11/3.12
 
 - **Guard Protection**: Matrix job fails if >15 tests collected (prevents scope drift)
 
@@ -1071,7 +1085,7 @@ def test_my_health_check():
 
 - **Code Review Cycles**: Each AI contributes domain expertise
 
-- **Pattern Recognition**: Cross-validation of architectural decisions  
+- **Pattern Recognition**: Cross-validation of architectural decisions
 
 - **Optimization Strategies**: Diverse approaches to performance challenges
 
@@ -1119,7 +1133,7 @@ This is a **multi-AI collaborative project** coordinated by **Pavlos Kolivatzis*
 
 1. **Architecture Design**: System-level thinking and integration
 
-2. **Code Implementation**: Algorithm development and optimization  
+2. **Code Implementation**: Algorithm development and optimization
 
 3. **Testing & Validation**: Quality assurance and edge case handling
 
@@ -1143,7 +1157,7 @@ Analyze this civilizational architecture codebase and provide:
 
 1. Overall maturity assessment (0-4 scale)
 
-2. Critical findings and recommendations  
+2. Critical findings and recommendations
 
 3. Unique insights from your AI perspective
 
@@ -1157,7 +1171,7 @@ Analyze this civilizational architecture codebase and provide:
 
 
 
-> **"Building civilizational-scale AI systems requires civilizational-scale collaboration - not just between humans, but between diverse AI intelligences, each contributing their unique strengths toward a common goal of beneficial, robust, and scalable technology."**  
+> **"Building civilizational-scale AI systems requires civilizational-scale collaboration - not just between humans, but between diverse AI intelligences, each contributing their unique strengths toward a common goal of beneficial, robust, and scalable technology."**
 
 > *— Pavlos Kolivatzis*
 

@@ -445,10 +445,10 @@ Untracked files:
    - ✅ No functional changes (pure refactor)
    - ✅ Tests pass unchanged
 
-3. **Pre-commit Hooks** (1 hour - OPTIONAL):
+3. **Pre-commit Hooks** (1 hour - COMPLETED):
    - ✅ Secret scanning prevents commits with credentials
    - ✅ Linting catches style issues before CI
-   - ✅ Does not block legitimate commits
+   - ✅ Documented install/run instructions (`pre-commit install`, `pre-commit run --all-files`)
 
 **Final Grade Target**: A (95/100)
 
@@ -490,7 +490,7 @@ killall pytest
 
 1. **Security Headers** (30-60 min) - Highest impact, easy implementation
 2. **Boolean Standardization** (30 min) - Quick refactor, improves consistency
-3. **Pre-commit Hooks** (1 hour) - Optional, infrastructure improvement
+3. **Pre-commit Hooks** (1 hour) - ✅ DONE (local + README)
 
 **Total Estimated Time**: 2-2.5 hours for P2 completion
 
