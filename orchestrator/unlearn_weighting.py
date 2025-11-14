@@ -99,7 +99,7 @@ def _ewma_update(key: str, value: float) -> None:
     _ewma[key] = ALPHA * value + (1.0 - ALPHA) * _ewma[key]
 
 
-def _normalize(value: float, min_val: float, max_val: float) -> float:
+def _normalize(value: float, _min_val: float, max_val: float) -> float:
     """Clamp and rescale value to [0, 1] range."""
     return max(0.0, min(max_val, value)) / max(1e-9, max_val)
 

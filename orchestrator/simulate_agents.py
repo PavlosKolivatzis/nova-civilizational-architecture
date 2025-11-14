@@ -14,7 +14,7 @@ from datetime import datetime
 
 from nova.sim.agents import (
     MultiAgentSimulator, SimulationConfig, ConsensusModel,
-    create_demo_config, run_agent_simulation
+    create_demo_config
 )
 from nova.sim.metrics import get_monitor, get_guardrails
 

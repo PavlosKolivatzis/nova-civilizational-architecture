@@ -558,7 +558,6 @@ if FastAPI is not None:
             from orchestrator.phase10_manager import get_phase10_manager
             from orchestrator.prometheus_metrics import (
                 phase10_eai_gauge,
-                phase10_fcq_gauge,
                 phase10_cgc_gauge,
                 phase10_pis_gauge,
                 phase10_ag_throttle_counter,

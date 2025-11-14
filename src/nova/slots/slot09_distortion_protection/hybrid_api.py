@@ -1523,7 +1523,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
                  response_model=DistortionDetectionResponse,
                  summary="Detect distortions in content",
                  description="Main endpoint for distortion detection with full NOVA integration")
-        async def detect_distortion(request: DistortionDetectionRequest, user: Dict[str, Any] = Depends(get_current_user)):
+        async def detect_distortion(request: DistortionDetectionRequest, _user: Dict[str, Any] = Depends(get_current_user)):
             try:
                 return await api_instance.detect_distortion(request)
             except ValueError as e:
@@ -1535,7 +1535,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         @app.post("/api/v1/bulk-detect",
                  summary="Bulk distortion detection",
                  description="Process multiple detection requests in parallel")
-        async def bulk_detect_distortion(requests: List[DistortionDetectionRequest], user: Dict[str, Any] = Depends(get_current_user)):
+        async def bulk_detect_distortion(requests: List[DistortionDetectionRequest], _user: Dict[str, Any] = Depends(get_current_user)):
             try:
                 if len(requests) > 100:
                     raise HTTPException(status_code=400, detail="Maximum 100 requests per batch")
@@ -1547,13 +1547,13 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         @app.get("/api/v1/health",
                 summary="Comprehensive health check",
                 description="Get detailed system health and performance metrics")
-        async def health_check(user: Dict[str, Any] = Depends(get_current_user)):
+        async def health_check(_user: Dict[str, Any] = Depends(get_current_user)):
             return api_instance.get_comprehensive_system_health()
         
         @app.get("/api/v1/metrics",
                 summary="Performance metrics",
                 description="Get detailed performance and quality metrics")
-        async def get_metrics(user: Dict[str, Any] = Depends(get_current_user)):
+        async def get_metrics(_user: Dict[str, Any] = Depends(get_current_user)):
             health = api_instance.get_comprehensive_system_health()
             return {
                 "performance": health["performance_metrics"],
@@ -1564,7 +1564,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         @app.get("/api/v1/status",
                 summary="System status",
                 description="Get current system status and integration info")
-        async def get_status(user: Dict[str, Any] = Depends(get_current_user)):
+        async def get_status(_user: Dict[str, Any] = Depends(get_current_user)):
             health = api_instance.get_comprehensive_system_health()
             return {
                 "status": health["status"],
@@ -1577,7 +1577,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         @app.post("/api/v1/admin/cleanup",
                  summary="Admin cleanup",
                  description="Trigger system cleanup (admin only)")
-        async def admin_cleanup(background_tasks: BackgroundTasks, user: Dict[str, Any] = Depends(get_current_user)):
+        async def admin_cleanup(background_tasks: BackgroundTasks, _user: Dict[str, Any] = Depends(get_current_user)):
             background_tasks.add_task(api_instance.cleanup)
             return {"message": "Cleanup initiated"}
         

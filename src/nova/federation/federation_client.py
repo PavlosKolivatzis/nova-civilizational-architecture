@@ -48,7 +48,7 @@ class FederationClient:
     def __enter__(self) -> "FederationClient":  # pragma: no cover - convenience
         return self
 
-    def __exit__(self, *exc_info) -> None:  # pragma: no cover - convenience
+    def __exit__(self, *_exc_info) -> None:  # pragma: no cover - convenience
         self.close()
 
     def list_peers(self) -> Dict[str, PeerRecord]:

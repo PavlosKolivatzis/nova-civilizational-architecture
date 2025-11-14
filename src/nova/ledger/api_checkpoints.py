@@ -81,12 +81,12 @@ async def verify(req: VerifyReq, svc: CheckpointService = Depends(get_service)):
     return {"ok": bool(ok)} if ok else {"ok": False, "error": err or "verification failed"}
 
 
-def create_checkpoint_router(service: CheckpointService) -> APIRouter:
+def create_checkpoint_router(_service: CheckpointService) -> APIRouter:
     """
     Create checkpoint API router with service dependency.
 
     Args:
-        service: CheckpointService instance
+        _service: CheckpointService instance (currently unused, reserved for future use)
 
     Returns:
         FastAPI router

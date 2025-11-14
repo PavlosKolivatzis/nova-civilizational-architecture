@@ -361,7 +361,7 @@ class CreativityGovernor:
         return candidates
 
     def _should_stop_exploration(self, hypothesis: SemanticHypothesis,
-                               prev_score: float, prev_entropy: float) -> bool:
+                               _prev_score: float, prev_entropy: float) -> bool:
         """Creativity-math stop conditions."""
 
         # Edge of Chaos: entropy window check

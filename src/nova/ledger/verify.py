@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-from .model import LedgerRecord, TrustScore, RecordKind
+from .model import LedgerRecord, RecordKind
 from .canon import verify_record_hash
 from .metrics import (
     ledger_verify_requests_total,
@@ -24,7 +24,7 @@ from .metrics import (
 # Optional import for PQC verification integration
 try:
     from nova.crypto.pqc_keyring import PQCKeyring
-    from nova.slots.slot08_memory_lock.pqc_verify import PQCVerificationService
+    from nova.slots.slot08_memory_lock.pqc_verify import PQCVerificationService  # noqa: F401 - used for type hints
     PQC_AVAILABLE = True
 except ImportError:
     PQC_AVAILABLE = False

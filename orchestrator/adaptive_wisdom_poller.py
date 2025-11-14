@@ -175,7 +175,6 @@ def _get_peer_qualities() -> list[float]:
     """
     try:
         from nova.metrics.registry import REGISTRY
-        from prometheus_client import REGISTRY as prom_registry
 
         # Try to find nova_federation_peer_quality metric
         for collector in REGISTRY._collector_to_names:

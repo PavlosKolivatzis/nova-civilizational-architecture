@@ -12,7 +12,6 @@ from typing import Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy import text
-import sqlalchemy.exc
 
 from .model import LedgerRecord, RecordKind, Checkpoint
 from .canon import compute_record_hash, verify_record_hash, compute_merkle_root

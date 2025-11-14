@@ -76,7 +76,7 @@ class AutonomyGovernor:
 
     def check_decision_boundary(
         self,
-        decision_type: str = "autonomous",
+        _decision_type: str = "autonomous",
         **kwargs
     ) -> Dict[str, Any]:
         """Check if decision should proceed, throttle, or escalate.

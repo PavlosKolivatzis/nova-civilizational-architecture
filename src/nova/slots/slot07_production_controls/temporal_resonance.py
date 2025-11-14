@@ -15,7 +15,6 @@ from dataclasses import dataclass
 
 from nova.slots.slot04_tri.core.temporal_schema import (
     TemporalBeliefEntry,
-    TemporalResonanceWindow,
     TemporalResonanceMetrics
 )
 from nova.slots.slot04_tri.core.variance_decay import VarianceDecayModel
