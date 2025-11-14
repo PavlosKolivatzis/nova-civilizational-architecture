@@ -40,7 +40,7 @@ Phase 2 configuration audit has been successfully completed across all three sub
 ✅ **EXCELLENT (98/100)** - Perfect documentation coverage, safe security defaults
 
 ### Priority Actions:
-- **P1**: Standardize boolean defaults (0/1 vs false/true style)
+- **P1**: Standardize boolean defaults (0/1 vs false/true style) — **Completed 2025-11-14** (`6e21b54`)
 - **P2**: Centralize multi-file flag parsing (5 flags in 4+ files)
 - **P3**: Add schema validation with Pydantic
 

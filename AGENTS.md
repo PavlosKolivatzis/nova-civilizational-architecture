@@ -29,5 +29,17 @@
 - Keep PRs focused; document any configuration toggles (e.g., feature flags in `.env.example`) and note post-merge activation steps.
 
 ## Security & Configuration Tips
-- `.env.example` documents all supported environment variables; never commit real secrets—use local `.env`.
+- `.env.example` documents all supported environment variables; never commit real secrets-use local `.env`.
 - Quantum entropy features are feature-flagged; default to simulator backend and confirm metrics before enabling in production.***
+
+## Flag Semantics (Canonical Format)
+- All Nova feature flags use strict string equality.
+- The literal string `"1"` enables a feature; `"0"` or any other value disables it.
+- This rule applies across orchestrator services, slot bootstraps, CI, and runbooks.
+
+```bash
+NOVA_ENABLE_PROMETHEUS=1   # Enabled
+NOVA_ENABLE_PROMETHEUS=0   # Disabled
+```
+
+Use [.env.example](./.env.example) as the authoritative reference when defining environment files.

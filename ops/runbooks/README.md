@@ -44,3 +44,18 @@ For these scenarios, consult:
 - `nova_slot1_anchors_total` - Truth anchor count
 - `nova_slot1_failures_total` - Verification failures
 - `nova_feature_flag_enabled` - Flag state visibility
+
+## Feature Flag Format (Phase 16-2+)
+- All feature flags use strict string equality. Only the literal string `"1"` enables a flag; `"0"` or any other value leaves it disabled.
+- This rule applies to orchestrator processes, slot services, CI lanes, and operational tooling. Values such as `true`, `yes`, or `on` are **not** recognized.
+- When creating `.env` files or toggling flags during an incident, copy values directly from [.env.example](../../.env.example) to avoid drift.
+
+```bash
+# Correct
+export NOVA_ENABLE_PROMETHEUS=1
+
+# Correctly disabled
+export NOVA_ENABLE_PROMETHEUS=0
+```
+
+Do not mix formats within the same deployment; inconsistent values will silently disable the feature and can mask intended mitigations.

@@ -192,47 +192,25 @@ git reset HEAD
 ---
 
 #### 3. Boolean Default Standardization (30 min) - LOW PRIORITY
-**Goal**: Standardize boolean env var style (0/1 vs false/true)
+**Status**: ✅ Completed in `feat(orchestrator): add security headers middleware` (`6e21b54309a5565ba6b31753fd2addc21087c7e7`, 2025-11-14)
 
-**Current Inconsistency** (from audit Phase 2.3):
-- Most flags use: `"0"` / `"1"` (string integers)
-- Some flags use: `"false"` / `"true"` (string booleans)
+- All env-driven feature flags now use strict `"1"` equality for enablement; any other value disables the flag.
+- `.env.example`, orchestrator loaders, slot configs, scripts, and tests were updated in the same commit.
+- Full-suite `python -m pytest -q` run (1435 passed / 4 skipped) verifies backwards-compatible behavior.
 
-**Decision**: Standardize on `"0"` / `"1"` (already dominant pattern)
+See README / AGENTS flag semantics sections for developer guidance.
 
-**Files to Audit**:
-```bash
-# Find all boolean env var reads
-cd /c/code/nova-civilizational-architecture
-grep -rn 'os.getenv.*"true"' src/ orchestrator/ | grep -v ".pyc"
-grep -rn 'os.getenv.*"false"' src/ orchestrator/ | grep -v ".pyc"
-```
+---
 
-**Pattern to Replace**:
-```python
-# BEFORE:
-enabled = os.getenv("NOVA_FEATURE", "false") == "true"
+### ✅ Boolean Flag Standardization (P2 Complete)
 
-# AFTER:
-enabled = os.getenv("NOVA_FEATURE", "0") == "1"
-```
+The boolean-standardization audit finding is now closed. Every Nova feature flag is evaluated via strict string equality (`"1"` enables; `"0"`/other disables) across orchestrator, slots, scripts, CI, and ops tooling.
 
-**Verification**:
-```bash
-pytest tests/ -q
-```
+- Commit: `6e21b54` – `feat(orchestrator): add security headers middleware`
+- Scope: `.env.example`, orchestrator app/config, slot configs (01/02/04/05/06/07/09/10), federation configs, runbooks/tests, and helper scripts.
+- Verification: `python -m pytest -q` (1435 passed / 4 skipped, 2025-11-14 11:02 UTC)
 
-**Commit Template**:
-```
-refactor(config): standardize boolean defaults to 0/1 (P2 audit)
-
-Converts string boolean style ("false"/"true") to dominant
-integer style ("0"/"1") for consistency.
-
-Changed: [list files]
-Tests: 1386/1386 passing
-Closes audit finding P2 (boolean standardization).
-```
+P2 grade target dependency resolved; remaining P2 work now limited to security headers + optional pre-commit hooks.
 
 ---
 

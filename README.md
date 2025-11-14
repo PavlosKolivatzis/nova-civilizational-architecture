@@ -803,6 +803,22 @@ Missing producers degrade gracefully via NullAdapters. Plugin status and contrac
 
 **CI lanes:** see `.github/workflows/phase2-features.yml` for per-flag validation.
 
+### Flag Semantics (Canonical Format)
+
+All Nova feature flags now use strict string equality. Only the literal string `"1"` enables a feature; `"0"` or any other value keeps it disabled. This applies to orchestrator services, slot loaders, CI, and runbooks.
+
+| Value | Behavior  |
+|-------|-----------|
+| `"1"` | Enabled   |
+| else  | Disabled  |
+
+```bash
+NOVA_ENABLE_PROMETHEUS=1          # Feature enabled
+NOVA_ALLOW_META_HALLUCINATIONS=0  # Feature disabled
+```
+
+See [.env.example](./.env.example) for the authoritative flag list.
+
 
 
 ### ✨ Previous Updates (2025-09-06)
@@ -1236,4 +1252,3 @@ make arc-analyze     # Generate final report + plots
 
 
 *Created and coordinated by Pavlos Kolivatzis with collaboration between Claude, Codex-GPT, DeepSeek, Gemini, and Copilot*
-
