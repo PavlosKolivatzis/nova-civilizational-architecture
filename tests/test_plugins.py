@@ -7,7 +7,10 @@ from pathlib import Path
 from orchestrator.plugins import PythonFilePlugin, RestAPIPlugin
 
 
-def test_python_file_plugin(tmp_path: Path) -> None:
+def test_python_file_plugin(tmp_path: Path, monkeypatch) -> None:
+    # P1-HR1: Set plugin directory for security validation
+    monkeypatch.setenv("NOVA_PLUGIN_DIR", str(tmp_path))
+
     plugin_file = tmp_path / "plugin.py"
     plugin_file.write_text(
         textwrap.dedent(

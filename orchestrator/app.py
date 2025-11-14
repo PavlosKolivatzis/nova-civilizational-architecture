@@ -707,7 +707,8 @@ if FastAPI is not None:
             sm = get_semantic_mirror()
             if sm:
                 # Optionally seed a pulse-eligible context (validation only)
-                if os.getenv("NOVA_ALLOW_EXPIRE_TEST", "1") == "1":
+                # P1-MR1: Test functionality disabled by default (security)
+                if os.getenv("NOVA_ALLOW_EXPIRE_TEST", "0") == "1":
                     key = "slot06.cultural_profile"  # documented, non-immune
                     if key not in sm._contexts:
                         now = time.time()
