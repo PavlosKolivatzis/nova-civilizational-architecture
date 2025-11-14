@@ -6,7 +6,7 @@ Runs periodic eigenvalue analysis and adapts learning rate η based on:
   - Generativity score G*
 
 Safety protocols:
-  - S < 0.01: Immediate clamp to η = 0.05 (CRITICAL)
+  - S < NOVA_WISDOM_CRITICAL_MARGIN (default 0.01): Immediate clamp to η = 0.05 (CRITICAL)
   - Hopf detected: Freeze learning, alert operator
   - Recovery: Gradual ramp after stabilization
 """
@@ -296,8 +296,11 @@ def _loop() -> None:
             new_eta = current.eta
             new_frozen = frozen
 
+            # P1 Configurable Thresholds (Phase 17 Audit Fix)
+            critical_margin = float(os.getenv("NOVA_WISDOM_CRITICAL_MARGIN", "0.01"))
+
             if not frozen:
-                if analysis.S < 0.01:
+                if analysis.S < critical_margin:
                     new_eta = eta_min
                     new_frozen = True
                 elif analysis.hopf_risk:

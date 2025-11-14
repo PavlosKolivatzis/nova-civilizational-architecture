@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
 from typing import Any, Dict, Optional
@@ -140,9 +141,11 @@ class FederationRemediator:
         with self._lock:
             if not self._can_trigger():
                 return
+            # P1 Configurable Thresholds (Phase 17 Audit Fix)
+            backoff_multiplier = float(os.getenv("NOVA_FEDERATION_BACKOFF_MULTIPLIER", "2.0"))
             current_interval = self.poller.get_interval()
             proposed = max(current_interval if current_interval else self.base_interval, self.base_interval)
-            proposed = min(proposed * 2, self.max_backoff)
+            proposed = min(proposed * backoff_multiplier, self.max_backoff)
             try:
                 self.poller.stop()
             except Exception:

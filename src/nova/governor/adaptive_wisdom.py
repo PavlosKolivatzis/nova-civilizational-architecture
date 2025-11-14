@@ -4,10 +4,22 @@
 
 from __future__ import annotations
 
+import os as _os
 from dataclasses import dataclass as _dataclass
 from typing import Literal as _Literal
 
 __all__ = ["AdaptiveWisdomGovernor", "Telemetry", "State"]
+
+# P1 Configurable Thresholds (Phase 17 Audit Fix)
+# Stability margin thresholds for mode transitions
+_CRITICAL_MARGIN = float(_os.getenv("NOVA_WISDOM_CRITICAL_MARGIN", "0.01"))
+_STABILIZING_MARGIN = float(_os.getenv("NOVA_WISDOM_STABILIZING_MARGIN", "0.02"))
+_EXPLORING_MARGIN = float(_os.getenv("NOVA_WISDOM_EXPLORING_MARGIN", "0.10"))
+_OPTIMAL_MARGIN = float(_os.getenv("NOVA_WISDOM_OPTIMAL_MARGIN", "0.05"))
+
+# Generativity (G) thresholds for mode transitions
+_EXPLORING_G = float(_os.getenv("NOVA_WISDOM_EXPLORING_G", "0.60"))
+_OPTIMAL_G = float(_os.getenv("NOVA_WISDOM_OPTIMAL_G", "0.70"))
 
 
 @_dataclass(frozen=True)
@@ -41,16 +53,16 @@ class AdaptiveWisdomGovernor:
     def step(self, margin: float, G: float) -> Telemetry:
         """Update eta based on margin (-Re(lambda_max)) and generativity G."""
 
-        if margin < 0.01:
+        if margin < _CRITICAL_MARGIN:
             self.eta = self.eta_min
             mode = "CRITICAL"
-        elif margin < 0.02:
+        elif margin < _STABILIZING_MARGIN:
             self.eta = max(self.eta_min, 0.08)
             mode = "STABILIZING"
-        elif margin > 0.10 and G < 0.60:
+        elif margin > _EXPLORING_MARGIN and G < _EXPLORING_G:
             self.eta = min(self.eta_max, self.eta * 1.10, 0.18)
             mode = "EXPLORING"
-        elif margin > 0.05 and G >= 0.70:
+        elif margin > _OPTIMAL_MARGIN and G >= _OPTIMAL_G:
             self.eta = max(self.eta_min, min(self.eta_max, 0.12))
             mode = "OPTIMAL"
         else:
