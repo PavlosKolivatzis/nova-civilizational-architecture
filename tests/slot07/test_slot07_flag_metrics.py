@@ -20,10 +20,10 @@ def test_flag_metrics_defaults_off(monkeypatch):
 
 
 def test_flag_metrics_truthy_variants(monkeypatch):
-    """Test that various truthy values enable flags."""
+    """Only the canonical \"1\" should enable the flags."""
     from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
 
-    for val in ["1", "true", "TRUE", "yes", "YES", "on", "On"]:
+    for val in ["1"]:
         monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", val)
         monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", val)
         monkeypatch.setenv("NOVA_USE_SHARED_HASH", val)
@@ -39,7 +39,7 @@ def test_flag_metrics_falsy_variants(monkeypatch):
     """Test that falsy values disable flags."""
     from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
 
-    for val in ["0", "false", "FALSE", "no", "off", "invalid", ""]:
+    for val in ["0", "false", "FALSE", "no", "off", "invalid", "", "true", "TRUE", "yes", "YES", "on", "On"]:
         monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", val)
         monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", val)
         monkeypatch.setenv("NOVA_USE_SHARED_HASH", val)
@@ -111,7 +111,7 @@ def test_flag_states_with_mixed_values(monkeypatch):
 
     monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "1")
     monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "0")
-    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "true")
+    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "1")
 
     metrics = get_flag_state_metrics()
 

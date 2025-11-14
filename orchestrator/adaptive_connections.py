@@ -262,7 +262,7 @@ def get_flow_health_summary() -> dict:
     )
 
     return {
-        "adaptive_connections_active": os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", "false").lower() == "true",
+        "adaptive_connections_active": os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", "0").strip() == "1",
         "links_count": links_count,
         "adaptation_enabled_links": adaptation_enabled_links,
         "total_sends": total_sends,

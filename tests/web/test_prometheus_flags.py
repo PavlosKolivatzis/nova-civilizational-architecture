@@ -18,7 +18,7 @@ def test_flag_gauges_reflect_env(monkeypatch):
     # Toggle flags
     monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "1")
     monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "0")
-    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "yes")
+    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "1")
     monkeypatch.setenv("FEDERATION_ENABLED", "1")
 
     r = _client().get("/metrics")
@@ -37,7 +37,7 @@ def test_flag_gauges_all_disabled(monkeypatch):
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
     monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "0")
     monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "false")
-    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "no")
+    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "0")
     monkeypatch.setenv("FEDERATION_ENABLED", "0")
 
     r = _client().get("/metrics")
@@ -53,11 +53,11 @@ def test_flag_gauges_all_disabled(monkeypatch):
 
 def test_flag_gauges_mixed_values(monkeypatch):
     """Test flag gauges with mixed truthy/falsy values."""
-    monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "true")
-    monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "TRUE")
+    monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
+    monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "1")
     monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "")
-    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "on")
-    monkeypatch.setenv("FEDERATION_ENABLED", "true")
+    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "1")
+    monkeypatch.setenv("FEDERATION_ENABLED", "1")
 
     r = _client().get("/metrics")
     assert r.status_code == 200

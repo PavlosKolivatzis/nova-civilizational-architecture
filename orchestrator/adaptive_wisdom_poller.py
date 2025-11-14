@@ -57,8 +57,8 @@ def _get_interval() -> float:
 
 def _get_enabled() -> bool:
     """Check if wisdom governor is enabled."""
-    raw = os.getenv("NOVA_WISDOM_GOVERNOR_ENABLED", "").lower()
-    return raw in ("1", "true", "yes", "on")
+    raw = os.getenv("NOVA_WISDOM_GOVERNOR_ENABLED", "0").strip()
+    return raw == "1"
 
 
 def _parse_generativity_params() -> GenerativityParams:

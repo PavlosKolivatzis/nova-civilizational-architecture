@@ -158,7 +158,7 @@ class EnhancedConfigManager:
         env_toggle = os.getenv("NOVA_HOT_RELOAD")  # explicit override
         self.enable_hot_reload = (
             False if serverless else enable_hot_reload
-        ) if env_toggle is None else (env_toggle.lower() == "true")
+        ) if env_toggle is None else (env_toggle.strip() == "1")
         if serverless and self.enable_hot_reload:
             # explicit override was TRUE in serverless; flip off and log
             self.enable_hot_reload = False

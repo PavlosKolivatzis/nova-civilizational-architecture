@@ -42,7 +42,7 @@ def load_registry(path: Path) -> List[PeerEntry]:
 
 
 def load_federation_config() -> FederationConfig:
-    enabled = os.getenv("FEDERATION_ENABLED", "false").lower() in {"1", "true", "yes", "on"}
+    enabled = os.getenv("FEDERATION_ENABLED", "0").strip() == "1"
     bind = os.getenv("FEDERATION_BIND", "0.0.0.0:9414")
     registry_env = os.getenv("NOVA_FEDERATION_REGISTRY")
     config = FederationConfig(enabled=enabled, bind=bind)

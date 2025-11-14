@@ -14,7 +14,9 @@
       "Bash(git commit:*)",
       "Bash(git add:*)",
       "Bash(git tag:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git fetch:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

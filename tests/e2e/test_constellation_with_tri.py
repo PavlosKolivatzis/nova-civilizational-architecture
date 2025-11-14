@@ -1,7 +1,7 @@
 
 def test_constellation_updates_with_tri_layers(tmp_path, monkeypatch):
     # Enable TRI link for this test only
-    monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "true")
+    monkeypatch.setenv("NOVA_ENABLE_TRI_LINK", "1")
 
     from nova.slots.slot05_constellation import ConstellationEngine
     from nova.slots.slot04_tri.core.tri_engine import TriEngine

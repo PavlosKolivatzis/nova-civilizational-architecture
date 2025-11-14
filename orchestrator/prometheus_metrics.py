@@ -65,8 +65,8 @@ slot6_p95_residual_risk_gauge = Gauge(
 
 # --- Flag gauges (Phase 2 feature flags) ------------------------------------
 def _env_truthy(name: str) -> bool:
-    v = (getenv(name, "") or "").strip().lower()
-    return v in {"1", "true", "yes", "on"}
+    v = (getenv(name, "") or "").strip()
+    return v == "1"
 
 # One gauge, labeled by flag name
 feature_flag_gauge = Gauge(

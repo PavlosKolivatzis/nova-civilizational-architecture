@@ -76,8 +76,14 @@ def initialize_flow_fabric() -> None:
     flow_metrics_enabled = config_data.get("flow_metrics_enabled", True)
 
     # Override from environment variables
-    adaptive_enabled = os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", str(adaptive_enabled)).lower() == "true"
-    flow_metrics_enabled = os.getenv("NOVA_FLOW_METRICS_ENABLED", str(flow_metrics_enabled)).lower() == "true"
+    adaptive_enabled = os.getenv(
+        "NOVA_ADAPTIVE_CONNECTIONS_ENABLED",
+        "1" if adaptive_enabled else "0",
+    ).strip() == "1"
+    flow_metrics_enabled = os.getenv(
+        "NOVA_FLOW_METRICS_ENABLED",
+        "1" if flow_metrics_enabled else "0",
+    ).strip() == "1"
 
     logger.info(f"Flow Fabric initialization: adaptive_enabled={adaptive_enabled}, metrics_enabled={flow_metrics_enabled}")
 

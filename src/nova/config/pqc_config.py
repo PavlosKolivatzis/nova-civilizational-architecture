@@ -24,8 +24,8 @@ class PQCConfig:
     def from_env(cls) -> "PQCConfig":
         """Load PQC configuration from environment variables."""
         return cls(
-            slot01_pqc_enabled=os.getenv("NOVA_SLOT01_PQC_ATTESTATION_ENABLED", "true").lower() == "true",
+            slot01_pqc_enabled=os.getenv("NOVA_SLOT01_PQC_ATTESTATION_ENABLED", "1").strip() == "1",
             slot01_pqc_algorithm=os.getenv("NOVA_SLOT01_PQC_ALGORITHM", "dilithium2"),
             slot08_pqc_rotation_days=int(os.getenv("NOVA_SLOT08_PQC_ROTATION_DAYS", "90")),
-            slot08_pqc_verify_log=os.getenv("NOVA_SLOT08_PQC_VERIFY_LOG", "true").lower() == "true",
+            slot08_pqc_verify_log=os.getenv("NOVA_SLOT08_PQC_VERIFY_LOG", "1").strip() == "1",
         )

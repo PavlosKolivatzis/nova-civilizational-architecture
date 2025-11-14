@@ -30,9 +30,9 @@ def test_metrics_200_when_enabled(monkeypatch):
     assert b"nova_slot6_p95_residual_risk" in r.content or len(r.content) > 0
 
 
-@pytest.mark.parametrize("flag_value", ["false", "0", "no", "off", ""])
+@pytest.mark.parametrize("flag_value", ["false", "0", "no", "off", "", "true", "TRUE", "yes", "on"])
 def test_metrics_disabled_variants(monkeypatch, flag_value):
-    """Test various falsy values disable the metrics endpoint."""
+    """All non-\"1\" values should keep the metrics endpoint disabled."""
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", flag_value)
     from orchestrator.app import app
     client = TestClient(app)
@@ -40,9 +40,9 @@ def test_metrics_disabled_variants(monkeypatch, flag_value):
     assert r.status_code == 404
 
 
-@pytest.mark.parametrize("flag_value", ["1", "true", "TRUE", "yes", "on", "ON"])
+@pytest.mark.parametrize("flag_value", ["1"])
 def test_metrics_enabled_variants(monkeypatch, flag_value):
-    """Test various truthy values enable the metrics endpoint."""
+    """Only the canonical \"1\" value should enable the endpoint."""
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", flag_value)
     from orchestrator.app import app
     client = TestClient(app)

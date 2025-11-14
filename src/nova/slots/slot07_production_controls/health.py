@@ -184,13 +184,13 @@ def _calculate_next_reset_time(circuit_breaker) -> float:
 def _is_reflex_enabled() -> bool:
     """Check if reflex emission is enabled via feature flags."""
     import os
-    return os.getenv("NOVA_REFLEX_ENABLED", "false").lower() == "true"
+    return os.getenv("NOVA_REFLEX_ENABLED", "0").strip() == "1"
 
 
 def _is_reflex_shadow_mode() -> bool:
     """Check if reflex emission is in shadow mode."""
     import os
-    return os.getenv("NOVA_REFLEX_SHADOW", "true").lower() == "true"
+    return os.getenv("NOVA_REFLEX_SHADOW", "1").strip() == "1"
 
 
 def _get_health_provenance() -> Dict[str, Any]:

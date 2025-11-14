@@ -26,8 +26,8 @@ else:
 
 def _env_truthy(name: str) -> bool:
     """Check if environment variable is truthy."""
-    v = os.getenv(name, "").strip().lower()
-    return v in {"1", "true", "yes", "on"}
+    v = os.getenv(name, "").strip()
+    return v == "1"
 
 
 def _canon(obj: Dict[str, Any]) -> bytes:

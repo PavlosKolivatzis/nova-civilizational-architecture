@@ -78,7 +78,7 @@ class _NullRangeProvider:
 
 
 def _feature_enabled() -> bool:
-    return os.getenv("FEDERATION_ENABLED", "false").lower() in {"1", "true", "yes", "on"}
+    return os.getenv("FEDERATION_ENABLED", "0").strip() == "1"
 
 
 def _error(code: str, http_status: int, reason: str) -> JSONResponse:

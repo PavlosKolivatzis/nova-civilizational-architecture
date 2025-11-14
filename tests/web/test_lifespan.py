@@ -4,7 +4,7 @@ import pytest
 import logging
 def _flag_enabled() -> bool:
     v = os.getenv("NOVA_ENABLE_LIFESPAN", "").strip().lower()
-    return v in {"1", "true", "yes", "on"}
+    return v == "1"
 
 @pytest.fixture(autouse=True)
 def ensure_event_loop():
@@ -45,7 +45,7 @@ def test_lifespan_enabled_runs_tasks(monkeypatch, caplog):
     from lifespan import LifespanManager, example_startup_task, example_shutdown_task
 
     caplog.set_level(logging.INFO)
-    monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "true")
+    monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", "1")
 
     # Create scoped manager to avoid global state
     mgr = LifespanManager()
@@ -103,7 +103,7 @@ def test_lifespan_manager_reset():
     assert mgr.shutdown_complete is False
 
 def test_lifespan_env_variants(monkeypatch, caplog):
-    """Test that different environment variable values are accepted."""
+    """Only canonical values should enable the lifespan manager."""
     pytest.importorskip("fastapi")
 
     from fastapi import FastAPI
@@ -112,8 +112,8 @@ def test_lifespan_env_variants(monkeypatch, caplog):
 
     caplog.set_level(logging.INFO)
 
-    # Test different valid values
-    for value in ["1", "true", "TRUE", "yes", "YES", "on", "ON"]:
+    # Test canonical value
+    for value in ["1"]:
         caplog.clear()
         monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", value)
 
@@ -125,7 +125,7 @@ def test_lifespan_env_variants(monkeypatch, caplog):
         assert "Starting lifespan management" in caplog.text
 
     # Test invalid values
-    for value in ["0", "false", "no", "off", "invalid", ""]:
+    for value in ["0", "false", "no", "off", "invalid", "", "true", "TRUE", "yes", "on"]:
         caplog.clear()
         monkeypatch.setenv("NOVA_ENABLE_LIFESPAN", value)
 

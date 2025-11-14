@@ -27,7 +27,7 @@ _CURRENT_EMA = _DEFAULT_EMA
 
 
 def _is_enabled() -> bool:
-    return os.getenv("NOVA_ARC_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+    return os.getenv("NOVA_ARC_ENABLED", "0").strip() == "1"
 
 
 def _sample_rate() -> float:

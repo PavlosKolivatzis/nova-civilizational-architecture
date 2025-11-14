@@ -50,7 +50,7 @@ def check_slot10_health() -> Dict[str, Any]:
 def check_meta_lens_health() -> Dict[str, Any]:
     """Check META_LENS_REPORT@1 health and configuration."""
     try:
-        enabled = os.getenv("NOVA_ENABLE_META_LENS", "0") in ("1", "true", "TRUE")
+        enabled = os.getenv("NOVA_ENABLE_META_LENS", "0").strip() == "1"
 
         if not enabled:
             return {

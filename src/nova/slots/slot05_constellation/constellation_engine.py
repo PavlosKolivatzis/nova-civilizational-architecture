@@ -571,8 +571,8 @@ class ConstellationEngine:
         Returns:
             Dict with current position data
         """
-        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip().lower()
-        enabled = flag in {"1", "true", "yes", "on"}
+        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip()
+        enabled = flag == "1"
         if not enabled:
             return {
                 "position": {"x": 0.0, "y": 0.0, "z": 0.0},
@@ -617,8 +617,8 @@ class ConstellationEngine:
         Returns:
             Dict with updated position and stability metrics
         """
-        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip().lower()
-        enabled = flag in {"1", "true", "yes", "on"}
+        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip()
+        enabled = flag == "1"
         if not enabled:
             return {
                 "position": {"x": 0.0, "y": 0.0, "z": 0.0},

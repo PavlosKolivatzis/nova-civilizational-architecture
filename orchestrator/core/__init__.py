@@ -41,7 +41,7 @@ class NovaOrchestrator:
         self.logger.setLevel(level)
         mode = os.getenv("NOVA_ANCHOR_VALIDATION_MODE", "STRICT").upper()
         self.anchor_validation_mode = AnchorValidationMode[mode] if mode in AnchorValidationMode.__members__ else AnchorValidationMode.STRICT
-        self._slot10_enabled = os.getenv("NOVA_SLOT10_ENABLED", "false").lower() == "true"
+        self._slot10_enabled = os.getenv("NOVA_SLOT10_ENABLED", "0").strip() == "1"
         self._slot10_available = False
         self.deployer = None
         if self._slot10_enabled:
@@ -59,7 +59,7 @@ class NovaOrchestrator:
             )
 
             gm: Optional[GeometricMemory] = None
-            if GeometricMemory is not None and os.getenv("NOVA_GM_ENABLED", "false").lower() == "true":
+            if GeometricMemory is not None and os.getenv("NOVA_GM_ENABLED", "0").strip() == "1":
                 gm = GeometricMemory(enabled=True)  # type: ignore[call-arg]
             self.deployer = InstitutionalNodeDeployer(
                 self.slot6,

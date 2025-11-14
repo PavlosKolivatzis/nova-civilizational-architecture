@@ -18,8 +18,8 @@ def test_legacy_import_blocked(monkeypatch):
 
 
 def test_legacy_import_blocked_truthy_values(monkeypatch):
-    """Test that various truthy values block legacy imports."""
-    truthy_values = ["1", "true", "TRUE", "yes", "YES", "on", "ON"]
+    """Test that only the canonical value blocks legacy imports."""
+    truthy_values = ["1"]
     
     for value in truthy_values:
         monkeypatch.setenv("NOVA_BLOCK_LEGACY_SLOT6", value)
@@ -34,8 +34,8 @@ def test_legacy_import_blocked_truthy_values(monkeypatch):
 
 
 def test_legacy_import_allowed_falsy_values(monkeypatch):
-    """Test that falsy values allow legacy imports (with deprecation warning)."""
-    falsy_values = ["", "0", "false", "FALSE", "no", "NO", "off", "OFF"]
+    """Test that non-canonical values allow legacy imports (with deprecation warning)."""
+    falsy_values = ["", "0", "false", "FALSE", "no", "NO", "off", "OFF", "true", "TRUE", "yes", "YES", "on", "ON"]
     
     for value in falsy_values:
         monkeypatch.setenv("NOVA_BLOCK_LEGACY_SLOT6", value)

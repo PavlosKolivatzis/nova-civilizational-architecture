@@ -119,17 +119,17 @@ class ReflexPolicyManager:
     def is_emission_enabled(self) -> bool:
         """Check if reflex emission is globally enabled."""
         # Environment variable override takes precedence
-        env_enabled = os.getenv("NOVA_REFLEX_ENABLED", "").lower()
-        if env_enabled in ("true", "false"):
-            return env_enabled == "true"
+        env_enabled = os.getenv("NOVA_REFLEX_ENABLED", "").strip()
+        if env_enabled:
+            return env_enabled == "1"
         
         return self.get_global_config().get("enabled", False)
     
     def is_shadow_mode(self) -> bool:
         """Check if running in shadow mode (compute but don't act)."""
-        env_shadow = os.getenv("NOVA_REFLEX_SHADOW", "").lower()
-        if env_shadow in ("true", "false"):
-            return env_shadow == "true"
+        env_shadow = os.getenv("NOVA_REFLEX_SHADOW", "").strip()
+        if env_shadow:
+            return env_shadow == "1"
             
         return self.get_global_config().get("shadow_mode", True)
 

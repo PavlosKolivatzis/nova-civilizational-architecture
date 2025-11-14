@@ -70,8 +70,8 @@ except Exception:  # ImportError or any init error -> mark unavailable
     # Fallback to current SHA256 implementation
 
 def _env_truthy(name: str) -> bool:
-    v = os.getenv(name, "").strip().lower()
-    return v in {"1", "true", "yes", "on"}
+    v = os.getenv(name, "").strip()
+    return v == "1"
 
 # Exported snapshot (for tests/introspection); runtime re-reads each call.
 NOVA_USE_SHARED_HASH = _env_truthy("NOVA_USE_SHARED_HASH")

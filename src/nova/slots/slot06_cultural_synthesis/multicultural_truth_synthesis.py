@@ -12,7 +12,7 @@ from .engine import CulturalProfile, CulturalSynthesisEngine
 
 def _env_truthy(name: str) -> bool:
     v = os.getenv(name, "")
-    return v.lower() in {"1", "true", "yes", "on"}
+    return v.strip() == "1"
 
 if _env_truthy("NOVA_BLOCK_LEGACY_SLOT6"):
     raise ImportError(

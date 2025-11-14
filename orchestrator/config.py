@@ -21,7 +21,7 @@ class SystemConfig:
 
     # Performance
     MAX_CONCURRENT_PROCESSES: int = int(os.getenv("NOVA_MAX_CONCURRENT_PROCESSES", 12))
-    MEMORY_ETHICS_ENABLED: bool = os.getenv("NOVA_MEMORY_ETHICS_ENABLED", "true").lower() == "true"
+    MEMORY_ETHICS_ENABLED: bool = os.getenv("NOVA_MEMORY_ETHICS_ENABLED", "1").strip() == "1"
     DISTORTION_DETECTION_SENSITIVITY: float = float(os.getenv("NOVA_DISTORTION_DETECTION_SENSITIVITY", 0.92))
 
     # Runtime thresholds
@@ -35,13 +35,13 @@ class SystemConfig:
     CURRENT_MODE: str = os.getenv("NOVA_CURRENT_MODE", "testing")
     
     # Flow Fabric - Adaptive Connections
-    ADAPTIVE_CONNECTIONS_ENABLED: bool = os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", "false").lower() == "true"
-    FLOW_METRICS_ENABLED: bool = os.getenv("NOVA_FLOW_METRICS_ENABLED", "true").lower() == "true"
+    ADAPTIVE_CONNECTIONS_ENABLED: bool = os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", "0").strip() == "1"
+    FLOW_METRICS_ENABLED: bool = os.getenv("NOVA_FLOW_METRICS_ENABLED", "1").strip() == "1"
     FLOW_MODE: str = os.getenv("NOVA_FLOW_MODE", "BALANCED")
     
     # Reflex Integration - Phase 2
-    REFLEX_ENABLED: bool = os.getenv("NOVA_REFLEX_ENABLED", "false").lower() == "true"
-    REFLEX_SHADOW: bool = os.getenv("NOVA_REFLEX_SHADOW", "true").lower() == "true"
+    REFLEX_ENABLED: bool = os.getenv("NOVA_REFLEX_ENABLED", "0").strip() == "1"
+    REFLEX_SHADOW: bool = os.getenv("NOVA_REFLEX_SHADOW", "1").strip() == "1"
 
 
 config = SystemConfig()

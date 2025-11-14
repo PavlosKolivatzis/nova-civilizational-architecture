@@ -95,8 +95,8 @@ class LifespanManager:
     @asynccontextmanager
     async def lifespan_context(self, app: Any) -> AsyncGenerator[None, None]:
         """ASGI lifespan context manager for FastAPI applications."""
-        flag = os.getenv("NOVA_ENABLE_LIFESPAN", "").strip().lower()
-        enabled = flag in {"1", "true", "yes", "on"}
+        flag = os.getenv("NOVA_ENABLE_LIFESPAN", "").strip()
+        enabled = flag == "1"
 
         if not enabled:
             logger.info("Lifespan management disabled (NOVA_ENABLE_LIFESPAN not set)")

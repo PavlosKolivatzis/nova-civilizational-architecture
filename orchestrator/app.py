@@ -102,6 +102,14 @@ def get_peer_store():
     from orchestrator.peer_store_singleton import get_peer_store as get_singleton
     return get_singleton()
 
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+}
+
+
 if FastAPI is not None:
     _federation_metrics_thread = None
     _federation_remediator = None
@@ -312,8 +320,8 @@ if FastAPI is not None:
         except Exception as e:
             logger.warning(f"CreativityGovernor initialization failed: {e}")
 
-        prom_enabled = os.getenv("NOVA_ENABLE_PROMETHEUS", "false").strip().lower() in {"1", "true", "yes", "on"}
-        federation_enabled = os.getenv("FEDERATION_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+        prom_enabled = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip() == "1"
+        federation_enabled = os.getenv("FEDERATION_ENABLED", "0").strip() == "1"
         if prom_enabled and federation_enabled:
             try:
                 from orchestrator import federation_poller
@@ -323,12 +331,7 @@ if FastAPI is not None:
                 auto_remediate_env = os.getenv("NOVA_FEDERATION_AUTOREMEDIATE")
                 if auto_remediate_env is None:
                     auto_remediate_env = os.getenv("FEDERATION_AUTOREMEDIATE", "1")
-                auto_remediate = auto_remediate_env.strip().lower() in {
-                    "1",
-                    "true",
-                    "yes",
-                    "on",
-                }
+                auto_remediate = auto_remediate_env.strip() == "1"
                 if auto_remediate:
                     try:
                         from orchestrator.federation_remediator import FederationRemediator
@@ -373,12 +376,7 @@ if FastAPI is not None:
                 logger.exception("Failed to start peer sync")
 
         # Adaptive wisdom governor (Phase 15-8)
-        wisdom_enabled = os.getenv("NOVA_WISDOM_GOVERNOR_ENABLED", "false").strip().lower() in {
-            "1",
-            "true",
-            "yes",
-            "on",
-        }
+        wisdom_enabled = os.getenv("NOVA_WISDOM_GOVERNOR_ENABLED", "0").strip() == "1"
         if prom_enabled and wisdom_enabled:
             try:
                 from orchestrator import adaptive_wisdom_poller
@@ -490,6 +488,14 @@ if FastAPI is not None:
     except Exception:
         logger.warning("Failed to add peer sync router")
 
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        """Attach security headers to every HTTP response."""
+        response = await call_next(request)
+        for header, value in SECURITY_HEADERS.items():
+            response.headers.setdefault(header, value)
+        return response
+
     @app.get("/health")
     async def health():
         """Return aggregated health information for all slots."""
@@ -598,8 +604,8 @@ if FastAPI is not None:
     async def metrics() -> Response:
         """Prometheus-compatible metrics for all slots."""
         import os
-        flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "false").strip().lower()
-        if flag not in {"1", "true", "yes", "on"}:
+        flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
+        if flag != "1":
             # Explicit 404 when disabled so scanners don't scrape it by default
             return Response(content=b"", status_code=404, media_type="text/plain")
 

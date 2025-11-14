@@ -226,13 +226,13 @@ class TestFlowFabricConfigurationValidation:
 
     def test_environment_flag_behavior(self):
         """Test flow fabric behavior under different environment flags."""
-        with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "true"}):
+        with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "1"}):
             from orchestrator.adaptive_connections import get_flow_health_summary
 
             summary = get_flow_health_summary()
             assert summary["adaptive_connections_active"] is True
 
-        with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "false"}):
+        with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "0"}):
             from orchestrator.adaptive_connections import get_flow_health_summary
 
             summary = get_flow_health_summary()

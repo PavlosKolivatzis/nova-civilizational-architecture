@@ -89,7 +89,7 @@ def _get_meta_lens_metrics() -> Dict[str, Any]:
     """Get META_LENS_REPORT@1 observability metrics."""
     try:
         import os
-        enabled = os.getenv("NOVA_ENABLE_META_LENS", "0") in ("1", "true", "TRUE")
+        enabled = os.getenv("NOVA_ENABLE_META_LENS", "0").strip() == "1"
 
         if not enabled:
             return {

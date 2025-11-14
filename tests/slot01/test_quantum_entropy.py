@@ -25,7 +25,7 @@ def test_entropy_length_default(monkeypatch):
                 fidelity=0.99,
             )
 
-    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "true")
+    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "1")
     monkeypatch.setattr(quantum_entropy, "QuantumEntropySource", DummySource)
 
     blob = quantum_entropy.get_entropy_bytes(32)
@@ -36,7 +36,7 @@ def test_entropy_length_default(monkeypatch):
 
 def test_fallback_env_seed(monkeypatch):
     """Environment seed should produce deterministic entropy."""
-    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "false")
+    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "0")
     monkeypatch.setenv("NOVA_ENTROPY_SEED", "test-seed")
 
     first = quantum_entropy.get_entropy_bytes(16)
@@ -48,7 +48,7 @@ def test_fallback_env_seed(monkeypatch):
 
 def test_fallback_random(monkeypatch):
     """Ensure fallback random entropy respects length."""
-    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "false")
+    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "0")
     monkeypatch.delenv("NOVA_ENTROPY_SEED", raising=False)
 
     blob = quantum_entropy.get_entropy_bytes(8)
@@ -60,7 +60,7 @@ def test_quantum_entropy_simulator_path(monkeypatch):
     """Exercise the actual simulator when Cirq is available."""
     pytest.importorskip("cirq")
 
-    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "true")
+    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "1")
     monkeypatch.delenv("NOVA_ENTROPY_SEED", raising=False)
 
     source = quantum_entropy.QuantumEntropySource(backend="simulator")
@@ -97,7 +97,7 @@ def test_fidelity_in_metadata(monkeypatch):
                 abs_bias=0.01,
             )
 
-    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "true")
+    monkeypatch.setenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED", "1")
     monkeypatch.setattr(quantum_entropy, "QuantumEntropySource", DummySource)
 
     from nova.slots.slot01_truth_anchor import truth_anchor_engine

@@ -218,8 +218,8 @@ class TriEngine:
         Returns:
             Dict with "score" and "layer_scores" keys
         """
-        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip().lower()
-        if flag not in {"1", "true", "yes", "on"}:
+        flag = os.getenv("NOVA_ENABLE_TRI_LINK", "").strip()
+        if flag != "1":
             # Return a harmless stub instead of raising to avoid accidental call sites exploding.
             return {
                 "score": 0.0,

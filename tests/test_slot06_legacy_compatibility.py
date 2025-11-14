@@ -10,7 +10,7 @@ from collections.abc import Mapping
 def _env_truthy(name: str) -> bool:
     """Check if environment variable is set to a truthy value."""
     v = os.getenv(name, "")
-    return v.lower() in {"1", "true", "yes", "on"}
+    return v.strip() == "1"
 
 
 # Skip all legacy tests if legacy imports are blocked

@@ -119,7 +119,7 @@ def _get_system_reflection() -> Dict[str, Any]:
         "NOVA_ANR_LEARN_SHADOW": os.getenv("NOVA_ANR_LEARN_SHADOW", "1"),  # Was "0" - now matches router/anr.py
         "NOVA_ANR_STRICT_ON_ANOMALY": os.getenv("NOVA_ANR_STRICT_ON_ANOMALY", "0"),
         "NOVA_ENABLE_PROBABILISTIC_CONTRACTS": os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "1"),  # Was "0" - standardized to "1"
-        "NOVA_SLOT10_ENABLED": os.getenv("NOVA_SLOT10_ENABLED", "false"),
+        "NOVA_SLOT10_ENABLED": os.getenv("NOVA_SLOT10_ENABLED", "0"),
         "NOVA_ENABLE_META_LENS": os.getenv("NOVA_ENABLE_META_LENS", "0"),
         "NOVA_UNLEARN_ANOMALY": os.getenv("NOVA_UNLEARN_ANOMALY", "0"),
         "NOVA_BUILD_SHA": os.getenv("NOVA_BUILD_SHA", "unknown"),

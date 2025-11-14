@@ -8,8 +8,8 @@ from orchestrator.metrics import get_slot6_metrics
 
 def _env_truthy(name: str) -> bool:
     """Check if environment variable is truthy."""
-    v = os.getenv(name, "").strip().lower()
-    return v in {"1", "true", "yes", "on"}
+    v = os.getenv(name, "").strip()
+    return v == "1"
 
 
 def get_flag_state_metrics() -> Dict[str, Any]:

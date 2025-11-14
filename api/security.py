@@ -48,6 +48,6 @@ def validate_startup_security():
         return True
     except RuntimeError as e:
         print(f"⚠️ Security warning: {e}")
-        if os.getenv("NOVA_REQUIRE_SECURITY", "1").lower() in {"1", "true", "yes"}:
+        if os.getenv("NOVA_REQUIRE_SECURITY", "1").strip() == "1":
             raise
         return False

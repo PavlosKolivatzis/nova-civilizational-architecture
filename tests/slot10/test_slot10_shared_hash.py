@@ -33,37 +33,21 @@ def test_fallback_sha256_when_flag_off(monkeypatch):
         assert record.sig.startswith("dummy:")
 
 
-def test_env_truthy_variants():
-    """Test that _env_truthy handles various truthy values."""
-    # Test directly with environment variable
+def test_env_truthy_requires_canonical_one():
+    """_env_truthy should only treat the canonical \"1\" as enabled."""
     os.environ["TEST_FLAG"] = "1"
     assert _env_truthy("TEST_FLAG") is True
 
-    os.environ["TEST_FLAG"] = "true"
-    assert _env_truthy("TEST_FLAG") is True
+    for value in ["true", "TRUE", "yes", "YES", "on", "ON", "0", "false", ""]:
+        os.environ["TEST_FLAG"] = value
+        assert _env_truthy("TEST_FLAG") is False
 
-    os.environ["TEST_FLAG"] = "YES"
-    assert _env_truthy("TEST_FLAG") is True
-
-    os.environ["TEST_FLAG"] = "on"
-    assert _env_truthy("TEST_FLAG") is True
-
-    os.environ["TEST_FLAG"] = "0"
-    assert _env_truthy("TEST_FLAG") is False
-
-    os.environ["TEST_FLAG"] = "false"
-    assert _env_truthy("TEST_FLAG") is False
-
-    os.environ["TEST_FLAG"] = ""
-    assert _env_truthy("TEST_FLAG") is False
-
-    # Clean up
     del os.environ["TEST_FLAG"]
 
 
 def test_shared_blake2b_when_flag_on_and_available(monkeypatch):
     """Test that audit records use blake2b when shared hash is enabled and available."""
-    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "true")
+    monkeypatch.setenv("NOVA_USE_SHARED_HASH", "1")
 
     # Import at runtime to check availability
     try:

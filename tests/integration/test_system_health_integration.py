@@ -164,7 +164,7 @@ class TestFlowFabricIntegration:
     def test_flow_fabric_health_when_enabled(self):
         """Test flow fabric health integration when flow metrics enabled."""
         # Set environment to enable flow metrics
-        with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "true"}):
+        with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "1"}):
             from orchestrator.health import health_payload
             from orchestrator.core.performance_monitor import PerformanceMonitor
             from orchestrator.core import create_router
@@ -204,7 +204,7 @@ class TestFlowFabricIntegration:
 
     def test_flow_fabric_contract_tracking(self):
         """Test that flow fabric tracks all expected Nova contracts."""
-        with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "true"}):
+        with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "1"}):
             from orchestrator.health import health_payload
             from orchestrator.core.performance_monitor import PerformanceMonitor
             from orchestrator.core import create_router

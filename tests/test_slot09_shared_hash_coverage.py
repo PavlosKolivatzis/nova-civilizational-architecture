@@ -43,7 +43,7 @@ def test_audit_hash_chain_with_shared_hash_disabled():
         create_development_config
     )
 
-    with patch.dict(os.environ, {'NOVA_USE_SHARED_HASH': 'false'}):
+    with patch.dict(os.environ, {'NOVA_USE_SHARED_HASH': '0'}):
         api = create_hybrid_slot9_api(config=create_development_config())
 
         # Create test audit trail
@@ -78,7 +78,7 @@ def test_audit_hash_chain_with_shared_hash_enabled():
     if not SHARED_HASH_AVAILABLE:
         pytest.skip("Shared hash utility not available")
 
-    with patch.dict(os.environ, {'NOVA_USE_SHARED_HASH': 'true'}):
+    with patch.dict(os.environ, {'NOVA_USE_SHARED_HASH': '1'}):
         api = create_hybrid_slot9_api(config=create_development_config())
 
         # Create test audit trail
@@ -161,8 +161,8 @@ def test_environment_flag_variations():
     """Test different environment variable values for shared hash."""
     from nova.slots.slot09_distortion_protection.hybrid_api import create_hybrid_slot9_api
 
-    # Test various truthy values
-    truthy_values = ["1", "true", "TRUE", "yes", "YES", "on", "ON"]
+    # Test canonical truthy value
+    truthy_values = ["1"]
 
     for value in truthy_values:
         with patch.dict(os.environ, {'NOVA_USE_SHARED_HASH': value}):
@@ -170,8 +170,8 @@ def test_environment_flag_variations():
             api = create_hybrid_slot9_api()
             assert api is not None
 
-    # Test falsy values
-    falsy_values = ["", "0", "false", "FALSE", "no", "NO", "off", "OFF"]
+    # Test falsy/invalid values
+    falsy_values = ["", "0", "false", "FALSE", "no", "NO", "off", "OFF", "true", "TRUE", "yes", "on"]
 
     for value in falsy_values:
         with patch.dict(os.environ, {'NOVA_USE_SHARED_HASH': value}):

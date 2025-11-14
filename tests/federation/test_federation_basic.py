@@ -18,7 +18,7 @@ from nova.federation.trust_model import score_trust
 
 
 def test_feature_flag_disabled(monkeypatch):
-    monkeypatch.setenv("FEDERATION_ENABLED", "false")
+    monkeypatch.setenv("FEDERATION_ENABLED", "0")
     from nova.federation.federation_server import build_router
 
     router = build_router()
@@ -48,7 +48,7 @@ def test_registry_loads_yaml(tmp_path: Path, monkeypatch):
         """,
         encoding="utf-8",
     )
-    monkeypatch.setenv("FEDERATION_ENABLED", "true")
+    monkeypatch.setenv("FEDERATION_ENABLED", "1")
     monkeypatch.setenv("NOVA_FEDERATION_REGISTRY", str(registry_file))
     config = load_federation_config()
     registry = PeerRegistry(config)

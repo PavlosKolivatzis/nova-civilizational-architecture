@@ -59,8 +59,8 @@ def flip_flags(enable=None, shadow=None):
     env_vars = read_env_file()
     
     # Get current values (default to safe disabled state)
-    current_enabled = env_vars.get("NOVA_SEMANTIC_MIRROR_ENABLED", "false").lower() == "true"
-    current_shadow = env_vars.get("NOVA_SEMANTIC_MIRROR_SHADOW", "true").lower() == "true"
+    current_enabled = env_vars.get("NOVA_SEMANTIC_MIRROR_ENABLED", "0").strip() == "1"
+    current_shadow = env_vars.get("NOVA_SEMANTIC_MIRROR_SHADOW", "1").strip() == "1"
     
     # Apply changes if specified
     if enable is not None:
@@ -69,8 +69,8 @@ def flip_flags(enable=None, shadow=None):
         current_shadow = shadow
     
     # Update environment variables
-    env_vars["NOVA_SEMANTIC_MIRROR_ENABLED"] = "true" if current_enabled else "false"
-    env_vars["NOVA_SEMANTIC_MIRROR_SHADOW"] = "true" if current_shadow else "false"
+    env_vars["NOVA_SEMANTIC_MIRROR_ENABLED"] = "1" if current_enabled else "0"
+    env_vars["NOVA_SEMANTIC_MIRROR_SHADOW"] = "1" if current_shadow else "0"
     
     # Write updated configuration
     write_env_file(env_vars)
@@ -83,13 +83,13 @@ def flip_flags(enable=None, shadow=None):
 def print_current_state():
     """Print current semantic mirror configuration."""
     env_vars = read_env_file()
-    enabled = env_vars.get("NOVA_SEMANTIC_MIRROR_ENABLED", "false").lower() == "true"
-    shadow = env_vars.get("NOVA_SEMANTIC_MIRROR_SHADOW", "true").lower() == "true"
+    enabled = env_vars.get("NOVA_SEMANTIC_MIRROR_ENABLED", "0").strip() == "1"
+    shadow = env_vars.get("NOVA_SEMANTIC_MIRROR_SHADOW", "1").strip() == "1"
     mode = determine_mode(enabled, shadow)
     
     print(f"Current Configuration ({ENV_FILE}):")
-    print(f"  NOVA_SEMANTIC_MIRROR_ENABLED={env_vars.get('NOVA_SEMANTIC_MIRROR_ENABLED', 'false')}")
-    print(f"  NOVA_SEMANTIC_MIRROR_SHADOW={env_vars.get('NOVA_SEMANTIC_MIRROR_SHADOW', 'true')}")
+    print(f"  NOVA_SEMANTIC_MIRROR_ENABLED={env_vars.get('NOVA_SEMANTIC_MIRROR_ENABLED', '0')}")
+    print(f"  NOVA_SEMANTIC_MIRROR_SHADOW={env_vars.get('NOVA_SEMANTIC_MIRROR_SHADOW', '1')}")
     print(f"  MODE={mode}")
 
 

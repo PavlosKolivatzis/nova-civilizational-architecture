@@ -85,7 +85,7 @@ def get_entropy_sample(n_bytes: Optional[int] = None) -> EntropySample:
     settings = _load_slot_settings()
     env_override = os.getenv("NOVA_SLOT01_QUANTUM_ENTROPY_ENABLED")
     quantum_enabled = (
-        (env_override.lower() in {"1", "true", "yes", "on"}) if env_override else settings.get("enabled", True)
+        (env_override.strip() == "1") if env_override is not None else settings.get("enabled", True)
     )
     backend = os.getenv("NOVA_SLOT01_QUANTUM_BACKEND", settings.get("backend", "simulator"))
     bytes_per_seed = int(settings.get("bytes_per_seed", DEFAULT_BYTES))

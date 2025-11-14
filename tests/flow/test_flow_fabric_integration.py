@@ -195,7 +195,7 @@ class TestFlowFabricEnvironmentFlags:
     """Environment flag handling."""
 
     def test_flow_metrics_environment_flag(self):
-        with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "false"}):
+        with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "0"}):
             from orchestrator.flow_fabric_init import initialize_flow_fabric
             try:
                 initialize_flow_fabric()
@@ -203,7 +203,7 @@ class TestFlowFabricEnvironmentFlags:
                 pytest.fail(f"Failed with metrics disabled: {e}")
 
     def test_adaptive_connections_environment_flag(self):
-        with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "true"}):
+        with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "1"}):
             from orchestrator.flow_fabric_init import initialize_flow_fabric
             try:
                 initialize_flow_fabric()

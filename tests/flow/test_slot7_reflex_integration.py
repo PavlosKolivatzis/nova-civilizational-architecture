@@ -233,8 +233,8 @@ class TestReflexPolicyManager:
     def test_feature_flag_overrides(self):
         """Test feature flag environment variable overrides"""
         with patch.dict('os.environ', {
-            'NOVA_REFLEX_ENABLED': 'true',
-            'NOVA_REFLEX_SHADOW': 'false'
+            'NOVA_REFLEX_ENABLED': '1',
+            'NOVA_REFLEX_SHADOW': '0'
         }):
             policy_manager = ReflexPolicyManager()
             

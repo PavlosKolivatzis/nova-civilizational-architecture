@@ -6,7 +6,7 @@ def _meta_lens_analyze(payload):
     from datetime import datetime, timezone
 
     # Check if meta-lens is enabled
-    if os.getenv("NOVA_ENABLE_META_LENS", "0") not in ("1", "true", "TRUE"):
+    if os.getenv("NOVA_ENABLE_META_LENS", "0").strip() != "1":
         return {
             "schema_version": "1.0.0",
             "source_slot": "S2",
@@ -21,7 +21,7 @@ def _meta_lens_analyze(payload):
     try:
         from .meta_lens_processor import run_fixed_point, create_base_state, hash_report
         # Strict/permissive validation mode
-        strict_validation = os.getenv("META_LENS_STRICT_VALIDATION", "0") in ("1", "true", "TRUE")
+        strict_validation = os.getenv("META_LENS_STRICT_VALIDATION", "0").strip() == "1"
 
         try:
             from contracts.validators.meta_lens_validator import validate_meta_lens_report
@@ -76,7 +76,7 @@ def _meta_lens_analyze(payload):
             context["_meta_lens_mode"] = "mock_adapters_import_error"
 
         # Test enforcement flag
-        enforce_real = os.getenv("NOVA_META_LENS_TEST_ENFORCE_REAL", "0") in ("1", "true", "TRUE")
+        enforce_real = os.getenv("NOVA_META_LENS_TEST_ENFORCE_REAL", "0").strip() == "1"
         if enforce_real and context.get("_meta_lens_mode") != "real_adapters":
             raise RuntimeError(f"META_LENS: expected real adapters in test, but mode is {context.get('_meta_lens_mode')}")
 
