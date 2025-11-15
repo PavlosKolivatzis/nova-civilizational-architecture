@@ -300,7 +300,3 @@ class TestEdgeCases:
     def test_empty_content_validation(self):
         with pytest.raises(ValueError):
             DistortionDetectionRequest(content=" ", trace_id="edge")
-
-
-
-

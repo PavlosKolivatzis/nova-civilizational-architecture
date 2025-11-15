@@ -18,7 +18,7 @@ AUDIT_CHAIN_KEY = secrets.token_hex(16)
 
 class DistortionType(Enum):
     NONE = "none"
-    INDIVIDUAL_COGNITIVE = "individual_cognitive" 
+    INDIVIDUAL_COGNITIVE = "individual_cognitive"
     CULTURAL_TRADITIONAL = "cultural_traditional"
     INFRASTRUCTURE_MAINTAINED = "infrastructure_maintained"
     SYSTEMATIC_MANIPULATION = "systematic_manipulation"
@@ -27,7 +27,7 @@ class DistortionType(Enum):
 class InfrastructureLevel(Enum):
     INDIVIDUAL = "individual"
     CULTURAL = "cultural"
-    INSTITUTIONAL = "institutional" 
+    INSTITUTIONAL = "institutional"
     INFRASTRUCTURE = "infrastructure"
     CIVILIZATIONAL = "civilizational"
 
@@ -38,7 +38,7 @@ class ConfidenceScore:
     value: float
     factors: Dict[str, float]
     timestamp: float = field(default_factory=time.time)
-    
+
     def __post_init__(self):
         if not 0.0 <= self.value <= 1.0:
             raise ValueError(f"Confidence must be between 0 and 1, got {self.value}")
@@ -58,29 +58,29 @@ class DistortionDetectionResult:
 
 class SecureTimeAwareCache:
     """Enhanced cache with encryption and automatic pruning"""
-    
+
     def __init__(self, capacity: int = 1500, expiry_hours: int = 6):
         self.capacity = capacity
         self.expiry_seconds = expiry_hours * 3600
         self.cache = OrderedDict()
         self.timestamps = {}
         self.access_count = {}
-        
+
     def get(self, key: str) -> Optional[Any]:
         if key in self.cache:
             if time.time() - self.timestamps[key] > self.expiry_seconds:
                 self._remove(key)
                 return None
-            
+
             # Update access patterns
             self.cache.move_to_end(key)
             self.access_count[key] = self.access_count.get(key, 0) + 1
             return self._decrypt(self.cache[key])
         return None
-    
+
     def put(self, key: str, value: Any) -> None:
         encrypted = self._encrypt(value)
-        
+
         if key in self.cache:
             self.cache.move_to_end(key)
         else:
@@ -88,37 +88,37 @@ class SecureTimeAwareCache:
                 # Remove least recently used with lowest access count
                 lru_key = self._find_lru_key()
                 self._remove(lru_key)
-        
+
         self.cache[key] = encrypted
         self.timestamps[key] = time.time()
         self.access_count[key] = 1
         self._prune_expired()
-    
+
     def _find_lru_key(self) -> str:
         """Find least recently used key with lowest access count"""
         min_access = min(self.access_count.values())
         candidates = [k for k, count in self.access_count.items() if count == min_access]
         return next(iter(candidates))  # First (oldest) among least accessed
-    
+
     def _prune_expired(self):
         """Remove expired entries"""
         current_time = time.time()
-        expired_keys = [k for k, ts in self.timestamps.items() 
+        expired_keys = [k for k, ts in self.timestamps.items()
                        if current_time - ts > self.expiry_seconds]
         for key in expired_keys:
             self._remove(key)
-    
+
     def _remove(self, key: str) -> None:
         if key in self.cache:
             del self.cache[key]
             del self.timestamps[key]
             del self.access_count[key]
-    
+
     def _encrypt(self, data: Any) -> bytes:
         """Simplified encryption for demonstration - use AES-GCM in production"""
         serialized = pickle.dumps(data)
         return hashlib.blake2b(serialized, salt=ENCRYPTION_SALT).digest()
-    
+
     def _decrypt(self, data: bytes) -> Any:
         """Matching decryption logic - placeholder for demonstration"""
         # In production, this would properly decrypt AES-GCM data
@@ -128,13 +128,13 @@ class SecureTimeAwareCache:
 
 class UnifiedAuditSystem:
     """Enhanced audit system with tamper-evident chaining"""
-    
+
     def __init__(self):
         self.logger = logging.getLogger('nova_audit_v2')
         self.chain = []
         self.chain_hash = AUDIT_CHAIN_KEY
-        
-    def record_event(self, slot_id: int, event_type: str, data: Dict, 
+
+    def record_event(self, slot_id: int, event_type: str, data: Dict,
                     confidence: Optional[ConfidenceScore] = None) -> str:
         """Record event with tamper-evident chain"""
         event_id = secrets.token_hex(8)
@@ -146,7 +146,7 @@ class UnifiedAuditSystem:
             'data': self._sanitize_audit_data(data),
             'confidence': confidence.value if confidence else None
         }
-        
+
         # Create tamper-evident chain
         event_hash = self._hash_event(event)
         chain_entry = {
@@ -155,14 +155,14 @@ class UnifiedAuditSystem:
             'prev_hash': self.chain_hash,
             'full_hash': self._hash_chain(event_hash)
         }
-        
+
         self.chain.append(chain_entry)
         self.chain_hash = chain_entry['full_hash']
-        
+
         # Log with chain integrity
         self.logger.info(f"AUDIT_CHAIN:{self.chain_hash[:16]}|{event_type}|{slot_id}")
         return event_id
-    
+
     def _sanitize_audit_data(self, data: Dict) -> Dict:
         """Remove sensitive data from audit logs"""
         sanitized = {}
@@ -176,82 +176,82 @@ class UnifiedAuditSystem:
             else:
                 sanitized[key] = value
         return sanitized
-    
+
     def _hash_event(self, event: Dict) -> str:
         """Create deterministic event hash"""
         return hashlib.blake2b(
             json.dumps(event, sort_keys=True).encode()
         ).hexdigest()
-    
+
     def _hash_chain(self, event_hash: str) -> str:
         """Create chain hash linking to previous events"""
         return hashlib.blake2b(
             f"{self.chain_hash}{event_hash}".encode()
         ).hexdigest()
-    
+
     def verify_chain_integrity(self) -> bool:
         """Verify audit chain hasn't been tampered with"""
         if not self.chain:
             return True
-            
+
         current_hash = AUDIT_CHAIN_KEY
         for entry in self.chain:
             expected_hash = hashlib.blake2b(
                 f"{current_hash}{entry['content_hash']}".encode()
             ).hexdigest()
-            
+
             if entry['full_hash'] != expected_hash:
                 return False
             current_hash = entry['full_hash']
-            
+
         return True
 
 
 class StrategicGuard:
     """Advanced security layer with behavioral analysis"""
-    
+
     FORBIDDEN_PATTERNS = [
-        r"beneficiar(y|ies)", r"economic.?dependency", 
+        r"beneficiar(y|ies)", r"economic.?dependency",
         r"infrastructure.?mapping", r"strategic.?intel",
         r"stakeholder.?network", r"economic.?replacement",
         r"manipulation.?infrastructure", r"systematic.?capture"
     ]
-    
+
     SAFE_ALTERNATIVES = {
         "economic dependency": "financial relationships",
-        "beneficiaries": "stakeholders", 
+        "beneficiaries": "stakeholders",
         "infrastructure mapping": "system analysis",
         "strategic intelligence": "analysis insights"
     }
-    
+
     def __init__(self):
         self.violation_count = 0
         self.response_patterns = []
-        
+
     def validate_response(self, response: Dict) -> bool:
         """Validate response contains no strategic leaks"""
         response_str = json.dumps(response, indent=2).lower()
-        
+
         # Pattern check
         for pattern in self.FORBIDDEN_PATTERNS:
             if re.search(pattern, response_str, re.IGNORECASE):
                 self.violation_count += 1
                 return False
-        
+
         # Behavioral anomaly detection
         if self._detect_response_anomaly(response_str):
             return False
-            
+
         return True
-    
+
     def sanitize_response(self, response: Dict) -> Dict:
         """Remove strategic content and replace with safe alternatives"""
         sanitized = {}
-        
+
         for key, value in response.items():
             if key.startswith('strategic_') or key.startswith('internal_'):
                 continue
-                
+
             if isinstance(value, str):
                 sanitized_value = value
                 for forbidden, safe in self.SAFE_ALTERNATIVES.items():
@@ -261,47 +261,47 @@ class StrategicGuard:
                 sanitized[key] = sanitized_value
             else:
                 sanitized[key] = value
-                
+
         return sanitized
-    
+
     def _detect_response_anomaly(self, response: str) -> bool:
         """Detect statistical anomalies in response patterns"""
         # Track response length patterns
         self.response_patterns.append(len(response))
-        
+
         if len(self.response_patterns) > 10:
             recent_avg = sum(self.response_patterns[-10:]) / 10
             current_length = len(response)
-            
+
             # Flag if response is 3x longer than recent average
             if current_length > recent_avg * 3:
                 return True
-                
+
         return False
 
 
 class ConstellationIntegrator:
     """Real-time stability integration with Slot 5"""
-    
+
     def __init__(self, constellation_manager):
         self.manager = constellation_manager
         self.stability_history = []
         self.drift_threshold = 0.1
-        
+
     def assess_impact(self, infrastructure_map: Dict) -> Dict:
         """Assess threat impact on constellation stability"""
         try:
             current_pos = self.manager.get_current_position()
             threat_level = infrastructure_map.get('threat_index', 0.5)
-            
+
             # Calculate stability metrics
             stability_score = max(0.1, 1.0 - (threat_level * 0.8))
             drift_vector = self._calculate_drift_vector(threat_level, current_pos)
             projected_pos = self._project_position(current_pos, drift_vector)
-            
+
             # Determine trend direction
             trend = self._analyze_trend(stability_score)
-            
+
             impact_assessment = {
                 'stability_index': stability_score,
                 'drift_vector': drift_vector,
@@ -317,20 +317,20 @@ class ConstellationIntegrator:
                     }
                 )
             }
-            
+
             # Update history
             self.stability_history.append({
                 'timestamp': time.time(),
                 'stability': stability_score,
                 'threat_level': threat_level
             })
-            
+
             # Keep only recent history
             if len(self.stability_history) > 100:
                 self.stability_history = self.stability_history[-50:]
-                
+
             return impact_assessment
-            
+
         except Exception as e:
             # Fallback assessment if constellation unavailable
             return {
@@ -345,15 +345,15 @@ class ConstellationIntegrator:
                 ),
                 'error': str(e)
             }
-    
+
     def _calculate_drift_vector(self, threat_level: float, position: Tuple) -> List[float]:
         """Calculate drift vector based on threat and position"""
         stability_drift = threat_level * 0.15
         cultural_drift = threat_level * 0.08
         temporal_drift = threat_level * 0.05
-        
+
         return [stability_drift, cultural_drift, temporal_drift]
-    
+
     def _project_position(self, current_pos: Tuple, drift_vector: List[float]) -> List[float]:
         """Project future position based on drift"""
         if len(current_pos) >= 3 and len(drift_vector) >= 3:
@@ -363,14 +363,14 @@ class ConstellationIntegrator:
                 current_pos[2] - drift_vector[2]   # Temporal stability decreases
             ]
         return [0.88, 0.09, 0.0]  # Default optimal position
-    
+
     def _analyze_trend(self, current_stability: float) -> str:
         """Analyze stability trend direction"""
         if len(self.stability_history) < 3:
             return 'stable'
-            
+
         recent_stabilities = [h['stability'] for h in self.stability_history[-3:]]
-        
+
         if all(s1 < s2 for s1, s2 in zip(recent_stabilities[:-1], recent_stabilities[1:])):
             return 'stabilizing'
         elif all(s1 > s2 for s1, s2 in zip(recent_stabilities[:-1], recent_stabilities[1:])):
@@ -379,7 +379,7 @@ class ConstellationIntegrator:
             return 'volatile'
         else:
             return 'stable'
-    
+
     def _calculate_urgency(self, stability: float, trend: str) -> str:
         """Calculate intervention urgency"""
         if stability < 0.3 or trend == 'deteriorating':
@@ -394,18 +394,18 @@ class ConstellationIntegrator:
 
 class DistortionAnalyzer:
     """Core distortion analysis engine"""
-    
+
     def __init__(self):
         self.pattern_weights = {
             'systematic_language': 0.3,
             'institutional_backing': 0.4,
             'economic_indicators': 0.3
         }
-        
-    def analyze_infrastructure(self, content: str, context: Dict, 
+
+    def analyze_infrastructure(self, content: str, context: Dict,
                              dthresh_result: Any) -> Dict[str, Any]:
         """Comprehensive infrastructure analysis"""
-        
+
         analysis = {
             'distortion_type': self._classify_distortion_type(content, dthresh_result),
             'infrastructure_level': self._assess_infrastructure_level(content, context),
@@ -415,36 +415,36 @@ class DistortionAnalyzer:
             'systematic_patterns': self._detect_systematic_patterns(content),
             'persistence_indicators': self._assess_persistence_patterns(content, context)
         }
-        
+
         return analysis
-    
+
     def _classify_distortion_type(self, content: str, dthresh_result: Any) -> DistortionType:
         """Classify the type of distortion detected"""
         content_lower = content.lower()
-        
+
         # Check for infrastructure-maintained patterns
         infrastructure_indicators = [
             'systematic', 'institutional', 'coordinated', 'organized',
             'funded by', 'sponsored by', 'official policy', 'standard practice'
         ]
-        
+
         cultural_indicators = [
             'tradition', 'culture', 'heritage', 'custom', 'ancestral',
             'traditional', 'cultural norm', 'way of life'
         ]
-        
+
         manipulation_indicators = [
             'disinformation', 'propaganda', 'coordinated campaign',
             'astroturfing', 'manipulation', 'deliberate distortion'
         ]
-        
-        infrastructure_score = sum(1 for indicator in infrastructure_indicators 
+
+        infrastructure_score = sum(1 for indicator in infrastructure_indicators
                                  if indicator in content_lower)
-        cultural_score = sum(1 for indicator in cultural_indicators 
+        cultural_score = sum(1 for indicator in cultural_indicators
                            if indicator in content_lower)
-        manipulation_score = sum(1 for indicator in manipulation_indicators 
+        manipulation_score = sum(1 for indicator in manipulation_indicators
                                if indicator in content_lower)
-        
+
         if manipulation_score >= 2:
             return DistortionType.SYSTEMATIC_MANIPULATION
         elif infrastructure_score >= 2:
@@ -455,14 +455,14 @@ class DistortionAnalyzer:
             return DistortionType.INFRASTRUCTURE_MAINTAINED
         else:
             return DistortionType.INDIVIDUAL_COGNITIVE
-    
+
     def _assess_infrastructure_level(self, content: str, context: Dict) -> InfrastructureLevel:
         """Assess the level of infrastructure supporting the distortion"""
         content_lower = content.lower()
-        
+
         # Analyze context for institutional markers
         institutional_depth = 0
-        
+
         if 'government' in content_lower or 'official' in content_lower:
             institutional_depth += 2
         if 'corporate' in content_lower or 'industry' in content_lower:
@@ -471,14 +471,14 @@ class DistortionAnalyzer:
             institutional_depth += 1
         if 'legal' in content_lower or 'regulatory' in content_lower:
             institutional_depth += 2
-        
+
         # Check context for scope indicators
         scope_indicators = context.get('scope_indicators', {})
         if scope_indicators.get('global_reach', False):
             institutional_depth += 2
         if scope_indicators.get('multi_institutional', False):
             institutional_depth += 1
-        
+
         if institutional_depth >= 6:
             return InfrastructureLevel.CIVILIZATIONAL
         elif institutional_depth >= 4:
@@ -489,11 +489,11 @@ class DistortionAnalyzer:
             return InfrastructureLevel.CULTURAL
         else:
             return InfrastructureLevel.INDIVIDUAL
-    
+
     def _calculate_threat_index(self, content: str, context: Dict, dthresh_result: Any) -> float:
         """Calculate overall threat index"""
         base_threat = getattr(dthresh_result, 'threat_level', 0.5)
-        
+
         # Adjust based on infrastructure level
         infrastructure_multiplier = {
             InfrastructureLevel.INDIVIDUAL: 0.8,
@@ -502,68 +502,68 @@ class DistortionAnalyzer:
             InfrastructureLevel.INFRASTRUCTURE: 1.6,
             InfrastructureLevel.CIVILIZATIONAL: 2.0
         }
-        
+
         infrastructure_level = self._assess_infrastructure_level(content, context)
         multiplier = infrastructure_multiplier.get(infrastructure_level, 1.0)
-        
+
         adjusted_threat = min(1.0, base_threat * multiplier)
-        
+
         return adjusted_threat
-    
+
     def _detect_economic_patterns(self, content: str) -> Dict[str, Any]:
         """Detect economic incentive patterns"""
         economic_keywords = [
             'profit', 'revenue', 'funding', 'investment', 'financial',
             'economic', 'market', 'industry', 'commercial', 'business'
         ]
-        
+
         content_lower = content.lower()
         economic_indicators = [kw for kw in economic_keywords if kw in content_lower]
-        
+
         return {
             'economic_keywords': economic_indicators,
             'economic_intensity': len(economic_indicators) / len(economic_keywords),
             'profit_indicators': 'profit' in content_lower or 'revenue' in content_lower
         }
-    
+
     def _detect_institutional_backing(self, content: str) -> Dict[str, Any]:
         """Detect institutional backing indicators"""
         institutional_keywords = [
             'official', 'government', 'agency', 'department', 'ministry',
             'organization', 'institution', 'authority', 'administration'
         ]
-        
+
         content_lower = content.lower()
         institutional_indicators = [kw for kw in institutional_keywords if kw in content_lower]
-        
+
         return {
             'institutional_keywords': institutional_indicators,
             'institutional_density': len(institutional_indicators) / len(institutional_keywords),
             'authority_claims': 'official' in content_lower or 'authority' in content_lower
         }
-    
+
     def _detect_systematic_patterns(self, content: str) -> Dict[str, Any]:
         """Detect systematic manipulation patterns"""
         systematic_keywords = [
             'systematic', 'coordinated', 'organized', 'campaign',
             'deliberate', 'intentional', 'strategic', 'planned'
         ]
-        
+
         content_lower = content.lower()
         systematic_indicators = [kw for kw in systematic_keywords if kw in content_lower]
-        
+
         return {
             'systematic_keywords': systematic_indicators,
             'systematic_intensity': len(systematic_indicators) / len(systematic_keywords),
             'coordination_indicators': 'coordinated' in content_lower or 'organized' in content_lower
         }
-    
+
     def _assess_persistence_patterns(self, content: str, context: Dict) -> Dict[str, Any]:
         """Assess how persistent this distortion pattern might be"""
-        
+
         # Institutional persistence is higher
         infrastructure_level = self._assess_infrastructure_level(content, context)
-        
+
         persistence_scores = {
             InfrastructureLevel.INDIVIDUAL: 0.2,
             InfrastructureLevel.CULTURAL: 0.6,
@@ -571,21 +571,21 @@ class DistortionAnalyzer:
             InfrastructureLevel.INFRASTRUCTURE: 0.9,
             InfrastructureLevel.CIVILIZATIONAL: 0.95
         }
-        
+
         base_persistence = persistence_scores.get(infrastructure_level, 0.5)
-        
+
         # Adjust for economic incentives
         economic_patterns = self._detect_economic_patterns(content)
         if economic_patterns['profit_indicators']:
             base_persistence += 0.1
-        
+
         return {
             'persistence_score': min(1.0, base_persistence),
             'infrastructure_persistence': base_persistence,
             'economic_reinforcement': economic_patterns['profit_indicators'],
             'estimated_duration': self._estimate_duration(base_persistence)
         }
-    
+
     def _estimate_duration(self, persistence_score: float) -> str:
         """Estimate how long distortion might persist"""
         if persistence_score < 0.3:
@@ -600,20 +600,20 @@ class DistortionAnalyzer:
 
 class InterventionSynthesizer:
     """Strategy synthesis for different distortion types"""
-    
+
     def __init__(self):
         self.strategy_templates = self._initialize_strategy_templates()
-        
-    def synthesize_intervention(self, analysis: Dict[str, Any], 
+
+    def synthesize_intervention(self, analysis: Dict[str, Any],
                               stability_impact: Dict[str, Any]) -> Dict[str, Any]:
         """Synthesize appropriate intervention strategy"""
-        
+
         distortion_type = analysis['distortion_type']
         infrastructure_level = analysis['infrastructure_level']
         urgency = stability_impact['intervention_urgency']
-        
+
         base_strategy = self.strategy_templates.get(distortion_type, self.strategy_templates[DistortionType.INDIVIDUAL_COGNITIVE])
-        
+
         # Customize strategy based on urgency and infrastructure level
         customized_strategy = base_strategy.copy()
         customized_strategy.update({
@@ -624,9 +624,9 @@ class InterventionSynthesizer:
             'resource_requirements': self._estimate_resources(infrastructure_level),
             'success_probability': self._estimate_success_probability(analysis, stability_impact)
         })
-        
+
         return customized_strategy
-    
+
     def _initialize_strategy_templates(self) -> Dict[DistortionType, Dict[str, Any]]:
         """Initialize strategy templates for different distortion types"""
         return {
@@ -659,7 +659,7 @@ class InterventionSynthesizer:
                 'implementation_complexity': 'very_high'
             }
         }
-    
+
     def _calculate_timeline(self, urgency: str, infrastructure_level: InfrastructureLevel) -> str:
         """Calculate intervention timeline"""
         urgency_multipliers = {
@@ -668,7 +668,7 @@ class InterventionSynthesizer:
             'medium': 1.0,
             'low': 1.5
         }
-        
+
         base_timelines = {
             InfrastructureLevel.INDIVIDUAL: 'days',
             InfrastructureLevel.CULTURAL: 'weeks',
@@ -676,9 +676,9 @@ class InterventionSynthesizer:
             InfrastructureLevel.INFRASTRUCTURE: 'quarters',
             InfrastructureLevel.CIVILIZATIONAL: 'years'
         }
-        
+
         return base_timelines.get(infrastructure_level, 'months')
-    
+
     def _estimate_resources(self, infrastructure_level: InfrastructureLevel) -> str:
         """Estimate resource requirements"""
         resource_levels = {
@@ -688,13 +688,13 @@ class InterventionSynthesizer:
             InfrastructureLevel.INFRASTRUCTURE: 'high',
             InfrastructureLevel.CIVILIZATIONAL: 'massive'
         }
-        
+
         return resource_levels.get(infrastructure_level, 'medium')
-    
+
     def _estimate_success_probability(self, analysis: Dict, stability_impact: Dict) -> float:
         """Estimate probability of intervention success"""
         base_probability = 0.7
-        
+
         # Adjust for infrastructure level
         infrastructure_penalties = {
             InfrastructureLevel.INDIVIDUAL: 0.0,
@@ -703,17 +703,17 @@ class InterventionSynthesizer:
             InfrastructureLevel.INFRASTRUCTURE: -0.3,
             InfrastructureLevel.CIVILIZATIONAL: -0.4
         }
-        
+
         infrastructure_level = analysis['infrastructure_level']
         penalty = infrastructure_penalties.get(infrastructure_level, -0.1)
-        
+
         # Adjust for stability impact
         stability_bonus = (stability_impact['stability_index'] - 0.5) * 0.2
-        
+
         # Adjust for persistence
         persistence_score = analysis.get('persistence_indicators', {}).get('persistence_score', 0.5)
         persistence_penalty = persistence_score * -0.3
-        
+
         final_probability = base_probability + penalty + stability_bonus + persistence_penalty
         return max(0.1, min(0.9, final_probability))
 
@@ -721,7 +721,7 @@ class InterventionSynthesizer:
 class Slot9Core:
     """Optimized production core for Slot 9"""
     VERSION = "2.4.0"
-    
+
     def __init__(self, slot2_manager, constellation_manager, audit_system=None):
         self.slot2 = slot2_manager
         self.constellation = ConstellationIntegrator(constellation_manager)
@@ -730,7 +730,7 @@ class Slot9Core:
         self.cache = SecureTimeAwareCache(capacity=1500, expiry_hours=6)
         self.analyzer = DistortionAnalyzer()
         self.intervention_synthesizer = InterventionSynthesizer()
-        
+
         # Performance metrics
         self.metrics = {
             'total_requests': 0,
@@ -739,26 +739,26 @@ class Slot9Core:
             'average_processing_time': 0.0,
             'security_violations': 0
         }
-        
+
         self.logger = logging.getLogger('slot9_core')
-        
+
     def process(self, content: str, context: Dict = None) -> DistortionDetectionResult:
         """Main processing pipeline with comprehensive analysis"""
         start_time = time.time()
         self.metrics['total_requests'] += 1
-        
+
         if context is None:
             context = {}
-        
+
         # Generate content hash for caching
         content_hash = self._generate_content_hash(content, context)
-        
+
         # Check cache first
         if cached_result := self.cache.get(content_hash):
             self.metrics['cache_hits'] += 1
             self.logger.debug(f"Cache hit for content hash: {content_hash[:16]}")
             return cached_result
-        
+
         # ΔTHRESH early warning analysis
         try:
             dthresh_result = self.slot2.process_content(content, context.get('session_id', 'default'))
@@ -773,7 +773,7 @@ class Slot9Core:
             self.logger.warning(f"ΔTHRESH analysis failed: {e}")
             dthresh_result = self._create_fallback_dthresh_result()
             dthresh_confidence = ConfidenceScore(value=0.5, factors={'fallback_mode': 1.0})
-        
+
         # Record detection event
         detection_audit_id = self.audit.record_event(
             slot_id=9,
@@ -785,12 +785,12 @@ class Slot9Core:
             },
             confidence=dthresh_confidence
         )
-        
+
         # Determine if deep analysis is needed
         threat_threshold = 0.4
         dthresh_action = getattr(dthresh_result, 'action', 'pass')
         dthresh_threat = getattr(dthresh_result, 'threat_level', 0.3)
-        
+
         if dthresh_action in ["quarantine", "neutralize"] or dthresh_threat > threat_threshold:
             # Comprehensive threat analysis
             result = self._perform_threat_analysis(
@@ -802,17 +802,17 @@ class Slot9Core:
             result = self._create_standard_response(
                 content, context, dthresh_result, dthresh_confidence, detection_audit_id
             )
-        
+
         # Calculate processing time
         processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
         result.processing_time_ms = processing_time
-        
+
         # Update metrics
         self._update_metrics(processing_time)
-        
+
         # Cache the result
         self.cache.put(content_hash, result)
-        
+
         # Final audit log
         self.audit.record_event(
             slot_id=9,
@@ -824,38 +824,38 @@ class Slot9Core:
             },
             confidence=result.confidence
         )
-        
+
         return result
-    
+
     def _perform_threat_analysis(self, content: str, context: Dict, dthresh_result: Any,
                                 dthresh_confidence: ConfidenceScore, audit_id: str) -> DistortionDetectionResult:
         """Perform comprehensive threat analysis"""
-        
+
         # Infrastructure analysis
         infrastructure_analysis = self.analyzer.analyze_infrastructure(content, context, dthresh_result)
-        
+
         # Constellation stability assessment
         stability_impact = self.constellation.assess_impact(infrastructure_analysis)
-        
+
         # Intervention strategy synthesis
         intervention_strategy = self.intervention_synthesizer.synthesize_intervention(
             infrastructure_analysis, stability_impact
         )
-        
+
         # Generate public response
         public_response = self._generate_public_response(infrastructure_analysis, stability_impact)
-        
+
         # Security validation
         if not self.security.validate_response(public_response):
             self.metrics['security_violations'] += 1
             public_response = self.security.sanitize_response(public_response)
             self.logger.warning("Security violation detected and sanitized")
-        
+
         # Calculate comprehensive confidence
         comprehensive_confidence = self._calculate_comprehensive_confidence(
             dthresh_confidence, infrastructure_analysis, stability_impact
         )
-        
+
         # Audit the threat analysis
         analysis_audit_id = self.audit.record_event(
             slot_id=9,
@@ -869,7 +869,7 @@ class Slot9Core:
             },
             confidence=comprehensive_confidence
         )
-        
+
         return DistortionDetectionResult(
             distortion_type=infrastructure_analysis['distortion_type'],
             infrastructure_level=infrastructure_analysis['infrastructure_level'],
@@ -882,11 +882,11 @@ class Slot9Core:
             intervention_strategy=intervention_strategy,
             audit_id=analysis_audit_id
         )
-    
+
     def _create_standard_response(self, content: str, context: Dict, dthresh_result: Any,
                                  dthresh_confidence: ConfidenceScore, audit_id: str) -> DistortionDetectionResult:
         """Create standard response for low-threat content"""
-        
+
         standard_audit_id = self.audit.record_event(
             slot_id=9,
             event_type='standard_response_generated',
@@ -897,7 +897,7 @@ class Slot9Core:
             },
             confidence=dthresh_confidence
         )
-        
+
         return DistortionDetectionResult(
             distortion_type=DistortionType.NONE,
             infrastructure_level=InfrastructureLevel.INDIVIDUAL,
@@ -922,13 +922,13 @@ class Slot9Core:
             },
             audit_id=standard_audit_id
         )
-    
+
     def _generate_public_response(self, infrastructure_analysis: Dict, stability_impact: Dict) -> Dict[str, Any]:
         """Generate safe public-facing response"""
-        
+
         threat_level = infrastructure_analysis.get('threat_index', 0.5)
         infrastructure_level = infrastructure_analysis.get('infrastructure_level', InfrastructureLevel.INDIVIDUAL)
-        
+
         if threat_level > 0.8:
             assessment = "Content requires careful verification"
             confidence_level = "Review recommended"
@@ -941,7 +941,7 @@ class Slot9Core:
         else:
             assessment = "Content appears reliable"
             confidence_level = "High confidence"
-        
+
         return {
             'assessment': assessment,
             'confidence_level': confidence_level,
@@ -949,7 +949,7 @@ class Slot9Core:
             'system_info': f'NOVA Integrity Analysis v{self.VERSION}',
             'analysis_timestamp': time.time()
         }
-    
+
     def _generate_safe_recommendations(self, infrastructure_level: InfrastructureLevel) -> List[str]:
         """Generate safe public recommendations"""
         base_recommendations = [
@@ -957,7 +957,7 @@ class Slot9Core:
             "Consider the source's expertise and potential biases",
             "Look for corroborating evidence from primary sources"
         ]
-        
+
         if infrastructure_level in [InfrastructureLevel.INSTITUTIONAL, InfrastructureLevel.INFRASTRUCTURE]:
             base_recommendations.extend([
                 "Consider institutional perspectives and policies",
@@ -968,14 +968,14 @@ class Slot9Core:
                 "Consider cultural context and perspectives",
                 "Seek diverse viewpoints on cultural topics"
             ])
-        
+
         return base_recommendations
-    
+
     def _calculate_comprehensive_confidence(self, dthresh_confidence: ConfidenceScore,
-                                          infrastructure_analysis: Dict, 
+                                          infrastructure_analysis: Dict,
                                           stability_impact: Dict) -> ConfidenceScore:
         """Calculate comprehensive confidence score"""
-        
+
         # Weight different confidence factors
         factors = {
             'dthresh_analysis': dthresh_confidence.value * 0.3,
@@ -983,19 +983,19 @@ class Slot9Core:
             'stability_assessment': stability_impact['confidence'].value * 0.2,
             'pattern_coherence': 0.8 * 0.1  # Confidence in pattern matching
         }
-        
+
         # Calculate weighted average
         total_confidence = sum(factors.values())
-        
+
         # Adjust for threat level (higher threats = lower confidence in assessment)
         threat_adjustment = 1.0 - (infrastructure_analysis.get('threat_index', 0.5) * 0.1)
         final_confidence = total_confidence * threat_adjustment
-        
+
         return ConfidenceScore(
             value=max(0.5, min(0.95, final_confidence)),
             factors=factors
         )
-    
+
     def _create_fallback_dthresh_result(self):
         """Create fallback ΔTHRESH result when system unavailable"""
         class FallbackResult:
@@ -1004,15 +1004,15 @@ class Slot9Core:
                 self.threat_level = 0.5
                 self.confidence = 0.6
                 self.summary = 'ΔTHRESH system unavailable - fallback analysis'
-        
+
         return FallbackResult()
-    
+
     def _update_metrics(self, processing_time_ms: float):
         """Update performance metrics"""
         # Update running average of processing time
         current_avg = self.metrics['average_processing_time']
         total_requests = self.metrics['total_requests']
-        
+
         if total_requests == 1:
             self.metrics['average_processing_time'] = processing_time_ms
         else:
@@ -1021,16 +1021,16 @@ class Slot9Core:
             self.metrics['average_processing_time'] = (
                 alpha * processing_time_ms + (1 - alpha) * current_avg
             )
-    
+
     def _generate_content_hash(self, content: str, context: Dict) -> str:
         """Generate unique content identifier for caching"""
         context_str = json.dumps(context, sort_keys=True) if context else ""
         combined = f"{content}{context_str}"
         return hashlib.blake2b(
-            combined.encode(), 
+            combined.encode(),
             key=AUDIT_CHAIN_KEY.encode()
         ).hexdigest()
-    
+
     def get_system_status(self) -> Dict[str, Any]:
         """Get comprehensive system status"""
         return {
@@ -1058,7 +1058,7 @@ class Slot9Core:
 
 class Slot9Gateway:
     """Optimized interface for slot-to-slot communication"""
-    
+
     def __init__(self, core: Slot9Core):
         self.core = core
         self.thresholds = {
@@ -1067,7 +1067,7 @@ class Slot9Gateway:
             'medium_alert': 0.5,
             'low_alert': 0.25
         }
-        
+
     def quick_threat_assessment(self, content: str, context: Dict = None) -> float:
         """Quick threat assessment for other slots - returns threat level 0-1"""
         try:
@@ -1076,13 +1076,13 @@ class Slot9Gateway:
         except Exception as e:
             self.core.logger.error(f"Quick threat assessment failed: {e}")
             return 0.5  # Default moderate threat level
-    
+
     def get_intervention_profile(self, content: str, context: Dict = None) -> Dict[str, Any]:
         """Get intervention metadata for coordination with other slots"""
         try:
             result = self.core.process(content, context or {})
             stability_impact = result.threat_landscape.get('stability_impact', {})
-            
+
             return {
                 'strategy_type': result.intervention_strategy.get('type', 'standard'),
                 'urgency': result.intervention_strategy.get('urgency', 'medium'),
@@ -1103,13 +1103,13 @@ class Slot9Gateway:
                 'infrastructure_level': 'individual',
                 'resource_requirements': 'medium'
             }
-    
+
     def emergency_threat_assessment(self, content: str) -> Dict[str, Any]:
         """Emergency assessment for critical threats"""
         result = self.core.process(content, {'emergency_mode': True})
-        
+
         threat_level = result.threat_landscape.get('infrastructure_analysis', {}).get('threat_index', 0.0)
-        
+
         return {
             'threat_level': threat_level,
             'alert_level': self._determine_alert_level(threat_level),
@@ -1118,7 +1118,7 @@ class Slot9Gateway:
             'recommended_actions': self._get_emergency_actions(threat_level),
             'confidence': result.confidence.value
         }
-    
+
     def _determine_alert_level(self, threat_level: float) -> str:
         """Determine alert level based on threat"""
         if threat_level >= self.thresholds['critical_alert']:
@@ -1129,7 +1129,7 @@ class Slot9Gateway:
             return 'medium'
         else:
             return 'low'
-    
+
     def _get_emergency_actions(self, threat_level: float) -> List[str]:
         """Get recommended emergency actions"""
         if threat_level >= self.thresholds['critical_alert']:
@@ -1152,11 +1152,11 @@ class Slot9Gateway:
                 'Document threat patterns',
                 'Maintain vigilance'
             ]
-    
+
     def get_slot_integration_data(self) -> Dict[str, Any]:
         """Get data for integration with other NOVA slots"""
         system_status = self.core.get_system_status()
-        
+
         return {
             'slot_id': 9,
             'slot_name': 'Infrastructure-Aware Distortion Detection',
@@ -1182,19 +1182,19 @@ def integrate_with_slot4_tri_engine(tri_engine, slot9_gateway, content: str, con
     """Integration with Slot 4 TRI Engine"""
     threat_level = slot9_gateway.quick_threat_assessment(content, context)
     base_tri = tri_engine.calculate_tri(content)
-    
+
     # Apply infrastructure penalty
     infrastructure_penalty = threat_level * 0.3
     adjusted_tri = max(0.0, base_tri - infrastructure_penalty)
-    
+
     return adjusted_tri
 
 
-def integrate_with_slot6_cultural_adaptation(cultural_adapter, slot9_gateway, 
+def integrate_with_slot6_cultural_adaptation(cultural_adapter, slot9_gateway,
                                            content: str, context: Dict = None) -> Dict[str, Any]:
     """Integration with Slot 6 Cultural Adaptation"""
     intervention_profile = slot9_gateway.get_intervention_profile(content, context)
-    
+
     # Determine if cultural adaptation should be bypassed
     if intervention_profile['infrastructure_level'] in ['infrastructure', 'institutional']:
         return {
@@ -1213,7 +1213,7 @@ def integrate_with_slot6_cultural_adaptation(cultural_adapter, slot9_gateway,
 def integrate_with_slot7_orchestration(orchestrator, slot9_gateway, alert_content: str) -> Dict[str, Any]:
     """Integration with Slot 7 Production Controls"""
     emergency_assessment = slot9_gateway.emergency_threat_assessment(alert_content)
-    
+
     if emergency_assessment['immediate_action']:
         return orchestrator.initiate_emergency_response({
             'threat_level': emergency_assessment['threat_level'],

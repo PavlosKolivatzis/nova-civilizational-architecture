@@ -131,7 +131,7 @@ class AdvancedSafetyPolicy:
     ) -> Dict[str, Any]:
         """Advanced validation with comprehensive safety checks."""
         self.stats["total_checks"] += 1
-        
+
         validation_result: Dict[str, Any] = {
             "is_safe": True,
             "violations": [],
@@ -139,21 +139,21 @@ class AdvancedSafetyPolicy:
             "policy_actions": [],
             "rate_limited": False
         }
-        
+
         # Check rate limiting first
         if user_id is not None and not self.rate_limit_ok(user_id):
             validation_result["rate_limited"] = True
             validation_result["is_safe"] = False
             self.stats["rate_limit_hits"] += 1
             return validation_result
-        
+
         # Basic safety checks (score bounds, tone validation, etc.)
         basic_result = self._basic_safety_check(analysis_result)
         if not basic_result["is_safe"]:
             validation_result["is_safe"] = False
             validation_result["violations"].extend(basic_result["violations"])
             validation_result["policy_actions"].extend(basic_result["policy_actions"])
-        
+
         # Content filtering if enabled
         if self.enable_content_filtering and content:
             content_violations = self._check_content_safety(content)
@@ -162,7 +162,7 @@ class AdvancedSafetyPolicy:
                 validation_result["violations"].extend(content_violations)
                 validation_result["filtered_content"] = "[FILTERED]"  # Replace harmful content
                 self.stats["content_filtered"] += 1
-        
+
         # Update violation statistics and tracking
         if validation_result["violations"]:
             self.stats["violations_detected"] += 1
@@ -179,19 +179,19 @@ class AdvancedSafetyPolicy:
                 # Keep only last 100 violations
                 if len(self._recent_violations) > 100:
                     self._recent_violations.pop(0)
-            
+
         return validation_result
 
     def _basic_safety_check(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
         """Basic safety validation."""
         from nova.slots.slot03_emotional_matrix.safety_policy import validate_metrics
-        
+
         result: Dict[str, Any] = {
             "is_safe": True,
             "violations": [],
             "policy_actions": []
         }
-        
+
         errors = validate_metrics(analysis_result)
         if errors:
             result["is_safe"] = False
@@ -201,13 +201,13 @@ class AdvancedSafetyPolicy:
                     "confidence": 1.0,
                     "details": f"Validation error: {error}"
                 })
-        
+
         return result
 
     def _check_content_safety(self, content: str) -> List[Dict[str, Any]]:
         """Check content for safety violations."""
         violations: List[Dict[str, Any]] = []
-        
+
         # Check harmful patterns (including dynamically added ones)
         harmful_patterns = self.detect_harmful(content)
         for pattern in harmful_patterns:
@@ -217,19 +217,19 @@ class AdvancedSafetyPolicy:
                 violation_type = f"harmful_content_{pattern_name}"
             else:
                 violation_type = "harmful_content"
-                
+
             violations.append({
                 "type": violation_type,
                 "confidence": 0.9,
                 "details": f"Harmful pattern detected: {pattern}"
             })
-        
+
         # Check for blocked domains/sources
         import re
         domain_pattern = re.compile(r'https?://([^/\s]+)', re.I)
         domains = domain_pattern.findall(content)
         blocked_domains = ['malicious-site.com', 'badsite.org', 'dangerous.net']  # Example blocked domains
-        
+
         for domain in domains:
             if domain in blocked_domains:
                 violations.append({
@@ -237,7 +237,7 @@ class AdvancedSafetyPolicy:
                     "confidence": 1.0,
                     "details": f"Blocked domain detected: {domain}"
                 })
-        
+
         return violations
 
     def get_policy_stats(self) -> Dict[str, float | int]:
@@ -272,7 +272,7 @@ class AdvancedSafetyPolicy:
     def update_harmful_patterns(self, new_patterns: List[Dict[str, Any]]) -> None:
         """Update harmful content patterns."""
         global _HARM_PATTERNS
-        
+
         # Add new patterns to existing ones
         new_compiled_patterns: List[re.Pattern[str]] = []
         for pattern_info in new_patterns:
@@ -286,6 +286,6 @@ class AdvancedSafetyPolicy:
                         self._pattern_names[pattern_str] = pattern_name
                     except re.error:
                         continue  # Skip invalid patterns
-        
+
         # Update global patterns (in a real system, this might be handled differently)
         _HARM_PATTERNS = _HARM_PATTERNS + tuple(new_compiled_patterns)

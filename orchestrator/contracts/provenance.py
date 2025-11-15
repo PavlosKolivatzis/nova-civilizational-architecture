@@ -12,11 +12,11 @@ SCHEMA_VERSION = "1"
 
 def provenance(schema_id: str, version: str = SCHEMA_VERSION) -> Dict[str, Any]:
     """Generate standardized provenance block for health responses.
-    
+
     Args:
         schema_id: The schema identifier (use SLOT*_SCHEMA_ID constants)
         version: Schema version (defaults to current SCHEMA_VERSION)
-        
+
     Returns:
         Dictionary with schema_id and schema_version for contract tracking
     """
@@ -31,7 +31,7 @@ def slot3_provenance() -> Dict[str, Any]:
     return provenance(SLOT3_SCHEMA_ID)
 
 def slot6_provenance() -> Dict[str, Any]:
-    """Generate Slot 6 (Cultural Synthesis) provenance block.""" 
+    """Generate Slot 6 (Cultural Synthesis) provenance block."""
     return provenance(SLOT6_SCHEMA_ID)
 
 def slot7_provenance() -> Dict[str, Any]:

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def setup_semantic_mirror_integration() -> bool:
     """Setup Semantic Mirror integration across slots.
-    
+
     Returns:
         True if setup successful, False otherwise
     """
@@ -25,22 +25,22 @@ def setup_semantic_mirror_integration() -> bool:
         if not semantic_mirror_enabled:
             logger.info("Semantic Mirror disabled by feature flag")
             return True  # Not enabled, but not an error
-        
+
         # Initialize semantic mirror
         mirror = get_semantic_mirror()
-        
+
         # Configure production access rules
         _configure_production_access_rules(mirror)
-        
+
         # Setup Slot 7 context publishing
         _setup_slot7_context_publishing()
-        
-        # Setup Slot 6 context consumption  
+
+        # Setup Slot 6 context consumption
         _setup_slot6_context_consumption()
-        
+
         logger.info("Semantic Mirror integration setup complete")
         return True
-        
+
     except Exception as e:
         logger.error(f"Failed to setup Semantic Mirror integration: {e}")
         return False
@@ -51,12 +51,12 @@ def _configure_production_access_rules(mirror) -> None:
     production_rules = {
         # Slot 7 Production Controls -> Other Slots
         "slot07.breaker_state": [
-            "slot06_cultural_synthesis", 
+            "slot06_cultural_synthesis",
             "slot03_emotional_matrix"
         ],
         "slot07.pressure_level": [
             "slot06_cultural_synthesis",
-            "slot03_emotional_matrix", 
+            "slot03_emotional_matrix",
             "slot01_truth_anchor"
         ],
         "slot07.resource_status": [
@@ -70,7 +70,7 @@ def _configure_production_access_rules(mirror) -> None:
         "slot07.public_metrics": [
             "slot06_cultural_synthesis"
         ],
-        
+
         # Slot 6 Cultural Synthesis -> Other Slots
         "slot06.cultural_profile": [
             "slot03_emotional_matrix",
@@ -86,7 +86,7 @@ def _configure_production_access_rules(mirror) -> None:
         "slot06.synthesis_results": [
             "slot07_production_controls"
         ],
-        
+
         # Slot 3 Emotional Matrix -> Limited Access
         "slot03.emotional_state": [
             "slot06_cultural_synthesis"
@@ -95,16 +95,16 @@ def _configure_production_access_rules(mirror) -> None:
             "slot06_cultural_synthesis",
             "slot07_production_controls"
         ],
-        
+
         # Cross-slot coordination contexts
         "system.coordination_state": [
             "slot01_truth_anchor",
-            "slot03_emotional_matrix", 
+            "slot03_emotional_matrix",
             "slot06_cultural_synthesis",
             "slot07_production_controls"
         ]
     }
-    
+
     mirror.configure_access_rules(production_rules)
     logger.info(f"Configured {len(production_rules)} production access rules")
 
@@ -115,14 +115,14 @@ def _setup_slot7_context_publishing() -> None:
         # Import here to avoid circular dependencies
         from nova.slots.slot07_production_controls.context_publisher import get_context_publisher
         from nova.slots.slot07_production_controls.production_control_engine import ProductionControlEngine
-        
+
         # Get production engine instance
         # Note: In production, this would be the actual running engine instance
         engine = ProductionControlEngine()
-        
+
         # Setup context publisher
         publisher = get_context_publisher(engine)
-        
+
         # Configure publishing interval based on environment
         if config.CURRENT_MODE == "production":
             publisher.publish_interval_seconds = 30.0  # Less frequent in prod
@@ -130,9 +130,9 @@ def _setup_slot7_context_publishing() -> None:
             publisher.publish_interval_seconds = 15.0  # Moderate in staging
         else:
             publisher.publish_interval_seconds = 10.0  # Frequent in dev/testing
-        
+
         logger.info(f"Configured Slot 7 context publishing (interval={publisher.publish_interval_seconds}s)")
-        
+
     except ImportError as e:
         logger.warning(f"Slot 7 context publishing not available: {e}")
     except Exception as e:
@@ -144,19 +144,19 @@ def _setup_slot6_context_consumption() -> None:
     try:
         # Import here to avoid circular dependencies
         from nova.slots.slot06_cultural_synthesis.context_aware_synthesis import get_context_aware_synthesis
-        
+
         # Initialize context-aware synthesis
         # Note: Base engine would be wired in production
         synthesis = get_context_aware_synthesis()
-        
+
         # Configure context cache TTL based on environment
         if config.CURRENT_MODE == "production":
             synthesis.context_cache_ttl = 60.0  # Longer cache in prod
         else:
             synthesis.context_cache_ttl = 30.0  # Shorter cache in dev/staging
-        
+
         logger.info(f"Configured Slot 6 context consumption (cache_ttl={synthesis.context_cache_ttl}s)")
-        
+
     except ImportError as e:
         logger.warning(f"Slot 6 context consumption not available: {e}")
     except Exception as e:
@@ -168,24 +168,24 @@ def get_semantic_mirror_health() -> Dict[str, Any]:
     try:
         mirror = get_semantic_mirror()
         metrics = mirror.get_metrics()
-        
+
         # Determine health status
         health_status = "healthy"
         issues = []
-        
+
         # Check for potential issues
         if metrics["active_contexts"] == 0:
             issues.append("no_active_contexts")
-        
+
         if metrics.get("queries_access_denied", 0) > metrics.get("queries_successful", 1) * 0.1:
             issues.append("high_access_denial_rate")
-            
+
         if metrics.get("queries_rate_limited", 0) > 0:
             issues.append("rate_limiting_active")
-        
+
         if issues:
             health_status = "degraded"
-        
+
         return {
             "status": health_status,
             "issues": issues,
@@ -199,10 +199,10 @@ def get_semantic_mirror_health() -> Dict[str, Any]:
             "feature_enabled": getattr(config, 'SEMANTIC_MIRROR_ENABLED', False),
             "timestamp": metrics.get("last_cleanup", 0)
         }
-        
+
     except Exception as e:
         return {
-            "status": "error", 
+            "status": "error",
             "issues": [f"health_check_failed: {str(e)}"],
             "metrics": {},
             "feature_enabled": False,
@@ -215,9 +215,9 @@ def reset_semantic_mirror_integration() -> None:
     from orchestrator.semantic_mirror import reset_semantic_mirror
     from nova.slots.slot07_production_controls.context_publisher import reset_context_publisher
     from nova.slots.slot06_cultural_synthesis.context_aware_synthesis import reset_context_aware_synthesis
-    
+
     reset_semantic_mirror()
-    reset_context_publisher() 
+    reset_context_publisher()
     reset_context_aware_synthesis()
-    
+
     logger.info("Reset Semantic Mirror integration")

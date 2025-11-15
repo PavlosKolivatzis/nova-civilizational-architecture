@@ -48,10 +48,10 @@ class EventBus:
                 results.append(res)
 
             except Exception:
-                self.metrics.errors += 1 
+                self.metrics.errors += 1
             finally:
                 self._update_metrics(time.perf_counter() - start)
-                
+
         return results
 
     def _update_metrics(self, duration: float) -> None:

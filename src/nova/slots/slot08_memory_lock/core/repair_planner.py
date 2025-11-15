@@ -36,7 +36,7 @@ class RepairPlanner:
     def _get_phase_lock(self) -> Optional[float]:
         """Read phase_lock with adaptive repair sensitivity from Semantic Mirror."""
         import os
-        
+
         if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
             return None
 
@@ -54,12 +54,12 @@ class RepairPlanner:
         try:
             from orchestrator.semantic_mirror import get_semantic_mirror
             mirror = get_semantic_mirror()
-            
+
             # Prefer TRI phase coherence if available
             phase_lock = _mirror_get(mirror, "slot04.phase_coherence", default=None)
             if phase_lock is not None:
                 return float(phase_lock)
-                
+
             # Use system pressure to modulate repair sensitivity
             pressure = _mirror_get(mirror, "slot07.pressure_level", default=None)
             if pressure is not None:
@@ -68,7 +68,7 @@ class RepairPlanner:
                 return float(0.60 - 0.20 * pressure_val)  # [0.4..0.6] range
         except Exception:
             pass
-            
+
         # Fallback to env var
         try:
             phase_lock_str = os.getenv("SLOT07_PHASE_LOCK")
@@ -76,7 +76,7 @@ class RepairPlanner:
                 return float(phase_lock_str)
         except (ValueError, TypeError):
             pass
-            
+
         return 0.5  # Conservative default
 
     def decide_repair_strategy(self, health_metrics: HealthMetrics,

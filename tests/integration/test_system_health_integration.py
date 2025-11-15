@@ -478,12 +478,3 @@ class TestPolishSprintValidation:
             assert "deps" in result
             assert result["self_check"] in ["ok", "error"]
             assert result["engine_status"] in ["normal", "minimal", "degraded"]
-
-
-
-
-
-
-
-
-

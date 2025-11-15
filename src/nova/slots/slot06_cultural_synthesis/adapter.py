@@ -165,7 +165,7 @@ class CulturalSynthesisAdapter:
         except ImportError:
             # Metrics collection is optional
             pass
-        
+
         return GuardrailValidationResult(
             result=result,
             compliance_score=pps,

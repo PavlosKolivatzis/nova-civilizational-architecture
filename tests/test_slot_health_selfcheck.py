@@ -50,4 +50,3 @@ def test_slot_health_error_handling():
 
         assert results["slot01_truth_anchor"]["self_check"] == "error"
         assert "Import failed" in results["slot01_truth_anchor"]["reason"]
-

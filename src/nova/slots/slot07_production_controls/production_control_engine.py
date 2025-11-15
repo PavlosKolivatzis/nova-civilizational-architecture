@@ -30,14 +30,14 @@ class ProcessingMetrics:
 
 class ProductionControlsCircuitBreaker:
     """Advanced circuit breaker for production controls with configurable safeguards."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config["circuit_breaker"]
         self.failure_threshold = self.config["failure_threshold"]
-        self.error_threshold = self.config["error_threshold"] 
+        self.error_threshold = self.config["error_threshold"]
         self.reset_timeout = self.config["reset_timeout"]
         self.recovery_time = self.config["recovery_time"]
-        
+
         self._state = "closed"  # closed, open, half-open
         self.failure_count = 0
         self.success_count = 0
@@ -45,8 +45,8 @@ class ProductionControlsCircuitBreaker:
         self.last_success_time: Optional[float] = None
         self._opened_at: Optional[float] = None
         self._lock = threading.Lock()
-        
-    @property 
+
+    @property
     def state(self) -> str:
         """Get current circuit breaker state with automatic transitions."""
         with self._lock:
@@ -55,17 +55,17 @@ class ProductionControlsCircuitBreaker:
                     self._state = "half-open"
                     # logger.info("Circuit breaker transitioning from open to half-open")
             return self._state
-    
+
     @contextmanager
     def protect(self):
         """Context manager for circuit breaker protection."""
         if not self.config["enabled"]:
             yield
             return
-            
+
         if self.state == "open":
             raise CircuitBreakerOpenError("Circuit breaker is open")
-            
+
         start_time = time.time()
         try:
             yield
@@ -74,29 +74,29 @@ class ProductionControlsCircuitBreaker:
             raise
         else:
             self._record_success(time.time() - start_time)
-    
+
     def _record_failure(self, exception: Exception, duration: float):
         """Record a failure and update circuit breaker state."""
         with self._lock:
             self.failure_count += 1
             self.last_failure_time = time.time()
-            
+
             if self.failure_count >= self.failure_threshold:
                 self._state = "open"
                 self._opened_at = time.time()
                 # logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
-    
+
     def _record_success(self, duration: float):
         """Record a success and update circuit breaker state."""
         with self._lock:
             self.success_count += 1
             self.last_success_time = time.time()
-            
+
             if self._state == "half-open":
                 self._state = "closed"
                 self.failure_count = 0
                 # logger.info("Circuit breaker closed after successful request in half-open state")
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get circuit breaker metrics."""
         return {
@@ -113,36 +113,36 @@ class ProductionControlsCircuitBreaker:
 
 class RateLimiter:
     """Token bucket rate limiter with burst capacity."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config["rate_limiting"]
         self.requests_per_minute = self.config["requests_per_minute"]
         self.burst_size = self.config["burst_size"]
-        
+
         self.tokens = self.burst_size
         self.last_update = time.time()
         self._lock = threading.Lock()
-    
+
     def is_allowed(self) -> bool:
         """Check if request is allowed under rate limits."""
         if not self.config["enabled"]:
             return True
-            
+
         with self._lock:
             now = time.time()
-            
+
             # Add tokens based on time passed
             time_passed = now - self.last_update
             tokens_to_add = time_passed * (self.requests_per_minute / 60.0)
             self.tokens = min(self.burst_size, self.tokens + tokens_to_add)
             self.last_update = now
-            
+
             if self.tokens >= 1:
                 self.tokens -= 1
                 return True
-            
+
             return False
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get rate limiter metrics."""
         return {
@@ -155,32 +155,32 @@ class RateLimiter:
 
 class ResourceProtector:
     """Resource protection with limits on payload size, processing time, and concurrency."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config["resource_protection"]
         self.max_payload_size_mb = self.config["max_payload_size_mb"]
         self.max_processing_time = self.config["max_processing_time_seconds"]
         self.max_concurrent_requests = self.config["max_concurrent_requests"]
-        
+
         self.active_requests = 0
         self._lock = threading.Lock()
-    
+
     def check_payload_size(self, payload: Dict[str, Any]) -> bool:
         """Check if payload size is within limits."""
         if not self.config["enabled"]:
             return True
-            
+
         # Rough estimate of payload size
         payload_str = str(payload)
         size_mb = len(payload_str.encode('utf-8')) / (1024 * 1024)
-        
+
         if size_mb > self.max_payload_size_mb:
             raise ResourceLimitExceededError(
                 f"Payload size {size_mb:.2f}MB exceeds limit of {self.max_payload_size_mb}MB"
             )
-        
+
         return True
-    
+
     def check_concurrency(self) -> bool:
         """Check if concurrency limit allows new request (wisdom-aware)."""
         if not self.config["enabled"]:
@@ -205,13 +205,13 @@ class ResourceProtector:
 
             self.active_requests += 1
             return True
-    
+
     def release_request(self):
         """Release a request slot."""
         if self.config["enabled"]:
             with self._lock:
                 self.active_requests = max(0, self.active_requests - 1)
-    
+
     @contextmanager
     def protect_processing_time(self):
         """Context manager for processing time protection."""
@@ -223,7 +223,7 @@ class ResourceProtector:
                 processing_time = time.time() - start_time
                 if processing_time > self.max_processing_time:
                     logger.warning(f"Processing time {processing_time:.2f}s exceeded limit of {self.max_processing_time}s")
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get resource protector metrics (includes wisdom-aware backpressure)."""
         # Compute effective max_concurrent_requests with wisdom integration
@@ -271,22 +271,22 @@ class ProductionControlEngine:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize production control engine with configurable safeguards."""
         self.config = config or get_production_controls_config()
-        
+
         # Initialize components
         self.circuit_breaker = ProductionControlsCircuitBreaker(self.config)
         self.rate_limiter = RateLimiter(self.config)
         self.resource_protector = ResourceProtector(self.config)
-        
+
         # Initialize metrics
         self.metrics = ProcessingMetrics()
-        
+
         # Initialize monitoring
         self._monitoring_enabled = self.config["monitoring"]["metrics_collection_enabled"]
         self._alert_on_cb_trip = self.config["monitoring"]["alert_on_circuit_breaker_trip"]
-        
+
         # Initialize failover settings
         self.failover_config = self.config["failover"]
-        
+
         # Thread safety
         self._metrics_lock = threading.Lock()
 
@@ -298,25 +298,25 @@ class ProductionControlEngine:
 
         # Avoid potential logging issues during initialization
         # logger.info(f"ProductionControlEngine v{self.__version__} initialized")
-    
+
     def process(self, payload: dict, operation_id: Optional[str] = None) -> dict:
         """Process payload through comprehensive production controls with circuit-breaker protection."""
         operation_id = operation_id or f"op_{int(time.time() * 1000)}"
         start_time = time.time()
-        
+
         try:
             # Pre-processing checks and protections
             self._pre_processing_checks(payload)
-            
+
             # Main processing with circuit breaker protection
             with self.circuit_breaker.protect():
                 with self.resource_protector.protect_processing_time():
                     result = self._core_processing(payload, operation_id)
-            
+
             # Post-processing success handling
             processing_time = time.time() - start_time
             self._record_success_metrics(processing_time, operation_id)
-            
+
             return {
                 "status": "processed",
                 "operation_id": operation_id,
@@ -325,27 +325,27 @@ class ProductionControlEngine:
                 "result": result,
                 "timestamp": time.time()
             }
-            
+
         except (CircuitBreakerOpenError, ResourceLimitExceededError, RateLimitExceededError) as e:
             # Handle safeguard violations
             processing_time = time.time() - start_time
             self._record_safeguard_violation(e, operation_id, processing_time)
-            
+
             if self.failover_config["graceful_degradation_enabled"]:
                 return self._graceful_degradation_response(payload, operation_id, str(e))
             else:
                 raise
-                
+
         except Exception as e:
             # Handle processing failures
             processing_time = time.time() - start_time
             self._record_failure_metrics(e, processing_time, operation_id)
             raise
-            
+
         finally:
             # Always release request slot
             self.resource_protector.release_request()
-    
+
     def _pre_processing_checks(self, payload: dict):
         """Perform all pre-processing safety checks."""
         # Rate limiting check
@@ -353,11 +353,11 @@ class ProductionControlEngine:
             with self._metrics_lock:
                 self.metrics.rate_limit_violations += 1
             raise RateLimitExceededError("Rate limit exceeded")
-        
+
         # Resource protection checks
         self.resource_protector.check_payload_size(payload)
         self.resource_protector.check_concurrency()
-    
+
     def _core_processing(self, payload: dict, operation_id: str) -> dict:
         """Core business logic processing - can be extended by subclasses."""
         # Simulate processing logic that could fail
@@ -368,43 +368,43 @@ class ProductionControlEngine:
 
         if payload.get("simulate_failure"):
             raise ValueError(f"Simulated failure for operation {operation_id}")
-        
+
         # Basic processing
         result = {
             "processed_payload": payload,
             "operation_id": operation_id,
             "engine_version": self.__version__
         }
-        
+
         # Add any additional processing logic here
         return result
-    
+
     def _record_success_metrics(self, processing_time: float, operation_id: str):
         """Record metrics for successful processing."""
         if not self._monitoring_enabled:
             return
-            
+
         with self._metrics_lock:
             self.metrics.total_requests += 1
             self.metrics.successful_requests += 1
             self.metrics.processing_times.append(processing_time)
-        
+
         # logger.debug(f"Operation {operation_id} completed successfully in {processing_time:.3f}s")
-    
+
     def _record_failure_metrics(self, exception: Exception, processing_time: float, operation_id: str):
         """Record metrics for failed processing."""
         if not self._monitoring_enabled:
             return
-            
+
         with self._metrics_lock:
             self.metrics.total_requests += 1
             self.metrics.failed_requests += 1
             self.metrics.last_failure_time = time.time()
             self.metrics.last_failure_reason = str(exception)
             self.metrics.processing_times.append(processing_time)
-        
+
         # logger.error(f"Operation {operation_id} failed after {processing_time:.3f}s: {exception}")
-    
+
     def _record_safeguard_violation(self, exception: Exception, operation_id: str, processing_time: float):
         """Record metrics for safeguard violations and emit reflex signals."""
         if self._monitoring_enabled:
@@ -422,7 +422,7 @@ class ProductionControlEngine:
 
         self._emit_reflex_signal(exception, operation_id)
         logger.warning(f"Safeguard violation for operation {operation_id}: {exception}")
-    
+
     def _graceful_degradation_response(self, payload: dict, operation_id: str, error_reason: str) -> dict:
         """Provide graceful degradation response when safeguards are triggered."""
         return {
@@ -437,11 +437,11 @@ class ProductionControlEngine:
             "safeguards_active": self._get_active_safeguards(),
             "timestamp": time.time()
         }
-    
+
     def _get_active_safeguards(self) -> List[str]:
         """Get list of currently active safeguards."""
         active = []
-        
+
         if self.config["circuit_breaker"]["enabled"]:
             active.append(f"circuit_breaker({self.circuit_breaker.state})")
         if self.config["rate_limiting"]["enabled"]:
@@ -450,9 +450,9 @@ class ProductionControlEngine:
             active.append("resource_protection")
         if self.failover_config["enabled"]:
             active.append("failover")
-        
+
         return active
-    
+
     def get_comprehensive_metrics(self) -> Dict[str, Any]:
         """Get comprehensive metrics from all components."""
         with self._metrics_lock:
@@ -470,7 +470,7 @@ class ProductionControlEngine:
                 "last_failure_time": self.metrics.last_failure_time,
                 "last_failure_reason": self.metrics.last_failure_reason,
             }
-            
+
             if self.metrics.processing_times:
                 times = list(self.metrics.processing_times)
                 base_metrics.update({
@@ -478,7 +478,7 @@ class ProductionControlEngine:
                     "min_processing_time_ms": round(min(times) * 1000, 2),
                     "max_processing_time_ms": round(max(times) * 1000, 2),
                 })
-        
+
         # Compute phase lock to update belief state
         phase_lock = self.compute_phase_lock()
 
@@ -498,26 +498,26 @@ class ProductionControlEngine:
             "config": self.config,
             "feature_flags": get_flag_state_metrics(),
         }
-    
+
     def health_check(self) -> Dict[str, Any]:
         """Perform comprehensive health check."""
         metrics = self.get_comprehensive_metrics()
-        
+
         # Determine health status
         health_status = "healthy"
         health_issues = []
-        
+
         if self.circuit_breaker.state == "open":
             health_status = "degraded"
             health_issues.append("circuit_breaker_open")
-        
+
         if metrics["success_rate"] < 0.9 and metrics["total_requests"] > 10:
-            health_status = "degraded" 
+            health_status = "degraded"
             health_issues.append("low_success_rate")
-        
+
         if metrics["circuit_breaker_trips"] > 0:
             health_issues.append("circuit_breaker_trips_detected")
-        
+
         if not health_issues:
             health_status = "healthy"
 
@@ -594,7 +594,7 @@ class ProductionControlEngine:
                 )
         except Exception:
             logger.debug("Failed to emit reflex signal", exc_info=True)
-    
+
 
     def compute_phase_lock(self) -> float:
         """
@@ -647,7 +647,7 @@ class ProductionControlEngine:
         except Exception as e:
             logger.error(f"Failed to reset circuit breaker: {e}")
             return False
-    
+
     def update_configuration(self, new_config: Dict[str, Any]) -> bool:
         """Update engine configuration at runtime."""
         try:
@@ -656,18 +656,18 @@ class ProductionControlEngine:
             for key in required_keys:
                 if key not in new_config:
                     raise ValueError(f"Missing required configuration key: {key}")
-            
+
             # Update configuration
             self.config.update(new_config)
-            
+
             # Reinitialize components with new config
             self.circuit_breaker = ProductionControlsCircuitBreaker(self.config)
             self.rate_limiter = RateLimiter(self.config)
             self.resource_protector = ResourceProtector(self.config)
-            
+
             logger.info("Configuration updated successfully")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to update configuration: {e}")
             return False

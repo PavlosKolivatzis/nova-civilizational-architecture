@@ -64,4 +64,3 @@ def configure_logging(level: str = "INFO", json_format: bool = True) -> None:
     # Set specific log levels for noisy modules
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("asyncio").setLevel(logging.WARNING)
-

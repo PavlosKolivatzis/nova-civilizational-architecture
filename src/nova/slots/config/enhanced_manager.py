@@ -36,13 +36,13 @@ _WATCHDOG = _WATCHDOG_AVAILABLE
 
 class SlotMetadata:
     """Enhanced slot metadata - extends existing slotX.meta.yaml pattern."""
-    
-    def __init__(self, name: str = None, version: str = None, 
+
+    def __init__(self, name: str = None, version: str = None,
                  slot: Optional[int] = None, entry_point: Optional[str] = None,
                  adapter: Optional[str] = None, description: Optional[str] = None,
                  inputs: Optional[Dict[str, str]] = None, outputs: Optional[Dict[str, str]] = None,
                  metrics: Optional[List[str]] = None, ci: Optional[Dict[str, Any]] = None,
-                 config_schema: Optional[Dict[str, Any]] = None, 
+                 config_schema: Optional[Dict[str, Any]] = None,
                  runtime_constraints: Optional[Dict[str, Any]] = None,
                  dependencies: List[str] = None, security_level: str = "standard",
                  performance_targets: Optional[Dict[str, float]] = None,
@@ -53,7 +53,7 @@ class SlotMetadata:
             raise ValueError("name is required")
         if not version:
             raise ValueError("version is required")
-            
+
         self.name = name
         self.version = version
         self.slot = slot
@@ -71,7 +71,7 @@ class SlotMetadata:
         self.performance_targets = performance_targets
         self.id = id
         self.slug = kwargs.pop("slug", None)
-        
+
         # Store any extra/unknown fields
         self.extra = kwargs
 
@@ -87,7 +87,7 @@ class SlotMetadata:
         with path.open("r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
         return cls.from_dict(data)
-    
+
     @classmethod
     def from_dict(cls, raw: Dict[str, Any]) -> "SlotMetadata":
         """Create SlotMetadata from a dict, tolerating unknown keys and legacy aliases."""
@@ -96,7 +96,7 @@ class SlotMetadata:
         # Legacy alias support – if your older code used 'slot_id', map it to 'id'
         if "slot_id" in d and "id" not in d:
             d["id"] = d.pop("slot_id")
-            
+
         # Handle real YAML schema differences
         if "produces" in d:
             d["outputs"] = d.pop("produces")  # Map produces -> outputs
@@ -109,11 +109,11 @@ class SlotMetadata:
         # Define known fields since we're no longer using @dataclass
         known_fields = {
             'name', 'version', 'slot', 'entry_point', 'adapter', 'description',
-            'inputs', 'outputs', 'metrics', 'ci', 'config_schema', 
+            'inputs', 'outputs', 'metrics', 'ci', 'config_schema',
             'runtime_constraints', 'dependencies', 'security_level',
             'performance_targets', 'id'
         }
-        
+
         known = {k: v for k, v in d.items() if k in known_fields}
         extra = {k: v for k, v in d.items() if k not in known_fields}
 
@@ -470,7 +470,7 @@ class EnhancedConfigManager:
                 'slug': metadata.slug,
                 **metadata.extra
             }
-        
+
         return {
             "slot_id": slot_id,
             "metadata": metadata_dict,

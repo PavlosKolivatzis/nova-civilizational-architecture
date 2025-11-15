@@ -15,7 +15,7 @@ def health() -> dict:
         "overall_status": "operational",
         "version": "v7.4.1"
     }
-    
+
     try:
         # Test basic cultural synthesis functionality
         with warnings.catch_warnings():
@@ -26,12 +26,12 @@ def health() -> dict:
         legacy_calls = get_legacy_usage_count()
         result["legacy_calls_total"] = legacy_calls
         result["basic_synthesis"] = "functional"
-        
+
         # Test the new cultural synthesis engine and include expected metrics
         try:
             from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine
             engine = CulturalSynthesisEngine()
-            
+
             # Test synthesis with minimal profile
             test_profile = {
                 "clarity": 0.8,
@@ -43,13 +43,13 @@ def health() -> dict:
                 "ideology_push": False
             }
             metrics = engine.synthesize(test_profile)
-            
+
             # Include the expected metrics for CI compatibility
             result["principle_preservation_score"] = metrics.get("principle_preservation_score", 0.8)
             result["residual_risk"] = metrics.get("residual_risk", 0.2)
             result["adaptation_effectiveness"] = metrics.get("adaptation_effectiveness", 0.8)
             result["engine_synthesis"] = "functional"
-            
+
         except Exception as engine_error:
             # If engine fails, provide safe defaults for CI compatibility
             result["principle_preservation_score"] = 0.8
@@ -57,18 +57,18 @@ def health() -> dict:
             result["adaptation_effectiveness"] = 0.8
             result["engine_synthesis"] = "degraded"
             result["engine_error"] = str(engine_error)
-            
+
     except Exception as e:
         result["self_check"] = "error"
         result["engine_status"] = "failed"
         result["overall_status"] = "critical_failure"
         result["error"] = type(e).__name__
         result["message"] = str(e)
-        
+
         # Even in error case, provide safe defaults for CI compatibility
         result["principle_preservation_score"] = 0.8
         result["residual_risk"] = 0.2
-    
+
     # Always attach provenance
     try:
         from orchestrator.contracts.provenance import slot6_provenance
@@ -77,7 +77,7 @@ def health() -> dict:
         # Fallback if provenance module not available
         result["schema_id"] = "https://github.com/PavlosKolivatzis/nova-civilizational-architecture/schemas/slot6_cultural_profile_schema.json"
         result["schema_version"] = "1"
-    
+
     return result
 
 __all__ = ["health"]

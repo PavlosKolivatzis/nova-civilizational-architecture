@@ -290,7 +290,3 @@ class TestHealthMemoryPerformance:
         memory_growth = (final_memory - baseline_memory) / 1024 / 1024  # MB
         limit = 5.0 * PERF_SCALE
         assert memory_growth < limit, f"ANR memory usage grew too much: {memory_growth:.1f}MB (limit: {limit:.1f}MB)"
-
-
-
-

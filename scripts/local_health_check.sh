@@ -7,7 +7,7 @@ echo "🔍 NOVA Health Check Validation Script"
 echo "✅ Testing smoke test collection..."
 pytest -q -k "health and not contracts" --ignore=tests/contracts --collect-only | grep -c "test session starts" || echo "Smoke collection works"
 
-# Test 2: Health endpoint provenance check  
+# Test 2: Health endpoint provenance check
 echo "✅ Testing health endpoint provenance..."
 python - <<'PY'
 from fastapi.testclient import TestClient
@@ -32,7 +32,7 @@ def walk(obj, pred):
 def has_provenance(d):
     return isinstance(d, dict) and ('schema_id' in d) and ('schema_version' in d)
 
-slot3_hint_keys = {'engine_status', 'escalation_status', 'basic_analysis', 'emotional_tone'}  
+slot3_hint_keys = {'engine_status', 'escalation_status', 'basic_analysis', 'emotional_tone'}
 slot6_hint_keys = {'basic_synthesis', 'legacy_calls_total', 'version', 'principle_preservation_score', 'residual_risk'}
 
 def looks_like_slot3(d):
@@ -66,7 +66,7 @@ from nova.slots.config.enhanced_manager import SlotMetadata
 
 # Test with id field and unknown keys
 test_data = {
-    "name": "test_slot", 
+    "name": "test_slot",
     "version": "1.0",
     "id": "slot_test_id",
     "unknown_field": "should_be_tolerated",
@@ -87,7 +87,7 @@ echo "✅ Testing matrix configurations..."
 echo "  Normal mode..."
 python -c "from fastapi.testclient import TestClient; from orchestrator.app import app; c = TestClient(app); r = c.get('/health'); assert r.status_code == 200"
 
-echo "  Serverless mode..."  
+echo "  Serverless mode..."
 VERCEL=1 NOVA_HOT_RELOAD=false python -c "from fastapi.testclient import TestClient; from orchestrator.app import app; c = TestClient(app); r = c.get('/health'); assert r.status_code == 200"
 
 echo "🎉 ALL VALIDATION CHECKS PASSED!"

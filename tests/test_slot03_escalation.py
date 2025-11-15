@@ -69,7 +69,7 @@ class TestEmotionalEscalationManager:
     def test_handler_registration_and_execution(self):
         """Test escalation handler registration and execution."""
         handler_calls = []
-        
+
         def test_handler(event):
             handler_calls.append(event)
 
@@ -90,12 +90,12 @@ class TestEmotionalEscalationManager:
         """Test routing to other slots via adapter registry."""
         mock_slot1 = Mock()
         mock_slot4 = Mock()
-        
+
         adapter_registry = {
             'slot01_truth': mock_slot1,
             'slot04_wisdom': mock_slot4
         }
-        
+
         manager = EmotionalEscalationManager(adapter_registry)
 
         critical_analysis = {
@@ -176,7 +176,7 @@ class TestEmotionalEscalationManager:
 
         # Critical should have most actions, low should have least
         assert len(events[ThreatLevel.CRITICAL].suggested_actions) > len(events[ThreatLevel.LOW].suggested_actions)
-        
+
         # Check for specific critical actions
         critical_actions = " ".join(events[ThreatLevel.CRITICAL].suggested_actions).lower()
         assert "quarantine" in critical_actions or "alert" in critical_actions
@@ -230,11 +230,11 @@ class TestThreatLevel:
     def test_threat_level_comparison(self):
         """Test ThreatLevel enum can be compared."""
         levels = [ThreatLevel.LOW, ThreatLevel.MEDIUM, ThreatLevel.HIGH, ThreatLevel.CRITICAL]
-        
+
         # Test that we can use levels in sets, lists, etc.
         level_set = set(levels)
         assert len(level_set) == 4
-        
+
         # Test equality
         assert ThreatLevel.HIGH == ThreatLevel.HIGH
         assert ThreatLevel.HIGH != ThreatLevel.LOW

@@ -12,7 +12,7 @@ class TestRateLimiter:
     def test_rate_limiter_allows_requests_within_limit(self):
         """Test that rate limiter allows requests within the limit."""
         limiter = RateLimiter(max_requests=3, window_seconds=60)
-        
+
         assert limiter.is_allowed("user1") is True
         assert limiter.is_allowed("user1") is True
         assert limiter.is_allowed("user1") is True
@@ -20,7 +20,7 @@ class TestRateLimiter:
     def test_rate_limiter_blocks_requests_over_limit(self):
         """Test that rate limiter blocks requests over the limit."""
         limiter = RateLimiter(max_requests=2, window_seconds=60)
-        
+
         assert limiter.is_allowed("user1") is True
         assert limiter.is_allowed("user1") is True
         assert limiter.is_allowed("user1") is False
@@ -28,10 +28,10 @@ class TestRateLimiter:
     def test_rate_limiter_window_expiry(self):
         """Test that rate limiter window expires correctly."""
         limiter = RateLimiter(max_requests=1, window_seconds=1)
-        
+
         assert limiter.is_allowed("user1") is True
         assert limiter.is_allowed("user1") is False
-        
+
         # Wait for window to expire
         time.sleep(1.1)
         assert limiter.is_allowed("user1") is True
@@ -39,7 +39,7 @@ class TestRateLimiter:
     def test_rate_limiter_different_users(self):
         """Test that rate limiter tracks different users separately."""
         limiter = RateLimiter(max_requests=1, window_seconds=60)
-        
+
         assert limiter.is_allowed("user1") is True
         assert limiter.is_allowed("user2") is True
         assert limiter.is_allowed("user1") is False
@@ -65,7 +65,7 @@ class TestAdvancedSafetyPolicy:
             'emotional_tone': 'joy',
             'confidence': 0.8
         }
-        
+
         result = self.policy.validate(valid_analysis, "happy content")
         assert result['is_safe'] is True
         assert len(result['violations']) == 0
@@ -78,7 +78,7 @@ class TestAdvancedSafetyPolicy:
             'emotional_tone': 'joy',
             'confidence': 0.8
         }
-        
+
         result = self.policy.validate(invalid_analysis, "content")
         assert result['is_safe'] is False
         violation_types = [v['type'] for v in result['violations']]
@@ -91,7 +91,7 @@ class TestAdvancedSafetyPolicy:
             'emotional_tone': 'invalid_tone',
             'confidence': 0.8
         }
-        
+
         result = self.policy.validate(invalid_analysis, "content")
         violation_types = [v['type'] for v in result['violations']]
         assert 'invalid_tone' in violation_types
@@ -103,18 +103,18 @@ class TestAdvancedSafetyPolicy:
             "Let's attack and destroy them all",
             "You should die and disappear forever"
         ]
-        
+
         analysis = {
             'score': -0.8,
             'emotional_tone': 'anger',
             'confidence': 0.9
         }
-        
+
         for content in harmful_contents:
             result = self.policy.validate(analysis, content)
             assert result['is_safe'] is False
             assert len(result['violations']) > 0
-            
+
             # Check that content was filtered
             assert "[FILTERED]" in result['filtered_content']
 
@@ -122,7 +122,7 @@ class TestAdvancedSafetyPolicy:
         """Test blocked domain detection."""
         content = "Check out this link: https://malicious-site.com/bad-stuff"
         analysis = {'score': 0.0, 'emotional_tone': 'neutral', 'confidence': 0.5}
-        
+
         result = self.policy.validate(analysis, content)
         violation_types = [v['type'] for v in result['violations']]
         assert 'blocked_source' in violation_types
@@ -131,12 +131,12 @@ class TestAdvancedSafetyPolicy:
         """Test rate limiting functionality."""
         analysis = {'score': 0.0, 'emotional_tone': 'neutral', 'confidence': 0.5}
         user_id = "test_user"
-        
+
         # First few requests should succeed
         for i in range(5):
             result = self.policy.validate(analysis, f"content {i}", user_id)
             assert result['rate_limited'] is False
-        
+
         # Next request should be rate limited
         result = self.policy.validate(analysis, "content overflow", user_id)
         assert result['rate_limited'] is True
@@ -145,14 +145,14 @@ class TestAdvancedSafetyPolicy:
     def test_policy_statistics(self):
         """Test policy statistics collection."""
         analysis = {'score': 0.0, 'emotional_tone': 'neutral', 'confidence': 0.5}
-        
+
         # Perform several validations
         self.policy.validate(analysis, "normal content")
         self.policy.validate(analysis, "I hate all humans", "user1")  # Should trigger violation
         self.policy.validate(analysis, "more content", "user2")
-        
+
         stats = self.policy.get_policy_stats()
-        
+
         assert stats['total_checks'] >= 3
         assert stats['violations_detected'] >= 1
         assert stats['content_filtered'] >= 1
@@ -167,23 +167,23 @@ class TestAdvancedSafetyPolicy:
                 "severity": "high"
             }
         ]
-        
+
         self.policy.update_harmful_patterns(new_patterns)
-        
+
         analysis = {'score': -0.5, 'emotional_tone': 'anger', 'confidence': 0.7}
         result = self.policy.validate(analysis, "This contains custom_bad_word")
-        
+
         violation_types = [v['type'] for v in result['violations']]
         assert 'harmful_content_custom_threat' in violation_types
 
     def test_recent_violations_tracking(self):
         """Test recent violations tracking."""
         analysis = {'score': -0.8, 'emotional_tone': 'anger', 'confidence': 0.9}
-        
+
         # Generate some violations
         harmful_content = "I want to kill everyone"
         self.policy.validate(analysis, harmful_content, "user1")
-        
+
         violations = self.policy.get_recent_violations(limit=5)
         assert len(violations) >= 1
         assert violations[0]['content_preview'] == harmful_content[:100] + "..."
@@ -191,12 +191,12 @@ class TestAdvancedSafetyPolicy:
     def test_content_filtering_disabled(self):
         """Test behavior when content filtering is disabled."""
         policy_no_filter = AdvancedSafetyPolicy(enable_content_filtering=False)
-        
+
         analysis = {'score': -0.8, 'emotional_tone': 'anger', 'confidence': 0.9}
         harmful_content = "I hate all humans"
-        
+
         result = policy_no_filter.validate(analysis, harmful_content)
-        
+
         # Should not detect harmful content violations
         violation_types = [v['type'] for v in result['violations']]
         harmful_violations = [v for v in violation_types if v.startswith('harmful_content_')]
@@ -209,7 +209,7 @@ class TestAdvancedSafetyPolicy:
             'emotional_tone': 'joy',
             'confidence': 1.5  # Invalid confidence
         }
-        
+
         result = self.policy.validate(invalid_analysis, "content")
         violation_types = [v['type'] for v in result['violations']]
         assert 'confidence_out_of_bounds' in violation_types
@@ -221,11 +221,11 @@ class TestAdvancedSafetyPolicy:
             'emotional_tone': 'invalid_tone',  # Invalid tone
             'confidence': 1.5  # Invalid confidence
         }
-        
+
         harmful_content = "I hate everyone and want to kill them all"
-        
+
         result = self.policy.validate(invalid_analysis, harmful_content)
-        
+
         assert result['is_safe'] is False
         assert len(result['violations']) >= 3  # At least score, tone, and harmful content
 
@@ -241,7 +241,7 @@ class TestSafetyViolation:
             confidence=0.95,
             timestamp=time.time()
         )
-        
+
         assert violation.violation_type == "test_violation"
         assert violation.content == "test content"
         assert violation.confidence == 0.95
@@ -257,5 +257,5 @@ class TestSafetyViolation:
             timestamp=time.time(),
             metadata=metadata
         )
-        
+
         assert violation.metadata == metadata

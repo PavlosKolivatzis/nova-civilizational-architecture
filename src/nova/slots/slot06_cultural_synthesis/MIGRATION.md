@@ -32,7 +32,7 @@ cultural_profile = adapter.analyze_cultural_context("TestInst", {"region": "EU"}
 ```python
 # ⚠️ DEPRECATED - Issues DeprecationWarning
 from nova.slots.slot06_cultural_synthesis.multicultural_truth_synthesis import (
-    AdaptiveSynthesisEngine, 
+    AdaptiveSynthesisEngine,
     MulticulturalTruthSynthesisAdapter
 )
 
@@ -77,7 +77,7 @@ profile = engine.analyze_cultural_context("TestInst", {"region": "EU"})
 - **New**: Returns standard `Dict[str, Any]` (CulturalProfile)
 
 ### Interface
-- **Legacy**: `analyze_cultural_context(institution, context)` 
+- **Legacy**: `analyze_cultural_context(institution, context)`
 - **New**: `synthesize(profile)` where profile includes institution
 
 ### Error Handling
@@ -90,7 +90,7 @@ The `CULTURAL_PROFILE@1` contract is stable across both APIs:
 
 Required keys:
 - `principle_preservation_score` (0.0-1.0)
-- `residual_risk` (0.0-1.0) 
+- `residual_risk` (0.0-1.0)
 - `policy_actions` (List)
 - `forbidden_hits` (List)
 - `consent_required` (bool)
@@ -120,5 +120,5 @@ Look for `slot6.legacy_calls_total` metric to track adoption.
 
 For migration questions or issues, reference:
 - Schema contract tests for expected behavior
-- Legacy compatibility tests for transition patterns  
+- Legacy compatibility tests for transition patterns
 - Health metrics for usage tracking

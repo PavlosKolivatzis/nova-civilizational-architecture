@@ -20,7 +20,7 @@ class ConstellationEngine:
         self.similarity_threshold = 0.3
         self.stability_window = 10
         self.link_strength_threshold = 0.2
-        
+
         # Tracking for stability metrics
         self._constellation_history = []
         self._link_history = []
@@ -32,7 +32,7 @@ class ConstellationEngine:
     def _get_tri_signals(self) -> Optional[Dict[str, float]]:
         """Read TRI coherence signals with robust fallback chain."""
         import os
-        
+
         if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
             return None
 
@@ -47,7 +47,7 @@ class ConstellationEngine:
                 phase_jitter = _mirror_get(m, "slot04.phase_jitter", default=None, requester="slot05_constellation")
         except Exception:
             pass
-        
+
         if coherence is not None or phase_jitter is not None:
             out = {}
             if coherence is not None:
@@ -58,7 +58,7 @@ class ConstellationEngine:
 
         # 2) Mirror empty? Fallback to TRI adapter (real telemetry)
         try:
-            # Note: This would need actual TRI adapter implementation  
+            # Note: This would need actual TRI adapter implementation
             # For now, fall through to env vars
             pass
         except Exception:
@@ -106,20 +106,20 @@ class ConstellationEngine:
         }
 
         return adjusted_weight, annotations
-        
+
     def map(self, items: list[str]) -> dict:
         """Enhanced constellation mapping with computed links and stability metrics.
-        
+
         Args:
             items: List of items to map into constellation
-            
+
         Returns:
             Dict containing constellation, links, and stability metrics
         """
         if not items:
             return {
-                "constellation": [], 
-                "links": [], 
+                "constellation": [],
+                "links": [],
                 "stability": {"score": 1.0, "status": "empty"},
                 "metadata": {
                     "item_count": 0,
@@ -127,19 +127,19 @@ class ConstellationEngine:
                     "version": self.__version__
                 }
             }
-        
+
         # Create constellation mapping
         constellation = self._create_constellation_mapping(items)
-        
+
         # Compute links between items
         links = self._compute_links(items)
-        
+
         # Calculate stability metrics
         stability = self._calculate_stability_metrics(constellation, links)
-        
+
         # Update history for stability tracking
         self._update_history(constellation, links)
-        
+
         result = {
             "constellation": constellation,
             "links": links,
@@ -150,20 +150,20 @@ class ConstellationEngine:
                 "version": self.__version__
             }
         }
-        
+
         logger.debug(f"Mapped constellation: {len(items)} items, {len(links)} links, "
                     f"stability: {stability['score']:.3f}")
-        
+
         return result
 
     def _create_constellation_mapping(self, items: List[str]) -> List[Dict[str, Any]]:
         """Create structured constellation mapping from items."""
         constellation = []
-        
+
         for i, item in enumerate(items):
             # Basic item analysis
             item_analysis = self._analyze_item(item)
-            
+
             constellation_item = {
                 "id": i,
                 "content": item,
@@ -177,13 +177,13 @@ class ConstellationEngine:
             if item_analysis.get("annotations"):
                 constellation_item["annotations"] = item_analysis["annotations"]
             constellation.append(constellation_item)
-            
+
         return constellation
 
     def _analyze_item(self, item: str) -> Dict[str, Any]:
         """Analyze individual item characteristics."""
         content = item.lower().strip()
-        
+
         # Determine item type based on content patterns
         item_type = "concept"
         if any(word in content for word in ["error", "fail", "bug", "issue"]):
@@ -194,7 +194,7 @@ class ConstellationEngine:
             item_type = "process"
         elif any(word in content for word in ["data", "metric", "value", "number"]):
             item_type = "data"
-            
+
         # Calculate base weight based on content significance
         base_weight = min(1.0, len(content) / 100.0)  # Longer content = higher weight
 
@@ -235,24 +235,24 @@ class ConstellationEngine:
         """Calculate 2D position for constellation item."""
         if total == 1:
             return {"x": 0.5, "y": 0.5}
-            
+
         # Arrange items in a circle for visual constellation
         angle = 2 * math.pi * index / total
         radius = 0.3  # Keep items within reasonable bounds
-        
+
         x = 0.5 + radius * math.cos(angle)
         y = 0.5 + radius * math.sin(angle)
-        
+
         return {"x": x, "y": y}
 
     def _compute_links(self, items: List[str]) -> List[Dict[str, Any]]:
         """Compute links between constellation items."""
         links = []
-        
+
         for i in range(len(items)):
             for j in range(i + 1, len(items)):
                 similarity = self._calculate_similarity(items[i], items[j])
-                
+
                 if similarity >= self.similarity_threshold:
                     link = {
                         "source": i,
@@ -262,7 +262,7 @@ class ConstellationEngine:
                         "bidirectional": True
                     }
                     links.append(link)
-        
+
         return links
 
     @lru_cache(maxsize=1024)
@@ -316,23 +316,23 @@ class ConstellationEngine:
         """Determine the type of relationship between two items."""
         content1 = item1.lower()
         content2 = item2.lower()
-        
+
         # Check for problem-solution relationships
         if ("problem" in content1 or "error" in content1) and ("solution" in content2 or "fix" in content2):
             return "solution"
         elif ("solution" in content1 or "fix" in content1) and ("problem" in content2 or "error" in content2):
             return "solution"
-            
+
         # Check for cause-effect relationships
         if any(word in content1 for word in ["cause", "because", "due to"]) or \
            any(word in content2 for word in ["result", "effect", "outcome"]):
             return "causal"
-            
+
         # Check for hierarchical relationships
         if "part" in content1 and "whole" in content2 or \
            "component" in content1 and "system" in content2:
             return "hierarchical"
-            
+
         # Default to conceptual similarity
         return "conceptual"
 
@@ -340,17 +340,17 @@ class ConstellationEngine:
         """Calculate stability metrics for the constellation."""
         # Basic stability score
         stability_score = self._calculate_base_stability(constellation, links)
-        
+
         # Historical stability (if we have history)
         historical_stability = self._calculate_historical_stability()
-        
+
         # Determine stability status
         status = self._determine_stability_status(stability_score)
-        
+
         # Additional metrics
         density = len(links) / max(1, len(constellation) * (len(constellation) - 1) / 2)
         connectivity = self._calculate_connectivity(constellation, links)
-        
+
         return {
             "score": stability_score,
             "status": status,
@@ -368,15 +368,15 @@ class ConstellationEngine:
         """Calculate base stability score."""
         if not constellation:
             return 1.0
-            
+
         factors = []
-        
+
         # Factor 1: Item weight distribution
         weights = [item["weight"] for item in constellation]
         weight_variance = self._calculate_variance(weights)
         weight_stability = 1.0 - min(1.0, weight_variance)
         factors.append(weight_stability)
-        
+
         # Factor 2: Link strength consistency
         if links:
             strengths = [link["strength"] for link in links]
@@ -385,19 +385,19 @@ class ConstellationEngine:
             factors.append(strength_stability)
         else:
             factors.append(0.8)  # Neutral for no links
-            
+
         # Factor 3: Position distribution
         positions = [(item["position"]["x"], item["position"]["y"]) for item in constellation]
         position_stability = self._calculate_position_stability(positions)
         factors.append(position_stability)
-        
+
         return sum(factors) / len(factors)
 
     def _calculate_variance(self, values: List[float]) -> float:
         """Calculate variance of a list of values."""
         if len(values) < 2:
             return 0.0
-            
+
         mean = sum(values) / len(values)
         variance = sum((x - mean) ** 2 for x in values) / len(values)
         return variance
@@ -406,21 +406,21 @@ class ConstellationEngine:
         """Calculate stability based on position distribution."""
         if len(positions) < 2:
             return 1.0
-            
+
         # Check if positions are well distributed
         distances = []
         for i, pos1 in enumerate(positions):
             for j, pos2 in enumerate(positions[i+1:], i+1):
                 dist = math.sqrt((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)
                 distances.append(dist)
-                
+
         if not distances:
             return 1.0
-            
+
         # Prefer moderate, consistent distances
         mean_distance = sum(distances) / len(distances)
         distance_variance = self._calculate_variance(distances)
-        
+
         # Stability is higher when distances are consistent and reasonable
         return max(0.0, 1.0 - distance_variance) * min(1.0, mean_distance / 0.5)
 
@@ -428,25 +428,25 @@ class ConstellationEngine:
         """Calculate stability trend from historical data."""
         if len(self._constellation_history) < 2:
             return {"trend": "stable", "confidence": 0.5, "change_rate": 0.0}
-            
+
         # Compare recent stability scores
         recent_scores = [h.get("stability_score", 0.5) for h in self._constellation_history[-5:]]
-        
+
         if len(recent_scores) < 2:
             return {"trend": "stable", "confidence": 0.5, "change_rate": 0.0}
-            
+
         # Calculate trend
         change_rate = (recent_scores[-1] - recent_scores[0]) / len(recent_scores)
-        
+
         if abs(change_rate) < 0.01:
             trend = "stable"
         elif change_rate > 0:
             trend = "improving"
         else:
             trend = "declining"
-            
+
         confidence = min(1.0, len(recent_scores) / 5.0)
-        
+
         return {
             "trend": trend,
             "confidence": confidence,
@@ -468,22 +468,22 @@ class ConstellationEngine:
         """Calculate how well connected the constellation is."""
         if len(constellation) <= 1:
             return 1.0
-            
+
         # Build adjacency list
         adjacency = defaultdict(set)
         for link in links:
             adjacency[link["source"]].add(link["target"])
             adjacency[link["target"]].add(link["source"])
-            
+
         # Count connected components
         visited = set()
         components = 0
-        
+
         for i in range(len(constellation)):
             if i not in visited:
                 self._dfs_visit(i, adjacency, visited)
                 components += 1
-                
+
         # Connectivity is better with fewer components
         connectivity = 1.0 - (components - 1) / max(1, len(constellation) - 1)
         return connectivity
@@ -499,31 +499,31 @@ class ConstellationEngine:
         """Calculate stability of item distribution."""
         if not constellation:
             return 1.0
-            
+
         # Check type distribution
         types = [item["type"] for item in constellation]
         type_counts = defaultdict(int)
         for t in types:
             type_counts[t] += 1
-            
+
         # Prefer balanced type distribution
         total = len(constellation)
         type_distribution = [count / total for count in type_counts.values()]
         distribution_variance = self._calculate_variance(type_distribution)
-        
+
         return max(0.0, 1.0 - distribution_variance)
 
     def _calculate_link_stability(self, links: List[Dict]) -> float:
         """Calculate stability of link strengths."""
         if not links:
             return 0.8  # Neutral score for no links
-            
+
         strengths = [link["strength"] for link in links]
-        
+
         # Prefer consistent, strong links
         mean_strength = sum(strengths) / len(strengths)
         strength_variance = self._calculate_variance(strengths)
-        
+
         # Balance mean strength and consistency
         return (mean_strength * 0.7 + (1.0 - strength_variance) * 0.3)
 
@@ -531,19 +531,19 @@ class ConstellationEngine:
         """Calculate structural balance of the constellation."""
         if not links:
             return 0.8
-            
+
         # Check for balanced link distribution
         link_counts = defaultdict(int)
         for link in links:
             link_counts[link["source"]] += 1
             link_counts[link["target"]] += 1
-            
+
         if not link_counts:
             return 0.8
-            
+
         counts = list(link_counts.values())
         count_variance = self._calculate_variance(counts)
-        
+
         # Lower variance = better balance
         return max(0.0, 1.0 - count_variance / max(1, max(counts)))
 

@@ -162,7 +162,7 @@ class TruthAnchorEngine:
                 record.value = backup
             else:
                 self._anchors[anchor_id] = AnchorRecord(value=backup)
-            
+
             # Save recovery to persistence
             self._save_to_persistence()
             return backup

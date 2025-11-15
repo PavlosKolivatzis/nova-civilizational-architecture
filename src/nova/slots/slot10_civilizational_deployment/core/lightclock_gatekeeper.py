@@ -100,13 +100,13 @@ class LightClockGatekeeper:
     def should_open_gate(self) -> bool:
         """Check if deployment gate should open based on epistemic signals."""
         coh, pl, jit, p = self._read_epistemic_signals()
-        
+
         # Tighten threshold under jitter/pressure
         base = self._tri_gate
         if jit is not None and jit >= 0.25:
             base += 0.05
         base += 0.05 * max(0.0, min(1.0, p))
-        
+
         return coh >= base and 0.45 <= pl <= 0.60
 
     def evaluate_deploy_gate(self, slot08: dict, slot04: dict) -> LightClockGateResult:
@@ -126,7 +126,7 @@ class LightClockGatekeeper:
             if phase_lock is None:
                 # Direct fallback - avoid recursive call to _read_epistemic_signals
                 phase_lock = 0.5  # Conservative default
-            
+
         slot9_policy = self._mirror.read("slot09.final_policy", None)
 
         failed: list[str] = []

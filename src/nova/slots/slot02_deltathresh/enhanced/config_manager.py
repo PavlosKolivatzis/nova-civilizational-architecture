@@ -66,4 +66,3 @@ class ConfigManager:
             return False
         self.load_from_file(self._config_file)
         return True
-

@@ -45,7 +45,7 @@ def test_clamping() -> None:
         "layer_scores": {"x": 5.0},
     }
     res = engine.synthesize(profile)
-    
+
     # Check only numeric values are clamped (skip lists and booleans)
     numeric_values = [v for v in res.values() if isinstance(v, (int, float))]
     assert all(0.0 <= v <= 1.0 for v in numeric_values)

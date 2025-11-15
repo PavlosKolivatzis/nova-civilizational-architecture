@@ -46,4 +46,3 @@ def test_active_safeguards_reflect_configuration():
     active2 = engine2._get_active_safeguards()
     assert "rate_limiting" in active2
     assert "resource_protection" in active2
-

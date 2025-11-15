@@ -68,4 +68,3 @@ def test_ethics_guard_policy_update():
         EthicsGuard.read("beta", "eve")
     EthicsGuard.update_policies("beta", "root", readers={"alice", "eve"})
     assert EthicsGuard.read("beta", "eve") == 1
-

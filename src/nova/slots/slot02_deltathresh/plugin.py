@@ -6,30 +6,30 @@ from typing import Any, Mapping, Callable, Dict
 
 class Slot02DeltaThreshPlugin(SlotPlugin):
     """ΔTHRESH Manager plugin for pattern detection and threshold management."""
-    
+
     id = "slot02_deltathresh"
     version = "1.0.0"
     optional = False
-    
+
     def __init__(self):
         self._processor = None
-    
+
     def start(self, bus: Any, config: Mapping[str, Any]) -> None:
         """Initialize ΔTHRESH processor."""
         self._bus = bus
         self._config = config
-        
+
         try:
             from .core import DeltaThreshProcessor
             self._processor = DeltaThreshProcessor()
             print(f"🎯 ΔTHRESH Manager started (v{self.version})")
         except ImportError:
             print("⚠️ ΔTHRESH processor not available")
-    
+
     def stop(self) -> None:
         """Clean up ΔTHRESH resources."""
         self._processor = None
-    
+
     def health(self) -> Mapping[str, Any]:
         """Return ΔTHRESH health status."""
         return {
@@ -76,7 +76,7 @@ class Slot02DeltaThreshPlugin(SlotPlugin):
                     "layer_analysis": {},
                     "error": str(e)
                 }
-        
+
         from .plugin_meta_lens_addition import _meta_lens_analyze
 
         return {

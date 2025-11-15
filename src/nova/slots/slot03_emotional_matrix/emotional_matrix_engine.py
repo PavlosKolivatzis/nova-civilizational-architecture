@@ -294,4 +294,3 @@ class EmotionalMatrixEngine:
             except Exception:
                 metrics["policy_error"] = "policy hook failure"
                 break
-

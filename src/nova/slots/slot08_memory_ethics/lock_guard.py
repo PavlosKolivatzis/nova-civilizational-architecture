@@ -367,4 +367,3 @@ __all__ = [
     "fast_json_serializer",
     "binary_serializer",
 ]
-

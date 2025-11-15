@@ -9,13 +9,13 @@ flow_metrics_enabled: true          # Always collect metrics even when adaptatio
 default_config:
   base_weight: 1.0      # Default routing weight (1.0 = neutral)
   base_frequency: 1.0   # Default frequency multiplier (1.0 = normal rate)
-  
+
   # Adaptation bounds
   min_weight: 0.1       # Minimum weight (prevents complete throttling)
   max_weight: 3.0       # Maximum weight (prevents excessive priority)
   min_frequency: 0.1    # Minimum frequency (90% throttling max)
   max_frequency: 5.0    # Maximum frequency (5x boost max)
-  
+
   # Behavioral settings
   throttle_window_seconds: 60    # Time window for frequency calculations
   history_size: 100             # Number of sends to track for metrics
@@ -30,15 +30,15 @@ contracts:
     min_frequency: 0.5    # Allow 50% throttling max for emotional analysis
     max_frequency: 2.0    # Allow 2x boost for emotional urgency
     priority: high        # High priority contract for adaptation
-    
-  # Future: S3→S4 TRI reports  
+
+  # Future: S3→S4 TRI reports
   TRI_REPORT@1:
     base_weight: 1.0
     base_frequency: 1.0
     min_frequency: 0.3    # Allow more throttling for TRI (less time-critical)
     max_frequency: 3.0    # Allow higher boost for risk scenarios
     priority: medium
-    
+
   # Future: S6→S10 cultural profiles
   CULTURAL_PROFILE@1:
     base_weight: 1.0
@@ -59,7 +59,7 @@ flow_modes:
       EMOTION_REPORT@1: 1.0
       TRI_REPORT@1: 1.0
       CULTURAL_PROFILE@1: 1.0
-      
+
   THREAT:
     description: "High-threat mode - prioritize emotional and risk analysis"
     weight_multipliers:
@@ -70,7 +70,7 @@ flow_modes:
       EMOTION_REPORT@1: 1.5
       TRI_REPORT@1: 2.0
       CULTURAL_PROFILE@1: 0.7
-      
+
   INTEGRATIVE:
     description: "Integration mode - prioritize cultural synthesis and deployment"
     weight_multipliers:
@@ -87,14 +87,14 @@ metrics:
   collection_interval_seconds: 30  # How often to collect adaptive metrics
   history_retention_minutes: 60   # How long to keep detailed metrics history
   prometheus_enabled: true        # Expose metrics for Prometheus scraping
-  
+
   # Metric labels and dimensions
   labels:
     - contract_name
-    - source_slot  
+    - source_slot
     - target_slot
     - flow_mode
-    
+
   # Alert thresholds
   alerts:
     high_throttle_rate: 0.3        # Alert if >30% of sends are throttled
@@ -107,10 +107,10 @@ environments:
     adaptive_connections_enabled: true   # Enable in dev for testing
     default_config:
       min_frequency: 0.5              # Less aggressive throttling in dev
-      
+
   staging:
     adaptive_connections_enabled: true   # Enable in staging for validation
-    
+
   production:
     adaptive_connections_enabled: false  # Conservative default for prod
     metrics:

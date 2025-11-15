@@ -12,25 +12,25 @@ _Last updated: 2025-11-12_
 
 ## 2. Immediate Actions
 
-1. **Clamp η (learning rate)**  
+1. **Clamp η (learning rate)**
    ```bash
    export NOVA_WISDOM_ETA_OVERRIDE=0.05
    python orchestrator/adaptive_wisdom_poller.py --apply-override
    ```
 
-2. **Freeze Governor if Hopf Distance Critical**  
+2. **Freeze Governor if Hopf Distance Critical**
    ```bash
   curl -s -X POST http://localhost:8000/wisdom/freeze -d '{"reason":"hopf"}'
    ```
    Resume only after H ≥ 0.03 AND S ≥ 0.05.
 
-3. **Inspect TRI + Slot7 Pressure**  
+3. **Inspect TRI + Slot7 Pressure**
    ```bash
    curl -s http://localhost:8000/semantic/context | jq '.slot04, .slot07'
    ```
    - High Slot7 pressure (>0.8) often precedes stability drops; throttle concurrency.
 
-4. **Restart Poller (if metrics stale)**  
+4. **Restart Poller (if metrics stale)**
    ```bash
    systemctl restart nova-wisdom-poller
    tail -f /var/log/nova/wisdom_poller.log

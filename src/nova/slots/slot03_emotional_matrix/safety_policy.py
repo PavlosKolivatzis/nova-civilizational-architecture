@@ -36,7 +36,7 @@ def validate_metrics(metrics: dict) -> list[str]:
                 errors.append("score_out_of_bounds")
         except Exception:
             errors.append("score_out_of_bounds")
-    
+
     return errors
 _ALLOWED_TONES = {"positive", "negative", "neutral", "unknown"}
 

@@ -139,23 +139,23 @@ class Slot1Adapter:
                 request_id=request_id,
                 slot_id="slot1_truth_anchor"
             )
-        
+
         start = time.perf_counter()
-        
+
         try:
             # Validate payload structure
             if not isinstance(payload, dict):
                 return self._make_error_result(
                     "invalid_payload_type", request_id, start, "Payload must be a dictionary"
                 )
-            
+
             # Validate content (optional strict validation)
             content = payload.get("content", "")
             if not content or not isinstance(content, str):
                 return self._make_error_result(
                     "invalid_content", request_id, start, "Content must be a non-empty string"
                 )
-            
+
             domain = payload.get("anchor_domain", "nova.core")
 
             # Execute analysis
@@ -184,7 +184,7 @@ class Slot1Adapter:
             await self._update_metrics(start, success=False)
             logger.warning(f"Request {request_id} cancelled")
             raise  # Re-raise for proper cancellation handling
-            
+
         except Exception as e:
             logger.error(f"Request {request_id} failed: {e}", exc_info=True)
             return self._make_error_result(
@@ -194,14 +194,14 @@ class Slot1Adapter:
     async def _update_metrics(self, start: float, success: bool):
         """Update performance metrics safely."""
         elapsed = (time.perf_counter() - start) * 1000
-        
+
         if self._lock is None:
             self._lock = asyncio.Lock()
         async with self._lock:
             self._total_requests += 1
             if not success:
                 self._failed_requests += 1
-            
+
             # Exponential moving average
             if self._avg_processing_time == 0.0:
                 self._avg_processing_time = elapsed
@@ -215,7 +215,7 @@ class Slot1Adapter:
         """Create a successful result with metrics update."""
         elapsed = (time.perf_counter() - start) * 1000
         self._safe_metrics_update(start, success=True)
-        
+
         return SlotResult(
             status="ok",
             data=data,
@@ -224,12 +224,12 @@ class Slot1Adapter:
             latency_ms=elapsed,
         )
 
-    def _make_error_result(self, error_type: str, request_id: str, 
+    def _make_error_result(self, error_type: str, request_id: str,
                           start: float, message: str) -> SlotResult:
         """Create an error result with metrics update."""
         elapsed = (time.perf_counter() - start) * 1000
         self._safe_metrics_update(start, success=False)
-        
+
         return SlotResult(
             status="error",
             error=f"{error_type}:{message}",
@@ -255,7 +255,7 @@ class Slot1Adapter:
         """Get comprehensive performance metrics."""
         total = max(1, self._total_requests)
         success_count = self._total_requests - self._failed_requests
-        
+
         return {
             "total_requests": self._total_requests,
             "failed_requests": self._failed_requests,

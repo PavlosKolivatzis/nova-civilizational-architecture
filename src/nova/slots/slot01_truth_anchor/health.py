@@ -37,4 +37,3 @@ def health() -> dict:
             "error": str(e),
             "engine_status": "degraded",
         }
-

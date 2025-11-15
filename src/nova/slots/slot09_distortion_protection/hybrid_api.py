@@ -100,7 +100,7 @@ class PolicyAction(str, Enum):
     DEGRADE_AND_REVIEW = "DEGRADE_AND_REVIEW"
     RESTRICTED_SCOPE_DEPLOYMENT = "RESTRICTED_SCOPE_DEPLOYMENT"
     BLOCK_OR_SANDBOX = "BLOCK_OR_SANDBOX"
-    
+
 class DistortionType(str, Enum):
     NONE = "none"
     INDIVIDUAL_COGNITIVE = "individual_cognitive"
@@ -150,7 +150,7 @@ class HybridApiConfig:
     cache_ttl_seconds: float = 300.0
     max_processing_time_ms: float = 5000
     ema_alpha: float = 0.1
-    
+
     # NOVA domain settings (from my version)
     threat_threshold_warning: float = 0.6
     threat_threshold_block: float = 0.8
@@ -160,7 +160,7 @@ class HybridApiConfig:
     ids_drift_threshold_low: float = 0.02
     ids_drift_threshold_medium: float = 0.1
     ids_drift_threshold_high: float = 0.3
-    
+
     # Confidence and quality settings
     default_confidence_fallback: float = 0.5
     confidence_stability_weight: float = 0.6
@@ -291,7 +291,7 @@ else:
 
 class CircuitBreaker:
     """Production-grade circuit breaker with exponential backoff."""
-    
+
     def __init__(self, threshold: int = 10, reset_timeout: float = 60.0):
         self.threshold = threshold
         self.reset_timeout = reset_timeout
@@ -299,7 +299,7 @@ class CircuitBreaker:
         self.last_failure_time = 0
         self.state = "closed"  # closed, open, half-open
         self._lock = threading.RLock()
-    
+
     def is_open(self) -> bool:
         with self._lock:
             if self.state == "open":
@@ -308,14 +308,14 @@ class CircuitBreaker:
                     return False
                 return True
             return False
-    
+
     def record_failure(self):
         with self._lock:
             self.failure_count += 1
             self.last_failure_time = time.time()
             if self.failure_count >= self.threshold:
                 self.state = "open"
-    
+
     def record_success(self):
         with self._lock:
             if self.state == "half-open":
@@ -326,7 +326,7 @@ class CircuitBreaker:
 
 class SecureContentCache:
     """Content cache with TTL and optional encryption for sensitive data."""
-    
+
     def __init__(self, ttl_seconds: float = 300.0, max_size: int = 1000):
         self.ttl = ttl_seconds
         self.max_size = max_size
@@ -335,7 +335,7 @@ class SecureContentCache:
         self._lock = threading.RLock()
         self.hits = 0
         self.misses = 0
-    
+
     def get(self, key: str) -> Optional[Any]:
         with self._lock:
             if key in self._cache:
@@ -350,29 +350,29 @@ class SecureContentCache:
                 self._evict_key(key)
             self.misses += 1
             return None
-    
+
     def set(self, key: str, value: Any):
         with self._lock:
             # Evict if at capacity
             if len(self._cache) >= self.max_size and key not in self._cache:
                 self._evict_lru()
-            
+
             self._cache[key] = (time.time(), value)
             if key in self._access_order:
                 self._access_order.remove(key)
             self._access_order.append(key)
-    
+
     def _evict_key(self, key: str):
         if key in self._cache:
             del self._cache[key]
         if key in self._access_order:
             self._access_order.remove(key)
-    
+
     def _evict_lru(self):
         if self._access_order:
             lru_key = self._access_order[0]
             self._evict_key(lru_key)
-    
+
     def hit_rate(self) -> float:
         total = self.hits + self.misses
         return self.hits / max(1, total)
@@ -403,7 +403,7 @@ class HybridDistortionDetectionAPI:
         self.core_detector = core_detector
         self.config = config or HybridApiConfig()
         self.logger = logging.getLogger('slot9_hybrid_api')
-        
+
         # Performance tracking (enhanced version)
         self.metrics: MetricsDict = {
             'total_requests': 0,
@@ -415,7 +415,7 @@ class HybridDistortionDetectionAPI:
             'threat_detections_by_type': {dt.value: 0 for dt in DistortionType},
             'policy_actions_taken': {pa.value: 0 for pa in PolicyAction}
         }
-        
+
         # Resilience features (enhanced version)
         self.circuit_breaker = CircuitBreaker(
             threshold=self.config.circuit_breaker_threshold,
@@ -430,7 +430,7 @@ class HybridDistortionDetectionAPI:
         # Hash chain state and feedback storage
         self.last_audit_hash: Optional[str] = None
         self.last_deployment_feedback: Optional[Dict[str, Any]] = None
-        
+
         self.logger.info(f"HybridDistortionDetectionAPI v{self.VERSION} initialized")
         self.logger.info(f"NOVA integration: {'enabled' if NOVA_INTEGRATION_AVAILABLE else 'fallback mode'}")
 
@@ -438,61 +438,61 @@ class HybridDistortionDetectionAPI:
         """Main API endpoint combining resilience patterns with deep NOVA integration."""
         start_time = time.perf_counter()
         trace_id = request.trace_id or f"slot9_hybrid_{uuid.uuid4().hex[:8]}"
-        
+
         # Circuit breaker check (enhanced version resilience)
         if self.circuit_breaker.is_open():
             self.logger.warning(f"Circuit breaker open for trace_id={trace_id}")
             return self._create_circuit_breaker_response(trace_id, start_time)
-        
+
         try:
             async with self._metrics_context():
                 # Content validation (enhanced version)
                 self._validate_request_content(request)
-                
+
                 # Cache check with secure hashing (enhanced version)
                 cache_key = self._generate_secure_cache_key(request.content, request.context)
                 if cached_response := self.content_cache.get(cache_key):
                     cached_response.trace_id = trace_id  # Update trace ID
                     self.logger.debug(f"Cache hit for trace_id={trace_id}")
                     return cached_response
-                
+
                 # Core processing with NOVA integration (hybrid approach)
                 policy_result = await self._process_with_nova_integration(
                     request, trace_id
                 )
-                
+
                 # Build comprehensive response (my version domain logic)
                 response = await self._build_comprehensive_response(
                     policy_result, request, trace_id, start_time
                 )
-                
+
                 # Cache successful responses (enhanced version)
                 if response.status != ResponseStatus.ERROR:
                     self.content_cache.set(cache_key, response)
-                
+
                 # Record success for circuit breaker
                 self.circuit_breaker.record_success()
-                
+
                 # Update metrics (hybrid tracking)
                 self._update_comprehensive_metrics(response)
-                
+
                 self.logger.info(
                     f"Detection complete trace_id={trace_id}: "
                     f"status={response.status.value}, threat={response.threat_level:.3f}, "
                     f"policy={response.policy_action.value}, confidence={response.confidence:.3f}, "
                     f"time={response.processing_time_ms:.1f}ms"
                 )
-                
+
                 return response
-                
+
         except Exception as e:
             self.circuit_breaker.record_failure()
             processing_time = (time.perf_counter() - start_time) * 1000
             self.logger.error(f"Detection error trace_id={trace_id}: {e}", exc_info=True)
-            
+
             with self._metrics_lock:
                 self.metrics['error_count'] += 1
-                
+
             return self._create_comprehensive_error_response(trace_id, str(e), processing_time)
 
     @asynccontextmanager
@@ -514,10 +514,10 @@ class HybridDistortionDetectionAPI:
         """Enhanced content validation with security checks."""
         if not request.content or not request.content.strip():
             raise ValueError("Content cannot be empty or whitespace only")
-            
+
         if len(request.content.encode('utf-8')) > self.config.max_content_length_bytes:
             raise ValueError(f"Content exceeds maximum size of {self.config.max_content_length_bytes} bytes")
-        
+
         # Additional security validations could go here
         if request.priority == RequestPriority.CRITICAL and not request.trace_id:
             self.logger.warning("Critical priority request without trace_id")
@@ -529,7 +529,7 @@ class HybridDistortionDetectionAPI:
         context_hash = hashlib.sha256(context_str.encode('utf-8')).hexdigest()
         return f"slot9:{content_hash[:16]}:{context_hash[:8]}"
 
-    async def _process_with_nova_integration(self, request: DistortionDetectionRequest, 
+    async def _process_with_nova_integration(self, request: DistortionDetectionRequest,
                                            trace_id: str) -> Dict[str, Any]:
         """Process request with full NOVA integration or fallback."""
         if NOVA_INTEGRATION_AVAILABLE and IDS_ENABLED:
@@ -537,7 +537,7 @@ class HybridDistortionDetectionAPI:
         else:
             return await self._process_with_fallback_logic(request, trace_id)
 
-    async def _process_with_ids_policy(self, request: DistortionDetectionRequest, 
+    async def _process_with_ids_policy(self, request: DistortionDetectionRequest,
                                      trace_id: str) -> Dict[str, Any]:
         """Process using actual IDS policy integration (my version logic)."""
         try:
@@ -548,7 +548,7 @@ class HybridDistortionDetectionAPI:
                     "content": self._extract_content_vector(request.content, request.context)
                 }
             }
-            
+
             loop = asyncio.get_running_loop()
             policy_future = loop.run_in_executor(
                 None,
@@ -565,7 +565,7 @@ class HybridDistortionDetectionAPI:
                 raise TimeoutError("IDS processing timed out")
 
             return policy_future.result()
-            
+
         except (asyncio.TimeoutError, TimeoutError):
             self.logger.warning(f"IDS processing timeout for trace_id={trace_id}")
             raise TimeoutError("IDS processing timed out")
@@ -577,15 +577,15 @@ class HybridDistortionDetectionAPI:
                                          trace_id: str) -> Dict[str, Any]:
         """Fallback processing when NOVA integration unavailable."""
         self.logger.info(f"Using fallback processing for trace_id={trace_id}")
-        
+
         # Simple heuristic-based analysis
         content_length = len(request.content)
         word_count = len(request.content.split())
-        
+
         # Simulate stability and drift based on content characteristics
         stability = min(1.0, max(0.0, 0.8 - (content_length / 10000)))
         drift = min(0.5, max(-0.5, (word_count - 50) / 100))
-        
+
         return {
             "final_policy": "STANDARD_PROCESSING",
             "final_reason": f"fallback:length_{content_length}|words_{word_count}",
@@ -620,7 +620,7 @@ class HybridDistortionDetectionAPI:
             sum(1 for char in content if char.isupper()) / max(1, len(content)),  # Caps ratio
             content.count('\n') / max(1, len(content))  # Line break density
         ]
-    
+
     def _extract_content_vector(
         self,
         content: str,
@@ -629,7 +629,7 @@ class HybridDistortionDetectionAPI:
         """Extract content embedding vector from content."""
         words = content.split()
         sentences = content.split('.')
-        
+
         return [
             len(words) / 100.0,  # Word count factor
             sum(len(word) for word in words) / max(1, len(words)),  # Avg word length
@@ -639,32 +639,32 @@ class HybridDistortionDetectionAPI:
             len(set(content.lower())) / max(1, len(content))  # Character diversity
         ]
 
-    async def _build_comprehensive_response(self, policy_result: Dict[str, Any], 
+    async def _build_comprehensive_response(self, policy_result: Dict[str, Any],
                                           request: DistortionDetectionRequest,
                                           trace_id: str, start_time: float) -> DistortionDetectionResponse:
         """Build comprehensive response with full NOVA domain logic (my version approach)."""
         processing_time = (time.perf_counter() - start_time) * 1000
-        
+
         # Calculate threat level with sophisticated logic (my version)
         threat_level = self._calculate_sophisticated_threat_level(policy_result)
-        
+
         # Determine status based on threat level
         status = self._determine_status_from_threat(threat_level)
-        
+
         # Calculate confidence using IDS analysis (my version)
         confidence = self._calculate_ids_based_confidence(policy_result)
-        
+
         # Classify distortion type and infrastructure level (my version)
         distortion_type = self._classify_distortion_type(policy_result)
         infrastructure_level = self._assess_infrastructure_level(policy_result)
         severity = self._determine_severity(policy_result)
-        
+
         # Extract comprehensive IDS analysis (my version)
         ids_analysis = self._extract_comprehensive_ids_analysis(policy_result)
-        
+
         # Create detailed audit trail (my version)
         audit_trail = self._create_detailed_audit_trail(policy_result, trace_id, processing_time)
-        
+
         # Build response
         response = DistortionDetectionResponse(
             format_version=self.FORMAT_VERSION,
@@ -684,19 +684,19 @@ class HybridDistortionDetectionAPI:
             deployment_context=self._default_deployment_context(request),
             deployment_feedback={}
         )
-        
+
         # Add detailed analysis if requested (my version)
         if request.include_detailed_analysis:
             response.threat_landscape = self._generate_threat_landscape(policy_result, request)
             response.intervention_strategy = self._generate_intervention_strategy(policy_result, request)
-        
+
         return response
 
     # Threat level calculation with sophisticated IDS integration (my version)
     def _calculate_sophisticated_threat_level(self, policy_result: Dict) -> float:
         """Calculate threat level with sophisticated IDS-based logic."""
         policy_action = policy_result.get('final_policy', 'STANDARD_PROCESSING')
-        
+
         # Base threat levels by policy
         base_threat_mapping = {
             'ALLOW_FASTPATH': 0.1,
@@ -708,16 +708,16 @@ class HybridDistortionDetectionAPI:
             'BLOCK_OR_SANDBOX': 0.9
         }
         base_threat = base_threat_mapping.get(policy_action, 0.3)
-        
+
         # IDS-based adjustments
         traits_analysis = policy_result.get('traits_analysis', {})
         content_analysis = policy_result.get('content_analysis', {})
-        
+
         # Stability penalties
         traits_stability = traits_analysis.get('stability', 1.0)
         content_stability = content_analysis.get('stability', 1.0)
         avg_stability = (traits_stability + content_stability) / 2
-        
+
         stability_penalty = 0.0
         if avg_stability < self.config.ids_stability_threshold_low:
             stability_penalty += 0.3
@@ -725,12 +725,12 @@ class HybridDistortionDetectionAPI:
             stability_penalty += 0.2
         elif avg_stability < self.config.ids_stability_threshold_high:
             stability_penalty += 0.1
-        
+
         # Drift penalties
         traits_drift = abs(traits_analysis.get('drift', 0.0))
         content_drift = abs(content_analysis.get('drift', 0.0))
         max_drift = max(traits_drift, content_drift)
-        
+
         drift_penalty = 0.0
         if max_drift > self.config.ids_drift_threshold_high:
             drift_penalty += 0.2
@@ -738,7 +738,7 @@ class HybridDistortionDetectionAPI:
             drift_penalty += 0.15
         elif max_drift > self.config.ids_drift_threshold_low:
             drift_penalty += 0.1
-        
+
         # Combine factors
         final_threat = base_threat + stability_penalty + drift_penalty
         return round(min(1.0, max(0.0, final_threat)), 3)
@@ -756,24 +756,24 @@ class HybridDistortionDetectionAPI:
         """Calculate confidence based on IDS analysis consistency."""
         traits_analysis = policy_result.get('traits_analysis', {})
         content_analysis = policy_result.get('content_analysis', {})
-        
+
         # Use stability as base for confidence
         traits_stability = traits_analysis.get('stability', 0.5)
         content_stability = content_analysis.get('stability', 0.5)
-        
+
         # Weight by configuration
         stability_confidence = (
             traits_stability * self.config.confidence_stability_weight +
             content_stability * (1 - self.config.confidence_stability_weight)
         )
-        
+
         # Penalize for high drift (indicates uncertainty)
         traits_drift = abs(traits_analysis.get('drift', 0.0))
         content_drift = abs(content_analysis.get('drift', 0.0))
         avg_drift = (traits_drift + content_drift) / 2
-        
+
         drift_penalty = avg_drift * self.config.confidence_drift_weight
-        
+
         final_confidence = stability_confidence * (1 - drift_penalty)
         return round(max(0.1, min(1.0, final_confidence)), 3)
 
@@ -781,7 +781,7 @@ class HybridDistortionDetectionAPI:
         """Classify distortion type based on policy and severity."""
         policy_action = policy_result.get('final_policy', 'STANDARD_PROCESSING')
         severity = policy_result.get('final_severity', 'normal')
-        
+
         if policy_action == 'BLOCK_OR_SANDBOX':
             return DistortionType.SYSTEMATIC_MANIPULATION
         elif severity == 'high':
@@ -796,27 +796,27 @@ class HybridDistortionDetectionAPI:
     def _assess_infrastructure_level(self, policy_result: Dict) -> InfrastructureLevel:
         """Assess infrastructure level based on analysis."""
         severity = policy_result.get('final_severity', 'normal')
-        
+
         severity_mapping = {
             'low': InfrastructureLevel.INDIVIDUAL,
             'normal': InfrastructureLevel.CULTURAL,
             'medium': InfrastructureLevel.INSTITUTIONAL,
             'high': InfrastructureLevel.INFRASTRUCTURE
         }
-        
+
         return severity_mapping.get(severity, InfrastructureLevel.INDIVIDUAL)
 
     def _determine_severity(self, policy_result: Dict) -> ThreatSeverity:
         """Determine threat severity."""
         final_severity = policy_result.get('final_severity', 'normal')
-        
+
         severity_mapping = {
             'low': ThreatSeverity.LOW,
             'normal': ThreatSeverity.NORMAL,
             'medium': ThreatSeverity.MEDIUM,
             'high': ThreatSeverity.HIGH
         }
-        
+
         return severity_mapping.get(final_severity, ThreatSeverity.NORMAL)
 
     def _extract_comprehensive_ids_analysis(self, policy_result: Dict) -> Dict[str, Any]:
@@ -915,33 +915,33 @@ class HybridDistortionDetectionAPI:
     def _generate_compliance_markers(self, policy_result: Dict) -> List[str]:
         """Generate compliance markers for audit trail."""
         markers = []
-        
+
         policy_action = policy_result.get('final_policy', 'STANDARD_PROCESSING')
         if policy_action == 'BLOCK_OR_SANDBOX':
             markers.append("HIGH_THREAT_BLOCKED")
-        
+
         severity = policy_result.get('final_severity', 'normal')
         if severity == 'high':
             markers.append("HIGH_SEVERITY_DETECTED")
-        
+
         # Check for systematic manipulation indicators
         traits_stability = policy_result.get('traits_analysis', {}).get('stability', 1.0)
         content_stability = policy_result.get('content_analysis', {}).get('stability', 1.0)
-        
+
         if min(traits_stability, content_stability) < 0.25:
             markers.append("SYSTEMATIC_MANIPULATION")
-        
+
         if not NOVA_INTEGRATION_AVAILABLE:
             markers.append("FALLBACK_MODE_PROCESSING")
-            
+
         return markers
 
-    def _generate_threat_landscape(self, policy_result: Dict, 
+    def _generate_threat_landscape(self, policy_result: Dict,
                                  request: DistortionDetectionRequest) -> Dict[str, Any]:
         """Generate detailed threat landscape analysis (my version approach)."""
         traits_analysis = policy_result.get('traits_analysis', {})
         content_analysis = policy_result.get('content_analysis', {})
-        
+
         return {
             "infrastructure_analysis": {
                 "economic_indicators": self._analyze_economic_patterns(request.content),
@@ -950,7 +950,7 @@ class HybridDistortionDetectionAPI:
                 "persistence_score": self._calculate_persistence_score(policy_result)
             },
             "stability_impact": {
-                "stability_index": (traits_analysis.get('stability', 0.5) + 
+                "stability_index": (traits_analysis.get('stability', 0.5) +
                                   content_analysis.get('stability', 0.5)) / 2,
                 "intervention_urgency": self._calculate_intervention_urgency(policy_result),
                 "projected_impact": self._assess_projected_impact(policy_result),
@@ -972,7 +972,7 @@ class HybridDistortionDetectionAPI:
         """Generate intervention strategy recommendations (my version approach)."""
         policy_action = policy_result.get('final_policy', 'STANDARD_PROCESSING')
         severity = policy_result.get('final_severity', 'normal')
-        
+
         # Strategy templates based on threat classification
         strategy_templates = {
             'ALLOW_FASTPATH': {
@@ -1000,9 +1000,9 @@ class HybridDistortionDetectionAPI:
                 'expected_effectiveness': 0.4
             }
         }
-        
+
         base_strategy = strategy_templates.get(policy_action, strategy_templates['STANDARD_PROCESSING'])
-        
+
         # Enhance with context-specific recommendations
         enhanced_strategy = {
             **base_strategy,
@@ -1014,7 +1014,7 @@ class HybridDistortionDetectionAPI:
             'cultural_considerations': self._assess_cultural_factors(request.context),
             'implementation_complexity': self._assess_implementation_complexity(policy_result)
         }
-        
+
         return enhanced_strategy
 
     # Helper methods for detailed analysis
@@ -1052,7 +1052,7 @@ class HybridDistortionDetectionAPI:
             policy_result.get('traits_analysis', {}).get('stability', 0.5) +
             policy_result.get('content_analysis', {}).get('stability', 0.5)
         ) / 2
-        
+
         if stability_avg < 0.3:
             return 'critical'
         elif stability_avg < 0.6:
@@ -1079,7 +1079,7 @@ class HybridDistortionDetectionAPI:
             policy_result.get('traits_analysis', {}).get('stability', 0.5) +
             policy_result.get('content_analysis', {}).get('stability', 0.5)
         ) / 2
-        
+
         if stability_avg > 0.8:
             return 'stabilizing'
         elif stability_avg < 0.3:
@@ -1090,49 +1090,49 @@ class HybridDistortionDetectionAPI:
     def _extract_detected_patterns(self, policy_result: Dict) -> List[str]:
         """Extract detected patterns from policy result."""
         patterns = []
-        
+
         final_reason = policy_result.get('final_reason', '')
         if 'stability' in final_reason:
             patterns.append('stability_drift')
         if 'drift' in final_reason:
             patterns.append('content_drift')
-        
+
         # Add state-based patterns
         traits_state = policy_result.get('traits_analysis', {}).get('state', '')
         content_state = policy_result.get('content_analysis', {}).get('state', '')
-        
+
         if traits_state == IDSState.DISINTEGRATING.value:
             patterns.append('traits_disintegration')
         if content_state == IDSState.DIVERGING.value:
             patterns.append('content_divergence')
-            
+
         return patterns
 
     def _identify_threat_vectors(self, policy_result: Dict) -> List[str]:
         """Identify potential threat vectors."""
         vectors = []
-        
+
         policy_action = policy_result.get('final_policy', 'STANDARD_PROCESSING')
         if policy_action == 'BLOCK_OR_SANDBOX':
             vectors.extend(['systematic_manipulation', 'coordinated_campaign'])
         elif policy_action == 'DEGRADE_AND_REVIEW':
             vectors.extend(['infrastructure_distortion', 'institutional_bias'])
-        
+
         # Analyze drift patterns for additional vectors
         traits_drift = policy_result.get('traits_analysis', {}).get('drift', 0.0)
         content_drift = policy_result.get('content_analysis', {}).get('drift', 0.0)
-        
+
         if abs(traits_drift) > 0.2:
             vectors.append('behavioral_manipulation')
         if abs(content_drift) > 0.2:
             vectors.append('content_manipulation')
-            
+
         return vectors
 
     def _estimate_success_probability(self, policy_result: Dict) -> float:
         """Estimate intervention success probability."""
         severity = policy_result.get('final_severity', 'normal')
-        
+
         # Base probabilities by severity
         base_probabilities = {
             'low': 0.9,
@@ -1140,37 +1140,37 @@ class HybridDistortionDetectionAPI:
             'medium': 0.6,
             'high': 0.4
         }
-        
+
         base_prob = base_probabilities.get(severity, 0.7)
-        
+
         # Adjust based on stability
         stability_avg = (
             policy_result.get('traits_analysis', {}).get('stability', 0.5) +
             policy_result.get('content_analysis', {}).get('stability', 0.5)
         ) / 2
-        
+
         stability_bonus = (stability_avg - 0.5) * 0.2
-        
+
         return round(max(0.1, min(1.0, base_prob + stability_bonus)), 2)
 
     def _define_escalation_triggers(self, policy_result: Dict) -> List[str]:
         """Define escalation triggers for intervention."""
         triggers = []
-        
+
         stability_avg = (
             policy_result.get('traits_analysis', {}).get('stability', 0.5) +
             policy_result.get('content_analysis', {}).get('stability', 0.5)
         ) / 2
-        
+
         if stability_avg < 0.3:
             triggers.append('immediate_escalation_required')
         if stability_avg < 0.5:
             triggers.append('enhanced_monitoring')
-        
+
         severity = policy_result.get('final_severity', 'normal')
         if severity == 'high':
             triggers.extend(['expert_review_required', 'cross_slot_coordination'])
-            
+
         return triggers
 
     def _assess_cultural_factors(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -1185,14 +1185,14 @@ class HybridDistortionDetectionAPI:
     def _assess_implementation_complexity(self, policy_result: Dict) -> str:
         """Assess implementation complexity."""
         policy_action = policy_result.get('final_policy', 'STANDARD_PROCESSING')
-        
+
         complexity_mapping = {
             'ALLOW_FASTPATH': 'minimal',
             'STANDARD_PROCESSING': 'low',
             'DEGRADE_AND_REVIEW': 'medium',
             'BLOCK_OR_SANDBOX': 'high'
         }
-        
+
         return complexity_mapping.get(policy_action, 'low')
 
     def _update_comprehensive_metrics(self, response: DistortionDetectionResponse):
@@ -1203,7 +1203,7 @@ class HybridDistortionDetectionAPI:
                 self.metrics['blocked_requests'] += 1
             elif response.status == ResponseStatus.WARNING:
                 self.metrics['warning_requests'] += 1
-            
+
             # Update threat detection tracking
             self.metrics['threat_detections_by_type'][response.distortion_type.value] += 1
             self.metrics['policy_actions_taken'][response.policy_action.value] += 1
@@ -1303,18 +1303,18 @@ class HybridDistortionDetectionAPI:
             processing_times = self.metrics['processing_times']
             if not processing_times:
                 processing_times = [0.0]
-            
+
             # Calculate performance metrics
             avg_time = sum(processing_times) / len(processing_times)
             p50_time = sorted(processing_times)[len(processing_times) // 2] if processing_times else 0
             p95_time = sorted(processing_times)[int(len(processing_times) * 0.95)] if processing_times else 0
             p99_time = sorted(processing_times)[int(len(processing_times) * 0.99)] if processing_times else 0
-            
+
             # Calculate rates
             error_rate = self.metrics['error_count'] / max(1, total_requests)
             block_rate = self.metrics['blocked_requests'] / max(1, total_requests)
             warning_rate = self.metrics['warning_requests'] / max(1, total_requests)
-            
+
             # Determine overall system status
             if error_rate > 0.10 or self.circuit_breaker.is_open():
                 system_status = SystemStatus.UNHEALTHY
@@ -1322,7 +1322,7 @@ class HybridDistortionDetectionAPI:
                 system_status = SystemStatus.DEGRADED
             else:
                 system_status = SystemStatus.HEALTHY
-        
+
         return {
             "status": system_status.value,
             "version": self.VERSION,
@@ -1363,23 +1363,23 @@ class HybridDistortionDetectionAPI:
         """Enhanced bulk detection with better error handling and performance."""
         if not requests:
             return []
-        
+
         self.logger.info(f"Processing bulk detection: {len(requests)} requests")
-        
+
         # Process with concurrency control
         semaphore = asyncio.Semaphore(10)  # Limit concurrent processing
-        
+
         async def process_single(request):
             async with semaphore:
                 return await self.detect_distortion(request)
-        
+
         # Execute with timeout protection
         try:
             responses = await asyncio.wait_for(
                 asyncio.gather(*[process_single(req) for req in requests], return_exceptions=True),
                 timeout=len(requests) * 2  # 2 seconds per request
             )
-            
+
             # Convert exceptions to error responses
             processed_responses: List[DistortionDetectionResponse] = []
             for i, response in enumerate(responses):
@@ -1391,9 +1391,9 @@ class HybridDistortionDetectionAPI:
                     processed_responses.append(error_response)
                 else:
                     processed_responses.append(cast(DistortionDetectionResponse, response))
-            
+
             return processed_responses
-            
+
         except asyncio.TimeoutError:
             self.logger.error("Bulk detection timed out")
             # Return error responses for all requests
@@ -1432,17 +1432,17 @@ class HybridDistortionDetectionAPI:
         # Clear expired cache entries
         expired = self.content_cache.clear_expired()
         self.logger.info(f"Cleared {expired} expired cache entries")
-        
+
         # Reset circuit breaker if appropriate
         if self.circuit_breaker.state == "half-open":
             self.circuit_breaker.record_success()
-        
+
         # Log final metrics
         health = self.get_comprehensive_system_health()
         self.logger.info(f"Final metrics - Requests: {health['uptime_requests']}, "
                         f"Error rate: {health['quality_metrics']['error_rate']:.4f}, "
                         f"Avg time: {health['performance_metrics']['avg_processing_time_ms']:.2f}ms")
-        
+
         self.logger.info("API cleanup completed successfully")
 
 # ============================================================================
@@ -1491,7 +1491,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
         ensure_src_on_path()
 
         from nova.auth import verify_jwt_token
-        
+
         app = FastAPI(
             title="NOVA Slot 9 - Hybrid Distortion Protection API",
             description="Production-ready distortion detection with enterprise resilience",
@@ -1499,7 +1499,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
             docs_url="/docs",
             redoc_url="/redoc"
         )
-        
+
         # Add CORS middleware
         app.add_middleware(
             CORSMiddleware,
@@ -1518,7 +1518,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
                 return verify_jwt_token(credentials.credentials)
             except Exception:
                 raise HTTPException(status_code=401, detail="Invalid auth token")
-        
+
         @app.post("/api/v1/detect",
                  response_model=DistortionDetectionResponse,
                  summary="Detect distortions in content",
@@ -1531,7 +1531,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
             except Exception as e:
                 api_instance.logger.error(f"API endpoint error: {e}")
                 raise HTTPException(status_code=500, detail="Internal processing error")
-        
+
         @app.post("/api/v1/bulk-detect",
                  summary="Bulk distortion detection",
                  description="Process multiple detection requests in parallel")
@@ -1543,13 +1543,13 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
             except Exception as e:
                 api_instance.logger.error(f"Bulk API endpoint error: {e}")
                 raise HTTPException(status_code=500, detail="Bulk processing error")
-        
+
         @app.get("/api/v1/health",
                 summary="Comprehensive health check",
                 description="Get detailed system health and performance metrics")
         async def health_check(_user: Dict[str, Any] = Depends(get_current_user)):
             return api_instance.get_comprehensive_system_health()
-        
+
         @app.get("/api/v1/metrics",
                 summary="Performance metrics",
                 description="Get detailed performance and quality metrics")
@@ -1560,7 +1560,7 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
                 "quality": health["quality_metrics"],
                 "threat_detection": health["threat_detection_metrics"]
             }
-        
+
         @app.get("/api/v1/status",
                 summary="System status",
                 description="Get current system status and integration info")
@@ -1573,14 +1573,14 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
                 "integration_status": health["integration_status"],
                 "resilience_status": health["resilience_status"]
             }
-        
+
         @app.post("/api/v1/admin/cleanup",
                  summary="Admin cleanup",
                  description="Trigger system cleanup (admin only)")
         async def admin_cleanup(background_tasks: BackgroundTasks, _user: Dict[str, Any] = Depends(get_current_user)):
             background_tasks.add_task(api_instance.cleanup)
             return {"message": "Cleanup initiated"}
-        
+
         @app.get("/",
                 summary="API Root",
                 description="API information and available endpoints")
@@ -1591,16 +1591,16 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
                 "status": "operational",
                 "endpoints": {
                     "detect": "/api/v1/detect",
-                    "bulk_detect": "/api/v1/bulk-detect", 
+                    "bulk_detect": "/api/v1/bulk-detect",
                     "health": "/api/v1/health",
                     "metrics": "/api/v1/metrics",
                     "status": "/api/v1/status",
                     "docs": "/docs"
                 }
             }
-        
+
         return app
-        
+
     except ImportError:
         api_instance.logger.warning("FastAPI not available - web endpoints disabled")
         return None
@@ -1611,13 +1611,13 @@ def create_fastapi_app(api_instance: HybridDistortionDetectionAPI):
 
 async def example_usage():
     """Example usage of the Hybrid API."""
-    
+
     # Create production configuration
     config = create_production_config()
-    
+
     # Initialize API (in production, core_detector would be the actual Slot9Core)
     api = create_hybrid_slot9_api(core_detector=None, config=config)
-    
+
     # Single detection request
     request = DistortionDetectionRequest(
         content="This is sample content for distortion analysis.",
@@ -1625,24 +1625,24 @@ async def example_usage():
         include_detailed_analysis=True,
         priority=RequestPriority.HIGH
     )
-    
+
     # Process request
     response = await api.detect_distortion(request)
     print(f"Detection result: {response.status.value} - Threat: {response.threat_level:.3f}")
-    
+
     # Bulk processing example
     bulk_requests = [
         DistortionDetectionRequest(content=f"Sample content {i}", trace_id=f"bulk_{i}")
         for i in range(5)
     ]
-    
+
     bulk_responses = await api.bulk_detect(bulk_requests)
     print(f"Bulk processing: {len(bulk_responses)} responses")
-    
+
     # Health check
     health = api.get_comprehensive_system_health()
     print(f"System status: {health['status']} - Error rate: {health['quality_metrics']['error_rate']:.4f}")
-    
+
     # Cleanup
     api.cleanup()
 

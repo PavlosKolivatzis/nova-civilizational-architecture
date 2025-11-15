@@ -31,4 +31,3 @@ def test_slot_health_check(slot_name, _):
     status = health_mod.health()
     assert status["self_check"] == "ok"
     assert status["engine_status"] == "operational"
-

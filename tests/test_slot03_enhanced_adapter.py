@@ -20,7 +20,7 @@ class TestSlot3EmotionalAdapter:
             'slot04_wisdom': Mock(),
             'slot07_ethical': Mock()
         }
-        
+
     @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
     @patch('orchestrator.adapters.slot3_emotional.ENGINE')
     @patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
@@ -33,19 +33,19 @@ class TestSlot3EmotionalAdapter:
             'score': 0.8,
             'confidence': 0.9
         }
-        
+
         mock_safety_policy.validate.return_value = {
             'is_safe': True,
             'violations': [],
             'rate_limited': False
         }
-        
+
         from nova.slots.slot03_emotional_matrix.escalation import ThreatLevel
         mock_escalation_mgr.classify_threat.return_value = ThreatLevel.LOW
-        
+
         adapter = Slot3EmotionalAdapter(self.mock_registry)
         result = adapter.analyze("I feel great today!")
-        
+
         assert result['emotional_tone'] == 'joy'
         assert result['score'] == 0.8
         assert result['confidence'] == 0.9
@@ -65,16 +65,16 @@ class TestSlot3EmotionalAdapter:
             'score': -0.8,
             'confidence': 0.9
         }
-        
+
         mock_safety_policy.validate.return_value = {
             'is_safe': True,
             'violations': [],
             'rate_limited': False
         }
-        
+
         from nova.slots.slot03_emotional_matrix.escalation import ThreatLevel, EscalationEvent
         import time
-        
+
         mock_escalation_mgr.classify_threat.return_value = ThreatLevel.HIGH
         mock_escalation_event = EscalationEvent(
             threat_level=ThreatLevel.HIGH,
@@ -85,10 +85,10 @@ class TestSlot3EmotionalAdapter:
             suggested_actions=["Enhanced monitoring", "Alert administrators"]
         )
         mock_escalation_mgr.escalate.return_value = mock_escalation_event
-        
+
         adapter = Slot3EmotionalAdapter(self.mock_registry)
         result = adapter.analyze("I hate this system")
-        
+
         assert result['threat_level'] == 'high'
         assert result['escalation']['triggered'] is True
         assert len(result['escalation']['suggested_actions']) > 0
@@ -104,15 +104,15 @@ class TestSlot3EmotionalAdapter:
             'score': -0.8,
             'confidence': 0.9
         }
-        
+
         mock_safety_policy.validate.return_value = {
             'is_safe': False,
             'violations': [{'type': 'harmful_content', 'confidence': 0.95}],
             'rate_limited': False
         }
-        
+
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
@@ -120,7 +120,7 @@ class TestSlot3EmotionalAdapter:
             "confidence": 0.8
         }
         result = adapter.analyze("harmful content", user_id="user1")
-        
+
         assert 'safety' in result
         assert result['safety']['is_safe'] is False
         # Escalation should not be triggered due to safety violation
@@ -136,15 +136,15 @@ class TestSlot3EmotionalAdapter:
             'score': 0.0,
             'confidence': 0.5
         }
-        
+
         mock_safety_policy.validate.return_value = {
             'is_safe': False,
             'violations': [],
             'rate_limited': True
         }
-        
+
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
@@ -152,7 +152,7 @@ class TestSlot3EmotionalAdapter:
             "confidence": 0.8
         }
         result = adapter.analyze("normal content", user_id="user1")
-        
+
         assert result['safety']['rate_limited'] is True
         # Should not proceed with escalation when rate limited
         assert 'escalation' not in result
@@ -161,7 +161,7 @@ class TestSlot3EmotionalAdapter:
     def test_unavailable_adapter(self):
         """Test adapter behavior when components are unavailable."""
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
@@ -169,7 +169,7 @@ class TestSlot3EmotionalAdapter:
             "confidence": 0.8
         }
         result = adapter.analyze("test content")
-        
+
         assert result == {}
         assert adapter.available is False
 
@@ -178,21 +178,21 @@ class TestSlot3EmotionalAdapter:
         with patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True), \
              patch('orchestrator.adapters.slot3_emotional.ENGINE') as mock_engine, \
              patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY') as mock_safety_policy:
-            
+
             mock_engine.analyze.return_value = {
                 'emotional_tone': 'anger',
                 'score': -0.8,
                 'confidence': 0.9
             }
-            
+
             mock_safety_policy.validate.return_value = {
                 'is_safe': True,
                 'violations': [],
                 'rate_limited': False
             }
-            
+
             adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
@@ -208,16 +208,16 @@ class TestSlot3EmotionalAdapter:
         """Test receiving escalation events from other slots."""
         from nova.slots.slot03_emotional_matrix.escalation import ThreatLevel, EscalationEvent
         import time
-        
+
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
             "score": 0.7,
             "confidence": 0.8
         }
-        
+
         escalation_event = EscalationEvent(
             threat_level=ThreatLevel.HIGH,
             content="external threat",
@@ -225,21 +225,21 @@ class TestSlot3EmotionalAdapter:
             timestamp=time.time(),
             source_slot="slot01_truth"
         )
-        
+
         result = adapter.receive_escalation(escalation_event)
         assert result is True
 
     def test_receive_escalation_error_handling(self):
         """Test escalation event processing error handling."""
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
             "score": 0.7,
             "confidence": 0.8
         }
-        
+
         # Pass invalid escalation event
         result = adapter.receive_escalation("invalid_event")
         assert result is False
@@ -253,15 +253,15 @@ class TestSlot3EmotionalAdapter:
             'total_escalations': 10,
             'threat_level_distribution': {'high': 2, 'medium': 3, 'low': 5}
         }
-        
+
         mock_safety_policy.get_policy_stats.return_value = {
             'total_checks': 100,
             'violations_detected': 5,
             'violation_rate': 0.05
         }
-        
+
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
@@ -269,7 +269,7 @@ class TestSlot3EmotionalAdapter:
             "confidence": 0.8
         }
         health = adapter.get_health_status()
-        
+
         assert health['available'] is True
         assert health['escalation_enabled'] is True
         assert health['safety_policy_enabled'] is True
@@ -279,17 +279,17 @@ class TestSlot3EmotionalAdapter:
     def test_adapter_registry_update(self):
         """Test adapter registry updating."""
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
             "score": 0.7,
             "confidence": 0.8
         }
-        
+
         new_registry = {'slot01_truth': Mock(), 'slot02_delta': Mock()}
         adapter.update_adapter_registry(new_registry)
-        
+
         assert adapter.adapter_registry == new_registry
 
     @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
@@ -297,9 +297,9 @@ class TestSlot3EmotionalAdapter:
     def test_analysis_error_handling(self, mock_engine):
         """Test error handling during analysis."""
         mock_engine.analyze.side_effect = Exception("Analysis failed")
-        
+
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
@@ -314,26 +314,26 @@ class TestSlot3EmotionalAdapter:
     def test_full_integration(self, mock_engine):
         """Test full integration with actual components."""
         adapter = Slot3EmotionalAdapter()
-        
+
         # Mock the engine to return realistic analysis data
         mock_engine.analyze.return_value = {
             "emotional_tone": "joy",
             "score": 0.7,
             "confidence": 0.8
         }
-        
+
         if not adapter.available:
             pytest.skip("Slot 3 components not available")
-        
+
         # Test normal content
         result = adapter.analyze("I feel happy today")
         assert 'emotional_tone' in result
         assert 'safety' in result
-        
+
         # Test potentially escalating content
         result = adapter.analyze("I am very angry about this situation")
         assert 'threat_level' in result
-        
+
         # Test health status
         health = adapter.get_health_status()
         assert 'available' in health

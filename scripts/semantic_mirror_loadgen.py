@@ -56,25 +56,25 @@ def generate_production_metrics(iteration: int) -> Dict[str, Any]:
 def run_load_generation(cycles: int = 50, delay: float = 0.1, verbose: bool = False):
     """Run the load generation cycle."""
     publish, query = safe_import_semantic_mirror()
-    
+
     print(f"Starting Semantic Mirror load generation: {cycles} cycles, {delay}s delay")
-    
+
     successful_publishes = 0
     successful_queries = 0
-    
+
     for i in range(cycles):
         try:
             # Publish Slot 6 cultural profile
             cultural_data = generate_cultural_profile(i)
             pub_result = publish(
-                "slot06.cultural_profile", 
+                "slot06.cultural_profile",
                 cultural_data,
-                "slot06_cultural_synthesis", 
+                "slot06_cultural_synthesis",
                 ttl=30.0
             )
             if pub_result:
                 successful_publishes += 1
-            
+
             # Publish Slot 7 production metrics occasionally
             if i % 5 == 0:  # Every 5th iteration
                 prod_data = generate_production_metrics(i)
@@ -86,37 +86,37 @@ def run_load_generation(cycles: int = 50, delay: float = 0.1, verbose: bool = Fa
                 )
                 if pub_result:
                     successful_publishes += 1
-            
+
             # Query from Slot 3 perspective
             cultural_context = query("slot06.cultural_profile", "slot03_emotional_matrix")
             if cultural_context is not None:
                 successful_queries += 1
-                
+
                 if verbose:
                     adaptation_rate = cultural_context.get("adaptation_rate", 0.0)
                     print(f"Cycle {i:3d}: Cultural adaptation={adaptation_rate:.2f}")
-            
+
             # Query from Slot 7 perspective (some will fail due to ACL)
             if i % 3 == 0:  # Every 3rd iteration
                 prod_context = query("slot07.public_metrics", "slot06_cultural_synthesis")
                 if prod_context is not None:
                     successful_queries += 1
-            
+
             # Sleep between iterations
             if delay > 0:
                 time.sleep(delay)
-                
+
         except KeyboardInterrupt:
             print(f"\nLoad generation interrupted at cycle {i}")
             break
         except Exception as e:
             if verbose:
                 print(f"Error in cycle {i}: {e}")
-    
+
     # Final summary
     total_expected_publishes = cycles + (cycles // 5)  # cultural + occasional production
     total_expected_queries = cycles + (cycles // 3)    # cultural + occasional production
-    
+
     print("Load generation complete!")
     print(f"Publications: {successful_publishes}/{total_expected_publishes} successful")
     print(f"Queries: {successful_queries}/{total_expected_queries} successful")
@@ -137,16 +137,16 @@ Examples:
   python scripts/semantic_mirror_loadgen.py --verbose
         """
     )
-    
+
     parser.add_argument('--cycles', type=int, default=50,
                        help='Number of load generation cycles (default: 50)')
     parser.add_argument('--delay', type=float, default=0.1,
                        help='Delay between cycles in seconds (default: 0.1)')
     parser.add_argument('--verbose', action='store_true',
                        help='Print detailed progress information')
-    
+
     args = parser.parse_args()
-    
+
     try:
         run_load_generation(args.cycles, args.delay, args.verbose)
     except Exception as e:

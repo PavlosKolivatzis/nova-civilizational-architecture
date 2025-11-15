@@ -8,4 +8,3 @@ def test_engine_initializes_with_core_anchor():
     assert snapshot["anchors"] >= 1
     assert snapshot["total_anchors"] >= 1
     assert snapshot["active_anchors"] >= 1
-

@@ -57,24 +57,24 @@ def flip_flags(enable=None, shadow=None):
     """Flip semantic mirror flags and return new state."""
     # Read current settings
     env_vars = read_env_file()
-    
+
     # Get current values (default to safe disabled state)
     current_enabled = env_vars.get("NOVA_SEMANTIC_MIRROR_ENABLED", "0").strip() == "1"
     current_shadow = env_vars.get("NOVA_SEMANTIC_MIRROR_SHADOW", "1").strip() == "1"
-    
+
     # Apply changes if specified
     if enable is not None:
         current_enabled = enable
     if shadow is not None:
         current_shadow = shadow
-    
+
     # Update environment variables
     env_vars["NOVA_SEMANTIC_MIRROR_ENABLED"] = "1" if current_enabled else "0"
     env_vars["NOVA_SEMANTIC_MIRROR_SHADOW"] = "1" if current_shadow else "0"
-    
+
     # Write updated configuration
     write_env_file(env_vars)
-    
+
     # Determine and return mode
     mode = determine_mode(current_enabled, current_shadow)
     return mode, current_enabled, current_shadow
@@ -86,7 +86,7 @@ def print_current_state():
     enabled = env_vars.get("NOVA_SEMANTIC_MIRROR_ENABLED", "0").strip() == "1"
     shadow = env_vars.get("NOVA_SEMANTIC_MIRROR_SHADOW", "1").strip() == "1"
     mode = determine_mode(enabled, shadow)
-    
+
     print(f"Current Configuration ({ENV_FILE}):")
     print(f"  NOVA_SEMANTIC_MIRROR_ENABLED={env_vars.get('NOVA_SEMANTIC_MIRROR_ENABLED', '0')}")
     print(f"  NOVA_SEMANTIC_MIRROR_SHADOW={env_vars.get('NOVA_SEMANTIC_MIRROR_SHADOW', '1')}")
@@ -105,44 +105,44 @@ Examples:
   python scripts/semantic_mirror_flip.py --print               # Show current
         """
     )
-    
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--enable', action='store_true',
                       help='Enable Semantic Mirror feature')
     group.add_argument('--disable', action='store_true',
                       help='Disable Semantic Mirror feature')
-    
+
     shadow_group = parser.add_mutually_exclusive_group()
     shadow_group.add_argument('--shadow', action='store_true',
                              help='Enable shadow mode (metrics only)')
     shadow_group.add_argument('--no-shadow', action='store_true',
                              help='Disable shadow mode (full operation)')
-    
+
     parser.add_argument('--print', action='store_true',
                        help='Print current configuration without changes')
-    
+
     args = parser.parse_args()
-    
+
     try:
         # Handle print-only mode
         if args.print:
             print_current_state()
             return
-        
+
         # Determine flag changes
         enable_flag = None
         shadow_flag = None
-        
+
         if args.enable:
             enable_flag = True
         elif args.disable:
             enable_flag = False
-        
+
         if args.shadow:
             shadow_flag = True
         elif args.no_shadow:
             shadow_flag = False
-        
+
         # Apply changes
         if enable_flag is not None or shadow_flag is not None:
             mode, enabled, shadow = flip_flags(enable_flag, shadow_flag)
@@ -153,7 +153,7 @@ Examples:
         else:
             # No changes requested, show current state
             print_current_state()
-            
+
     except Exception as e:
         print(f"Error managing semantic mirror flags: {e}", file=sys.stderr)
         sys.exit(1)

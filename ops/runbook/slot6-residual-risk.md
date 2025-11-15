@@ -13,22 +13,22 @@ _Last updated: 2025-11-12_
 
 ## 2. Immediate Actions
 
-1. **Freeze high-risk adapters**  
+1. **Freeze high-risk adapters**
    - Toggle `SLOT3_ESCALATION_ENABLED=0` if emotional escalations are looping.
    - Set `slot06.receiver.force_decay=1.0` via Semantic Mirror to flush stuck pulses.
 
-2. **Inspect Semantic Mirror Contexts**  
+2. **Inspect Semantic Mirror Contexts**
    ```bash
    curl -s http://localhost:8000/semantic/context | jq '.slot07'
    ```
    - Ensure `breaker_state != "open"`. If open, resolve Slot7 issues first.
 
-3. **Re-run Cultural Synthesis Health Checks**  
+3. **Re-run Cultural Synthesis Health Checks**
    ```bash
    python -m tests.test_slot6_adapter_logging -k health
    ```
 
-4. **Trigger Guardrail Snapshot**  
+4. **Trigger Guardrail Snapshot**
    ```bash
    python - <<'PY'
    from nova.slots.slot06_cultural_synthesis.engine import CulturalSynthesisEngine

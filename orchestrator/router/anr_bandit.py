@@ -251,4 +251,3 @@ class LinUCBBandit:
             "state_path": self.state_path,
             "save_counter": self.save_counter,
         }
-

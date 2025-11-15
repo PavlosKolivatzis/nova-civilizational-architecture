@@ -44,25 +44,25 @@ class ContextEntry:
     ttl_seconds: float = 300.0  # 5 minutes default TTL
     access_count: int = 0
     last_accessed: float = 0.0
-    
+
     def is_expired(self, current_time: float) -> bool:
         """Check if this context entry has expired."""
         return (current_time - self.timestamp) > self.ttl_seconds
-    
+
     def is_accessible_by(self, requesting_slot: str, access_rules: Dict[str, Set[str]]) -> bool:
         """Check if requesting slot can access this context entry."""
         # Self-access always allowed (publisher can read back)
         if requesting_slot == self.published_by:
             return True
-        
+
         # Private means strictly publisher-only
         if self.scope == ContextScope.PRIVATE:
             return False
-        
+
         # Public means everyone can read
         if self.scope == ContextScope.PUBLIC:
             return True
-        
+
         # INTERNAL → require explicit allow-list (deny-by-default)
         allowed_consumers = access_rules.get(self.key)
         if not allowed_consumers:  # No ACL entry = deny access
@@ -73,42 +73,42 @@ class ContextEntry:
 class SemanticMirror:
     """
     Thread-safe read-only context broker for inter-slot awareness.
-    
+
     Provides bounded context sharing with access control, TTL expiration,
     and observability for contextual decision making across slots.
     """
-    
+
     def __init__(self, max_entries: int = 1000, cleanup_interval_seconds: float = 60.0):
         self._contexts: Dict[str, ContextEntry] = {}
         self._access_rules: Dict[str, Set[str]] = {}
         self._access_history = deque(maxlen=10000)  # Bounded access log
         self._metrics = defaultdict(int)
         self._lock = threading.RLock()
-        
+
         # Configuration
         self.max_entries = max_entries
         self.cleanup_interval_seconds = cleanup_interval_seconds
         self.last_cleanup = time.time()
-        
+
         # Rate limiting per slot
         self._rate_limits: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
         self.max_queries_per_minute = 1000
-        
+
         logger.info(f"SemanticMirror initialized (max_entries={max_entries})")
-    
+
     def configure_access_rules(self, rules: Dict[str, List[str]]) -> None:
         """Configure which slots can access which context keys.
-        
+
         Args:
             rules: Dict mapping context keys to list of allowed consumer slots
         """
         with self._lock:
             self._access_rules = {key: set(consumers) for key, consumers in rules.items()}
             logger.info(f"Configured access rules for {len(rules)} context keys")
-    
+
     def add_access_rules(self, rules: Dict[str, List[str]]) -> None:
         """Add/merge access rules without replacing existing ones.
-        
+
         Args:
             rules: Dict mapping context keys to list of additional allowed consumer slots
         """
@@ -117,41 +117,41 @@ class SemanticMirror:
                 current = self._access_rules.get(key, set())
                 self._access_rules[key] = current | set(readers)
             logger.info(f"Added access rules for {len(rules)} context keys")
-    
-    def publish_context(self, key: str, value: Any, publisher_slot: str, 
+
+    def publish_context(self, key: str, value: Any, publisher_slot: str,
                        scope: ContextScope = ContextScope.INTERNAL,
                        ttl_seconds: float = 300.0) -> bool:
         """Publish context data to the semantic mirror.
-        
+
         Args:
             key: Unique context identifier (e.g., "slot07.breaker_state")
             value: Context data (must be JSON serializable)
             publisher_slot: Slot identifier publishing this context
             scope: Visibility scope for this context
             ttl_seconds: Time-to-live for this context entry
-            
+
         Returns:
             True if published successfully, False otherwise
         """
         current_time = time.time()
-        
+
         with self._lock:
             # Cleanup if needed
             if current_time - self.last_cleanup > self.cleanup_interval_seconds:
                 self._cleanup_expired_entries(current_time)
-            
+
             # Check memory bounds
             if len(self._contexts) >= self.max_entries:
                 logger.warning(f"SemanticMirror at capacity ({self.max_entries}), rejecting publication")
                 self._metrics["publications_rejected_capacity"] += 1
                 return False
-            
+
             # Validate key format
             if not self._is_valid_context_key(key):
                 logger.warning(f"Invalid context key format: {key}")
                 self._metrics["publications_rejected_invalid_key"] += 1
                 return False
-            
+
             # Create context entry
             entry = ContextEntry(
                 key=key,
@@ -161,55 +161,55 @@ class SemanticMirror:
                 timestamp=current_time,
                 ttl_seconds=ttl_seconds
             )
-            
+
             self._contexts[key] = entry
             self._metrics["publications_total"] += 1
             self._metrics[f"publications_by_{publisher_slot}"] += 1
-            
+
             logger.debug(f"Published context: {key} by {publisher_slot} (scope={scope.value})")
             return True
-    
+
     def get_context(self, key: str, requesting_slot: str) -> Optional[Any]:
         """Retrieve context data from the semantic mirror.
-        
+
         Args:
             key: Context identifier to retrieve
             requesting_slot: Slot identifier making the request
-            
+
         Returns:
             Context value if accessible, None otherwise
         """
         current_time = time.time()
-        
+
         with self._lock:
             # Rate limiting check
             if not self._check_rate_limit(requesting_slot, current_time):
                 self._metrics["queries_rate_limited"] += 1
                 return None
-            
+
             # Find context entry
             entry = self._contexts.get(key)
             if not entry:
                 self._metrics["queries_not_found"] += 1
                 return None
-            
+
             # Check expiration
             if entry.is_expired(current_time):
                 logger.debug(f"Context expired: {key}")
                 del self._contexts[key]
                 self._metrics["queries_expired"] += 1
                 return None
-            
+
             # Check access permissions
             if not entry.is_accessible_by(requesting_slot, self._access_rules):
                 logger.warning(f"Access denied: {requesting_slot} -> {key}")
                 self._metrics["queries_access_denied"] += 1
                 return None
-            
+
             # Update access tracking
             entry.access_count += 1
             entry.last_accessed = current_time
-            
+
             # Log access for audit
             self._access_history.append({
                 "timestamp": current_time,
@@ -218,41 +218,41 @@ class SemanticMirror:
                 "publisher_slot": entry.published_by,
                 "value_type": type(entry.value).__name__
             })
-            
+
             self._metrics["queries_successful"] += 1
             self._metrics[f"queries_by_{requesting_slot}"] += 1
-            
+
             return entry.value
-    
+
     def query_context_keys(self, prefix: str, requesting_slot: str) -> List[str]:
         """List available context keys with given prefix.
-        
+
         Args:
             prefix: Key prefix to filter by (e.g., "slot07.")
             requesting_slot: Slot making the request
-            
+
         Returns:
             List of accessible context keys matching prefix
         """
         current_time = time.time()
         accessible_keys = []
-        
+
         with self._lock:
             for key, entry in self._contexts.items():
                 if key.startswith(prefix) and not entry.is_expired(current_time):
                     if entry.is_accessible_by(requesting_slot, self._access_rules):
                         accessible_keys.append(key)
-        
+
         return accessible_keys
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get semantic mirror metrics for monitoring."""
         current_time = time.time()
-        
+
         with self._lock:
-            active_contexts = sum(1 for entry in self._contexts.values() 
+            active_contexts = sum(1 for entry in self._contexts.values()
                                 if not entry.is_expired(current_time))
-            
+
             return {
                 "active_contexts": active_contexts,
                 "total_contexts": len(self._contexts),
@@ -261,12 +261,12 @@ class SemanticMirror:
                 "last_cleanup": self.last_cleanup,
                 **dict(self._metrics)
             }
-    
+
     def get_context_summary(self, requesting_slot: str) -> Dict[str, Any]:
         """Get summary of accessible contexts for debugging."""
         current_time = time.time()
         summary = {}
-        
+
         with self._lock:
             for key, entry in self._contexts.items():
                 if not entry.is_expired(current_time):
@@ -278,32 +278,32 @@ class SemanticMirror:
                             "access_count": entry.access_count,
                             "value_type": type(entry.value).__name__
                         }
-        
+
         return summary
-    
+
     def _is_valid_context_key(self, key: str) -> bool:
         """Validate context key format (slot_name.context_type)."""
         parts = key.split('.')
-        return len(parts) >= 2 and all(part.isidentifier() or part.replace('_', '').isalnum() 
+        return len(parts) >= 2 and all(part.isidentifier() or part.replace('_', '').isalnum()
                                       for part in parts)
-    
+
     def _check_rate_limit(self, requesting_slot: str, current_time: float) -> bool:
         """Check if requesting slot is within rate limits."""
         slot_queries = self._rate_limits[requesting_slot]
-        
+
         # Remove queries older than 1 minute
         cutoff_time = current_time - 60.0
         while slot_queries and slot_queries[0] < cutoff_time:
             slot_queries.popleft()
-        
+
         # Check if under limit
         if len(slot_queries) >= self.max_queries_per_minute:
             return False
-        
+
         # Record this query
         slot_queries.append(current_time)
         return True
-    
+
     def _cleanup_expired_entries(self, current_time: float) -> None:
         """Remove expired context entries and emit unlearn pulses (observable-only)."""
         expired_entries = [
@@ -468,7 +468,7 @@ def _configure_default_access_rules(mirror: SemanticMirror) -> None:
         "router.anr_reward_deployment": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"],
         "router.anr_explain": ["slot07_production_controls", "slot10_civilizational_deployment", "anr"]
     }
-    
+
     mirror.configure_access_rules(default_rules)
 
 

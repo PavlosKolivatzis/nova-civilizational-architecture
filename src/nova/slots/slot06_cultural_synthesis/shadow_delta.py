@@ -7,14 +7,14 @@ affecting production behavior.
 
 Usage Example:
     from nova.slots.slot06_cultural_synthesis.shadow_delta import record_changed, get_and_reset
-    
+
     # In cultural synthesis logic:
     baseline_result = synthesize_without_context(input_data)
     context_aware_result = synthesize_with_context(input_data, mirror_context)
-    
+
     # Record if context changed the decision
     record_changed(baseline_result, context_aware_result)
-    
+
     # Periodically collect metrics:
     delta_count = get_and_reset()
     print(f"Context influenced {delta_count} synthesis decisions")
@@ -27,11 +27,11 @@ _shadow_delta_counter = 0
 def record_changed(before: dict, after: dict) -> None:
     """
     Record when a synthesis result changed due to context awareness.
-    
+
     Args:
         before: Synthesis result without context
         after: Synthesis result with context influence
-        
+
     Note:
         Compares dictionaries by value equality. Any difference in the
         result structure, values, or keys counts as a context-influenced change.
@@ -44,7 +44,7 @@ def record_changed(before: dict, after: dict) -> None:
 def get_and_reset() -> int:
     """
     Get current shadow delta count and reset counter to zero.
-    
+
     Returns:
         Number of synthesis decisions influenced by context since last reset
     """
@@ -57,7 +57,7 @@ def get_and_reset() -> int:
 def get_current_count() -> int:
     """
     Get current shadow delta count without resetting.
-    
+
     Returns:
         Number of synthesis decisions influenced by context since last reset
     """

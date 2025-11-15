@@ -8,5 +8,4 @@ ignore = ["E501"]
 [tool.ruff.lint.per-file-ignores]
 "orchestrator/**" = ["F401", "F811", "F821"]
 "src/nova/**" = ["F401", "F821", "E999"]
-"tests/**" = ["F401", "F811", "F841"]
-
+"tests/**" = ["F401", "F811", "F841", "E402"]

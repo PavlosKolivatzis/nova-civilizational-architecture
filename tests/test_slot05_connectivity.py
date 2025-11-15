@@ -16,4 +16,3 @@ def test_connectivity_across_components():
     full = engine._calculate_connectivity(constellation, links)
     assert full > partial
     assert full <= 1.0
-

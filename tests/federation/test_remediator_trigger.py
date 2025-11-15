@@ -97,4 +97,3 @@ def test_remediator_logs_config_error_without_restart():
 
     assert poller.stop_calls == 0, "Config error should not restart poller"
     assert counter._value.get() >= baseline + 1
-

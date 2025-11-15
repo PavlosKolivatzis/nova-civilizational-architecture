@@ -125,7 +125,7 @@ def _unique_timestamp() -> float:
 def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict[str, Any]:
     """Generate comprehensive health payload for the system."""
     cb_metrics = get_circuit_breaker_metrics(circuit_breaker)
-    
+
     # Include Flow Fabric metrics if enabled
     flow_health = {}
     try:
@@ -149,11 +149,11 @@ def health_payload(slot_registry, monitor, router, circuit_breaker=None) -> Dict
         "timestamp": _unique_timestamp(),
         "version": "1.0.0",
     }
-    
+
     # Add flow fabric health if available
     if flow_health:
         payload["flow_fabric"] = flow_health
-    
+
     return payload
 
 

@@ -151,4 +151,3 @@ class EnhancedPerformanceTracker:
                 "avg_processing_time": avg_time,
                 "layer_latency_violations": self.metrics["layer_latency_violations"],
             }
-

@@ -16,4 +16,3 @@ def test_normalize_preserves_mid_number_zeros():
     # zeros within numbers are preserved
     assert slot_loader.normalize("slot1002") == "slot1002"
     assert slot_loader.normalize("slot60007") == "slot60007"
-

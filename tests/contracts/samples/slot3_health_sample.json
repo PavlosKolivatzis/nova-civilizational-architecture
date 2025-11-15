@@ -3,7 +3,7 @@
   "engine_status": "operational",
   "basic_analysis": "functional",
   "escalation_status": "operational",
-  "safety_policy_status": "operational", 
+  "safety_policy_status": "operational",
   "enhanced_engine_status": "operational",
   "overall_status": "fully_operational",
   "maturity_level": "4/4_processual",

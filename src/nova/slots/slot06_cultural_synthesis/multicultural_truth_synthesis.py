@@ -28,7 +28,7 @@ def _increment_legacy_usage():
     """Track legacy usage for retirement metrics."""
     global _LEGACY_CALL_COUNT
     _LEGACY_CALL_COUNT += 1
-    
+
     # Also record in centralized metrics if available
     try:
         from orchestrator.metrics import get_slot6_metrics
@@ -55,27 +55,27 @@ class ProfileWrapper(Mapping[str, Any]):
     def __init__(self, data: Dict[str, Any]):
         # Never mutate the source; shallow copy is enough for our metrics dicts
         self._data = dict(data)
-        
+
         # Only supply defaults if missing (conservative approach)
         self._data.setdefault("adaptation_effectiveness", 0.0)
         self._data.setdefault("principle_preservation_score", 0.0)
         self._data.setdefault("residual_risk", 1.0)
 
     # --- Mapping interface ---
-    def __getitem__(self, k: str) -> Any: 
+    def __getitem__(self, k: str) -> Any:
         return self._data[k]
-    
-    def __iter__(self) -> Iterator[str]:  
+
+    def __iter__(self) -> Iterator[str]:
         return iter(self._data)
-    
-    def __len__(self) -> int:             
+
+    def __len__(self) -> int:
         return len(self._data)
 
     # Legacy helpers
-    def get(self, k: str, default=None):  
+    def get(self, k: str, default=None):
         return self._data.get(k, default)
-    
-    def to_dict(self) -> Dict[str, Any]:  
+
+    def to_dict(self) -> Dict[str, Any]:
         return dict(self._data)
 
     # --- Attribute access ---
@@ -96,7 +96,7 @@ class AdaptiveSynthesisEngine(CulturalSynthesisEngine):
 
 class MulticulturalTruthSynthesisAdapter(CulturalSynthesisAdapter):
     """Deprecated alias for CulturalSynthesisAdapter with ProfileWrapper compatibility."""
-    
+
     def analyze_cultural_context(
         self,
         institution_name: str,
@@ -105,7 +105,7 @@ class MulticulturalTruthSynthesisAdapter(CulturalSynthesisAdapter):
     ) -> ProfileWrapper:
         """Legacy wrapper that returns ProfileWrapper for CI compatibility."""
         _increment_legacy_usage()  # Track usage for retirement metrics
-        
+
         # Call parent method to get normal dict result
         data: CulturalProfile = dict(ctx or {})
         data["institution"] = institution_name

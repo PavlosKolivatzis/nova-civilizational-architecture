@@ -33,12 +33,12 @@ class SystemConfig:
     # Deployment
     DEPLOYMENT_MODES: tuple[str, ...] = ("testing", "staging", "production")
     CURRENT_MODE: str = os.getenv("NOVA_CURRENT_MODE", "testing")
-    
+
     # Flow Fabric - Adaptive Connections
     ADAPTIVE_CONNECTIONS_ENABLED: bool = os.getenv("NOVA_ADAPTIVE_CONNECTIONS_ENABLED", "0").strip() == "1"
     FLOW_METRICS_ENABLED: bool = os.getenv("NOVA_FLOW_METRICS_ENABLED", "1").strip() == "1"
     FLOW_MODE: str = os.getenv("NOVA_FLOW_MODE", "BALANCED")
-    
+
     # Reflex Integration - Phase 2
     REFLEX_ENABLED: bool = os.getenv("NOVA_REFLEX_ENABLED", "0").strip() == "1"
     REFLEX_SHADOW: bool = os.getenv("NOVA_REFLEX_SHADOW", "1").strip() == "1"
