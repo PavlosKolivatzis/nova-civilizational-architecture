@@ -288,6 +288,26 @@ anomaly_engaged_gauge = Gauge(
     registry=_REGISTRY,
 )
 
+# Phase 17: Secret Scanning & Baseline Attestation metrics
+secrets_baseline_findings_gauge = Gauge(
+    "nova_secrets_baseline_findings_total",
+    "Total secret findings in baseline by risk level",
+    ["risk_level"],
+    registry=_REGISTRY,
+)
+
+secrets_baseline_info = Info(
+    "nova_secrets_baseline",
+    "Current secrets baseline hash and metadata",
+    registry=_REGISTRY,
+)
+
+secrets_scan_timestamp_gauge = Gauge(
+    "nova_secrets_scan_timestamp",
+    "Last secrets baseline scan timestamp (unix)",
+    registry=_REGISTRY,
+)
+
 # --- local last-seen snapshots so we can turn gauges-in-memory into monotonic counters
 _last_sm_totals = {"unlearn_pulses_sent": 0, "entries_expired": 0}
 _last_slot_totals: dict[str, int] = defaultdict(int)
@@ -573,6 +593,58 @@ def update_slot1_metrics() -> None:
         slot1_failures_counter.set(0)
 
 
+def update_secrets_baseline_metrics() -> None:
+    """Update Phase 17 secret scanning metrics for Prometheus export."""
+    from pathlib import Path
+    import json
+    from datetime import datetime
+
+    try:
+        # Load attestation if exists
+        attestation_path = Path('.artifacts/secrets-baseline-attestation.json')
+        if not attestation_path.exists():
+            return  # No baseline yet
+
+        attestation = json.loads(attestation_path.read_text())
+
+        # Update info metric (hash, timestamp, file count)
+        secrets_baseline_info.info({
+            'hash': attestation.get('baseline_hash', '')[:16],
+            'timestamp': attestation.get('timestamp', ''),
+            'file_count': str(attestation.get('statistics', {}).get('file_count', 0)),
+            'finding_count': str(attestation.get('statistics', {}).get('finding_count', 0))
+        })
+
+        # Update scan timestamp
+        timestamp_str = attestation.get('timestamp', '')
+        if timestamp_str:
+            try:
+                dt = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                secrets_scan_timestamp_gauge.set(dt.timestamp())
+            except (ValueError, AttributeError):
+                pass
+
+        # Load risk classification report if exists
+        report_path = Path('.artifacts/secrets-audit.md')
+        if report_path.exists():
+            report = report_path.read_text()
+
+            # Parse findings counts from report
+            for risk in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']:
+                # Look for pattern like "## 🔴 CRITICAL Risk (5 findings)"
+                import re
+                pattern = rf'##.*{risk}.*\((\d+)\s+findings?\)'
+                match = re.search(pattern, report)
+                if match:
+                    count = int(match.group(1))
+                    secrets_baseline_findings_gauge.labels(risk_level=risk).set(count)
+                else:
+                    secrets_baseline_findings_gauge.labels(risk_level=risk).set(0)
+
+    except Exception as e:
+        logger.debug(f"Could not update secrets baseline metrics: {e}")
+
+
 def get_metrics_response():
     """Get Prometheus metrics response."""
     update_slot6_metrics()
@@ -581,6 +653,7 @@ def get_metrics_response():
     update_lightclock_metrics()
     update_system_health_metrics()
     update_semantic_mirror_metrics()
+    update_secrets_baseline_metrics()
     payload = generate_latest(_REGISTRY)
     try:
         federation_registry = get_federation_registry()
