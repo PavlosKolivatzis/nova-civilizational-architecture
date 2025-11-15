@@ -125,69 +125,17 @@ Closes audit finding P2 (security headers).
 ---
 
 #### 2. Pre-commit Hooks (1 hour) - LOW PRIORITY
-**Goal**: Add git hooks for secret scanning and linting
+**Status**: ✅ Completed in `chore(ci): add pre-commit hooks and secret baseline` (`5cf06d0`, 2025-11-14) + scoped enforcement (`chore: normalize whitespace in active dirs`, 2025-11-15)
 
-**Files to Create**:
-- `.pre-commit-config.yaml`
-- Update `.gitignore` if needed
-
-**Implementation**:
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: check-added-large-files
-        args: ['--maxkb=500']
-
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
-    hooks:
-      - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
-        exclude: \.env\.example$
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.6
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-```
-
-**Setup Commands**:
-```bash
-cd /c/code/nova-civilizational-architecture
-
-# Install pre-commit (if not already)
-pip install pre-commit
-
-# Initialize hooks
-pre-commit install
-
-# Generate secrets baseline
-detect-secrets scan > .secrets.baseline
-
-# Test hooks
-pre-commit run --all-files
-```
+- `.pre-commit-config.yaml` installs schema validators, whitespace guards, `ruff`, and `detect-secrets` (baseline tracked at `.secrets.baseline`).
+- Active directories (`src/`, `orchestrator/`, `tests/`, `scripts/`, `ops/`, `config/`, `README.md`) were normalized via mechanical whitespace cleanup.
+- Hooks currently target only those paths to avoid rewriting archival artifacts; future sanitation sprints will expand coverage.
+- README references `pip install pre-commit detect-secrets`, `pre-commit install`, `pre-commit run --all-files`, and `scripts/bootstrap_dev_env.sh` for newcomers.
 
 **Verification**:
-```bash
-# Try committing a file with "password=secret123"
-echo "password=secret123" > test_secret.py
-git add test_secret.py
-git commit -m "test"  # Should fail
-
-# Cleanup
-rm test_secret.py
-git reset HEAD
-```
-
-**Note**: This is optional infrastructure - can be skipped if time-limited.
+- `python -m pre_commit run --files .pre-commit-config.yaml README.md .secrets.baseline`
+- `.secrets.baseline` exists in repo root
+- CI job `pre-commit` runs `pre-commit run --all-files --show-diff-on-failure`
 
 ---
 

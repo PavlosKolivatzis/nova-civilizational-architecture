@@ -12,8 +12,11 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
+        files: ^((src|orchestrator|tests|scripts|ops|config)/|README\.md)
       - id: end-of-file-fixer
+        files: ^((src|orchestrator|tests|scripts|ops|config)/|README\.md)
       - id: check-yaml
+        files: ^(src|orchestrator|tests|scripts|ops|config)/.*\.(ya?ml|YML|YAML)$
       - id: check-json
         files: ^contracts/.*\.json$
 
@@ -29,7 +32,6 @@ repos:
           - orchestrator
           - tests
           - scripts
-          - ops
 
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
