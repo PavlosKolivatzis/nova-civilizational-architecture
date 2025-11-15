@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import logging
-import os
 import threading
 import time
 from typing import Any, Dict, Optional
 
+from nova.config.thresholds import load_federation_thresholds
 from nova.federation.metrics import m
 
 log = logging.getLogger("nova.federation.remediator")
@@ -51,6 +51,11 @@ class FederationRemediator:
         self._last_action_ts = 0.0
         self._ready_failures = 0
         self._last_config_error_ts = 0.0
+        self._thresholds = load_federation_thresholds()
+        log.info(
+            "Federation remediator thresholds loaded backoff_multiplier=%.2f",
+            self._thresholds.backoff_multiplier,
+        )
 
         self._error_counter = self.metrics["pull_result"].labels(status="error")
         self._success_counter = self.metrics["pull_result"].labels(status="success")
@@ -142,7 +147,7 @@ class FederationRemediator:
             if not self._can_trigger():
                 return
             # P1 Configurable Thresholds (Phase 17 Audit Fix)
-            backoff_multiplier = float(os.getenv("NOVA_FEDERATION_BACKOFF_MULTIPLIER", "2.0"))
+            backoff_multiplier = self._thresholds.backoff_multiplier
             current_interval = self.poller.get_interval()
             proposed = max(current_interval if current_interval else self.base_interval, self.base_interval)
             proposed = min(proposed * backoff_multiplier, self.max_backoff)

@@ -836,6 +836,20 @@ See [.env.example](./.env.example) for the authoritative flag list.
 
 
 
+### Threshold Safety Ranges
+
+Adaptive wisdom plus federation remediation now rely on validated Pydantic schemas (`nova.config.thresholds`). Keep these variables within safe ranges or startup will fail fast with actionable errors:
+
+- `NOVA_WISDOM_CRITICAL_MARGIN`: default `0.01`, safe `0.005–0.02`; values below freeze learning immediately.
+- `NOVA_WISDOM_STABILIZING_MARGIN`: default `0.02`, safe `0.01–0.05`; must remain above the critical margin to provide hysteresis.
+- `NOVA_WISDOM_OPTIMAL_MARGIN`: default `0.05`, safe `0.03–0.10`; must stay between the stabilizing and exploring margins.
+- `NOVA_WISDOM_EXPLORING_MARGIN`: default `0.10`, safe `0.05–0.20`; highest stability gate that unlocks exploration mode.
+- `NOVA_WISDOM_EXPLORING_G`: default `0.60`, safe `0.40–0.80`; lower generativity trigger for exploration.
+- `NOVA_WISDOM_OPTIMAL_G`: default `0.70`, safe `0.60–0.90`; must be ≥ `EXPLORING_G` to keep optimal logic coherent.
+- `NOVA_FEDERATION_BACKOFF_MULTIPLIER`: default `2.0`, safe `1.5–4.0`; controls the remediator’s polling interval expansion.
+
+Threshold objects are immutable, shared across the governor/poller/remediator, and logged at startup for audit trails.
+
 ### ✨ Previous Updates (2025-09-06)
 
 - **🎉 Resolved GitHub conflicts**: Successfully merged enhanced Slot 9 features

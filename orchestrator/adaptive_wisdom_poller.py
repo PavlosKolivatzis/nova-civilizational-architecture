@@ -24,6 +24,7 @@ from typing import Any, Deque, Dict, Iterator, Optional
 from orchestrator.peer_store_singleton import get_peer_store
 from nova.adaptive_wisdom_core import Params3D, State3D, ThreeDProvider
 from nova.bifurcation_monitor import BifurcationMonitor
+from nova.config.thresholds import load_wisdom_thresholds
 from nova.governor import state as governor_state
 from nova.governor.adaptive_wisdom import AdaptiveWisdomGovernor
 from nova.metrics import wisdom_metrics
@@ -196,11 +197,18 @@ def _loop() -> None:
     monitor = BifurcationMonitor(
         hopf_threshold=float(os.getenv("NOVA_WISDOM_HOPF_THRESHOLD", "0.02"))
     )
+    threshold_config = load_wisdom_thresholds()
+    log.info("Adaptive wisdom thresholds loaded: %s", threshold_config.model_dump())
 
     eta_min = float(os.getenv("NOVA_WISDOM_ETA_MIN", "0.05"))
     eta_max = float(os.getenv("NOVA_WISDOM_ETA_MAX", "0.18"))
     eta_default = float(os.getenv("NOVA_WISDOM_ETA_DEFAULT", "0.10"))
-    governor = AdaptiveWisdomGovernor(eta=eta_default, eta_min=eta_min, eta_max=eta_max)
+    governor = AdaptiveWisdomGovernor(
+        eta=eta_default,
+        eta_min=eta_min,
+        eta_max=eta_max,
+        thresholds=threshold_config,
+    )
 
     # Quality target for gamma learning
     Q = params.Q
@@ -296,11 +304,8 @@ def _loop() -> None:
             new_eta = current.eta
             new_frozen = frozen
 
-            # P1 Configurable Thresholds (Phase 17 Audit Fix)
-            critical_margin = float(os.getenv("NOVA_WISDOM_CRITICAL_MARGIN", "0.01"))
-
             if not frozen:
-                if analysis.S < critical_margin:
+                if analysis.S < threshold_config.critical_margin:
                     new_eta = eta_min
                     new_frozen = True
                 elif analysis.hopf_risk:

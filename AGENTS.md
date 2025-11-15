@@ -43,3 +43,14 @@ NOVA_ENABLE_PROMETHEUS=0   # Disabled
 ```
 
 Use [.env.example](./.env.example) as the authoritative reference when defining environment files.
+
+## Threshold Safety Ranges
+- `NOVA_WISDOM_CRITICAL_MARGIN`: default `0.01`, safe `0.005–0.02`; below this we immediately freeze ?-learning.
+- `NOVA_WISDOM_STABILIZING_MARGIN`: default `0.02`, safe `0.01–0.05`; must stay above the critical margin.
+- `NOVA_WISDOM_OPTIMAL_MARGIN`: default `0.05`, safe `0.03–0.10`; must sit between stabilizing and exploring margins.
+- `NOVA_WISDOM_EXPLORING_MARGIN`: default `0.10`, safe `0.05–0.20`; highest stability gate for exploration.
+- `NOVA_WISDOM_EXPLORING_G`: default `0.60`, safe `0.40–0.80`; lower generativity gate for exploration.
+- `NOVA_WISDOM_OPTIMAL_G`: default `0.70`, safe `0.60–0.90`; must be ≥ `EXPLORING_G`.
+- `NOVA_FEDERATION_BACKOFF_MULTIPLIER`: default `2.0`, safe `1.5–4.0`; bounds remediator backoff.
+
+These values are enforced at runtime by `nova.config.thresholds`; invalid combos raise immediately before any slot bootstraps.
