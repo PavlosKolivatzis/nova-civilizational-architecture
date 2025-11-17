@@ -14,7 +14,8 @@ overall:
   level: 4.0
   coverage: "10/10"
   summary: "All slots operate at Processual (4.0) with autonomous recovery & governance"
-  tests_passed: 506
+  tests_passed: 1435
+  tests_total: 1443
   processual_tests_added: 39
   last_verified_ci: "main"
 

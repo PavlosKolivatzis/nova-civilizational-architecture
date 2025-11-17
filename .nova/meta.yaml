@@ -89,7 +89,7 @@ learning_path:
       - read: "orchestrator/app.py"
         focus: ["Slot registration", "lifespan manager", "error boundaries"]
       - run: "pytest -q -m 'not slow'"
-        expect: "506 tests passing"
+        expect: "1435 tests passing (1443 total collected)"
       - run: "npm run maturity"
         expect: "overall: 4.0, all slots Processual"
 
@@ -230,7 +230,8 @@ runtime:
 
   tests:
     command: "pytest -q -m 'not slow'"
-    expected_pass_count: 506
+    expected_pass_count: 1435
+    total_collected: 1443
     coverage_target: "85% (configurable thresholds)"
 
   metrics:

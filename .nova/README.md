@@ -69,7 +69,7 @@ The canonical navigation index for Nova. Contains:
 - **Goal**: Probe current system state
 - **Read**: `src/nova/slots/*/meta.yaml`, `orchestrator/app.py`
 - **Run**: `pytest -q`, `npm run maturity`
-- **Verify**: 506 tests passing, maturity 4.0
+- **Verify**: 1435 tests passing (1443 total), maturity 4.0
 
 ### Phase 3: Observability (~10 min)
 - **Goal**: Understand runtime metrics
