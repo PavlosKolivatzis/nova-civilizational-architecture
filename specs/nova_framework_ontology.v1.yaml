@@ -14,9 +14,9 @@ meta:
     authors: ["Pavlos Kolivatzis", "GPT Research System", "Claude Research System", "DeepSeek", "Kilo AI", "Gemini", "GitHub Copilot"]
     status: "empirically validated, 99.7% accuracy, 1082 test cases"
   description: >
-    Translation-neutral contracts for ΔTHRESH, PAD.E.L., INF-o-INITY,
-    Constellation, Wisdom Governor, Effortless Layer, and ARC.
-    Built for cross-agent interoperability (symbolic, neural, hybrid).
+    Translation-neutral contracts for Nova's 10-slot cognitive architecture.
+    Core frameworks: ΔTHRESH, Constellation, Wisdom Governor, ARC, Truth Anchor,
+    Distortion Protection. Built for cross-agent interoperability (symbolic, neural, hybrid).
     Grounded in spectral graph theory and equilibrium analysis.
 
 # ---------- Mathematical Foundations (USM) ----------
@@ -75,11 +75,15 @@ signals:
     type: Scalar
     range: [0, "log(n)"]
     unit: "nats"
-    desc: "Laplacian spectral entropy, H(λ) = -∑λᵢlog λᵢ"
+    desc: "Laplacian spectral entropy (raw), H(λ) = -∑λᵢlog λᵢ"
+    formula_raw: "H(λ) = -∑λᵢlog λᵢ"
+    formula_normalized: "ε_norm = H(λ) / log(m)"
     validation:
-      extraction_threshold: 2.5
+      extraction_threshold_raw: 2.5
+      extraction_threshold_normalized: 0.7
       accuracy: 0.942
       reference: "USM Theorem 1"
+      note: "Threshold 2.5 applies to raw entropy; 0.7 for normalized [0,1]"
 
   equilibrium_gradient_E:
     type: Scalar
@@ -102,6 +106,19 @@ signals:
   generativity_Gstar: {type: Scalar, desc: "Composite(Progress,Novelty,Consistency)"}
   eta: {type: Scalar, desc: "Global learning gain"}
   tri_coherence: {type: Scalar, desc: "Truth Resonance Index"}
+
+  # Convergence rate signals (ADMM/federated consensus)
+  kappa_state:
+    type: Scalar
+    unit: "convergence_rate"
+    desc: "State contraction rate κ_state = λ_min(H)"
+    formula: "κ_state = λ_min(H)"
+
+  kappa_energy:
+    type: Scalar
+    unit: "convergence_rate"
+    desc: "Energy contraction rate κ_energy = 2λ_min(H)"
+    formula: "κ_energy = 2λ_min(H)"
 
   # Core outputs
   truth_vector: {type: Vector, shape: [768], desc: "Stabilized epistemic signal"}
@@ -138,8 +155,8 @@ ledgers:
 
 # ---------- Role Separation (Architectural Invariant) ----------
 role_separation:
-  slots_interpret: [deltaTHRESH, INF_o_INITY, Constellation, PAD_E_L, WisdomGovernor, EffortlessLayer, ARC]
-  core_attests: [Slot01, Slot09]
+  slots_interpret: [deltaTHRESH, Constellation, WisdomGovernor, ARC, EmotionalMatrix, TRI_Engine, CulturalSynthesis, ProductionControls, MemoryEthicsGuard]
+  core_attests: [TruthAnchor_Slot01, DistortionProtection_Slot09]
 
   forbidden:
     - rule: "slots MUST NOT write to attest_ledger directly"
@@ -149,7 +166,33 @@ role_separation:
 
 # ---------- Frameworks ----------
 frameworks:
+  - id: TruthAnchor
+    slot_id: 1
+    name: Truth Anchor & Cryptographic Verification
+    purpose: "Hash-chain management, cryptographic verification, attestation integrity"
+    inputs: [content, context, claim_hash]
+    outputs: [truth_hash, verification_status, chain_integrity, attest_hash]
+    state_variables: [prev_hash, merkle_root]
+    transformations:
+      - name: hash_content
+        in: [content, context]
+        out: [truth_hash]
+        rule: "blake2b(content || context) if NOVA_USE_SHARED_HASH else sha256"
+        impl_ref: "src.nova.slots.slot01_truth_anchor.hashing.compute_hash"
+      - name: verify_chain
+        in: [truth_hash, prev_hash]
+        out: [chain_integrity]
+        rule: "validate hash chain continuity + merkle tree consistency"
+        impl_ref: "src.nova.slots.slot01_truth_anchor.verification.verify_chain"
+      - name: create_attestation
+        in: [claim_hash, truth_hash, prev_hash]
+        out: [attest_hash]
+        rule: "write to attest_ledger with signature"
+        impl_ref: "src.nova.slots.slot01_truth_anchor.attest.create_entry"
+    interfaces: {upstream: [ALL_SLOTS], downstream: [attest_ledger]}
+
   - id: deltaTHRESH
+    slot_id: 2
     name: ΔTHRESH Semantic Stabilizer
     purpose: "Detect and reduce distortion; produce truth_vector"
     inputs: [user_intent_vector, context_vector]
@@ -158,116 +201,141 @@ frameworks:
       - name: spectral_assess
         in: [context_vector]
         out: [spectral_entropy_H]
-        rule: "H(λ) = -∑λᵢlog λᵢ"
+        rule: "H(λ) = -∑λᵢlog λᵢ (raw entropy)"
         impl_ref: "src.nova.slots.slot02_deltathresh.spectral.compute_entropy"
-        validation: {threshold: 2.5, accuracy: 0.942}
+        validation: {threshold_raw: 2.5, threshold_normalized: 0.7, accuracy: 0.942}
       - name: stabilize_signal
         in: [user_intent_vector, spectral_entropy_H]
         out: [truth_vector]
         rule: "low-pass + anchor alignment; ε-based gain"
         impl_ref: "src.nova.slots.slot02_deltathresh.core.stabilize"
-    interfaces: {upstream: [], downstream: [INF_o_INITY, Constellation]}
+    interfaces: {upstream: [TruthAnchor], downstream: [Constellation, TRI_Engine]}
 
-  - id: INF_o_INITY
-    name: INF-o-INITY Cross-Domain Synthesizer
-    purpose: "Fuse stabilized truths into symbolic structures"
-    inputs: [truth_vector, context_vector]
-    outputs: [symbolic_anchor, equilibrium_ratio_rho]
+  - id: TRI_Engine
+    slot_id: 4
+    name: TRI Engine (Truth Resonance Index)
+    purpose: "Calculate epistemic coherence and truth resonance scores"
+    inputs: [truth_vector, context_vector, anchors]
+    outputs: [tri_score, tri_coherence, coherence_breakdown]
+    state_variables: [tri_score, active_anchors]
     transformations:
-      - name: equilibrium_check
-        in: [truth_vector]
-        out: [equilibrium_ratio_rho]
-        rule: "ρ = |∇E| / (|∇E| + |∇E_balanced|)"
-        impl_ref: "src.nova.slots.slot03_inf_o_inity.equilibrium.compute_ratio"
-        validation: {threshold: 0.7, sensitivity: 0.891, specificity: 0.913}
-      - name: cross_domain_synthesis
-        in: [truth_vector, context_vector]
-        out: [symbolic_anchor]
-        rule: "graph-theoretic fusion + spectral consistency"
-    interfaces: {upstream: [deltaTHRESH], downstream: [Constellation, EffortlessLayer]}
+      - name: compute_tri
+        in: [truth_vector, anchors]
+        out: [tri_score, tri_coherence]
+        rule: "TRI evaluation over active anchors + phase-space continuity"
+        impl_ref: "src.nova.slots.slot04_tri_engine.core.compute_tri"
+      - name: coherence_decomposition
+        in: [tri_score, context_vector]
+        out: [coherence_breakdown]
+        rule: "decompose TRI into truth/resonance/index components"
+        impl_ref: "src.nova.slots.slot04_tri_engine.analysis.decompose"
+    interfaces: {upstream: [deltaTHRESH, Constellation], downstream: [WisdomGovernor, ProductionControls]}
 
   - id: Constellation
-    name: Constellation Spatial Positioning
+    slot_id: 5
+    name: Constellation Spatial Positioning & Navigation
     purpose: "Maintain memory-threaded coherence via anchor placement"
-    inputs: [symbolic_anchor, context_vector]
-    outputs: [tri_coherence]
-    state_variables: [tri_coherence]
+    inputs: [symbolic_anchor, context_vector, truth_vector]
+    outputs: [tri_coherence, anchor_position]
+    state_variables: [tri_coherence, active_anchors, anchor_graph]
     transformations:
       - name: anchor_place
-        in: [symbolic_anchor]
-        out: []
-        rule: "phase-space placement; nearest-neighbor continuity"
-      - name: coherence_eval
         in: [symbolic_anchor, context_vector]
+        out: [anchor_position]
+        rule: "phase-space placement; nearest-neighbor continuity"
+        impl_ref: "src.nova.slots.slot05_constellation.placement.place_anchor"
+      - name: coherence_eval
+        in: [symbolic_anchor, context_vector, active_anchors]
         out: [tri_coherence]
-        rule: "TRI evaluation over active anchors"
-    interfaces: {upstream: [INF_o_INITY], downstream: [WisdomGovernor, EffortlessLayer, ARC]}
+        rule: "TRI evaluation over active anchors + graph coherence"
+        impl_ref: "src.nova.slots.slot05_constellation.coherence.evaluate"
+    interfaces: {upstream: [deltaTHRESH, TRI_Engine], downstream: [WisdomGovernor, ARC]}
 
   - id: WisdomGovernor
-    name: Adaptive Wisdom Governor
+    slot_id: 7
+    name: Adaptive Wisdom Governor (Production Controls)
     purpose: "Closed-loop control of learning and production concurrency"
     inputs: [tri_coherence, stability_S, hopf_H, generativity_Gstar]
-    outputs: [eta]
-    state_variables: [eta]
+    outputs: [eta, production_mode]
+    state_variables: [eta, stability_S, hopf_H, generativity_Gstar, gamma, production_mode]
     transformations:
       - name: cap_eta_by_coherence
         in: [tri_coherence]
         out: [eta]
         rule: "η_cap = f(TRI); apply min(η, η_cap)"
+        impl_ref: "src.nova.slots.slot07_production_controls.governor.cap_eta"
       - name: generativity_bias
-        in: [generativity_Gstar]
+        in: [generativity_Gstar, stability_S, hopf_H]
         out: [eta]
         rule: "Δη = κ * (G* - G0) if S>=0.03 and H>=0.02 else 0"
-    interfaces: {upstream: [Constellation], downstream: [EffortlessLayer]}
+        impl_ref: "src.nova.slots.slot07_production_controls.governor.bias_eta"
+      - name: mode_determination
+        in: [stability_S, hopf_H, eta]
+        out: [production_mode]
+        rule: "FULL if S>=0.03 and H>=0.02, DEGRADED if boundary, MINIMAL else"
+        impl_ref: "src.nova.slots.slot07_production_controls.modes.determine_mode"
+    interfaces: {upstream: [Constellation, TRI_Engine], downstream: [CivilizationalDeployment]}
 
-  - id: EffortlessLayer
-    name: Cognitive–Symbolic Interface
-    purpose: "Translate intent to symbolic acts with minimal cognitive load"
-    inputs: [user_intent_vector, context_vector, eta, tri_coherence, consent_profile]
-    outputs: [symbolic_form]
+  - id: DistortionProtection
+    slot_id: 9
+    name: Distortion Protection & Detection
+    purpose: "Detect extraction patterns, distortion, and equilibrium violations"
+    inputs: [context_vector, equilibrium_ratio_rho, spectral_entropy_H, detection_results]
+    outputs: [distortion_alert, extraction_detected, shield_status, equilibrium_ratio_rho]
+    state_variables: [shield_S, detection_history, alpha, beta, gamma]
     transformations:
-      - name: semantic_projection
-        in: [user_intent_vector, context_vector]
-        out: [symbolic_anchor]
-        rule: "projection to nearest stable anchor"
-      - name: adaptive_density
-        in: [symbolic_anchor, eta, tri_coherence]
-        out: [symbolic_form]
-        rule: "control symbolic granularity via η and TRI"
-    constraints:
-      - name: ethical_gate
-        condition: "consent_profile is valid"
-        action: "allow; else block"
-        validator: "Slot10.consent.validate"
-    interfaces: {upstream: [deltaTHRESH, INF_o_INITY, Constellation, WisdomGovernor], downstream: [Human, Storage]}
+      - name: equilibrium_check
+        in: [context_vector]
+        out: [equilibrium_ratio_rho]
+        rule: "ρ = |∇E| / (|∇E| + |∇E_balanced|)"
+        impl_ref: "src.nova.slots.slot09_distortion_protection.equilibrium.compute_ratio"
+        validation: {threshold: 0.7, sensitivity: 0.891, specificity: 0.913}
+      - name: extraction_detect
+        in: [spectral_entropy_H, equilibrium_ratio_rho, shield_S]
+        out: [extraction_detected, distortion_alert]
+        rule: "alert if H>2.5 OR ρ<0.7 (with shield suppression S)"
+        impl_ref: "src.nova.slots.slot09_distortion_protection.detector.detect"
+      - name: shield_assessment
+        in: [context_vector, detection_history]
+        out: [shield_status]
+        rule: "evaluate institutional buffering and power-shield dynamics"
+        impl_ref: "src.nova.slots.slot09_distortion_protection.shield.assess"
+    interfaces: {upstream: [deltaTHRESH, ARC], downstream: [TruthAnchor, WisdomGovernor]}
 
   - id: ARC
+    slot_id: null  # Cross-cutting framework (not a dedicated slot)
     name: Autonomous Reflection Cycle
     purpose: "Self-monitoring and self-improvement"
-    inputs: [detection_results, ground_truth]
-    outputs: [precision, recall, f1_score, drift, optimized_params]
-    state_variables: [precision, recall, f1_score, drift, alpha, beta, gamma]
+    inputs: [detection_results, ground_truth, convergence_state]
+    outputs: [precision, recall, f1_score, drift, optimized_params, kappa_state, kappa_energy]
+    state_variables: [precision, recall, f1_score, drift, alpha, beta, gamma, kappa_state, kappa_energy]
     parameters: {max_cycles: 10, convergence_patience: 3}
     transformations:
       - name: metric_calculation
         in: [detection_results, ground_truth]
         out: [precision, recall, f1_score, drift]
         rule: "standard classification metrics + temporal stability"
+        impl_ref: "src.nova.arc.metrics.calculate"
       - name: parameter_optimization
         in: [precision, recall, alpha, beta, gamma]
         out: [alpha_next, beta_next, gamma_next]
         rule: "Bayesian adjustment: if P>0.8 and R<0.8 then α↓ else if R>0.8 and P<0.8 then α↑"
         impl_ref: "src.nova.arc.optimizer.bayesian_adjust"
+      - name: convergence_rate_calculation
+        in: [convergence_state]
+        out: [kappa_state, kappa_energy]
+        rule: "κ_state = λ_min(H), κ_energy = 2λ_min(H) for ADMM convergence"
+        impl_ref: "src.nova.arc.convergence.compute_rates"
     validation:
       baseline: {precision: 0.782, recall: 0.756}
       target: {precision: 0.90, recall: 0.90}
       achieved: {precision: 0.923, recall: 0.918}
       improvement_p_value: 0.001
-    interfaces: {upstream: [deltaTHRESH, INF_o_INITY, Constellation], downstream: [WisdomGovernor]}
+    interfaces: {upstream: [deltaTHRESH, DistortionProtection, Constellation], downstream: [WisdomGovernor, DistortionProtection]}
 
 # ---------- Validation & Testing ----------
 validation:
-  required_frameworks: [deltaTHRESH, INF_o_INITY, Constellation, WisdomGovernor, EffortlessLayer, ARC]
+  required_frameworks: [TruthAnchor, deltaTHRESH, TRI_Engine, Constellation, WisdomGovernor, DistortionProtection, ARC]
 
   invariants:
     - id: SPECTRAL_THRESHOLD
@@ -332,10 +400,18 @@ metrics:
     - {name: nova_arc_precision, from: precision}
     - {name: nova_arc_recall, from: recall}
 
+# ---------- HISTORICAL FRAMEWORKS (Not in v1.0) ----------
+# The following frameworks are mentioned in historical docs but not mapped to current slots:
+# - PAD.E.L: Theoretical framework from Phase 11, no current slot mapping
+# - INF-o-INITY: Schema versioning system for analysis cards (e.g., v6.0), not a slot
+# - EffortlessLayer: Cognitive-symbolic interface concept, not implemented as dedicated slot
+# These may be integrated in future versions or remain as theoretical/historical references.
+
 # ---------- CONTINUATION PROMPT ----------
 # Context: Nova Framework Ontology v1.0 grounded in Universal Structure Mathematics
-# State: Defined 7 frameworks (ΔTHRESH, INF-o-INITY, Constellation, WisdomGovernor, EffortlessLayer, ARC, PAD.E.L)
+# State: Defined 7 core frameworks with slot_id mappings (1,2,4,5,7,9 + ARC cross-cutting)
 # Status: Empirically validated (99.7% accuracy, 1082 tests), USM theorems integrated
+# Fixes Applied: Explicit slot mappings, Slot01/09 definitions, spectral entropy clarity, convergence rates
 # Next: Implement src/nova/ontology/ (loader, validator, enforcer) + tests
 # Key refs: .nova/meta.yaml learning_path, USM paper spectral/equilibrium math, ARC self-improvement
 # Critical: Maintain 3-ledger separation, role enforcement, consent gates, empirical thresholds
