@@ -36,8 +36,11 @@ GIT_SUBJECT=$(git log -1 --format='%s' 2>/dev/null || echo "")
 GIT_BRANCH=$(git branch --show-current 2>/dev/null || echo "detached")
 
 # Maturity check (silent mode to avoid npm noise)
-MATURITY_JSON=$(npm run maturity --silent 2>/dev/null || echo '{"overall":null}')
-MATURITY_SCORE=$(echo "$MATURITY_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('overall', 'N/A'))" 2>/dev/null || echo "N/A")
+MATURITY_JSON=$(npm run maturity --silent 2>/dev/null || echo '{"averages":{"overall":null}}')
+# Try python3 first (Unix/macOS), fallback to python (Windows)
+MATURITY_SCORE=$(echo "$MATURITY_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('averages', {}).get('overall', 'N/A'))" 2>/dev/null || \
+                 echo "$MATURITY_JSON" | python -c "import json,sys; d=json.load(sys.stdin); print(d.get('averages', {}).get('overall', 'N/A'))" 2>/dev/null || \
+                 echo "N/A")
 
 # Test count (from maturity.yaml if present)
 if [ -f "docs/maturity.yaml" ]; then

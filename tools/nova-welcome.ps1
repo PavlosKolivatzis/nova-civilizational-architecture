@@ -27,7 +27,7 @@ if (-not $gitBranch) { $gitBranch = "detached" }
 $maturityJson = npm run maturity --silent 2>$null | Out-String
 $maturityScore = if ($maturityJson) {
     try {
-        ($maturityJson | ConvertFrom-Json).overall
+        ($maturityJson | ConvertFrom-Json).averages.overall
     } catch {
         "N/A"
     }
