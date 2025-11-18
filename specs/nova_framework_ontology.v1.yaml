@@ -125,6 +125,39 @@ signals:
   symbolic_anchor: {type: Vector, desc: "Stable representational anchor"}
   symbolic_form: {type: Text, desc: "Human-readable output"}
 
+  # PAD.E.L outputs (psychological truth filter)
+  reflex_integrity:
+    type: Scalar
+    range: [0, 1]
+    desc: "Consistency of psychological response patterns with ethical norms"
+  internal_stability_index:
+    type: Scalar
+    range: [0, 1]
+    desc: "Governor parameter stability relative to equilibrium manifold"
+  drift_coefficients:
+    type: Vector
+    desc: "Parameter drift measurements [α_drift, β_drift, γ_drift, η_drift]"
+  emotional_coherence:
+    type: Scalar
+    range: [0, 1]
+    desc: "Cross-correlation of emotional signals with cognitive state"
+
+  # INF-o-INITY outputs (informational truth filter)
+  distortion_index:
+    type: Scalar
+    range: [0, 1]
+    desc: "Spectral distortion magnitude mapped to epistemic uncertainty"
+  convergence_map:
+    type: Matrix
+    desc: "Graph-theoretic narrative convergence topology"
+  epistemic_entropy_profile:
+    type: Vector
+    desc: "Spectral entropy decomposition across frequency bands"
+  narrative_coherence:
+    type: Scalar
+    range: [0, 1]
+    desc: "Graph-theoretic coherence of narrative structure"
+
   # Ethics
   consent_profile: {type: Text, desc: "CE-001 policy id"}
 
@@ -305,7 +338,7 @@ frameworks:
   - id: ARC
     slot_id: null  # Cross-cutting framework (not a dedicated slot)
     name: Autonomous Reflection Cycle
-    purpose: "Self-monitoring and self-improvement"
+    purpose: "Self-monitoring, self-improvement, and meta-analysis coordination"
     inputs: [detection_results, ground_truth, convergence_state]
     outputs: [precision, recall, f1_score, drift, optimized_params, kappa_state, kappa_energy]
     state_variables: [precision, recall, f1_score, drift, alpha, beta, gamma, kappa_state, kappa_energy]
@@ -326,6 +359,56 @@ frameworks:
         out: [kappa_state, kappa_energy]
         rule: "κ_state = λ_min(H), κ_energy = 2λ_min(H) for ADMM convergence"
         impl_ref: "src.nova.arc.convergence.compute_rates"
+    analytic_instruments:
+      - id: PAD_E_L
+        name: "Psychological Architecture & Drift Evaluation Layer"
+        purpose: "Inner psychological truth filter - reflex integrity and emotional stability analysis"
+        status: active_analytic_instrument
+        inputs: [state_vectors, eta, gamma, emotional_matrices, hopf_H, stability_S]
+        outputs: [reflex_integrity, internal_stability_index, drift_coefficients, emotional_coherence]
+        transformations:
+          - name: reflex_integrity_assessment
+            in: [state_vectors, emotional_matrices]
+            out: [reflex_integrity]
+            rule: "evaluate psychological response patterns for consistency with ethical norms"
+            impl_ref: "src.nova.arc.instruments.padel.assess_reflexes"
+          - name: internal_stability_analysis
+            in: [eta, gamma, hopf_H, stability_S]
+            out: [internal_stability_index, drift_coefficients]
+            rule: "measure drift in governor parameters relative to equilibrium manifold"
+            impl_ref: "src.nova.arc.instruments.padel.stability_analysis"
+          - name: emotional_coherence_mapping
+            in: [emotional_matrices, state_vectors]
+            out: [emotional_coherence]
+            rule: "cross-correlate emotional signals with cognitive state for authenticity"
+            impl_ref: "src.nova.arc.instruments.padel.coherence_map"
+        invocation: "arc.invoke('padel', state_dict)"
+        integration_slots: [1, 2, 4, 5, 7, 9]
+
+      - id: INF_o_INITY
+        name: "Information Network Fidelity & Distortion Analysis Engine"
+        purpose: "Outer informational truth filter - narrative coherence and epistemic entropy profiling"
+        status: active_analytic_instrument
+        inputs: [signal_spectra, narrative_networks, semantic_entropy, context_vector, tri_coherence]
+        outputs: [distortion_index, convergence_map, epistemic_entropy_profile, narrative_coherence]
+        transformations:
+          - name: distortion_topology_analysis
+            in: [signal_spectra, semantic_entropy]
+            out: [distortion_index, epistemic_entropy_profile]
+            rule: "map spectral distortions to epistemic uncertainty quantification"
+            impl_ref: "src.nova.arc.instruments.infoinity.distortion_topology"
+          - name: narrative_convergence_mapping
+            in: [narrative_networks, context_vector]
+            out: [convergence_map, narrative_coherence]
+            rule: "analyze graph-theoretic narrative structure for coherence and bias"
+            impl_ref: "src.nova.arc.instruments.infoinity.narrative_convergence"
+          - name: fidelity_scoring
+            in: [signal_spectra, tri_coherence]
+            out: [distortion_index]
+            rule: "cross-validate TRI coherence with spectral fidelity metrics"
+            impl_ref: "src.nova.arc.instruments.infoinity.fidelity_score"
+        invocation: "arc.invoke('infoinity', signal_dict)"
+        integration_slots: [1, 2, 4, 5, 7, 9]
     validation:
       baseline: {precision: 0.782, recall: 0.756}
       target: {precision: 0.90, recall: 0.90}
@@ -400,18 +483,42 @@ metrics:
     - {name: nova_arc_precision, from: precision}
     - {name: nova_arc_recall, from: recall}
 
-# ---------- HISTORICAL FRAMEWORKS (Not in v1.0) ----------
-# The following frameworks are mentioned in historical docs but not mapped to current slots:
-# - PAD.E.L: Theoretical framework from Phase 11, no current slot mapping
-# - INF-o-INITY: Schema versioning system for analysis cards (e.g., v6.0), not a slot
+# ---------- ANALYTIC INSTRUMENTS (Active Meta-Tools) ----------
+# PAD.E.L and INF-o-INITY are now **analytic instruments** under ARC, not standalone slots.
+# They process data from Slots 1-10 for diagnostic and interpretive purposes.
+#
+# Integration Pattern:
+#   Framework         PAD.E.L Integration                    INF-o-INITY Integration
+#   ─────────────────────────────────────────────────────────────────────────────────────
+#   Slot 1 (TruthAnchor)       Evaluates emotional bias in           Detects narrative bias in
+#                              verification process                   attestation inputs
+#   Slot 2 (ΔTHRESH)           Measures drift within                 Measures distortion within
+#                              perception thresholds                  spectral channels
+#   Slot 4 (TRI Engine)        Feeds internal stability              Normalizes epistemic
+#                              variables (S, H, G*, γ)                coherence signals
+#   Slot 5 (Constellation)     Provides emotional resonance          Maps informational resonance
+#                              weighting                              across anchors
+#   Slot 7 (Wisdom Governor)   Runs reflex diagnostics before        Uses coherence data to
+#                              policy output                          adjust η-governance
+#   Slot 9 (Distortion Prot.)  Detects psychological                 Detects information
+#                              morphotypes                            morphotypes
+#
+# Invocation: arc.invoke('padel', state) or arc.invoke('infoinity', signals)
+#
+# Historical Note:
 # - EffortlessLayer: Cognitive-symbolic interface concept, not implemented as dedicated slot
-# These may be integrated in future versions or remain as theoretical/historical references.
 
 # ---------- CONTINUATION PROMPT ----------
 # Context: Nova Framework Ontology v1.0 grounded in Universal Structure Mathematics
 # State: Defined 7 core frameworks with slot_id mappings (1,2,4,5,7,9 + ARC cross-cutting)
 # Status: Empirically validated (99.7% accuracy, 1082 tests), USM theorems integrated
-# Fixes Applied: Explicit slot mappings, Slot01/09 definitions, spectral entropy clarity, convergence rates
-# Next: Implement src/nova/ontology/ (loader, validator, enforcer) + tests
+# Fixes Applied:
+#   - Explicit slot mappings (1,2,4,5,7,9)
+#   - Slot01/09 full definitions (TruthAnchor, DistortionProtection)
+#   - Spectral entropy clarity (raw H>2.5 vs normalized ε>0.7)
+#   - Convergence rates (κ_state, κ_energy for ADMM)
+#   - PAD.E.L & INF-o-INITY as analytic_instruments under ARC
+#   - Integration hooks: arc.invoke('padel', state) / arc.invoke('infoinity', signals)
+# Next: Implement src/nova/ontology/ (loader, validator, enforcer) + src/nova/arc/instruments/ + tests
 # Key refs: .nova/meta.yaml learning_path, USM paper spectral/equilibrium math, ARC self-improvement
 # Critical: Maintain 3-ledger separation, role enforcement, consent gates, empirical thresholds
