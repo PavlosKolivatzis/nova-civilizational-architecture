@@ -72,49 +72,173 @@ learning_path:
   phase1_orientation:
     goal: "Understand Nova's mental model and architectural boundaries"
     duration: "~15 minutes"
+    why: "Build foundational ontology before touching code"
     steps:
-      - read: "agents/nova_ai_operating_framework.md"
+      - step: 1
+        action: "read"
+        file: "agents/nova_ai_operating_framework.md"
         focus: ["Rule of Sunlight", "3 ledgers", "6 invariants", "first 10min checklist"]
-      - read: "docs/architecture.md"
+        note: "This is the Rosetta Stone. Everything else builds on this."
+      - step: 2
+        action: "read"
+        file: "docs/architecture.md"
         focus: ["10 slot map", "orchestrator role", "inter-slot contracts"]
-      - read: "docs/slots/*.md"
+        note: "See how philosophy manifests in structure"
+      - step: 3
+        action: "read"
+        file: "docs/slots/*.md"
         focus: ["Each slot's purpose", "contract stability", "inter-dependencies"]
+        note: "Read in order: slot01 → slot02 → ... → slot10"
+    checkpoint:
+      verify_understanding:
+        - "Can you explain the Rule of Sunlight in your own words?"
+        - "What are the 3 ledgers and why are they separated?"
+        - "Name all 6 invariants without looking"
+        - "Draw the 10-slot architecture from memory"
+        - "Explain: Why can't slots attest directly?"
+      test_yourself:
+        - "Open a random slot meta.yaml and identify its contracts"
+        - "Trace a hypothetical event: user input → which slots → attestation"
 
   phase2_introspection:
     goal: "Probe current system state and verify understanding"
     duration: "~10 minutes"
+    why: "Theory → Code. See how abstractions are implemented."
     steps:
-      - read: "src/nova/slots/*/meta.yaml"
+      - step: 1
+        action: "read"
+        file: "src/nova/slots/*/meta.yaml"
         focus: ["Slot versions", "feature flags", "contract schemas", "dependencies"]
-      - read: "orchestrator/app.py"
+        note: "These are EXECUTABLE specs. Slots self-describe."
+      - step: 2
+        action: "read"
+        file: "orchestrator/app.py"
         focus: ["Slot registration", "lifespan manager", "error boundaries"]
-      - run: "pytest -q -m 'not slow'"
+        note: "The orchestrator is thin glue. Slots do the work."
+      - step: 3
+        action: "run"
+        command: "pytest -q -m 'not slow'"
         expect: "1435 tests passing (1443 total collected)"
-      - run: "npm run maturity"
+        note: "Tests are documentation. Read failures to understand boundaries."
+      - step: 4
+        action: "run"
+        command: "npm run maturity"
         expect: "overall: 4.0, all slots Processual"
+        note: "Maturity = operational capability, not code volume"
+    checkpoint:
+      verify_understanding:
+        - "What is the difference between a slot's meta.yaml and its implementation?"
+        - "How does the orchestrator discover slots at runtime?"
+        - "Why are tests the highest maturity indicator (not LOC)?"
+        - "Name 3 feature flags and what they gate"
+      test_yourself:
+        - "Add a print statement to orchestrator/app.py, restart, verify it runs"
+        - "Run a single slot's tests: pytest tests/test_slot01* -v"
+        - "Find where NOVA_ENABLE_PROMETHEUS is checked in code"
 
   phase3_observability:
     goal: "Understand runtime metrics and health monitoring"
     duration: "~10 minutes"
+    why: "Sunlight = observability. See how Nova watches itself."
     steps:
-      - read: "orchestrator/prometheus_metrics.py"
+      - step: 1
+        action: "read"
+        file: "orchestrator/prometheus_metrics.py"
         focus: ["Metric naming (nova_slotN_*)", "flag gauges", "slot health"]
-      - read: "src/nova/slots/slot07_production_controls/flag_metrics.py"
+        note: "Metrics are the nervous system. No hidden state."
+      - step: 2
+        action: "read"
+        file: "src/nova/slots/slot07_production_controls/flag_metrics.py"
         focus: ["Feature flag observability", "runtime introspection"]
-      - run: "NOVA_ENABLE_PROMETHEUS=1 uvicorn orchestrator.app:app"
+        note: "Flags themselves are observable (meta-observability)"
+      - step: 3
+        action: "run"
+        command: "NOVA_ENABLE_PROMETHEUS=1 uvicorn orchestrator.app:app"
         then: "curl localhost:8000/metrics | grep nova_"
         expect: "Prometheus metrics with flag states, slot health"
+        note: "Metrics disabled by default (flag=0). This is reversibility."
+    checkpoint:
+      verify_understanding:
+        - "Why are metrics behind a feature flag instead of always-on?"
+        - "What does nova_feature_flag_enabled{flag='X'} tell you?"
+        - "How would you add a new metric to Slot02?"
+      test_yourself:
+        - "Find a metric in /metrics and trace it back to source code"
+        - "Toggle NOVA_ENABLE_PROMETHEUS=0, verify /metrics returns 404"
+        - "Read a slot's metrics.py and predict what appears in /metrics"
 
   phase4_change_protocol:
     goal: "Learn how to propose reversible, sunlight-safe changes"
     duration: "~10 minutes"
+    why: "Now you understand Nova. Learn how to evolve it safely."
     steps:
-      - read: "agents/nova_ai_operating_framework.md"
+      - step: 1
+        action: "read"
+        file: "agents/nova_ai_operating_framework.md"
         section: "Change policy (§5), Pre-merge checklist (§11)"
-      - read: ".env.example"
+        note: "Off-by-default, flag-gated, reversible. No exceptions."
+      - step: 2
+        action: "read"
+        file: ".env.example"
         focus: ["NOVA_* feature flags", "default states (0=off)"]
-      - experiment: "Add a new flag, gate behavior, write test, verify rollback"
-      - verify: "Toggle flag → behavior reverts without code changes"
+        note: "Every flag starts at 0. Opt-in only."
+      - step: 3
+        action: "experiment"
+        task: "Add a new flag, gate behavior, write test, verify rollback"
+        note: "This is the final exam. Can you make a sunlight-safe change?"
+      - step: 4
+        action: "verify"
+        test: "Toggle flag → behavior reverts without code changes"
+        note: "If you need code changes to revert, the flag is broken."
+    checkpoint:
+      verify_understanding:
+        - "Why must flags default to 0 (off)?"
+        - "What's the difference between a flag and a config value?"
+        - "How do you test both flag=0 and flag=1 paths in CI?"
+      test_yourself:
+        - "Add NOVA_ENABLE_EXAMPLE_FEATURE=0 to .env.example"
+        - "Gate a simple behavior (e.g., log message) behind this flag"
+        - "Write a test that verifies both flag states"
+        - "Toggle flag, restart, confirm behavior change"
+        - "Set flag=0, confirm revert to original behavior"
+
+  phase5_synthesis:
+    goal: "Build a complete mental model and verify architectural understanding"
+    duration: "~30 minutes"
+    why: "Integration test for your brain. Can you think like Nova now?"
+    steps:
+      - step: 1
+        action: "draw"
+        task: "Sketch the full architecture from memory (no peeking)"
+        include: ["10 slots", "orchestrator", "contracts", "attestation flow"]
+        note: "If you can't draw it, you don't understand it yet."
+      - step: 2
+        action: "trace"
+        task: "Pick a user action and trace it end-to-end"
+        example: "User submits text → Slot02 detects ΔΣΘΩ → Slot01 anchors → Slot09 audits"
+        note: "Follow data flow: input → slots → ledgers → output"
+      - step: 3
+        action: "explain"
+        task: "Teach Nova to someone else (real or imaginary)"
+        topics: ["Rule of Sunlight", "Why 3 ledgers?", "Why slots can't attest?"]
+        note: "If you can teach it, you've internalized it."
+      - step: 4
+        action: "critique"
+        task: "Find 3 things Nova does well and 3 gaps/risks"
+        use: ".artifacts/audit_master_summary.md for gaps"
+        note: "Honest assessment proves understanding > cheerleading."
+    checkpoint:
+      verify_mastery:
+        - "Explain Nova's core innovation in 2 sentences"
+        - "What would break if we merged ledgers 1 and 2?"
+        - "Design a new Slot11. What contracts would it need?"
+        - "Propose a test for an untested edge case"
+        - "Identify a failure mode not covered by current safeguards"
+      final_exam:
+        - "Read a random code file you haven't seen yet"
+        - "Predict: Which slot owns this? What contracts does it use?"
+        - "Verify your prediction by reading meta.yaml + tests"
+        - "If wrong, explain WHY you were wrong (updates mental model)"
 
 # ============================================================================
 # ARCHITECTURE — Canonical Slot Map

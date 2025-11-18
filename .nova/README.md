@@ -83,6 +83,14 @@ The canonical navigation index for Nova. Contains:
 - **Experiment**: Add flag, gate behavior, test, verify rollback
 - **Verify**: Toggle flag → behavior reverts cleanly
 
+### Phase 5: Synthesis (~30 min) **NEW**
+- **Goal**: Build complete mental model
+- **Draw**: Full architecture from memory (no peeking)
+- **Trace**: End-to-end data flow for a user action
+- **Explain**: Teach Nova to someone else
+- **Critique**: Find 3 strengths + 3 gaps/risks
+- **Final Exam**: Read unknown code, predict slot ownership, verify
+
 ## Runtime State Sources
 
 | Source | Command | Provides |
