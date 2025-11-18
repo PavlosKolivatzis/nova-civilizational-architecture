@@ -158,6 +158,32 @@ signals:
     range: [0, 1]
     desc: "Graph-theoretic coherence of narrative structure"
 
+  # Coordination framework outputs
+  resonance_index:
+    type: Scalar
+    range: [0, 1]
+    desc: "Mean cosine similarity across all slot outputs (CRR)"
+  cross_slot_phase_error:
+    type: Scalar
+    desc: "Phase difference between TruthAnchor and TRI Engine outputs"
+  ethical_gradient:
+    type: Vector
+    desc: "Composite ethical direction [transparency, non_domination, reciprocity, accuracy]"
+  neuro_epistemic_vector:
+    type: Vector
+    desc: "Coupled psychological-informational state representation"
+  attention_stability:
+    type: Scalar
+    range: [0, 1]
+    desc: "Temporal stability of neuro-epistemic coupling"
+  provenance_hashes:
+    type: Vector
+    desc: "SHA3-256 hashes of all transformations in audit graph"
+  federated_consensus:
+    type: Scalar
+    range: [0, 1]
+    desc: "ADMM consensus score across distributed Nova nodes"
+
   # Ethics
   consent_profile: {type: Text, desc: "CE-001 policy id"}
 
@@ -416,6 +442,192 @@ frameworks:
       improvement_p_value: 0.001
     interfaces: {upstream: [deltaTHRESH, DistortionProtection, Constellation], downstream: [WisdomGovernor, DistortionProtection]}
 
+# ---------- Coordination Frameworks (Meta-Layers) ----------
+# These frameworks provide cross-cutting coordination, validation, and federation capabilities.
+# They observe and coordinate without participating in primary data flow (architectural hygiene).
+
+coordination_frameworks:
+  - id: CRR
+    slot_id: null  # Cross-cutting coordination layer
+    name: Cognitive Resonance Registry
+    purpose: "Quantify inter-slot alignment to prevent mission drift"
+    category: structural_coherence
+    inputs: [slot_outputs_all, truth_vector, tri_score, spectral_entropy_H, equilibrium_ratio_rho]
+    outputs: [resonance_index, cross_slot_phase_error, divergence_alerts]
+    state_variables: [resonance_index, phase_history, divergence_threshold]
+    transformations:
+      - name: inter_slot_alignment_tracking
+        in: [slot_outputs_all]
+        out: [resonance_index]
+        rule: "mean_cosine_similarity(Slot1..Slot9 embeddings)"
+        impl_ref: "src.nova.coordination.crr.alignment.track_resonance"
+      - name: semantic_drift_alerting
+        in: [resonance_index, phase_history]
+        out: [divergence_alerts]
+        rule: "alert if resonance_index < 0.7 OR phase_drift > 0.3"
+        impl_ref: "src.nova.coordination.crr.drift.detect_divergence"
+      - name: cross_slot_phase_error
+        in: [slot_outputs_all]
+        out: [cross_slot_phase_error]
+        rule: "phase_diff(Slot1.truth_vector, Slot4.tri_coherence)"
+        impl_ref: "src.nova.coordination.crr.phase.compute_error"
+    integration:
+      feeds_to: [ARC]
+      observes: [1, 2, 4, 5, 7, 9]
+      mode: read_only_observer
+    interfaces: {upstream: [ALL_SLOTS], downstream: [ARC]}
+
+  - id: MSE
+    slot_id: null
+    name: Meta-Statistical Engine
+    purpose: "Validate all quantitative metrics statistically before propagation"
+    category: scientific_validation
+    inputs: [reflex_integrity, tri_score, spectral_entropy_H, detection_results]
+    outputs: [validated_signals, statistical_confidence, p_values]
+    state_variables: [validation_history, significance_threshold]
+    parameters: {significance_level: 0.05, bootstrap_iterations: 1000}
+    transformations:
+      - name: t_test_validation
+        in: [reflex_integrity, validation_history]
+        out: [statistical_confidence]
+        rule: "two-sample t-test against baseline distribution, p < 0.05"
+        impl_ref: "src.nova.coordination.mse.tests.t_test"
+      - name: bootstrap_distribution
+        in: [tri_score]
+        out: [validated_signals, p_values]
+        rule: "bootstrap resampling (n=1000) to estimate confidence intervals"
+        impl_ref: "src.nova.coordination.mse.tests.bootstrap"
+      - name: chi_square_pattern_validation
+        in: [detection_results]
+        out: [statistical_confidence]
+        rule: "χ² test for pattern detection against null hypothesis"
+        impl_ref: "src.nova.coordination.mse.tests.chi_square"
+    policy: "promote signal only if p < 0.05"
+    integration:
+      gates_for: [deltaTHRESH, TRI_Engine]
+      validates_before_propagation: true
+    interfaces: {upstream: [deltaTHRESH, TRI_Engine, ARC], downstream: [ALL_SLOTS]}
+
+  - id: EVF
+    slot_id: null
+    name: Ethical Vector Field
+    purpose: "Continuous ethical gradient for dynamic decision weighting"
+    category: ethical_coordination
+    inputs: [cultural_context, threat_level, civilizational_phase, consent_profile]
+    outputs: [ethical_gradient, ethical_weight_vector, constraint_violations]
+    state_variables: [base_vectors, dynamic_modifiers, current_gradient]
+    base_vectors: [transparency, non_domination, reciprocity, accuracy]
+    transformations:
+      - name: base_vector_composition
+        in: [base_vectors]
+        out: [ethical_gradient]
+        rule: "weighted sum: w_transparency * v_transparency + w_non_dom * v_non_dom + ..."
+        impl_ref: "src.nova.coordination.evf.composition.compute_gradient"
+      - name: dynamic_modifier_integration
+        in: [cultural_context, threat_level, civilizational_phase]
+        out: [ethical_gradient]
+        rule: "modulate base_vectors by (cultural_weight, threat_multiplier, phase_scaling)"
+        impl_ref: "src.nova.coordination.evf.modifiers.apply_dynamics"
+      - name: constraint_violation_detection
+        in: [ethical_gradient, consent_profile]
+        out: [constraint_violations]
+        rule: "detect when actions violate ethical gradient thresholds"
+        impl_ref: "src.nova.coordination.evf.validation.check_violations"
+    integration:
+      feeds_to: [WisdomGovernor, CivilizationalDeployment]
+      sources: [Slot6_CulturalSynthesis, Slot9_DistortionProtection, Slot10_Deployment]
+    interfaces: {upstream: [Slot6, Slot9, Slot10], downstream: [WisdomGovernor]}
+
+  - id: NEM
+    slot_id: null
+    name: Neuro-Epistemic Map
+    purpose: "Bridge psychological (PAD.E.L) and informational (INF-o-INITY) layers"
+    category: cognitive_coordination
+    inputs: [emotional_coherence, narrative_coherence, reflex_integrity, distortion_index]
+    outputs: [neuro_epistemic_vector, attention_stability, cognitive_load_estimate]
+    state_variables: [coupling_coefficients, stability_history]
+    transformations:
+      - name: emotional_narrative_coupling
+        in: [emotional_coherence, narrative_coherence]
+        out: [neuro_epistemic_vector]
+        rule: "cross-correlate emotional salience with narrative coherence"
+        impl_ref: "src.nova.coordination.nem.coupling.compute_coupling"
+      - name: cognitive_load_calibration
+        in: [reflex_integrity, distortion_index]
+        out: [cognitive_load_estimate]
+        rule: "estimate cognitive_load = f(distortion_probability, reflex_complexity)"
+        impl_ref: "src.nova.coordination.nem.calibration.estimate_load"
+      - name: attention_stability_tracking
+        in: [neuro_epistemic_vector, stability_history]
+        out: [attention_stability]
+        rule: "measure temporal stability of neuro-epistemic coupling"
+        impl_ref: "src.nova.coordination.nem.stability.track_attention"
+    integration:
+      bridges: [PAD_E_L, INF_o_INITY]
+      enables: "human-system cognition loop modeling"
+    interfaces: {upstream: [ARC.PAD_E_L, ARC.INF_o_INITY], downstream: [WisdomGovernor]}
+
+  - id: PAG
+    slot_id: null
+    name: Provenance & Audit Graph
+    purpose: "Transparent lineage of every variable and decision"
+    category: traceability
+    inputs: [all_transformations, all_state_changes, external_inputs]
+    outputs: [audit_graph, provenance_hashes, attestation_chain]
+    state_variables: [graph_state, hash_chain, signature_history]
+    hash_function: sha3_256
+    attestation_method: truth_anchor_signature
+    transformations:
+      - name: graph_construction
+        in: [all_transformations, all_state_changes]
+        out: [audit_graph]
+        rule: "build DAG: nodes=[slots, datasets], edges=[transformations, decisions]"
+        impl_ref: "src.nova.coordination.pag.graph.construct"
+      - name: provenance_hashing
+        in: [audit_graph]
+        out: [provenance_hashes]
+        rule: "sha3_256(node_content || parent_hashes)"
+        impl_ref: "src.nova.coordination.pag.hashing.compute_provenance"
+      - name: attestation_chaining
+        in: [provenance_hashes, signature_history]
+        out: [attestation_chain]
+        rule: "link attestations with TruthAnchor signatures"
+        impl_ref: "src.nova.coordination.pag.attestation.chain"
+    integration:
+      cross_references: [MetaLegitimacySeal]
+      supports: [Slot10_CivilizationalDeployment]
+    interfaces: {upstream: [TruthAnchor, ALL_SLOTS], downstream: [Slot10, attest_ledger]}
+
+  - id: FB
+    slot_id: null
+    name: Federation Bridge
+    purpose: "Cross-node synchronization for distributed Nova instances"
+    category: infrastructure_federation
+    inputs: [tri_mean, entropy_norm, resonance_index, ethical_gradient]
+    outputs: [sync_status, federated_consensus, node_health]
+    state_variables: [peer_list, sync_history, consensus_state]
+    parameters: {update_rate: 3600, handshake_protocol: "PQC_signed_ledger"}
+    transformations:
+      - name: handshake_negotiation
+        in: [peer_list]
+        out: [sync_status]
+        rule: "PQC-signed ledger exchange for mutual authentication"
+        impl_ref: "src.nova.coordination.fb.handshake.negotiate"
+      - name: metric_synchronization
+        in: [tri_mean, entropy_norm, resonance_index]
+        out: [federated_consensus]
+        rule: "ADMM-based consensus optimization across nodes"
+        impl_ref: "src.nova.coordination.fb.sync.federated_consensus"
+      - name: fallback_isolation
+        in: [sync_status, node_health]
+        out: [sync_status]
+        rule: "switch to isolated_autonomy if sync fails > 3 cycles"
+        impl_ref: "src.nova.coordination.fb.fallback.isolate"
+    integration:
+      enables: "civilizational-scale federation"
+      fallback_mode: isolated_autonomy
+    interfaces: {upstream: [Slot10, CRR, MSE], downstream: [external_nova_nodes]}
+
 # ---------- Validation & Testing ----------
 validation:
   required_frameworks: [TruthAnchor, deltaTHRESH, TRI_Engine, Constellation, WisdomGovernor, DistortionProtection, ARC]
@@ -510,15 +722,27 @@ metrics:
 
 # ---------- CONTINUATION PROMPT ----------
 # Context: Nova Framework Ontology v1.0 grounded in Universal Structure Mathematics
-# State: Defined 7 core frameworks with slot_id mappings (1,2,4,5,7,9 + ARC cross-cutting)
+# State: 7 core frameworks (slots 1,2,4,5,7,9 + ARC) + 6 coordination frameworks (CRR,MSE,EVF,NEM,PAG,FB)
 # Status: Empirically validated (99.7% accuracy, 1082 tests), USM theorems integrated
+# Architecture:
+#   Core Slots: TruthAnchor(1), ΔTHRESH(2), TRI(4), Constellation(5), WisdomGov(7), DistortionProt(9)
+#   Analytic Instruments: PAD.E.L (psychological filter), INF-o-INITY (informational filter)
+#   Coordination: CRR (coherence), MSE (validation), EVF (ethics), NEM (cognition), PAG (provenance), FB (federation)
 # Fixes Applied:
 #   - Explicit slot mappings (1,2,4,5,7,9)
 #   - Slot01/09 full definitions (TruthAnchor, DistortionProtection)
 #   - Spectral entropy clarity (raw H>2.5 vs normalized ε>0.7)
 #   - Convergence rates (κ_state, κ_energy for ADMM)
 #   - PAD.E.L & INF-o-INITY as analytic_instruments under ARC
-#   - Integration hooks: arc.invoke('padel', state) / arc.invoke('infoinity', signals)
-# Next: Implement src/nova/ontology/ (loader, validator, enforcer) + src/nova/arc/instruments/ + tests
+#   - 6 coordination frameworks for integrity, adaptability, civilizational scalability
+# Integration Patterns:
+#   - arc.invoke('padel', state) / arc.invoke('infoinity', signals)
+#   - CRR.resonance_index → ARC (mission drift prevention)
+#   - MSE.p_values → deltaTHRESH/TRI (statistical validation gates)
+#   - EVF.ethical_gradient → WisdomGovernor (continuous ethics)
+#   - NEM.neuro_epistemic_vector → WisdomGovernor (human-AI cognition loop)
+#   - PAG.provenance_hashes → TruthAnchor/Slot10 (verifiable traceability)
+#   - FB.federated_consensus → Slot10 (distributed Nova synchronization)
+# Next: Implement src/nova/ontology/ (loader, validator, enforcer) + coordination/ + arc/instruments/ + tests
 # Key refs: .nova/meta.yaml learning_path, USM paper spectral/equilibrium math, ARC self-improvement
-# Critical: Maintain 3-ledger separation, role enforcement, consent gates, empirical thresholds
+# Critical: Maintain 3-ledger separation, role enforcement, consent gates, empirical thresholds, read-only observers
