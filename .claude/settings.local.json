@@ -16,7 +16,10 @@
       "Bash(git tag:*)",
       "Bash(curl:*)",
       "Bash(git fetch:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm run nova:status:*)",
+      "Bash(bash tools/nova-welcome.sh:*)",
+      "Bash(powershell -NoLogo -NoProfile -Command \".\\tools\\nova-welcome.ps1 -Compact\")"
     ],
     "deny": [],
     "ask": []
