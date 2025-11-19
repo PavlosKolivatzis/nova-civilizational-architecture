@@ -24,6 +24,12 @@ import typing as _typing
 from prometheus_client import Gauge as _Gauge
 from nova.governor import state as governor_state
 from nova.metrics.registry import REGISTRY as _REGISTRY
+from orchestrator.thresholds.manager import get_threshold, snapshot_thresholds
+
+try:  # pragma: no cover - semantic mirror not always available in tests
+    from orchestrator.semantic_mirror import publish as _publish_context
+except Exception:  # pragma: no cover
+    _publish_context = None
 
 __all__ = ["compute_max_concurrent_jobs", "get_backpressure_config", "get_tri_signal_snapshot"]
 
@@ -51,7 +57,10 @@ def get_backpressure_config() -> Tuple[int, int, int, float]:
     baseline = int(os.getenv("NOVA_SLOT07_MAX_JOBS_BASELINE", "16"))
     frozen = int(os.getenv("NOVA_SLOT07_MAX_JOBS_FROZEN", "2"))
     reduced = int(os.getenv("NOVA_SLOT07_MAX_JOBS_REDUCED", "6"))
-    threshold = float(os.getenv("NOVA_SLOT07_STABILITY_THRESHOLD", "0.03"))
+    try:
+        threshold = get_threshold("slot07_stability_threshold")
+    except KeyError:
+        threshold = float(os.getenv("NOVA_SLOT07_STABILITY_THRESHOLD", "0.03"))
 
     # Safety: ensure frozen < reduced < baseline
     frozen = max(1, min(frozen, baseline // 2))
@@ -90,6 +99,30 @@ def get_tri_signal_snapshot() -> _typing.Dict[str, _typing.Any]:
     return dict(_tri_signal_snapshot)
 
 
+def _as_float(value: _typing.Any) -> float | None:
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _publish_backpressure_context(payload: dict) -> None:
+    """Publish backpressure diagnostics to Semantic Mirror."""
+    if not _publish_context:
+        return
+    try:
+        _publish_context(
+            "slot07.backpressure_state",
+            payload,
+            "slot07_production_controls",
+            ttl=180.0,
+        )
+    except Exception:
+        return
+
+
 def _decide_job_cap(stability_margin: float | None = None) -> Tuple[int, int]:
     """
     Decide Slot 7 job cap, emitting Prometheus gauges for observability.
@@ -100,39 +133,55 @@ def _decide_job_cap(stability_margin: float | None = None) -> Tuple[int, int]:
     Returns:
         Tuple[int, int]: (cap, reason_code)
     """
-    baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
-    cap, reason = baseline, 0
+    baseline, frozen_jobs, reduced_jobs, stability_threshold = get_backpressure_config()
+    thresholds = snapshot_thresholds()
+    tri_drift_threshold = thresholds.get("slot07_tri_drift_threshold", 2.2)
+    stability_freeze_threshold = thresholds.get("slot07_stability_threshold_tri", 0.05)
+    tri_min_coherence = thresholds.get("tri_min_coherence", 0.65)
 
     tri_signal = _read_tri_truth_signal()
     tri_band = (tri_signal.get("tri_band") or "").lower() if tri_signal else ""
+    tri_coherence = _as_float(tri_signal.get("tri_coherence")) if tri_signal else None
+    tri_drift = _as_float(tri_signal.get("tri_drift_z")) if tri_signal else None
 
-    if governor_state.is_frozen() or tri_band == "red":
+    observed_stability = stability_margin if stability_margin is not None else _try_read_stability_from_poller()
+
+    if governor_state.is_frozen() or tri_band == "red" or (
+        observed_stability is not None and observed_stability < stability_freeze_threshold
+    ):
         cap, reason = frozen_jobs, 2
     else:
-        S = stability_margin if stability_margin is not None else _try_read_stability_from_poller()
-        if tri_signal:
-            drift = tri_signal.get("tri_drift_z")
-            try:
-                drift = float(drift)
-            except (TypeError, ValueError):
-                drift = None
-            if drift is not None:
-                drift_threshold = float(os.getenv("NOVA_SLOT07_TRI_DRIFT_THRESHOLD", "2.2"))
-                if drift >= drift_threshold:
-                    threshold = max(threshold, float(os.getenv("NOVA_SLOT07_STABILITY_THRESHOLD_TRI", "0.05")))
+        reduce = False
+        if tri_drift is not None and tri_drift >= tri_drift_threshold:
+            reduce = True
+        if tri_band == "amber":
+            reduce = True
+        if tri_coherence is not None and tri_coherence < tri_min_coherence:
+            reduce = True
+        if observed_stability is not None and observed_stability < stability_threshold:
+            reduce = True
 
-        if S is None:
-            cap, reason = baseline, 0
-        elif S < threshold:
-            cap, reason = reduced_jobs, 1
-        else:
-            cap, reason = baseline, 0
-
-        if tri_band == "amber" and reason == 0:
-            cap, reason = reduced_jobs, 1
+        cap, reason = (reduced_jobs, 1) if reduce else (baseline, 0)
 
     _slot7_jobs_current.set(cap)
     _slot7_jobs_reason.set(reason)
+    _publish_backpressure_context(
+        {
+            "cap": cap,
+            "reason": reason,
+            "baseline": baseline,
+            "reduced_jobs": reduced_jobs,
+            "frozen_jobs": frozen_jobs,
+            "stability_margin": observed_stability,
+            "tri_signal": tri_signal or None,
+            "thresholds": {
+                "slot07_stability_threshold": stability_threshold,
+                "slot07_stability_threshold_tri": stability_freeze_threshold,
+                "slot07_tri_drift_threshold": tri_drift_threshold,
+                "tri_min_coherence": tri_min_coherence,
+            },
+        }
+    )
     return cap, reason
 
 
@@ -188,7 +237,8 @@ def get_backpressure_status(stability_margin: float | None = None) -> _typing.Di
     Returns:
         dict: Status including current max_jobs, frozen state, stability margin
     """
-    baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
+    baseline, frozen_jobs, reduced_jobs, stability_threshold = get_backpressure_config()
+    thresholds = snapshot_thresholds()
     observed_stability = stability_margin if stability_margin is not None else _try_read_stability_from_poller()
     max_jobs, reason = _decide_job_cap(stability_margin=observed_stability)
     tri_signal = get_tri_signal_snapshot()
@@ -203,7 +253,13 @@ def get_backpressure_status(stability_margin: float | None = None) -> _typing.Di
             "baseline_jobs": baseline,
             "frozen_jobs": frozen_jobs,
             "reduced_jobs": reduced_jobs,
-            "stability_threshold": threshold,
+            "stability_threshold": stability_threshold,
+            "thresholds": {
+                "slot07_stability_threshold": thresholds.get("slot07_stability_threshold"),
+                "slot07_stability_threshold_tri": thresholds.get("slot07_stability_threshold_tri"),
+                "slot07_tri_drift_threshold": thresholds.get("slot07_tri_drift_threshold"),
+                "tri_min_coherence": thresholds.get("tri_min_coherence"),
+            },
         },
     }
 

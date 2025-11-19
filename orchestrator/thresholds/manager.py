@@ -117,3 +117,12 @@ def get_threshold(key: str) -> float:
 def snapshot_thresholds() -> Dict[str, float]:
     return _threshold_manager.snapshot()
 
+
+def reset_threshold_manager_for_tests() -> None:
+    """Reset the threshold manager cache (testing only)."""
+    global _threshold_manager
+    _threshold_manager = ThresholdManager()
+    try:
+        ThresholdManager.load.cache_clear()  # type: ignore[attr-defined]
+    except AttributeError:
+        pass

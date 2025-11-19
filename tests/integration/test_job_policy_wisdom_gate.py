@@ -13,6 +13,7 @@ import pytest
 
 from config.feature_flags import get_production_controls_config
 from nova.governor import state as governor_state
+from orchestrator.thresholds.manager import reset_threshold_manager_for_tests
 from nova.slots.slot07_production_controls.production_control_engine import (
     ProductionControlEngine,
 )
@@ -28,6 +29,7 @@ def setup_function():
     os.environ["NOVA_SLOT07_MAX_JOBS_BASELINE"] = "16"
     os.environ["NOVA_SLOT07_MAX_JOBS_FROZEN"] = "2"
     os.environ["NOVA_SLOT07_MAX_JOBS_REDUCED"] = "6"
+    reset_threshold_manager_for_tests()
 
 
 def teardown_function():
@@ -46,12 +48,23 @@ def test_baseline_parallelism_when_stable():
     assert max_jobs == 16  # Baseline
 
 
-def test_reduced_parallelism_when_unstable():
-    """Test that unstable system reduces parallelism."""
+def test_reduced_parallelism_when_tri_drift_high(monkeypatch):
+    """High TRI drift should reduce parallelism."""
     governor_state.set_frozen(False)
+    monkeypatch.setattr(
+        "nova.slots.slot07_production_controls.wisdom_backpressure._read_tri_truth_signal",
+        lambda: {"tri_drift_z": 5.0},
+    )
 
-    max_jobs = compute_max_concurrent_jobs(stability_margin=0.02)  # Low S
-    assert max_jobs == 6  # Reduced
+    max_jobs = compute_max_concurrent_jobs(stability_margin=0.08)
+    assert max_jobs == 6
+
+
+def test_low_stability_freezes_system():
+    """Critical stability drop should freeze production."""
+    governor_state.set_frozen(False)
+    max_jobs = compute_max_concurrent_jobs(stability_margin=0.01)
+    assert max_jobs == 2
 
 
 def test_minimal_parallelism_when_frozen():
