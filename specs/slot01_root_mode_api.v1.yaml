@@ -1,0 +1,146 @@
+schema: nova_slot_api/v1
+slot_id: 1
+name: Truth Anchor Root API
+version: "1.2.0"
+
+description: >
+  Root-mode API for Slot 01 Truth Anchor. Provides immutable anchor
+  registration, lookup, verification and recovery. Does not participate
+  in the flow mesh and does not emit inter-slot contracts.
+
+layer: foundational
+participates_in_flow_mesh: false
+participates_in_reflex: false
+participates_in_governor_throttling: false
+participates_in_tri: false
+
+interfaces:
+  rpc_style: request_response
+  transport: internal_orchestrator_call
+
+operations:
+  register:
+    description: Register a new immutable anchor with value and optional metadata.
+    idempotent: false
+    params:
+      anchor_id:
+        type: string
+        description: Globally unique identifier for the anchor.
+      value:
+        type: string
+        description: Exact anchored value (immutable once stored).
+      metadata:
+        type: object
+        required: false
+        description: Arbitrary metadata (source, timestamp, tags).
+    returns:
+      type: object
+      fields:
+        status:
+          type: string
+          enum: ["ok", "error"]
+        error:
+          type: string
+          required: false
+
+  lookup:
+    description: Lookup an existing anchor by id.
+    idempotent: true
+    params:
+      anchor_id:
+        type: string
+    returns:
+      type: object
+      fields:
+        found:
+          type: boolean
+        value:
+          type: string
+          required: false
+        metadata:
+          type: object
+          required: false
+
+  verify:
+    description: Verify that a given claim matches the stored anchor (and RealityLock if enabled).
+    idempotent: true
+    params:
+      anchor_id:
+        type: string
+      claim:
+        type: string
+    returns:
+      type: object
+      fields:
+        valid:
+          type: boolean
+        reason:
+          type: string
+          required: false
+
+  recover:
+    description: Attempt best-effort recovery for a corrupted or missing anchor record.
+    idempotent: false
+    params:
+      anchor_id:
+        type: string
+    returns:
+      type: object
+      fields:
+        status:
+          type: string
+          enum: ["ok", "not_found", "error"]
+        recovered:
+          type: boolean
+          required: false
+        error:
+          type: string
+          required: false
+
+  snapshot:
+    description: Return internal metrics snapshot for observability/debugging.
+    idempotent: true
+    params: {}
+    returns:
+      type: object
+      fields:
+        anchors:
+          type: integer
+        lookups:
+          type: integer
+        recoveries:
+          type: integer
+        failures:
+          type: integer
+
+  export_secret_key:
+    description: Export the current secret key for enhanced RealityLock mode (operator-only).
+    idempotent: true
+    params: {}
+    returns:
+      type: object
+      fields:
+        key:
+          type: string
+
+constraints:
+  dynamic_content_analysis: false
+  emits_slot_contracts: false
+  accepts_probabilistic_state: false
+  engine_selection:
+    mode: static
+    configured_by: SLOT1_ENHANCED_MODE
+    allows_auto_fallback: false
+
+metrics:
+  prometheus:
+    - nova_slot1_anchors_total
+    - nova_slot1_lookups_total
+    - nova_slot1_recoveries_total
+    - nova_slot1_failures_total
+
+config:
+  flags:
+    - SLOT1_STORAGE_PATH
+    - SLOT1_ENHANCED_MODE
+    - NOVA_GM_ENABLED

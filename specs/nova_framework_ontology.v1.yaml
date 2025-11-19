@@ -227,28 +227,21 @@ role_separation:
 frameworks:
   - id: TruthAnchor
     slot_id: 1
-    name: Truth Anchor & Cryptographic Verification
-    purpose: "Hash-chain management, cryptographic verification, attestation integrity"
-    inputs: [content, context, claim_hash]
-    outputs: [truth_hash, verification_status, chain_integrity, attest_hash]
-    state_variables: [prev_hash, merkle_root]
-    transformations:
-      - name: hash_content
-        in: [content, context]
-        out: [truth_hash]
-        rule: "blake2b(content || context) if NOVA_USE_SHARED_HASH else sha256"
-        impl_ref: "src.nova.slots.slot01_truth_anchor.hashing.compute_hash"
-      - name: verify_chain
-        in: [truth_hash, prev_hash]
-        out: [chain_integrity]
-        rule: "validate hash chain continuity + merkle tree consistency"
-        impl_ref: "src.nova.slots.slot01_truth_anchor.verification.verify_chain"
-      - name: create_attestation
-        in: [claim_hash, truth_hash, prev_hash]
-        out: [attest_hash]
-        rule: "write to attest_ledger with signature"
-        impl_ref: "src.nova.slots.slot01_truth_anchor.attest.create_entry"
-    interfaces: {upstream: [ALL_SLOTS], downstream: [attest_ledger]}
+    name: Truth Anchor Root API
+    purpose: "Immutable anchor registration, lookup, verification, and recovery. Zero adaptivity."
+    api_spec: "specs/slot01_root_mode_api.v1.yaml"
+    participates_in_flow_mesh: false
+    participates_in_reflex: false
+    participates_in_governor_throttling: false
+    participates_in_tri: false
+    inputs: []  # Root mode: no dynamic inputs
+    outputs: []  # Root mode: no inter-slot contracts
+    state_variables: []  # Internal persistence only
+    transformations: []  # No transformations - pure RPC service
+    interfaces:
+      rpc_operations: [register, lookup, verify, recover, snapshot, export_secret_key]
+      upstream: []  # Does not consume contracts
+      downstream: []  # Does not emit contracts
 
   - id: deltaTHRESH
     slot_id: 2
