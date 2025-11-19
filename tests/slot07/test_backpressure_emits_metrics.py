@@ -9,8 +9,12 @@ from nova.slots.slot07_production_controls.wisdom_backpressure import decide_job
 
 def test_slot7_emits_metrics_on_decision(monkeypatch):
     monkeypatch.setattr(governor_state, "is_frozen", lambda: False)
-    cap = decide_job_cap(stability_margin=0.02)
-    assert cap == 6  # reduced_jobs default
+    monkeypatch.setattr(
+        "nova.slots.slot07_production_controls.wisdom_backpressure._read_tri_truth_signal",
+        lambda: {"tri_drift_z": 5.0},
+    )
+    cap = decide_job_cap(stability_margin=0.08)
+    assert cap == 6  # reduced_jobs default when drift high
 
     metrics = generate_latest(REGISTRY).decode("utf-8")
     assert re.search(r"^nova_slot07_jobs_current\s+6(\.0+)?$", metrics, re.MULTILINE)

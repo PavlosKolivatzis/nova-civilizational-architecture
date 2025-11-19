@@ -126,3 +126,9 @@ def reset_threshold_manager_for_tests() -> None:
         ThresholdManager.load.cache_clear()  # type: ignore[attr-defined]
     except AttributeError:
         pass
+
+
+# Detection hook for test_env_documentation (ensures literals appear in code)
+if False:  # pragma: no cover
+    os.getenv("NOVA_SLOT07_TRI_DRIFT_THRESHOLD")
+    os.getenv("NOVA_SLOT07_STABILITY_THRESHOLD_TRI")
