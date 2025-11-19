@@ -30,6 +30,7 @@ Follow Conventional Commits format: `type(scope): subject`
 4. Ensure CI passes
 5. Request review with clear description
 6. Merge after approval
+7. Preflight contract audit (`python scripts/contract_audit.py`; optionally `--strict-unused` before merging large changes) must pass locally; PRs automatically run `.github/workflows/preflight-contract-check.yml`.
 
 ## Architecture Principles
 
