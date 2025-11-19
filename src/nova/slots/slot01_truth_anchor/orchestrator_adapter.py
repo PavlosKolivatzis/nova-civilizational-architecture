@@ -1,258 +1,160 @@
 """
-NOVA Slot 1: Orchestrator Adapter
-High-performance adapter for Truth Anchor Engine integration
+NOVA Slot 1: Root-Mode Orchestrator Adapter (v1.2)
+Pure deterministic anchor operations (no inference, no flow mesh)
 """
 
-import asyncio
-import inspect
-import time
-from typing import Dict, Any, Optional, Type
 import logging
+from typing import Dict, Any, Optional
 
-# Import from orchestrator contracts
-try:
-    from orchestrator.contracts import SlotResult
-except ImportError:
-    # Fallback for testing
-    from dataclasses import dataclass
-
-    @dataclass
-    class SlotResult:
-        status: str
-        data: Optional[Dict[str, Any]] = None
-        error: Optional[str] = None
-        request_id: str = ""
-        slot_id: str = "slot1_truth_anchor"
-        latency_ms: float = 0.0
+from .truth_anchor_engine import TruthAnchorEngine
 
 logger = logging.getLogger("slot1_adapter")
 
-# Engine imports -------------------------------------------------------------
-try:
-    from .truth_anchor_engine import TruthAnchorEngine as BasicTruthAnchorEngine
-except ImportError:  # pragma: no cover - defensive
-    BasicTruthAnchorEngine = None
-
-try:  # pragma: no cover - optional dependency
-    from .enhanced_truth_anchor_engine import TruthAnchorEngine as EnhancedTruthAnchorEngine
-except ImportError:  # pragma: no cover - optional dependency
-    EnhancedTruthAnchorEngine = None
-
-try:  # pragma: no cover - compatibility shim for tests
-    from .core import TruthAnchorEngine as LegacyTruthAnchorEngine  # type: ignore
-except ImportError:
-    LegacyTruthAnchorEngine = None
-
-
-class _FallbackTruthAnchorEngine:
-    """Minimal stub used when real engines are unavailable."""
-
-    async def analyze_content(self, content: str, request_id: str, domain: str):
-        return {
-            "truth_score": 0.8,
-            "anchor_stable": True,
-            "anchor_used": domain,
-            "timestamp": time.time(),
-        }
-
-    def establish_anchor(self, domain: str, facts: list) -> str:
-        return domain
-
-    def verify_anchor(self, domain: str) -> dict:
-        return {"exists": True, "verified": True, "domain": domain}
-
-    def cleanup(self) -> int:
-        return 0
 
 class Slot1Adapter:
-    """High-performance adapter for Truth Anchor Engine integration."""
+    """Root-Mode adapter for Truth Anchor. Immutable anchor lookup/verify/register."""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.engine = self._build_engine()
+
+        # Root-mode: STATIC engine selection — no adaptivity
+        self.engine = TruthAnchorEngine(
+            secret_key=self.config.get("secret_key"),
+            logger=logger,
+            storage_path=self.config.get("storage_path"),
+        )
 
         # Performance metrics
         self._total_requests = 0
         self._failed_requests = 0
-        self._avg_processing_time = 0.0
-        self._lock: asyncio.Lock | None = None
-        self._shutdown = False
 
-        logger.info("Slot 1 adapter initialized")
+        logger.info("Slot 1 adapter initialized (root-mode)")
 
-    # ------------------------------------------------------------------
-    # Engine helpers
-    # ------------------------------------------------------------------
-    def _build_engine(self):
-        engine_cls = self._select_engine_class()
-        kwargs = self._collect_engine_kwargs(engine_cls)
-        return engine_cls(**kwargs)
+    async def run(self, payload: dict, *, request_id: str) -> Dict[str, Any]:
+        """
+        Root-Mode API (v1.2):
+        Allowed operations:
+          - register(anchor_id, value, metadata)
+          - lookup(anchor_id)
+          - verify(anchor_id, claim)
+          - recover(anchor_id)
+          - snapshot()
+          - export_secret_key()
 
-    def _select_engine_class(self) -> Type:
-        preferred = (self.config.get("engine") or "auto").lower()
+        No dynamic content analysis.
+        No scoring.
+        No flow-mesh participation.
+        """
+        self._total_requests += 1
 
-        custom_cls = self.config.get("engine_cls")
-        if custom_cls:
-            return custom_cls
-        if LegacyTruthAnchorEngine:
-            return LegacyTruthAnchorEngine
-
-        if preferred == "basic" and BasicTruthAnchorEngine:
-            return BasicTruthAnchorEngine
-        if preferred == "enhanced" and EnhancedTruthAnchorEngine:
-            return EnhancedTruthAnchorEngine
-
-        if EnhancedTruthAnchorEngine and preferred in {"auto", "enhanced"}:
-            return EnhancedTruthAnchorEngine
-        if BasicTruthAnchorEngine:
-            return BasicTruthAnchorEngine
-
-        logger.warning("Falling back to stub TruthAnchorEngine implementation")
-        return _FallbackTruthAnchorEngine
-
-    def _collect_engine_kwargs(self, engine_cls: Type) -> Dict[str, Any]:
-        params = inspect.signature(engine_cls.__init__).parameters
-        accepts_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
-        candidates = {
-            "cache_max": self.config.get("cache_max", 2048),
-            "cache_ttl": self.config.get("cache_ttl", 120.0),
-            "stable_threshold": self.config.get("stable_threshold", 0.7),
-            "secret_key": self.config.get("secret_key"),
-            "storage_path": self.config.get("storage_path"),
-            "logger": self.config.get("logger", logger),
-        }
-
-        kwargs: Dict[str, Any] = {}
-        for key, value in candidates.items():
-            if value is None:
-                continue
-            if key in params or accepts_var_kw:
-                kwargs[key] = value
-        return kwargs
-
-    async def run(self, payload: dict, *, request_id: str) -> SlotResult:
-        """Execute truth analysis with robust error handling."""
-        if self._shutdown:
-            return SlotResult(
-                status="error",
-                error="adapter_shutdown",
-                request_id=request_id,
-                slot_id="slot1_truth_anchor"
-            )
-
-        start = time.perf_counter()
-
-        try:
-            # Validate payload structure
-            if not isinstance(payload, dict):
-                return self._make_error_result(
-                    "invalid_payload_type", request_id, start, "Payload must be a dictionary"
-                )
-
-            # Validate content (optional strict validation)
-            content = payload.get("content", "")
-            if not content or not isinstance(content, str):
-                return self._make_error_result(
-                    "invalid_content", request_id, start, "Content must be a non-empty string"
-                )
-
-            domain = payload.get("anchor_domain", "nova.core")
-
-            # Execute analysis
-            analysis = await self.engine.analyze_content(content, request_id, domain)
-
-            if "error" in analysis:
-                return self._make_error_result(
-                    "engine_error", request_id, start, analysis["error"]
-                )
-
-            # Prepare result data
-            slot_data = {
-                "truth_score": analysis.get("truth_score", 0.5),
-                "anchor_stable": analysis.get("anchor_stable", False),
-                "critical": analysis.get("critical", False),
-                "anchor_domain": analysis.get("anchor_used", domain),
-                "processing_metadata": {
-                    "request_timestamp": analysis.get("timestamp", time.time()),
-                    "engine_version": analysis.get("version", "unknown")
-                },
+        op = payload.get("op")
+        if not op:
+            self._failed_requests += 1
+            return {
+                "success": False,
+                "error": "missing_operation",
+                "slot": "slot01_truth_anchor",
             }
 
-            return self._make_success_result(request_id, start, slot_data)
-
-        except asyncio.CancelledError:
-            await self._update_metrics(start, success=False)
-            logger.warning(f"Request {request_id} cancelled")
-            raise  # Re-raise for proper cancellation handling
-
-        except Exception as e:
-            logger.error(f"Request {request_id} failed: {e}", exc_info=True)
-            return self._make_error_result(
-                "processing_error", request_id, start, str(e)
-            )
-
-    async def _update_metrics(self, start: float, success: bool):
-        """Update performance metrics safely."""
-        elapsed = (time.perf_counter() - start) * 1000
-
-        if self._lock is None:
-            self._lock = asyncio.Lock()
-        async with self._lock:
-            self._total_requests += 1
-            if not success:
-                self._failed_requests += 1
-
-            # Exponential moving average
-            if self._avg_processing_time == 0.0:
-                self._avg_processing_time = elapsed
-            else:
-                alpha = 0.1
-                self._avg_processing_time = (
-                    alpha * elapsed + (1 - alpha) * self._avg_processing_time
-                )
-
-    def _make_success_result(self, request_id: str, start: float, data: dict) -> SlotResult:
-        """Create a successful result with metrics update."""
-        elapsed = (time.perf_counter() - start) * 1000
-        self._safe_metrics_update(start, success=True)
-
-        return SlotResult(
-            status="ok",
-            data=data,
-            request_id=request_id,
-            slot_id="slot1_truth_anchor",
-            latency_ms=elapsed,
-        )
-
-    def _make_error_result(self, error_type: str, request_id: str,
-                          start: float, message: str) -> SlotResult:
-        """Create an error result with metrics update."""
-        elapsed = (time.perf_counter() - start) * 1000
-        self._safe_metrics_update(start, success=False)
-
-        return SlotResult(
-            status="error",
-            error=f"{error_type}:{message}",
-            request_id=request_id,
-            slot_id="slot1_truth_anchor",
-            latency_ms=elapsed,
-        )
-
-    def _safe_metrics_update(self, start: float, success: bool):
-        """Safely update metrics without blocking."""
         try:
-            # Use create_task for non-blocking metrics update
-            if hasattr(asyncio, 'get_running_loop'):
-                loop = asyncio.get_running_loop()
-                loop.create_task(self._update_metrics(start, success))
-        except RuntimeError:
-            # No event loop, update synchronously (for testing)
-            async def _sync_update():
-                await self._update_metrics(start, success)
-            asyncio.run(_sync_update())
+            if op == "register":
+                return await self._handle_register(payload)
+            elif op == "lookup":
+                return await self._handle_lookup(payload)
+            elif op == "verify":
+                return await self._handle_verify(payload)
+            elif op == "recover":
+                return await self._handle_recover(payload)
+            elif op == "snapshot":
+                return await self._handle_snapshot(payload)
+            elif op == "export_secret_key":
+                return await self._handle_export_secret_key(payload)
+            else:
+                self._failed_requests += 1
+                return {
+                    "success": False,
+                    "error": "unknown_operation",
+                    "slot": "slot01_truth_anchor",
+                }
+        except Exception as e:
+            self._failed_requests += 1
+            logger.error(f"Root-mode operation failed: {op} - {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": str(e),
+                "slot": "slot01_truth_anchor",
+            }
+
+    async def _handle_register(self, payload: dict) -> Dict[str, Any]:
+        """Register immutable anchor."""
+        anchor_id = payload.get("anchor_id")
+        value = payload.get("value")
+        metadata = payload.get("metadata", {})
+
+        if not anchor_id or value is None:
+            return {"success": False, "error": "missing_parameters", "slot": "slot01"}
+
+        self.engine.register(anchor_id, value, **metadata)
+        return {"success": True, "status": "ok", "slot": "slot01"}
+
+    async def _handle_lookup(self, payload: dict) -> Dict[str, Any]:
+        """Lookup anchor by ID."""
+        anchor_id = payload.get("anchor_id")
+        if not anchor_id:
+            return {"success": False, "error": "missing_anchor_id", "slot": "slot01"}
+
+        record = self.engine._anchors.get(anchor_id)
+        return {
+            "success": True,
+            "found": record is not None,
+            "value": record.value if record else None,
+            "metadata": record.metadata if record else None,
+            "slot": "slot01",
+        }
+
+    async def _handle_verify(self, payload: dict) -> Dict[str, Any]:
+        """Verify claim against stored anchor."""
+        anchor_id = payload.get("anchor_id")
+        claim = payload.get("claim")
+
+        if not anchor_id or claim is None:
+            return {"success": False, "error": "missing_parameters", "slot": "slot01"}
+
+        valid = self.engine.verify(anchor_id, claim)
+        return {"success": True, "valid": valid, "slot": "slot01"}
+
+    async def _handle_recover(self, payload: dict) -> Dict[str, Any]:
+        """Attempt anchor recovery."""
+        anchor_id = payload.get("anchor_id")
+        if not anchor_id:
+            return {"success": False, "error": "missing_anchor_id", "slot": "slot01"}
+
+        result = self.engine._recover(anchor_id)
+        return {
+            "success": True,
+            "recovered": result is not None,
+            "slot": "slot01",
+        }
+
+    async def _handle_snapshot(self, payload: dict) -> Dict[str, Any]:
+        """Return engine metrics snapshot."""
+        return {
+            "success": True,
+            "snapshot": self.engine.snapshot(),
+            "slot": "slot01",
+        }
+
+    async def _handle_export_secret_key(self, payload: dict) -> Dict[str, Any]:
+        """Export secret key (operator-only)."""
+        key = self.engine.export_secret_key()
+        return {
+            "success": True,
+            "key": key.hex(),
+            "slot": "slot01",
+        }
 
     def get_metrics(self) -> Dict[str, Any]:
-        """Get comprehensive performance metrics."""
+        """Get adapter performance metrics."""
         total = max(1, self._total_requests)
         success_count = self._total_requests - self._failed_requests
 
@@ -260,60 +162,30 @@ class Slot1Adapter:
             "total_requests": self._total_requests,
             "failed_requests": self._failed_requests,
             "success_rate": round(success_count / total, 4),
-            "avg_processing_time_ms": round(self._avg_processing_time, 2),
             "success_count": success_count,
-            "uptime_seconds": getattr(self, '_uptime', 0),
         }
 
-    # Passthrough methods with error handling
-    def establish_anchor(self, domain: str, facts: list) -> str:
-        """Establish a cryptographic truth anchor."""
-        try:
-            if not domain or not facts:
-                raise ValueError("Domain and facts are required")
-            return self.engine.establish_anchor(domain, facts)
-        except Exception as e:
-            logger.error(f"Failed to establish anchor {domain}: {e}")
-            raise
-
-    def verify_anchor(self, domain: str) -> dict:
-        """Verify a cryptographic truth anchor."""
-        try:
-            if not domain:
-                raise ValueError("Domain is required")
-            return self.engine.verify_anchor(domain)
-        except Exception as e:
-            logger.error(f"Failed to verify anchor {domain}: {e}")
-            return {"exists": False, "verified": False, "error": str(e)}
-
-    def cleanup_cache(self) -> int:
-        """Clean up engine cache."""
-        try:
-            if hasattr(self.engine, 'cleanup'):
-                return self.engine.cleanup()
-            return 0
-        except Exception as e:
-            logger.error(f"Cache cleanup failed: {e}")
-            return 0
-
     async def shutdown(self):
-        """Graceful shutdown of the adapter."""
-        self._shutdown = True
-        logger.info("Slot 1 adapter shutting down")
+        """Graceful shutdown."""
+        logger.info("Slot 1 adapter shutting down (root-mode)")
+
 
 # Global instance
 slot1_adapter = Slot1Adapter()
 
-async def run(payload: dict, *, request_id: str) -> SlotResult:
+
+async def run(payload: dict, *, request_id: str) -> Dict[str, Any]:
     """Orchestrator entry point."""
     return await slot1_adapter.run(payload, request_id=request_id)
 
+
 async def initialize(config: Optional[Dict[str, Any]] = None) -> Slot1Adapter:
-    """Initialize the adapter with configuration."""
+    """Initialize adapter with configuration."""
     global slot1_adapter
     slot1_adapter = Slot1Adapter(config)
     return slot1_adapter
 
+
 async def shutdown():
-    """Clean shutdown of the adapter."""
+    """Clean shutdown."""
     await slot1_adapter.shutdown()
