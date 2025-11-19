@@ -2,15 +2,7 @@
 
 import logging
 
-from prometheus_client import (
-    Gauge,
-    Counter,
-    Histogram,
-    Info,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-    CollectorRegistry,
-)
+from prometheus_client import Gauge, Counter, Histogram, Info, generate_latest, CONTENT_TYPE_LATEST
 from collections import defaultdict
 from typing import Dict
 import subprocess
@@ -18,12 +10,14 @@ from time import strftime, gmtime
 from os import getenv
 
 from orchestrator.metrics import get_slot6_metrics
+from orchestrator.prometheus.internal_registry import nova_internal_registry
+from orchestrator.prometheus.public_registry import nova_public_registry
 from nova.federation.metrics import get_registry as get_federation_registry
 from nova.metrics.registry import REGISTRY
 
 # Dedicated registries (internal + public)
-_INTERNAL_REGISTRY = REGISTRY
-_PUBLIC_REGISTRY = CollectorRegistry()
+_INTERNAL_REGISTRY = nova_internal_registry
+_PUBLIC_REGISTRY = nova_public_registry
 # Backward compatibility for modules importing _REGISTRY directly
 _REGISTRY = _INTERNAL_REGISTRY
 logger = logging.getLogger(__name__)
@@ -92,6 +86,31 @@ feature_flag_gauge_public = Gauge(
     ["flag"],
     registry=_PUBLIC_REGISTRY,
 )
+
+# Threshold gauges (Phase 3)
+_threshold_value_gauge = Gauge(
+    "nova_threshold_value",
+    "Configured threshold values across slots",
+    ["name"],
+    registry=_INTERNAL_REGISTRY,
+)
+_threshold_override_gauge = Gauge(
+    "nova_threshold_override_active",
+    "Whether a given threshold is overridden via environment",
+    ["name"],
+    registry=_INTERNAL_REGISTRY,
+)
+
+
+def threshold_gauge(name: str, value: float) -> None:
+    """Expose threshold value to Prometheus (internal registry only)."""
+    _threshold_value_gauge.labels(name=name).set(value)
+
+
+def threshold_override_gauge(name: str, value: float) -> None:
+    """Expose whether an environment override is applied (1.0) or not (0.0)."""
+    _threshold_override_gauge.labels(name=name).set(value)
+
 
 # --- LightClock & System Health metrics ------------------------------------
 lightclock_phase_lock_gauge = Gauge(
