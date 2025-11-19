@@ -373,12 +373,14 @@ def update_flag_metrics() -> None:
 
     prom_on = _env_truthy("NOVA_ENABLE_PROMETHEUS")
     federation_on = _env_truthy("FEDERATION_ENABLED")
+    slot01_root_mode = _env_truthy("NOVA_SLOT01_ROOT_MODE")  # Phase 1f: Root-Mode migration
 
     feature_flag_gauge.labels(flag="NOVA_ENABLE_TRI_LINK").set(1 if tri_on else 0)
     feature_flag_gauge.labels(flag="NOVA_ENABLE_LIFESPAN").set(1 if life_on else 0)
     feature_flag_gauge.labels(flag="NOVA_USE_SHARED_HASH").set(1 if hash_on else 0)
     feature_flag_gauge.labels(flag="NOVA_ENABLE_PROMETHEUS").set(1 if prom_on else 0)
     feature_flag_gauge.labels(flag="FEDERATION_ENABLED").set(1 if federation_on else 0)
+    feature_flag_gauge.labels(flag="NOVA_SLOT01_ROOT_MODE").set(1 if slot01_root_mode else 0)
 
 
 def update_lightclock_metrics() -> None:
