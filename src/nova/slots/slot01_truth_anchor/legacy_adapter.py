@@ -10,6 +10,7 @@ DO NOT MODIFY - Will be deprecated after Phase 8 migration complete.
 """
 
 import asyncio
+import importlib
 import inspect
 import time
 from typing import Dict, Any, Optional, Type
@@ -48,6 +49,16 @@ try:  # pragma: no cover - compatibility shim for tests
     from .core import TruthAnchorEngine as LegacyTruthAnchorEngine  # type: ignore
 except ImportError:
     LegacyTruthAnchorEngine = None
+
+
+def _load_legacy_engine_class() -> Optional[Type]:
+    """Dynamically import core TruthAnchorEngine to allow test stubs."""
+    try:
+        module = importlib.import_module("nova.slots.slot01_truth_anchor.core")
+        engine_cls = getattr(module, "TruthAnchorEngine")
+        return engine_cls  # type: ignore[return-value]
+    except Exception:
+        return LegacyTruthAnchorEngine
 
 
 class _FallbackTruthAnchorEngine:
@@ -98,8 +109,9 @@ class Slot1LegacyAdapter:
         custom_cls = self.config.get("engine_cls")
         if custom_cls:
             return custom_cls
-        if LegacyTruthAnchorEngine:
-            return LegacyTruthAnchorEngine
+        legacy_cls = _load_legacy_engine_class()
+        if legacy_cls:
+            return legacy_cls
 
         if preferred == "basic" and BasicTruthAnchorEngine:
             return BasicTruthAnchorEngine
@@ -241,6 +253,43 @@ class Slot1LegacyAdapter:
             slot_id="slot1_truth_anchor",
             latency_ms=elapsed,
         )
+
+    # ------------------------------------------------------------------
+    # Legacy orchestration helpers (preserved for compatibility tests)
+    # ------------------------------------------------------------------
+    def establish_anchor(self, domain: str, facts: list[str]) -> str:
+        """Proxy for legacy establish_anchor behaviours."""
+        if not isinstance(domain, str) or not domain.strip():
+            raise ValueError("domain_required")
+        if not facts:
+            raise ValueError("facts_required")
+        impl = getattr(self.engine, "establish_anchor", None)
+        if callable(impl):
+            return impl(domain, facts)
+        raise AttributeError("engine_missing_establish_anchor")
+
+    def verify_anchor(self, domain: str) -> Dict[str, Any]:
+        """Proxy for legacy verify_anchor behaviours."""
+        if not isinstance(domain, str) or not domain.strip():
+            return {"exists": False, "verified": False}
+        impl = getattr(self.engine, "verify_anchor", None)
+        if not callable(impl):
+            return {"exists": False, "verified": False, "error": "engine_missing_verify_anchor"}
+        try:
+            return impl(domain)
+        except Exception as exc:
+            return {"exists": False, "verified": False, "error": str(exc)}
+
+    def cleanup_cache(self) -> int:
+        """Proxy for cleanup() to keep legacy tests intact."""
+        impl = getattr(self.engine, "cleanup", None)
+        if callable(impl):
+            try:
+                return impl()
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.warning("Legacy cleanup failed: %s", exc)
+                return 0
+        return 0
 
     def _safe_metrics_update(self, start: float, success: bool):
         """Safely update metrics without blocking."""
