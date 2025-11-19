@@ -71,9 +71,12 @@
           "EMOTION_REPORT@1",
           "DELTA_THREAT@1",
           "TRI_REPORT@1",
-          "PRODUCTION_CONTROL@1"
+          "PRODUCTION_CONTROL@1",
+          "slot03_emotional@2"
         ],
-        "consumes": []
+        "consumes": [
+          "tri_truth_signal@1"
+        ]
       },
       "flags": [
         "SLOT3_ESCALATION_ENABLED",
@@ -100,11 +103,14 @@
       ],
       "contracts": {
         "produces": [
-          "TRI_REPORT@1"
+          "TRI_REPORT@1",
+          "tri_truth_signal@1",
+          "slot04-07-belief-state"
         ],
         "consumes": [
           "TRI_REPORT@1",
-          "CULTURAL_PROFILE@1"
+          "CULTURAL_PROFILE@1",
+          "slot04-07-belief-state"
         ]
       },
       "flags": [],
@@ -155,11 +161,13 @@
       "contracts": {
         "produces": [
           "CULTURAL_PROFILE@1",
-          "PLAN_WITH_CONSENT@1"
+          "PLAN_WITH_CONSENT@1",
+          "slot06_cultural@2"
         ],
         "consumes": [
           "CONTENT_ANALYSIS@1",
-          "EMOTION_REPORT@1"
+          "EMOTION_REPORT@1",
+          "tri_truth_signal@1"
         ]
       },
       "flags": [],
@@ -182,14 +190,17 @@
       ],
       "contracts": {
         "produces": [
-          "CONTROL_CMDS@1"
+          "CONTROL_CMDS@1",
+          "slot07_production@2"
         ],
         "consumes": [
           "PRODUCTION_CONTROL@1",
           "DELTA_THREAT@1",
           "DISTORTION_DETECTION@1",
           "MEMORY_ETHICS@1",
-          "EMO_FEEDBACK@1"
+          "EMO_FEEDBACK@1",
+          "tri_truth_signal@1",
+          "slot04-07-belief-state"
         ]
       },
       "flags": [
@@ -322,7 +333,12 @@
       "MEMORY_ETHICS@1",
       "CONSTELLATION_STATE@1",
       "PLAN_WITH_CONSENT@1",
-      "CONTROL_CMDS@1"
+      "CONTROL_CMDS@1",
+      "tri_truth_signal@1",
+      "slot03_emotional@2",
+      "slot06_cultural@2",
+      "slot07_production@2",
+      "slot04-07-belief-state"
     ]
   },
   "configuration": {

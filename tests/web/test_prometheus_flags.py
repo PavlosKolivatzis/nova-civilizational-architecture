@@ -98,3 +98,13 @@ def test_flag_gauges_with_slot7_fallback(monkeypatch):
     assert 'nova_feature_flag_enabled{flag="NOVA_ENABLE_PROMETHEUS"} 1' in body
     assert 'nova_feature_flag_enabled{flag="FEDERATION_ENABLED"} 1' in body
     assert 'nova_feature_flag_enabled{flag="NOVA_SLOT01_ROOT_MODE"} 1' in body
+
+
+def test_internal_metrics_endpoint(monkeypatch):
+    """Internal metrics endpoint exposes extended gauges."""
+    monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
+    monkeypatch.setenv("NOVA_SLOT01_ROOT_MODE", "1")
+
+    r = _client().get("/metrics/internal")
+    assert r.status_code == 200
+    assert 'nova_feature_flag_enabled{flag="NOVA_SLOT01_ROOT_MODE"} 1' in r.text

@@ -48,17 +48,39 @@ else:
 try:  # pragma: no cover - absence of FastAPI is acceptable
     from fastapi import FastAPI, Response, status, HTTPException, Request
     from fastapi.responses import JSONResponse
-    from api.health_config import router as health_router
-    from orchestrator.reflection import router as reflection_router
-    # Phase 17: Rate limiting for DoS protection (CR-3)
-    from slowapi import Limiter, _rate_limit_exceeded_handler
-    from slowapi.util import get_remote_address
-    from slowapi.errors import RateLimitExceeded
 except ImportError:  # pragma: no cover - exercised when FastAPI isn't installed
     FastAPI = None  # type: ignore[assignment]
+    Response = None  # type: ignore[assignment]
+    status = None  # type: ignore[assignment]
+    HTTPException = None  # type: ignore[assignment]
+    Request = None  # type: ignore[assignment]
+    JSONResponse = None  # type: ignore[assignment]
     health_router = None  # type: ignore[assignment]
     reflection_router = None  # type: ignore[assignment]
     Limiter = None  # type: ignore[assignment]
+    _rate_limit_exceeded_handler = None  # type: ignore[assignment]
+    get_remote_address = None  # type: ignore[assignment]
+    RateLimitExceeded = None  # type: ignore[assignment]
+else:
+    try:
+        from api.health_config import router as health_router
+    except ImportError:  # pragma: no cover - optional router
+        health_router = None  # type: ignore[assignment]
+    try:
+        from orchestrator.reflection import router as reflection_router
+    except ImportError:  # pragma: no cover - optional router
+        reflection_router = None  # type: ignore[assignment]
+
+    try:
+        # Phase 17: Rate limiting for DoS protection (CR-3)
+        from slowapi import Limiter, _rate_limit_exceeded_handler
+        from slowapi.util import get_remote_address
+        from slowapi.errors import RateLimitExceeded
+    except ImportError:  # pragma: no cover - exercised when slowapi isn't installed
+        Limiter = None  # type: ignore[assignment]
+        _rate_limit_exceeded_handler = None  # type: ignore[assignment]
+        get_remote_address = None  # type: ignore[assignment]
+        RateLimitExceeded = None  # type: ignore[assignment]
 # Monitor, bus and router are created once and reused across requests
 monitor = PerformanceMonitor()
 bus = EventBus(monitor=monitor)
@@ -564,10 +586,17 @@ if FastAPI is not None:
             from orchestrator.phase10_manager import get_phase10_manager
             from orchestrator.prometheus_metrics import (
                 phase10_eai_gauge,
+                phase10_eai_gauge_public,
+                phase10_fcq_gauge,
+                phase10_fcq_gauge_public,
                 phase10_cgc_gauge,
+                phase10_cgc_gauge_public,
                 phase10_pis_gauge,
+                phase10_pis_gauge_public,
                 phase10_ag_throttle_counter,
+                phase10_ag_throttle_counter_public,
                 phase10_ag_escalation_counter,
+                phase10_ag_escalation_counter_public,
             )
 
             mgr = get_phase10_manager()
@@ -577,13 +606,26 @@ if FastAPI is not None:
             pcr_metrics = mgr.pcr.get_metrics()
             cig_metrics = mgr.cig.get_metrics()
 
-            phase10_eai_gauge.labels(deployment="local").set(ag_metrics["eai"])
-            phase10_cgc_gauge.labels(mesh="global").set(cig_metrics["cgc"])
-            phase10_pis_gauge.labels(ledger="pcr").set(pcr_metrics["pis"])
+            eai_value = ag_metrics["eai"]
+            cgc_value = cig_metrics["cgc"]
+            pis_value = pcr_metrics["pis"]
+
+            phase10_eai_gauge.labels(deployment="local").set(eai_value)
+            phase10_eai_gauge_public.labels(deployment="local").set(eai_value)
+            phase10_fcq_gauge.labels(decision="autonomy_governor").set(ag_metrics.get("fcq", 0.0))
+            phase10_fcq_gauge_public.labels(decision="autonomy_governor").set(ag_metrics.get("fcq", 0.0))
+            phase10_cgc_gauge.labels(mesh="global").set(cgc_value)
+            phase10_cgc_gauge_public.labels(mesh="global").set(cgc_value)
+            phase10_pis_gauge.labels(ledger="pcr").set(pis_value)
+            phase10_pis_gauge_public.labels(ledger="pcr").set(pis_value)
 
             # Update counters (set to current totals; Prometheus handles deltas)
-            phase10_ag_throttle_counter._value._value = ag_metrics["throttle_events_total"]
-            phase10_ag_escalation_counter._value._value = ag_metrics["escalation_events_total"]
+            throttle_total = ag_metrics["throttle_events_total"]
+            escalation_total = ag_metrics["escalation_events_total"]
+            phase10_ag_throttle_counter._value._value = throttle_total
+            phase10_ag_throttle_counter_public._value._value = throttle_total
+            phase10_ag_escalation_counter._value._value = escalation_total
+            phase10_ag_escalation_counter_public._value._value = escalation_total
 
         except Exception as e:
             logger.warning(f"Phase 10 metrics update failed: {e}")
@@ -621,6 +663,19 @@ if FastAPI is not None:
             # Assumes these symbols already exist in this module's scope
             data = prometheus_metrics(METRIC_SLOT_REGISTRY, monitor)
             return Response(content=data, media_type="text/plain")
+
+    @app.get("/metrics/internal")
+    async def metrics_internal() -> Response:
+        """Internal Prometheus metrics (slot-level)."""
+        import os
+        flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
+        if flag != "1":
+            return Response(content=b"", status_code=404, media_type="text/plain")
+
+        from orchestrator.prometheus_metrics import get_internal_metrics_response
+        _update_phase10_metrics()
+        data, content_type = get_internal_metrics_response()
+        return Response(content=data, media_type=content_type)
 
     # Phase 10: FEP (Federated Ethical Protocol) endpoints
     @app.post("/phase10/fep/proposal")

@@ -9,8 +9,10 @@ from prometheus_client import (
     Info,
     generate_latest,
     CONTENT_TYPE_LATEST,
+    CollectorRegistry,
 )
 from collections import defaultdict
+from typing import Dict
 import subprocess
 from time import strftime, gmtime
 from os import getenv
@@ -19,8 +21,11 @@ from orchestrator.metrics import get_slot6_metrics
 from nova.federation.metrics import get_registry as get_federation_registry
 from nova.metrics.registry import REGISTRY
 
-# Dedicated registry (avoids duplicate registration across tests/imports)
-_REGISTRY = REGISTRY
+# Dedicated registries (internal + public)
+_INTERNAL_REGISTRY = REGISTRY
+_PUBLIC_REGISTRY = CollectorRegistry()
+# Backward compatibility for modules importing _REGISTRY directly
+_REGISTRY = _INTERNAL_REGISTRY
 logger = logging.getLogger(__name__)
 
 # --- Build provenance metric ------------------------------------
@@ -41,26 +46,32 @@ def _get_git_sha_short():
     return getenv('NOVA_BUILD_SHA', 'unknown')
 
 # Build info metric (constant labels for deployment traceability)
-build_info = Info(
+build_info_internal = Info(
     'nova_build',
     'Nova build information for deployment traceability',
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+build_info_public = Info(
+    'nova_build',
+    'Nova build information for deployment traceability',
+    registry=_PUBLIC_REGISTRY,
 )
 
 # Initialize build info at module load
-build_info.info({
-    'sha': _get_git_sha_short(),
-    'component': 'orchestrator',
-    'version': '5.1',
-    'built_at': strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
-})
+for build_info in (build_info_internal, build_info_public):
+    build_info.info({
+        'sha': _get_git_sha_short(),
+        'component': 'orchestrator',
+        'version': '5.1',
+        'built_at': strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
+    })
 
 # Prometheus gauges
 slot6_p95_residual_risk_gauge = Gauge(
     "nova_slot6_p95_residual_risk",
     "Slot6 95th percentile residual risk from cultural synthesis decisions",
     ["slot"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # --- Flag gauges (Phase 2 feature flags) ------------------------------------
@@ -69,18 +80,24 @@ def _env_truthy(name: str) -> bool:
     return v == "1"
 
 # One gauge, labeled by flag name
-feature_flag_gauge = Gauge(
+feature_flag_gauge_internal = Gauge(
     "nova_feature_flag_enabled",
     "Nova Phase-2 feature flag states",
     ["flag"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+feature_flag_gauge_public = Gauge(
+    "nova_feature_flag_enabled",
+    "Nova Phase-2 feature flag states",
+    ["flag"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 # --- LightClock & System Health metrics ------------------------------------
 lightclock_phase_lock_gauge = Gauge(
     "nova_lightclock_phase_lock",
     "Current LightClock phase lock value from Slot3",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Phase 6.0 Probabilistic Contracts metrics
@@ -88,134 +105,183 @@ slot_phase_lock_belief_mean_gauge = Gauge(
     "nova_slot_phase_lock_belief_mean",
     "Phase lock belief mean from probabilistic contracts",
     ["slot"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 slot_phase_lock_belief_variance_gauge = Gauge(
     "nova_slot_phase_lock_belief_variance",
     "Phase lock belief variance from probabilistic contracts",
     ["slot"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 system_pressure_gauge = Gauge(
     "nova_system_pressure_level",
     "System pressure level from Slot7",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 tri_coherence_gauge = Gauge(
     "nova_tri_coherence",
     "TRI signal coherence from Slot4",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 tri_coherence_current_gauge = Gauge(
     "nova_tri_coherence_current",
     "Canonical TRI coherence value emitted via tri_truth_signal@1",
-    registry=_REGISTRY,
+    ["slot", "mode", "source"],
+    registry=_INTERNAL_REGISTRY,
+)
+tri_coherence_current_gauge_public = Gauge(
+    "nova_tri_coherence_current",
+    "Canonical TRI coherence value emitted via tri_truth_signal@1",
+    ["slot", "mode", "source"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 tri_canonization_hash_info = Info(
     "nova_tri_canonization_hash",
     "Latest TRI canonical hash (for debugging/attestation linkage)",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+tri_canonization_hash_info_public = Info(
+    "nova_tri_canonization_hash",
+    "Latest TRI canonical hash (for debugging/attestation linkage)",
+    registry=_PUBLIC_REGISTRY,
 )
 
 tri_to_anchor_events_counter = Counter(
     "nova_tri_to_anchor_events_total",
     "Total TRI -> Slot01 attestation events triggered via Root-Mode bridge",
-    registry=_REGISTRY,
+    ["slot", "mode", "source"],
+    registry=_INTERNAL_REGISTRY,
 )
 
 slot01_attest_latency_gauge = Gauge(
     "nova_slot01_attest_latency_ms",
     "Average latency (ms) for TRI-triggered Slot01 attestation events",
-    registry=_REGISTRY,
+    ["slot", "mode", "source"],
+    registry=_INTERNAL_REGISTRY,
+)
+slot01_attest_latency_gauge_public = Gauge(
+    "nova_slot01_attest_latency_ms",
+    "Average latency (ms) for TRI-triggered Slot01 attestation events",
+    ["slot", "mode", "source"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 slot07_tri_coherence_gauge = Gauge(
     "nova_slot07_tri_coherence",
     "Latest TRI coherence snapshot consumed by Slot07 backpressure",
-    registry=_REGISTRY,
+    ["slot", "mode", "source"],
+    registry=_INTERNAL_REGISTRY,
+)
+slot07_tri_coherence_gauge_public = Gauge(
+    "nova_slot07_tri_coherence",
+    "Latest TRI coherence snapshot consumed by Slot07 backpressure",
+    ["slot", "mode", "source"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 slot07_tri_drift_gauge = Gauge(
     "nova_slot07_tri_drift_z",
     "Latest TRI drift Z-score consumed by Slot07 backpressure",
-    registry=_REGISTRY,
+    ["slot", "mode", "source"],
+    registry=_INTERNAL_REGISTRY,
+)
+slot07_tri_drift_gauge_public = Gauge(
+    "nova_slot07_tri_drift_z",
+    "Latest TRI drift Z-score consumed by Slot07 backpressure",
+    ["slot", "mode", "source"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 slot07_tri_jitter_gauge = Gauge(
     "nova_slot07_tri_jitter",
     "Latest TRI jitter snapshot consumed by Slot07 backpressure",
-    registry=_REGISTRY,
+    ["slot", "mode", "source"],
+    registry=_INTERNAL_REGISTRY,
 )
+slot07_tri_jitter_gauge_public = Gauge(
+    "nova_slot07_tri_jitter",
+    "Latest TRI jitter snapshot consumed by Slot07 backpressure",
+    ["slot", "mode", "source"],
+    registry=_PUBLIC_REGISTRY,
+)
+
+TRI_SIGNAL_LABELS = {"slot": "04", "mode": "canonized", "source": "tri_truth_signal"}
+SLOT07_LABELS = {"slot": "07", "mode": "governor", "source": "tri_truth_signal"}
+
+
+def _slot01_labels() -> Dict[str, str]:
+    mode = "root" if _env_truthy("NOVA_SLOT01_ROOT_MODE") else "legacy"
+    return {"slot": "01", "mode": mode, "source": "tri_truth_signal"}
 
 deployment_gate_gauge = Gauge(
     "nova_deployment_gate_open",
     "Whether Slot10 deployment gate is open (1=open, 0=closed)",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 semantic_mirror_ops_counter = Gauge(
     "nova_semantic_mirror_operations_total",
     "Total semantic mirror operations",
     ["operation_type"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Reciprocal Contextual Unlearning metrics (counters)
 unlearn_pulses_sent_counter = Counter(
     "nova_unlearn_pulses_sent_total",
     "Total unlearn pulses sent on context expiration",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 entries_expired_counter = Counter(
     "nova_entries_expired_total",
     "Total context entries expired from semantic mirror",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 unlearn_pulse_destinations_counter = Counter(
     "nova_unlearn_pulse_to_slot_total",
     "Unlearn pulses sent to specific slots",
     ["slot"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Contract fanout metrics (counters)
 fanout_delivered_counter = Counter(
     "nova_fanout_delivered_total",
     "Total local contract fanout deliveries",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 fanout_errors_counter = Counter(
     "nova_fanout_errors_total",
     "Total local contract fanout errors",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Slot6 decay metrics
 slot6_decay_events_counter = Counter(
     "nova_slot6_decay_events_total",
     "Total number of decay events processed by Slot6",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 slot6_decay_amount_counter = Counter(
     "nova_slot6_decay_amount_total",
     "Total decay amount processed by Slot6 (sum of old_weight - new_weight)",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Canary metrics
 canary_enabled_gauge = Gauge(
     "nova_unlearn_canary_enabled",
     "1 when canary is enabled",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Phase 10 Ethical Autonomy & Federated Cognition metrics
@@ -223,111 +289,145 @@ phase10_eai_gauge = Gauge(
     "nova_phase10_eai",
     "Ethical Autonomy Index (safe_autonomy / decisions × consensus_quality)",
     ["deployment"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+phase10_eai_gauge_public = Gauge(
+    "nova_phase10_eai",
+    "Ethical Autonomy Index (safe_autonomy / decisions × consensus_quality)",
+    ["deployment"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 phase10_fcq_gauge = Gauge(
     "nova_phase10_fcq",
     "Federated Consensus Quality for decisions",
     ["decision"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+phase10_fcq_gauge_public = Gauge(
+    "nova_phase10_fcq",
+    "Federated Consensus Quality for decisions",
+    ["decision"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 phase10_cgc_gauge = Gauge(
     "nova_phase10_cgc",
     "Cognitive Graph Coherence across deployments",
     ["mesh"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+phase10_cgc_gauge_public = Gauge(
+    "nova_phase10_cgc",
+    "Cognitive Graph Coherence across deployments",
+    ["mesh"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 phase10_pis_gauge = Gauge(
     "nova_phase10_pis",
     "Provenance Integrity Score for federated ledger",
     ["ledger"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+phase10_pis_gauge_public = Gauge(
+    "nova_phase10_pis",
+    "Provenance Integrity Score for federated ledger",
+    ["ledger"],
+    registry=_PUBLIC_REGISTRY,
 )
 
 phase10_ag_throttle_counter = Counter(
     "nova_phase10_ag_throttle_events_total",
     "Total Autonomy Governor throttle events",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+phase10_ag_throttle_counter_public = Counter(
+    "nova_phase10_ag_throttle_events_total",
+    "Total Autonomy Governor throttle events",
+    registry=_PUBLIC_REGISTRY,
 )
 
 phase10_ag_escalation_counter = Counter(
     "nova_phase10_ag_escalations_total",
     "Total Autonomy Governor escalations requiring human review",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+phase10_ag_escalation_counter_public = Counter(
+    "nova_phase10_ag_escalations_total",
+    "Total Autonomy Governor escalations requiring human review",
+    registry=_PUBLIC_REGISTRY,
 )
 
 canary_seeded_counter = Counter(
     "nova_unlearn_canary_seeded_total",
     "Total canary contexts seeded",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 canary_errors_counter = Counter(
     "nova_unlearn_canary_errors_total",
     "Total canary errors",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Anomaly weighting metrics
 anomaly_score_gauge = Gauge(
     "nova_unlearn_anomaly_score",
     "Current EWMA anomaly score for pulse weighting",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 anomaly_multiplier_gauge = Gauge(
     "nova_unlearn_anomaly_multiplier",
     "Current anomaly pulse weight multiplier",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Phase 16-2: Live Peer Synchronization & Context Auto-Switch metrics
 wisdom_peer_count_gauge = Gauge(
     "nova_wisdom_peer_count",
     "Number of live peers (for generativity context)",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 wisdom_novelty_gauge = Gauge(
     "nova_wisdom_novelty",
     "Current Novelty (N) component from peer diversity",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 wisdom_context_gauge = Gauge(
     "nova_wisdom_context",
     "Generativity context state (0=solo, 1=federated)",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 federation_sync_latency_histogram = Histogram(
     "nova_federation_sync_latency_seconds",
     "Peer sync request latency distribution",
     buckets=[0.1, 0.5, 1.0, 2.5, 5.0, 10.0],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 federation_sync_errors_counter = Counter(
     "nova_federation_sync_errors_total",
     "Total peer sync errors",
     ["peer_id", "error_type"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 federation_peer_last_seen_gauge = Gauge(
     "nova_federation_peer_last_seen_timestamp",
     "Last seen timestamp for each peer (unix timestamp)",
     ["peer_id"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 anomaly_engaged_gauge = Gauge(
     "nova_unlearn_anomaly_engaged",
     "Anomaly engagement state (0=disengaged, 1=engaged)",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Phase 17: Secret Scanning & Baseline Attestation metrics
@@ -335,19 +435,19 @@ secrets_baseline_findings_gauge = Gauge(
     "nova_secrets_baseline_findings_total",
     "Total secret findings in baseline by risk level",
     ["risk_level"],
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 secrets_baseline_info = Info(
     "nova_secrets_baseline",
     "Current secrets baseline hash and metadata",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 secrets_scan_timestamp_gauge = Gauge(
     "nova_secrets_scan_timestamp",
     "Last secrets baseline scan timestamp (unix)",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
 )
 
 # --- local last-seen snapshots so we can turn gauges-in-memory into monotonic counters
@@ -362,25 +462,45 @@ _last_tri_events = 0
 slot1_anchors_gauge = Gauge(
     "nova_slot1_anchors_total",
     "Total number of truth anchors registered",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+slot1_anchors_gauge_public = Gauge(
+    "nova_slot1_anchors_total",
+    "Total number of truth anchors registered",
+    registry=_PUBLIC_REGISTRY,
 )
 
 slot1_lookups_counter = Gauge(
     "nova_slot1_lookups_total",
     "Total number of anchor lookups performed",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+slot1_lookups_counter_public = Gauge(
+    "nova_slot1_lookups_total",
+    "Total number of anchor lookups performed",
+    registry=_PUBLIC_REGISTRY,
 )
 
 slot1_recoveries_counter = Gauge(
     "nova_slot1_recoveries_total",
     "Total number of successful anchor recoveries",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+slot1_recoveries_counter_public = Gauge(
+    "nova_slot1_recoveries_total",
+    "Total number of successful anchor recoveries",
+    registry=_PUBLIC_REGISTRY,
 )
 
 slot1_failures_counter = Gauge(
     "nova_slot1_failures_total",
     "Total number of anchor verification failures",
-    registry=_REGISTRY,
+    registry=_INTERNAL_REGISTRY,
+)
+slot1_failures_counter_public = Gauge(
+    "nova_slot1_failures_total",
+    "Total number of anchor verification failures",
+    registry=_PUBLIC_REGISTRY,
 )
 
 
@@ -401,6 +521,11 @@ def update_slot6_metrics():
 
 def update_flag_metrics() -> None:
     """Update feature flag metrics for Prometheus export."""
+    def _set_flag(flag_name: str, enabled: bool) -> None:
+        value = 1 if enabled else 0
+        feature_flag_gauge_internal.labels(flag=flag_name).set(value)
+        feature_flag_gauge_public.labels(flag=flag_name).set(value)
+
     # Import inside function to avoid hard import at module import time
     try:
         from nova.slots.slot07_production_controls.flag_metrics import get_flag_state_metrics
@@ -418,12 +543,12 @@ def update_flag_metrics() -> None:
     federation_on = _env_truthy("FEDERATION_ENABLED")
     slot01_root_mode = _env_truthy("NOVA_SLOT01_ROOT_MODE")  # Phase 1f: Root-Mode migration
 
-    feature_flag_gauge.labels(flag="NOVA_ENABLE_TRI_LINK").set(1 if tri_on else 0)
-    feature_flag_gauge.labels(flag="NOVA_ENABLE_LIFESPAN").set(1 if life_on else 0)
-    feature_flag_gauge.labels(flag="NOVA_USE_SHARED_HASH").set(1 if hash_on else 0)
-    feature_flag_gauge.labels(flag="NOVA_ENABLE_PROMETHEUS").set(1 if prom_on else 0)
-    feature_flag_gauge.labels(flag="FEDERATION_ENABLED").set(1 if federation_on else 0)
-    feature_flag_gauge.labels(flag="NOVA_SLOT01_ROOT_MODE").set(1 if slot01_root_mode else 0)
+    _set_flag("NOVA_ENABLE_TRI_LINK", tri_on)
+    _set_flag("NOVA_ENABLE_LIFESPAN", life_on)
+    _set_flag("NOVA_USE_SHARED_HASH", hash_on)
+    _set_flag("NOVA_ENABLE_PROMETHEUS", prom_on)
+    _set_flag("FEDERATION_ENABLED", federation_on)
+    _set_flag("NOVA_SLOT01_ROOT_MODE", slot01_root_mode)
 
 
 def update_lightclock_metrics() -> None:
@@ -616,23 +741,28 @@ def update_tri_truth_metrics() -> None:
 
     coherence = metrics.get("tri_coherence")
     if coherence is not None:
-        tri_coherence_current_gauge.set(float(coherence))
+        tri_coherence_current_gauge.labels(**TRI_SIGNAL_LABELS).set(float(coherence))
+        tri_coherence_current_gauge_public.labels(**TRI_SIGNAL_LABELS).set(float(coherence))
 
     canonical_hash = metrics.get("canonical_hash")
     if canonical_hash:
-        tri_canonization_hash_info.info({"hash": str(canonical_hash)})
+        payload = {"hash": str(canonical_hash)}
+        tri_canonization_hash_info.info(payload)
+        tri_canonization_hash_info_public.info(payload)
 
     global _last_tri_events
     attest_events = metrics.get("attest_events", 0)
+    slot01_labels = _slot01_labels()
     if isinstance(attest_events, (int, float)):
         delta = float(attest_events) - float(_last_tri_events)
         if delta > 0:
-            tri_to_anchor_events_counter.inc(delta)
+            tri_to_anchor_events_counter.labels(**slot01_labels).inc(delta)
         _last_tri_events = attest_events
 
     avg_latency = metrics.get("attest_latency_ms_avg")
     if avg_latency is not None:
-        slot01_attest_latency_gauge.set(float(avg_latency))
+        slot01_attest_latency_gauge.labels(**slot01_labels).set(float(avg_latency))
+        slot01_attest_latency_gauge_public.labels(**slot01_labels).set(float(avg_latency))
 
     try:
         from nova.slots.slot07_production_controls import wisdom_backpressure as wb
@@ -644,15 +774,20 @@ def update_tri_truth_metrics() -> None:
     if tri_snapshot:
         coherence = tri_snapshot.get("tri_coherence")
         if coherence is not None:
-            slot07_tri_coherence_gauge.set(float(coherence))
+            slot07_tri_coherence_gauge.labels(**SLOT07_LABELS).set(float(coherence))
+            slot07_tri_coherence_gauge_public.labels(**SLOT07_LABELS).set(float(coherence))
         drift = tri_snapshot.get("tri_drift_z")
         try:
-            slot07_tri_drift_gauge.set(float(drift))
+            drift_val = float(drift)
+            slot07_tri_drift_gauge.labels(**SLOT07_LABELS).set(drift_val)
+            slot07_tri_drift_gauge_public.labels(**SLOT07_LABELS).set(drift_val)
         except (TypeError, ValueError):
             pass
         jitter = tri_snapshot.get("tri_jitter")
         try:
-            slot07_tri_jitter_gauge.set(float(jitter))
+            jitter_val = float(jitter)
+            slot07_tri_jitter_gauge.labels(**SLOT07_LABELS).set(jitter_val)
+            slot07_tri_jitter_gauge_public.labels(**SLOT07_LABELS).set(jitter_val)
         except (TypeError, ValueError):
             pass
 
@@ -695,22 +830,26 @@ def update_slot1_metrics() -> None:
 
         if adapter.available:
             snapshot = adapter.snapshot()
-            slot1_anchors_gauge.set(snapshot.get("anchors", 0))
-            slot1_lookups_counter.set(snapshot.get("lookups", 0))
-            slot1_recoveries_counter.set(snapshot.get("recoveries", 0))
-            slot1_failures_counter.set(snapshot.get("failures", 0))
+            anchors = snapshot.get("anchors", 0)
+            lookups = snapshot.get("lookups", 0)
+            recoveries = snapshot.get("recoveries", 0)
+            failures = snapshot.get("failures", 0)
         else:
             # Clear metrics if Slot1 not available
-            slot1_anchors_gauge.set(0)
-            slot1_lookups_counter.set(0)
-            slot1_recoveries_counter.set(0)
-            slot1_failures_counter.set(0)
+            anchors = lookups = recoveries = failures = 0
     except Exception:
         # Fallback - set all to 0 if Slot1 unavailable
-        slot1_anchors_gauge.set(0)
-        slot1_lookups_counter.set(0)
-        slot1_recoveries_counter.set(0)
-        slot1_failures_counter.set(0)
+        anchors = lookups = recoveries = failures = 0
+
+    # Update both registries (public + internal)
+    slot1_anchors_gauge.set(anchors)
+    slot1_anchors_gauge_public.set(anchors)
+    slot1_lookups_counter.set(lookups)
+    slot1_lookups_counter_public.set(lookups)
+    slot1_recoveries_counter.set(recoveries)
+    slot1_recoveries_counter_public.set(recoveries)
+    slot1_failures_counter.set(failures)
+    slot1_failures_counter_public.set(failures)
 
 
 def update_secrets_baseline_metrics() -> None:
@@ -765,8 +904,7 @@ def update_secrets_baseline_metrics() -> None:
         logger.debug(f"Could not update secrets baseline metrics: {e}")
 
 
-def get_metrics_response():
-    """Get Prometheus metrics response."""
+def _refresh_metrics() -> None:
     update_slot6_metrics()
     update_flag_metrics()
     update_slot1_metrics()
@@ -775,7 +913,10 @@ def get_metrics_response():
     update_tri_truth_metrics()
     update_semantic_mirror_metrics()
     update_secrets_baseline_metrics()
-    payload = generate_latest(_REGISTRY)
+
+
+def _generate_payload_for_registry(registry):
+    payload = generate_latest(registry)
     try:
         federation_registry = get_federation_registry()
         federation_payload = generate_latest(federation_registry)
@@ -786,3 +927,15 @@ def get_metrics_response():
     except Exception as exc:  # pragma: no cover - best-effort federation metrics
         logger.debug("Federation metrics export failed: %s", exc)
     return payload, CONTENT_TYPE_LATEST
+
+
+def get_metrics_response():
+    """Get sanitized Prometheus metrics response."""
+    _refresh_metrics()
+    return _generate_payload_for_registry(_PUBLIC_REGISTRY)
+
+
+def get_internal_metrics_response():
+    """Get internal Prometheus metrics response."""
+    _refresh_metrics()
+    return _generate_payload_for_registry(_INTERNAL_REGISTRY)
