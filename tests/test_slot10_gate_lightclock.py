@@ -25,7 +25,7 @@ def test_gate_opens_under_good_signals():
 def test_gate_blocks_on_low_coherence():
     """Test gate blocks when TRI coherence is too low."""
     mirror = MirrorReaderHelper(
-        **{"slot03.phase_lock": 0.52, "slot04.coherence": 0.65, "slot04.phase_jitter": 0.10, "slot07.pressure_level": 0.2}
+        **{"slot03.phase_lock": 0.52, "slot04.coherence": 0.60, "slot04.phase_jitter": 0.10, "slot07.pressure_level": 0.2}
     )
     gatekeeper = LightClockGatekeeper(mirror=mirror)
     result = gatekeeper.should_open_gate()
@@ -67,13 +67,12 @@ def test_gate_tightens_threshold_on_high_jitter():
         **{"slot03.phase_lock": 0.52, "slot04.coherence": 0.68, "slot04.phase_jitter": 0.35, "slot07.pressure_level": 0.1}
     )
     gatekeeper = LightClockGatekeeper(mirror=mirror)
-    # Should require coherence >= 0.66 + 0.05 = 0.71 due to high jitter
     result = gatekeeper.should_open_gate()
-    assert result is False
+    assert result is False  # jitter exceeds threshold
 
-    # But should pass with higher coherence
+    # Should pass when jitter drops below threshold
     mirror = MirrorReaderHelper(
-        **{"slot03.phase_lock": 0.52, "slot04.coherence": 0.82, "slot04.phase_jitter": 0.35, "slot07.pressure_level": 0.1}
+        **{"slot03.phase_lock": 0.52, "slot04.coherence": 0.82, "slot04.phase_jitter": 0.10, "slot07.pressure_level": 0.1}
     )
     gatekeeper = LightClockGatekeeper(mirror=mirror)
     result = gatekeeper.should_open_gate()
@@ -118,14 +117,14 @@ def test_gate_conservative_defaults():
 def test_evaluate_deploy_gate_legacy_interface():
     """Test legacy evaluate_deploy_gate interface works with new signals."""
     mirror = MirrorReaderHelper(
-        **{"slot07.phase_lock": 0.75, "slot04.tri_score": 0.75, "slot09.final_policy": "ALLOW_FASTPATH"}
+        **{"slot07.phase_lock": 0.85, "slot04.tri_score": 0.75, "slot09.final_policy": "ALLOW_FASTPATH"}
     )
     gatekeeper = LightClockGatekeeper(mirror=mirror)
     result = gatekeeper.evaluate_deploy_gate({}, {})
 
     assert result.passed is True
-    assert result.phase_lock_value == 0.75
+    assert result.phase_lock_value == 0.85
     assert result.tri_score == 0.75
-    assert result.coherence_level == "medium"
+    assert result.coherence_level == "high"
     assert result.lightclock_passes is True
     assert len(result.failed_conditions) == 0

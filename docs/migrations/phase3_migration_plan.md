@@ -50,6 +50,8 @@ LightClockGatekeeper now uses:
 - `mirror.get_context("slot04.tri_belief")`
 - threshold overrides from Threshold Manager
 - deployment_gate decision is deterministic & observable
+- drift/jitter/coherence thresholds (`tri_min_coherence`, `slot07_tri_drift_threshold`, `tri_max_jitter`)
+- publishes structured gate results (reasons + thresholds) for downstream controllers
 
 ## 5. Observability Split (Public + Internal)
 
