@@ -376,7 +376,12 @@ frameworks:
         out: [production_mode]
         rule: "FULL if S>=0.03 and H>=0.02, DEGRADED if boundary, MINIMAL else"
         impl_ref: "src.nova.slots.slot07_production_controls.modes.determine_mode"
-      - name: tri_backpressure`r`n        in: [tri_truth_signal@1]`r`n        out: [production_mode]`r`n        rule: "tri_band and tri_drift_z enforce breaker freeze with attestation requests"`r`n        impl_ref: "src.nova.slots.slot07_production_controls.wisdom_backpressure.compute_max_concurrent_jobs"`r`n    interfaces: {upstream: [Constellation, TRI_Engine], downstream: [CivilizationalDeployment]}
+      - name: tri_backpressure
+        in: [tri_truth_signal@1]
+        out: [production_mode]
+        rule: "tri_band and tri_drift_z enforce breaker freeze with attestation requests"
+        impl_ref: "src.nova.slots.slot07_production_controls.wisdom_backpressure.compute_max_concurrent_jobs"
+    interfaces: {upstream: [Constellation, TRI_Engine], downstream: [CivilizationalDeployment]}
 
   - id: DistortionProtection
     slot_id: 9

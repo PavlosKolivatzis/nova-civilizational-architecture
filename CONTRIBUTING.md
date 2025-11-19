@@ -15,6 +15,7 @@ All probabilistic or uncertainty-aware components must register their belief met
 - All tests must pass: `pytest -q`
 - Code must pass linting: `ruff check src/nova orchestrator tests`
 - Type checking must pass: `mypy src/nova orchestrator scripts`
+- Contract interfaces must stay in sync: `python scripts/contract_audit.py`
 
 ### Commit Conventions
 Follow Conventional Commits format: `type(scope): subject`
