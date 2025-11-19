@@ -1,0 +1,63 @@
+schema: nova_contract/v1
+contract_id: slot06_cultural@2
+title: Cultural Synthesis TRI Truth Consumption
+description: >
+  Slot06 ingests the canonical TRI truth signal to drive principle
+  preservation, residual risk computation, and Semantic Mirror
+  publishing. tri_coherence replaces legacy truth_score inputs.
+
+depends_on: tri_truth_signal@1
+
+slots:
+  - id: 4
+    name: TRI Engine
+    role: truth_canonizer
+  - id: 6
+    name: Cultural Synthesis
+    role: interpreter
+  - id: 7
+    name: Production Controls
+    role: downstream_consumer
+  - id: 10
+    name: Civilizational Deployment
+    role: downstream_consumer
+
+interfaces:
+  inputs:
+    tri_truth_signal@1:
+      consumed_fields:
+        - tri_coherence
+        - tri_drift_z
+        - tri_jitter
+        - anchor_id
+      semantic_mirror_key: slot04.tri_truth_signal
+      ttl_seconds: 45
+  outputs:
+    CULTURAL_PROFILE@1:
+      enriched_with: [tri_coherence, tri_drift_z]
+    GuardrailValidationResult:
+      includes_anchor: true
+
+processing_rules:
+  - name: residual_risk_adjustment
+    rule: "Residual risk = base_risk * (1 + max(0, tri_drift_z) * 0.25)."
+  - name: principle_preservation_floor
+    rule: "If tri_coherence < 0.55 -> clamp principle_preservation_score <= 0.7 and flag transformation."
+  - name: attestation_link
+    rule: "Attach anchor_id to CULTURAL_PROFILE outputs for provenance."
+
+observability:
+  semantic_mirror_reads:
+    - key: slot04.tri_truth_signal
+      requester: slot06_cultural_synthesis
+  metrics:
+    - nova_slot6_tri_coherence
+    - nova_slot6_anchor_link_total
+
+safety_guarantees:
+  - "Slot06 refuses to approve deployments when tri_coherence in red band."
+  - "anchor_id propagation ensures Slot10 can request attestation proof."
+  - "Fallback to conservative cultural_profile when signal stale > 90s."
+
+version: "2.0.0"
+created_at: "2025-11-19T00:00:00Z"

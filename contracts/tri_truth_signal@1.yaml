@@ -1,0 +1,109 @@
+schema: nova_contract/v1
+contract_id: tri_truth_signal@1
+title: TRI Canonical Truth Signal
+description: >
+  Canonicalized truth signal emitted by Slot 04 (TRI Engine) after
+  resonance analysis. Replaces legacy truth_score propagation and
+  becomes the single source of truth for interpretation slots
+  (Slot03/Slot06/Slot07) and the attestation pipeline (Slot01).
+
+slots:
+  - id: 4
+    name: TRI Engine
+    role: truth_canonizer
+  - id: 3
+    name: Emotional Matrix
+    role: consumer
+  - id: 6
+    name: Cultural Synthesis
+    role: consumer
+  - id: 7
+    name: Production Controls / Wisdom Governor
+    role: consumer
+  - id: 1
+    name: Truth Anchor
+    role: attestor
+
+payload:
+  type: object
+  required_fields:
+    - tri_coherence
+    - tri_drift_z
+    - tri_jitter
+    - canonical_hash
+    - anchor_id
+    - timestamp
+  optional_fields:
+    - confidence
+    - source_window
+    - tri_band
+    - notes
+
+schema:
+  tri_coherence:
+    type: number
+    range: [0.0, 1.0]
+    description: "Normalized TRI coherence (canonical truth magnitude)."
+  tri_drift_z:
+    type: number
+    range: [-5.0, 5.0]
+    description: "Z-score delta from 24h rolling coherence mean."
+  tri_jitter:
+    type: number
+    range: [0.0, 0.5]
+    description: "Phase jitter magnitude (lower = more stable)."
+  canonical_hash:
+    type: string
+    description: "blake2b digest of canonicalized TRI payload."
+  anchor_id:
+    type: string
+    description: "Deterministic anchor identifier derived from canonical_hash."
+  timestamp:
+    type: number
+    description: "Unix epoch seconds when signal was canonized."
+  confidence:
+    type: number
+    range: [0.0, 1.0]
+    description: "TRI self-reported confidence."
+  source_window:
+    type: string
+    enum: ["live", "rolling_5m", "rolling_15m"]
+    description: "Averaging window used for the canonicalization."
+  tri_band:
+    type: string
+    enum: ["green", "amber", "red"]
+    description: "Operational band classification for downstream gates."
+  notes:
+    type: string
+    maxLength: 256
+    description: "Optional human-readable annotations from Slot04."
+
+semantic_mirror:
+  publisher_key: "slot04.tri_truth_signal"
+  canonical_key: "slot04.tri_canonized"
+  ttl_seconds: 45
+  consumers:
+    slot03_emotional_matrix: read
+    slot06_cultural_synthesis: read
+    slot07_production_controls: read
+    slot01_truth_anchor: read
+
+observability:
+  prometheus_metrics:
+    - nova_tri_coherence_current
+    - nova_tri_canonization_hash
+    - nova_tri_to_anchor_events_total
+    - nova_slot01_attest_latency_ms
+  logging:
+    level: INFO
+    event: "tri_truth_signal_canonized"
+    fields: [tri_coherence, tri_drift_z, tri_jitter, tri_band, anchor_id]
+
+safety_guarantees:
+  - "Canonical hash must be blake2b and re-computable from payload."
+  - "tri_drift_z must remain within configured safe bounds; outside triggers Slot07 freeze."
+  - "TRI band transitions are hysteresis-gated (green>=0.72, amber 0.5-0.72, red<0.5)."
+  - "Anchor_id unique per canonical_hash – ensures deterministic Slot01 lookups."
+
+version: "1.0.0"
+created_at: "2025-11-19T00:00:00Z"

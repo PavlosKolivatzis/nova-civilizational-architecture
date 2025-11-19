@@ -110,6 +110,48 @@ tri_coherence_gauge = Gauge(
     registry=_REGISTRY,
 )
 
+tri_coherence_current_gauge = Gauge(
+    "nova_tri_coherence_current",
+    "Canonical TRI coherence value emitted via tri_truth_signal@1",
+    registry=_REGISTRY,
+)
+
+tri_canonization_hash_info = Info(
+    "nova_tri_canonization_hash",
+    "Latest TRI canonical hash (for debugging/attestation linkage)",
+    registry=_REGISTRY,
+)
+
+tri_to_anchor_events_counter = Counter(
+    "nova_tri_to_anchor_events_total",
+    "Total TRI -> Slot01 attestation events triggered via Root-Mode bridge",
+    registry=_REGISTRY,
+)
+
+slot01_attest_latency_gauge = Gauge(
+    "nova_slot01_attest_latency_ms",
+    "Average latency (ms) for TRI-triggered Slot01 attestation events",
+    registry=_REGISTRY,
+)
+
+slot07_tri_coherence_gauge = Gauge(
+    "nova_slot07_tri_coherence",
+    "Latest TRI coherence snapshot consumed by Slot07 backpressure",
+    registry=_REGISTRY,
+)
+
+slot07_tri_drift_gauge = Gauge(
+    "nova_slot07_tri_drift_z",
+    "Latest TRI drift Z-score consumed by Slot07 backpressure",
+    registry=_REGISTRY,
+)
+
+slot07_tri_jitter_gauge = Gauge(
+    "nova_slot07_tri_jitter",
+    "Latest TRI jitter snapshot consumed by Slot07 backpressure",
+    registry=_REGISTRY,
+)
+
 deployment_gate_gauge = Gauge(
     "nova_deployment_gate_open",
     "Whether Slot10 deployment gate is open (1=open, 0=closed)",
@@ -314,6 +356,7 @@ _last_slot_totals: dict[str, int] = defaultdict(int)
 _last_fanout = {"fanout_delivered": 0, "fanout_errors": 0}
 _last_slot6_metrics = {"decay_events": 0, "decay_amount": 0.0}
 _last_canary = {"seeded": 0, "errors": 0}
+_last_tri_events = 0
 
 # --- Slot1 Truth Anchor metrics ------------------------------------
 slot1_anchors_gauge = Gauge(
@@ -539,6 +582,61 @@ def update_system_health_metrics() -> None:
             coherence = getenv("TRI_COHERENCE", "0.7")  # Default decent coherence
         tri_coherence_gauge.set(float(coherence))
 
+
+def update_tri_truth_metrics() -> None:
+    """Expose canonical TRI truth signal + attestation bridge metrics."""
+    try:
+        from orchestrator.tri_truth_bridge import get_bridge_metrics
+    except Exception:
+        return
+
+    try:
+        metrics = get_bridge_metrics()
+    except Exception:
+        return
+
+    coherence = metrics.get("tri_coherence")
+    if coherence is not None:
+        tri_coherence_current_gauge.set(float(coherence))
+
+    canonical_hash = metrics.get("canonical_hash")
+    if canonical_hash:
+        tri_canonization_hash_info.info({"hash": str(canonical_hash)})
+
+    global _last_tri_events
+    attest_events = metrics.get("attest_events", 0)
+    if isinstance(attest_events, (int, float)):
+        delta = float(attest_events) - float(_last_tri_events)
+        if delta > 0:
+            tri_to_anchor_events_counter.inc(delta)
+        _last_tri_events = attest_events
+
+    avg_latency = metrics.get("attest_latency_ms_avg")
+    if avg_latency is not None:
+        slot01_attest_latency_gauge.set(float(avg_latency))
+
+    try:
+        from nova.slots.slot07_production_controls import wisdom_backpressure as wb
+
+        tri_snapshot = wb.get_tri_signal_snapshot()
+    except Exception:
+        tri_snapshot = None
+
+    if tri_snapshot:
+        coherence = tri_snapshot.get("tri_coherence")
+        if coherence is not None:
+            slot07_tri_coherence_gauge.set(float(coherence))
+        drift = tri_snapshot.get("tri_drift_z")
+        try:
+            slot07_tri_drift_gauge.set(float(drift))
+        except (TypeError, ValueError):
+            pass
+        jitter = tri_snapshot.get("tri_jitter")
+        try:
+            slot07_tri_jitter_gauge.set(float(jitter))
+        except (TypeError, ValueError):
+            pass
+
         # Phase 6.0 Belief metrics from probabilistic contracts
         if mirror:
             # Slot 4 TRI belief
@@ -654,6 +752,7 @@ def get_metrics_response():
     update_slot1_metrics()
     update_lightclock_metrics()
     update_system_health_metrics()
+    update_tri_truth_metrics()
     update_semantic_mirror_metrics()
     update_secrets_baseline_metrics()
     payload = generate_latest(_REGISTRY)

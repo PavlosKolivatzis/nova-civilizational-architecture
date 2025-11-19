@@ -47,7 +47,7 @@ class Slot4TRIAdapter:
             try:
                 health = engine.assess()
                 # Safely extract attributes with sane defaults
-                return {
+                report = {
                     "coherence": getattr(health, "coherence", 0.7),
                     "phase_jitter": getattr(health, "phase_jitter", 0.15),
                     "tri_score": getattr(health, "tri_score", 0.75),
@@ -55,12 +55,16 @@ class Slot4TRIAdapter:
                     "drift_z": getattr(health, "drift_z", None),
                     "n_samples": getattr(health, "n_samples", None),
                 }
+                self._attach_truth_signal(report)
+                return report
             except Exception:
                 # fall through to safe defaults below
                 pass
 
         # Fallback: safe, deterministic defaults to keep gates functional
-        return {"coherence": 0.7, "phase_jitter": 0.15, "tri_score": 0.75}
+        report = {"coherence": 0.7, "phase_jitter": 0.15, "tri_score": 0.75}
+        self._attach_truth_signal(report)
+        return report
 
     def calculate(self, content: str, context: Optional[Dict] = None) -> Dict:
         """Calculate TRI for content analysis (Engine 2), with graceful fallbacks."""
@@ -85,3 +89,15 @@ class Slot4TRIAdapter:
             "layer_scores": {"structural": 0.0, "semantic": 0.0, "expression": 0.0},
             "metadata": {"fallback": True, "reason": "No TRI engines available"},
         }
+
+    def _attach_truth_signal(self, report: Dict[str, Any]) -> None:
+        """Enrich TRI report with canonical truth signal if possible."""
+        try:
+            from orchestrator.tri_truth_bridge import process_tri_truth_signal
+
+            truth_signal = process_tri_truth_signal(report)
+            if truth_signal:
+                report["truth_signal"] = truth_signal
+        except Exception:
+            # Never let truth bridge failures break downstream consumers
+            pass

@@ -25,7 +25,7 @@ from prometheus_client import Gauge as _Gauge
 from nova.governor import state as governor_state
 from nova.metrics.registry import REGISTRY as _REGISTRY
 
-__all__ = ["compute_max_concurrent_jobs", "get_backpressure_config"]
+__all__ = ["compute_max_concurrent_jobs", "get_backpressure_config", "get_tri_signal_snapshot"]
 
 _slot7_jobs_current = _Gauge(
     "nova_slot07_jobs_current",
@@ -37,6 +37,8 @@ _slot7_jobs_reason = _Gauge(
     "Slot7 backpressure reason code (0=baseline, 1=stability reduced, 2=frozen)",
     registry=_REGISTRY,
 )
+
+_tri_signal_snapshot: _typing.Dict[str, _typing.Any] = {}
 
 
 def get_backpressure_config() -> Tuple[int, int, int, float]:
@@ -58,6 +60,36 @@ def get_backpressure_config() -> Tuple[int, int, int, float]:
     return (baseline, frozen, reduced, threshold)
 
 
+def _read_tri_truth_signal() -> _typing.Dict[str, _typing.Any]:
+    """Fetch latest TRI truth signal from Semantic Mirror (best-effort)."""
+    global _tri_signal_snapshot
+    try:
+        from orchestrator.semantic_mirror import get_semantic_mirror
+
+        mirror = get_semantic_mirror()
+    except Exception:
+        return _tri_signal_snapshot
+
+    def _mirror_get(key: str, default=None):
+        try:
+            return mirror.get_context(key, default=default)
+        except TypeError:
+            try:
+                return mirror.get_context(key, "slot07_production_controls")
+            except TypeError:
+                return default
+
+    signal = _mirror_get("slot04.tri_truth_signal", default=None)
+    if isinstance(signal, dict):
+        _tri_signal_snapshot = signal
+    return _tri_signal_snapshot
+
+
+def get_tri_signal_snapshot() -> _typing.Dict[str, _typing.Any]:
+    """Return latest cached TRI truth signal snapshot."""
+    return dict(_tri_signal_snapshot)
+
+
 def _decide_job_cap(stability_margin: float | None = None) -> Tuple[int, int]:
     """
     Decide Slot 7 job cap, emitting Prometheus gauges for observability.
@@ -71,16 +103,33 @@ def _decide_job_cap(stability_margin: float | None = None) -> Tuple[int, int]:
     baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
     cap, reason = baseline, 0
 
-    if governor_state.is_frozen():
+    tri_signal = _read_tri_truth_signal()
+    tri_band = (tri_signal.get("tri_band") or "").lower() if tri_signal else ""
+
+    if governor_state.is_frozen() or tri_band == "red":
         cap, reason = frozen_jobs, 2
     else:
         S = stability_margin if stability_margin is not None else _try_read_stability_from_poller()
+        if tri_signal:
+            drift = tri_signal.get("tri_drift_z")
+            try:
+                drift = float(drift)
+            except (TypeError, ValueError):
+                drift = None
+            if drift is not None:
+                drift_threshold = float(os.getenv("NOVA_SLOT07_TRI_DRIFT_THRESHOLD", "2.2"))
+                if drift >= drift_threshold:
+                    threshold = max(threshold, float(os.getenv("NOVA_SLOT07_STABILITY_THRESHOLD_TRI", "0.05")))
+
         if S is None:
             cap, reason = baseline, 0
         elif S < threshold:
             cap, reason = reduced_jobs, 1
         else:
             cap, reason = baseline, 0
+
+        if tri_band == "amber" and reason == 0:
+            cap, reason = reduced_jobs, 1
 
     _slot7_jobs_current.set(cap)
     _slot7_jobs_reason.set(reason)
@@ -142,12 +191,14 @@ def get_backpressure_status(stability_margin: float | None = None) -> _typing.Di
     baseline, frozen_jobs, reduced_jobs, threshold = get_backpressure_config()
     observed_stability = stability_margin if stability_margin is not None else _try_read_stability_from_poller()
     max_jobs, reason = _decide_job_cap(stability_margin=observed_stability)
+    tri_signal = get_tri_signal_snapshot()
 
     return {
         "max_concurrent_jobs": max_jobs,
         "mode": _describe_mode(max_jobs, reason, baseline, reduced_jobs, frozen_jobs),
         "frozen": governor_state.is_frozen(),
         "stability_margin": observed_stability,
+        "tri_signal": tri_signal or None,
         "config": {
             "baseline_jobs": baseline,
             "frozen_jobs": frozen_jobs,

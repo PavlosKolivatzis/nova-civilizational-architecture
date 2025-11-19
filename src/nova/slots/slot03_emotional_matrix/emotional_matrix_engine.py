@@ -71,6 +71,7 @@ class EmotionalMatrixEngine:
 
     def __init__(self, config: Optional[EmotionConfig] = None):
         self.cfg = config or EmotionConfig()
+        self._last_tri_signal: Optional[Dict[str, Any]] = None
 
     # ---------- helpers ----------
     @staticmethod
@@ -83,6 +84,38 @@ class EmotionalMatrixEngine:
         # Faster than regex: lowercase, translate punctuation, split
         return cls._normalize(s).lower().translate(cls._PUNCT_TABLE).split()
 
+    def _get_tri_truth_signal(self) -> Optional[Dict[str, Any]]:
+        """Return cached TRI truth signal snapshot (best-effort)."""
+        if self._last_tri_signal is not None:
+            return self._last_tri_signal
+        return self._refresh_tri_truth_signal()
+
+    def _refresh_tri_truth_signal(self) -> Optional[Dict[str, Any]]:
+        """Fetch latest TRI truth signal from Semantic Mirror."""
+        try:
+            from orchestrator.semantic_mirror import get_semantic_mirror
+
+            mirror = get_semantic_mirror()
+        except Exception:
+            self._last_tri_signal = None
+            return None
+
+        def _mirror_get(key: str, default=None):
+            try:
+                return mirror.get_context(key, default=default)
+            except TypeError:
+                try:
+                    return mirror.get_context(key, "slot03_emotional_matrix")
+                except TypeError:
+                    return default
+
+        signal = _mirror_get("slot04.tri_truth_signal", default=None)
+        if isinstance(signal, dict):
+            self._last_tri_signal = signal
+        else:
+            self._last_tri_signal = None
+        return self._last_tri_signal
+
     def _get_phase_lock(self) -> Optional[float]:
         """
         Compute phase_lock from Semantic Mirror:
@@ -94,6 +127,12 @@ class EmotionalMatrixEngine:
         import os
         if os.getenv("NOVA_LIGHTCLOCK_DEEP", "1") == "0":
             return None
+
+        tri_signal = self._get_tri_truth_signal()
+        if tri_signal:
+            coherence = tri_signal.get("tri_coherence")
+            if coherence is not None:
+                return float(coherence)
 
         # Helper to support both mirror APIs:
         #   get_context(key, requester)  (older)
@@ -163,6 +202,8 @@ class EmotionalMatrixEngine:
         # cheap HTML/script guard; we keep it minimal but effective
         if "<script" in lower or "</script>" in lower or "<iframe" in lower:
             raise ValueError("potentially unsafe content detected")
+
+        tri_signal = self._refresh_tri_truth_signal()
 
         tokens = self._tokenize(lower)
         if not tokens:
@@ -264,6 +305,14 @@ class EmotionalMatrixEngine:
             },
             "version": self.__version__,
         }
+
+        if tri_signal:
+            metrics["tri_signal"] = tri_signal
+            metrics["tri_coherence"] = tri_signal.get("tri_coherence")
+            metrics["tri_band"] = tri_signal.get("tri_band")
+            annotations = metrics.setdefault("annotations", {})
+            if tri_signal.get("tri_band"):
+                annotations["tri_band"] = tri_signal["tri_band"]
 
         # Light-Clock coherence-aware scaling
         phase_lock = self._get_phase_lock()

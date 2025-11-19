@@ -1,6 +1,32 @@
 """Tests for smart TRI adapter routing between operational and content engines."""
 
+import pytest
+
 from orchestrator.adapters.slot4_tri import Slot4TRIAdapter
+
+
+@pytest.fixture(autouse=True)
+def stub_truth_bridge(monkeypatch):
+    """Isolate tests from semantic mirror + attestation side effects."""
+    try:
+        import orchestrator.tri_truth_bridge as bridge
+    except Exception:
+        return
+
+    def _stub(report):
+        return {
+            "tri_coherence": float(report.get("coherence", 0.0)),
+            "tri_drift_z": 0.0,
+            "tri_jitter": 0.1,
+            "tri_band": "green",
+            "canonical_hash": "stub",
+            "anchor_id": "tri::stub",
+            "timestamp": 0.0,
+            "confidence": 1.0,
+            "source_window": "live",
+        }
+
+    monkeypatch.setattr(bridge, "process_tri_truth_signal", _stub)
 
 
 def test_get_latest_report_uses_operational_engine(monkeypatch):
@@ -27,6 +53,7 @@ def test_get_latest_report_uses_operational_engine(monkeypatch):
     assert report["tri_mean"] == 0.87
     assert report["drift_z"] == 0.1
     assert report["n_samples"] == 128
+    assert report["truth_signal"]["anchor_id"] == "tri::stub"
 
 
 def test_get_latest_report_fallback():
@@ -40,6 +67,7 @@ def test_get_latest_report_fallback():
     assert report["coherence"] == 0.7
     assert report["phase_jitter"] == 0.15
     assert report["tri_score"] == 0.75
+    assert report["truth_signal"]["tri_band"] == "green"
 
 
 def test_calculate_routes_to_content_engine(monkeypatch):

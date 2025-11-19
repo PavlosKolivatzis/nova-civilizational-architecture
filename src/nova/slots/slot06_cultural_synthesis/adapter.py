@@ -47,6 +47,27 @@ def _profile_consent(profile: Dict[str, Any]) -> bool:
     return True  # default to True; engine will still sanity-check
 
 
+def _get_tri_truth_signal() -> Optional[Dict[str, Any]]:
+    """Fetch canonical TRI truth signal (best-effort)."""
+    try:
+        from orchestrator.semantic_mirror import get_semantic_mirror
+
+        mirror = get_semantic_mirror()
+    except Exception:
+        return None
+
+    def _mirror_get(key: str, default=None):
+        try:
+            return mirror.get_context(key, default=default)
+        except TypeError:
+            try:
+                return mirror.get_context(key, "slot06_cultural_synthesis")
+            except TypeError:
+                return default
+
+    signal = _mirror_get("slot04.tri_truth_signal", default=None)
+    return signal if isinstance(signal, dict) else None
+
 class CulturalSynthesisAdapter:
     """Thin wrapper around :class:`CulturalSynthesisEngine` used by Slot 10."""
 
@@ -93,6 +114,16 @@ class CulturalSynthesisAdapter:
             )
 
         s2 = _coalesce_slot2(slot2_result)
+        tri_signal = _get_tri_truth_signal()
+        if tri_signal:
+            coherence = tri_signal.get("tri_coherence")
+            if coherence is not None:
+                tri_score = float(coherence)
+                s2["tri_score"] = tri_score
+                s2["tri_gap"] = max(0.0, self.engine.config.tri_min_score - tri_score)
+            s2["tri_band"] = tri_signal.get("tri_band")
+            s2["tri_anchor_id"] = tri_signal.get("anchor_id")
+            s2["tri_drift_z"] = tri_signal.get("tri_drift_z")
         consent_ok = _profile_consent(profile)
 
         content = payload.get("content") if isinstance(payload, dict) else str(payload)
@@ -105,6 +136,12 @@ class CulturalSynthesisAdapter:
             consent_ok=bool(consent_ok),
             stability_index=stability_index,
         )
+        if tri_signal:
+            metrics.setdefault("tri_signal", tri_signal)
+            metrics["tri_band"] = tri_signal.get("tri_band")
+            metrics["anchor_id"] = tri_signal.get("anchor_id")
+            metrics["tri_coherence"] = tri_signal.get("tri_coherence")
+            metrics["tri_drift_z"] = tri_signal.get("tri_drift_z")
 
         pps = float(
             metrics.get(
@@ -179,6 +216,9 @@ class CulturalSynthesisAdapter:
             ),
             tri_gap=s2["tri_gap"],
             slot2_patterns=s2["slot2_patterns"],
+            tri_band=s2.get("tri_band"),
+            anchor_id=(tri_signal or {}).get("anchor_id"),
+            tri_signal=tri_signal or {},
         )
 
 

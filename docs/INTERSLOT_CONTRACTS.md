@@ -6,6 +6,72 @@ This document defines the formal contracts between NOVA slots, specifying payloa
 
 ## Contract Specifications
 
+### TRI_TRUTH_SIGNAL@1
+
+**Producer**: Slot 4 (TRI Engine)  
+**Consumers**: Slot 3 (Emotional Matrix), Slot 6 (Cultural Synthesis), Slot 7 (Production Controls), Slot 1 (Truth Anchor / Root-Mode)
+
+```yaml
+contract:
+  id: TRI_TRUTH_SIGNAL@1
+  version: "1"
+  schema_version: "1.0.0"
+  producer: slot04_tri_engine
+  consumers: ["slot03_emotional_matrix", "slot06_cultural_synthesis", "slot07_production_controls", "slot01_truth_anchor"]
+
+payload:
+  type: object
+  required_fields:
+    - tri_coherence
+    - tri_drift_z
+    - tri_jitter
+    - canonical_hash
+    - anchor_id
+    - timestamp
+  optional_fields:
+    - tri_band
+    - confidence
+    - source_window
+
+schema:
+  tri_coherence:
+    type: number
+    minimum: 0.0
+    maximum: 1.0
+  tri_drift_z:
+    type: number
+    minimum: -5.0
+    maximum: 5.0
+  tri_jitter:
+    type: number
+    minimum: 0.0
+    maximum: 0.5
+  canonical_hash:
+    type: string
+    description: "blake2b hash of canonicalized TRI payload"
+  anchor_id:
+    type: string
+    description: "Deterministic anchor id derived from canonical_hash"
+  tri_band:
+    type: string
+    enum: ["green", "amber", "red"]
+  timestamp:
+    type: number
+
+observability:
+  semantic_mirror_keys:
+    - slot04.tri_truth_signal
+    - slot04.tri_canonized
+  metrics:
+    - nova_tri_coherence_current
+    - nova_tri_canonization_hash
+    - nova_tri_to_anchor_events_total
+
+notes:
+  - Slot03/Slot06/Slot07 re-read this signal at call-time (no caching).
+  - Slot01 (Root-Mode) registers anchor_id when `NOVA_SLOT01_ROOT_MODE=1`.
+```
+
 ### EMOTION_REPORT@1
 
 **Producer**: Slot 3 (Emotional Matrix)  

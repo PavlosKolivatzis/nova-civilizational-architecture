@@ -14,7 +14,7 @@ and are clamped to the ``[0.0, 1.0]`` interval.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict, is_dataclass
-from typing import Any, Dict, Mapping, TypedDict
+from typing import Any, Dict, Mapping, Optional, TypedDict
 
 from frameworks.enums import DeploymentGuardrailResult
 
@@ -81,7 +81,7 @@ class SynthesisConfig:
 
 @dataclass
 class GuardrailValidationResult:
-    """Light‑weight guardrail result used by higher level modules."""
+    """Light-weight guardrail result used by higher level modules."""
 
     result: DeploymentGuardrailResult = DeploymentGuardrailResult.APPROVED
     compliance_score: float = 1.0
@@ -91,6 +91,9 @@ class GuardrailValidationResult:
     max_safe_adaptation: float = 0.0
     tri_gap: float = 0.0
     slot2_patterns: list[str] = field(default_factory=list)
+    tri_band: Optional[str] = None
+    anchor_id: Optional[str] = None
+    tri_signal: Dict[str, Any] = field(default_factory=dict)
 
 
 class CulturalSynthesisEngine:

@@ -106,6 +106,12 @@ signals:
   generativity_Gstar: {type: Scalar, desc: "Composite(Progress,Novelty,Consistency)"}
   eta: {type: Scalar, desc: "Global learning gain"}
   tri_coherence: {type: Scalar, desc: "Truth Resonance Index"}
+  tri_drift_z: {type: Scalar, range: [-5.0, 5.0], desc: "TRI drift Z-score against 24h baseline"}
+  tri_jitter: {type: Scalar, range: [0.0, 0.5], desc: "Phase jitter magnitude (lower=stable)"}
+  tri_band:
+    type: Text
+    enum: ["green", "amber", "red"]
+    desc: "Operational truth band classification used by downstream gates"
 
   # Convergence rate signals (ADMM/federated consensus)
   kappa_state:
@@ -203,6 +209,7 @@ ledgers:
     entries:
       - {type: deltaTHRESH_output, fields: [timestamp, truth_vector, spectral_entropy_H, assumptions, confidence], source: deltaTHRESH}
       - {type: constellation_placement, fields: [timestamp, anchor_id, position, tri_coherence, confidence], source: Constellation}
+      - {type: tri_truth_signal, fields: [timestamp, tri_coherence, tri_drift_z, tri_jitter, canonical_hash, anchor_id, tri_band], source: TRI_Engine}
 
   attest_ledger:
     purpose: "Hash-linked, immutable attestations"
@@ -268,7 +275,7 @@ frameworks:
     name: TRI Engine (Truth Resonance Index)
     purpose: "Calculate epistemic coherence and truth resonance scores"
     inputs: [truth_vector, context_vector, anchors]
-    outputs: [tri_score, tri_coherence, coherence_breakdown]
+    outputs: [tri_score, tri_coherence, coherence_breakdown, tri_truth_signal_payload]
     state_variables: [tri_score, active_anchors]
     transformations:
       - name: compute_tri
@@ -281,6 +288,11 @@ frameworks:
         out: [coherence_breakdown]
         rule: "decompose TRI into truth/resonance/index components"
         impl_ref: "src.nova.slots.slot04_tri_engine.analysis.decompose"
+      - name: canonize_truth_signal
+        in: [tri_coherence, tri_score]
+        out: [tri_truth_signal_payload]
+        rule: "Canonicalize TRI signal (tri_truth_signal@1) and publish to Semantic Mirror + ledgers"
+        impl_ref: "orchestrator.tri_truth_bridge.process_tri_truth_signal"
     interfaces: {upstream: [deltaTHRESH, Constellation], downstream: [WisdomGovernor, ProductionControls]}
 
   - id: Constellation
@@ -303,11 +315,49 @@ frameworks:
         impl_ref: "src.nova.slots.slot05_constellation.coherence.evaluate"
     interfaces: {upstream: [deltaTHRESH, TRI_Engine], downstream: [WisdomGovernor, ARC]}
 
+  - id: EmotionalMatrix
+    slot_id: 3
+    name: Slot03 Emotional Matrix
+    purpose: "Interpret affective signals with TRI canonization awareness"
+    inputs: [context_vector, tri_truth_signal@1]
+    outputs: [EMOTION_REPORT@1, DELTA_THREAT@1]
+    transformations:
+      - name: tri_enriched_analysis
+        in: [context_vector, tri_truth_signal@1]
+        out: [EMOTION_REPORT@1]
+        rule: "Gate emotional tone/escalation on canonical tri_coherence and bands"
+        impl_ref: "src.nova.slots.slot03_emotional_matrix.emotional_matrix_engine.EmotionalMatrixEngine.analyze"
+      - name: threat_projection
+        in: [EMOTION_REPORT@1, tri_truth_signal@1]
+        out: [DELTA_THREAT@1]
+        rule: "Propagate tri_drift_z into DELTA_THREAT contract metadata"
+        impl_ref: "src.nova.slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager.escalate"
+    interfaces: {upstream: [TRI_Engine], downstream: [CulturalSynthesis, WisdomGovernor]}
+
+  - id: CulturalSynthesis
+    slot_id: 6
+    name: Slot06 Cultural Synthesis
+    purpose: "Guardrail validation using Slot02 outputs + canonical TRI truth"
+    inputs: [cultural_context, tri_truth_signal@1]
+    outputs: [CULTURAL_PROFILE@1, GuardrailValidationResult]
+    transformations:
+      - name: tri_informed_guardrails
+        in: [tri_truth_signal@1, deltaTHRESH_output]
+        out: [GuardrailValidationResult]
+        rule: "Adjust principle preservation/residual risk based on tri_coherence & drift_z"
+        impl_ref: "src.nova.slots.slot06_cultural_synthesis.adapter.CulturalSynthesisAdapter.validate_cultural_deployment"
+      - name: cultural_profile_publish
+        in: [GuardrailValidationResult]
+        out: [CULTURAL_PROFILE@1]
+        rule: "Publish cultural profile enriched with anchor_id provenance"
+        impl_ref: "src.nova.slots.slot06_cultural_synthesis.engine.CulturalSynthesisEngine.synthesize"
+    interfaces: {upstream: [deltaTHRESH, TRI_Engine], downstream: [WisdomGovernor, CivilizationalDeployment]}
+
   - id: WisdomGovernor
     slot_id: 7
     name: Adaptive Wisdom Governor (Production Controls)
     purpose: "Closed-loop control of learning and production concurrency"
-    inputs: [tri_coherence, stability_S, hopf_H, generativity_Gstar]
+    inputs: [tri_truth_signal@1, stability_S, hopf_H, generativity_Gstar]
     outputs: [eta, production_mode]
     state_variables: [eta, stability_S, hopf_H, generativity_Gstar, gamma, production_mode]
     transformations:
@@ -326,7 +376,7 @@ frameworks:
         out: [production_mode]
         rule: "FULL if S>=0.03 and H>=0.02, DEGRADED if boundary, MINIMAL else"
         impl_ref: "src.nova.slots.slot07_production_controls.modes.determine_mode"
-    interfaces: {upstream: [Constellation, TRI_Engine], downstream: [CivilizationalDeployment]}
+      - name: tri_backpressure`r`n        in: [tri_truth_signal@1]`r`n        out: [production_mode]`r`n        rule: "tri_band and tri_drift_z enforce breaker freeze with attestation requests"`r`n        impl_ref: "src.nova.slots.slot07_production_controls.wisdom_backpressure.compute_max_concurrent_jobs"`r`n    interfaces: {upstream: [Constellation, TRI_Engine], downstream: [CivilizationalDeployment]}
 
   - id: DistortionProtection
     slot_id: 9
@@ -739,3 +789,5 @@ metrics:
 # Next: Implement src/nova/ontology/ (loader, validator, enforcer) + coordination/ + arc/instruments/ + tests
 # Key refs: .nova/meta.yaml learning_path, USM paper spectral/equilibrium math, ARC self-improvement
 # Critical: Maintain 3-ledger separation, role enforcement, consent gates, empirical thresholds, read-only observers
+
+

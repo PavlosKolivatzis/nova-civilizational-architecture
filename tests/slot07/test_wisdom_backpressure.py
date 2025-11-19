@@ -133,6 +133,7 @@ def test_public_api():
         "compute_max_concurrent_jobs",
         "get_backpressure_config",
         "get_backpressure_status",
+        "get_tri_signal_snapshot",
         "__all__",
         "annotations",  # from __future__ import annotations
         "os",
@@ -142,4 +143,4 @@ def test_public_api():
     assert public <= expected
 
     exported = set(module.__all__)
-    assert exported == {"compute_max_concurrent_jobs", "get_backpressure_config"}
+    assert exported == {"compute_max_concurrent_jobs", "get_backpressure_config", "get_tri_signal_snapshot"}
