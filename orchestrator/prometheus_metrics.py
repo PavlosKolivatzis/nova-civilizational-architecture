@@ -581,6 +581,17 @@ def update_system_health_metrics() -> None:
         if coherence is None:
             coherence = getenv("TRI_COHERENCE", "0.7")  # Default decent coherence
         tri_coherence_gauge.set(float(coherence))
+    except Exception:
+        # Fallback to conservative defaults instead of blowing up importers
+        from os import getenv
+        try:
+            system_pressure_gauge.set(float(getenv("SLOT07_PRESSURE_LEVEL", "0.3")))
+        except Exception:
+            system_pressure_gauge.set(0.3)
+        try:
+            tri_coherence_gauge.set(float(getenv("TRI_COHERENCE", "0.7")))
+        except Exception:
+            tri_coherence_gauge.set(0.7)
 
 
 def update_tri_truth_metrics() -> None:
@@ -594,6 +605,14 @@ def update_tri_truth_metrics() -> None:
         metrics = get_bridge_metrics()
     except Exception:
         return
+
+    mirror = None
+    try:
+        from orchestrator.semantic_mirror import get_semantic_mirror
+
+        mirror = get_semantic_mirror()
+    except Exception:
+        mirror = None
 
     coherence = metrics.get("tri_coherence")
     if coherence is not None:
@@ -637,28 +656,29 @@ def update_tri_truth_metrics() -> None:
         except (TypeError, ValueError):
             pass
 
-        # Phase 6.0 Belief metrics from probabilistic contracts
-        if mirror:
-            # Slot 4 TRI belief
-            tri_belief = mirror.get_context("slot04.tri_belief", "prometheus_metrics")
-            if tri_belief and hasattr(tri_belief, 'mean'):
-                slot_phase_lock_belief_mean_gauge.labels(slot="4").set(tri_belief.mean)
-                slot_phase_lock_belief_variance_gauge.labels(slot="4").set(tri_belief.variance)
+    # Phase 6.0 Belief metrics from probabilistic contracts
+    if mirror:
+        # Slot 4 TRI belief
+        tri_belief = mirror.get_context("slot04.tri_belief", "prometheus_metrics")
+        if tri_belief and hasattr(tri_belief, 'mean'):
+            slot_phase_lock_belief_mean_gauge.labels(slot="4").set(tri_belief.mean)
+            slot_phase_lock_belief_variance_gauge.labels(slot="4").set(tri_belief.variance)
 
-            # Slot 7 Production Controls belief
-            pc_belief = mirror.get_context("slot07.phase_lock_belief", "prometheus_metrics")
-            if pc_belief and hasattr(pc_belief, 'mean'):
-                slot_phase_lock_belief_mean_gauge.labels(slot="7").set(pc_belief.mean)
-                slot_phase_lock_belief_variance_gauge.labels(slot="7").set(pc_belief.variance)
+        # Slot 7 Production Controls belief
+        pc_belief = mirror.get_context("slot07.phase_lock_belief", "prometheus_metrics")
+        if pc_belief and hasattr(pc_belief, 'mean'):
+            slot_phase_lock_belief_mean_gauge.labels(slot="7").set(pc_belief.mean)
+            slot_phase_lock_belief_variance_gauge.labels(slot="7").set(pc_belief.variance)
 
-        # Deployment gate status - always compute even with defaults
-        try:
-            from nova.slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper
-            gatekeeper = LightClockGatekeeper(mirror=mirror)
-            gate_open = gatekeeper.should_open_gate()
-            deployment_gate_gauge.set(1 if gate_open else 0)
-        except Exception:
-            deployment_gate_gauge.set(0)  # Conservative: gate closed on error
+    # Deployment gate status - always compute even with defaults
+    try:
+        from nova.slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper
+
+        gatekeeper = LightClockGatekeeper(mirror=mirror)
+        gate_open = gatekeeper.should_open_gate()
+        deployment_gate_gauge.set(1 if gate_open else 0)
+    except Exception:
+        deployment_gate_gauge.set(0)  # Conservative: gate closed on error
 
     except Exception:
         # Complete fallback - set reasonable defaults
