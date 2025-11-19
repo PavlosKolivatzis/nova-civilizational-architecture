@@ -17,6 +17,7 @@ KNOWN_FEATURE_FLAGS = {
     "NOVA_ENABLE_LIFESPAN",
     "NOVA_USE_SHARED_HASH",
     "NOVA_ENABLE_PROMETHEUS",
+    "NOVA_SLOT01_ROOT_MODE",  # Phase 1: Slot01 Root-Mode migration flag
 }
 
 
