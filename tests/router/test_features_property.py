@@ -6,7 +6,7 @@ across adversarial inputs using Hypothesis property-based testing.
 
 import math
 import pytest
-from hypothesis import given, strategies as st, settings
+from hypothesis import given, strategies as st, settings, HealthCheck
 from orchestrator.router.features import build_feature_vector
 
 # Keep runtime predictable on CI
@@ -49,6 +49,7 @@ class TestFeatureVectorProperties:
     """Property-based tests for feature vector safety and correctness."""
 
     @given(adversarial_contexts())
+    @settings(suppress_health_check=[HealthCheck.too_slow])
     def test_build_feature_vector_total_function(self, ctx):
         """Test that build_feature_vector is a total function (never crashes)."""
         vec = build_feature_vector(ctx)

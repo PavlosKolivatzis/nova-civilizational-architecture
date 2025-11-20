@@ -33,6 +33,7 @@ from orchestrator.core import create_router
 from orchestrator.core.event_bus import Event, EventBus
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.health import health_payload, prometheus_metrics
+from orchestrator.router.epistemic_router import EpistemicRouter
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ else:
 monitor = PerformanceMonitor()
 bus = EventBus(monitor=monitor)
 router = create_router(monitor)
+deterministic_router = EpistemicRouter()
 configure_logging(level="INFO", json_format=True)
 
 # Optional: configure fallbacks
@@ -676,6 +678,22 @@ if FastAPI is not None:
         _update_phase10_metrics()
         data, content_type = get_internal_metrics_response()
         return Response(content=data, media_type=content_type)
+
+    @app.post("/router/decide")
+    async def router_decide(payload: dict | None = None):
+        """Deterministic routing decision endpoint."""
+        decision = deterministic_router.decide(payload or {})
+        return decision.to_dict()
+
+    @app.get("/router/debug")
+    async def router_debug():
+        """Return the latest routing decision (or generate one with safe defaults)."""
+        last = deterministic_router.last_decision
+        if last is None:
+            last = deterministic_router.decide({})
+        body = last.to_dict()
+        body.setdefault("metadata", {})["mode"] = "deterministic"
+        return body
 
     # Phase 10: FEP (Federated Ethical Protocol) endpoints
     @app.post("/phase10/fep/proposal")

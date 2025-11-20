@@ -111,6 +111,45 @@ def threshold_override_gauge(name: str, value: float) -> None:
     """Expose whether an environment override is applied (1.0) or not (0.0)."""
     _threshold_override_gauge.labels(name=name).set(value)
 
+# Router metrics
+router_route_selected_gauge_public = Gauge(
+    "nova_route_selected",
+    "Most recent routing decision",
+    ["route"],
+    registry=_PUBLIC_REGISTRY,
+)
+router_constraint_counter_public = Counter(
+    "nova_route_constraints_total",
+    "Constraint evaluation results",
+    ["result"],
+    registry=_PUBLIC_REGISTRY,
+)
+router_constraint_snapshot_info = Info(
+    "nova_router_constraint_snapshot",
+    "Last constraint snapshot (internal)",
+    registry=_INTERNAL_REGISTRY,
+)
+router_policy_info = Info(
+    "nova_router_anr_policy",
+    "Last ANR/static policy output",
+    registry=_INTERNAL_REGISTRY,
+)
+router_advisor_slot05_gauge = Gauge(
+    "nova_router_advisor_slot05",
+    "Advisor score from Slot05 constellation",
+    registry=_INTERNAL_REGISTRY,
+)
+router_advisor_slot08_gauge = Gauge(
+    "nova_router_advisor_slot08",
+    "Advisor score from Slot08 semantic continuity",
+    registry=_INTERNAL_REGISTRY,
+)
+router_final_score_gauge = Gauge(
+    "nova_router_final_score",
+    "Final deterministic routing score",
+    registry=_INTERNAL_REGISTRY,
+)
+
 
 # --- LightClock & System Health metrics ------------------------------------
 lightclock_phase_lock_gauge = Gauge(
@@ -932,6 +971,47 @@ def _refresh_metrics() -> None:
     update_tri_truth_metrics()
     update_semantic_mirror_metrics()
     update_secrets_baseline_metrics()
+
+
+def record_router_decision(decision) -> None:
+    """Record router decisions for observability feeds."""
+    # Import lazily to avoid circular dependencies when metrics module loads
+    route = getattr(decision, "route", "unknown")
+    router_route_selected_gauge_public.labels(route=route).set(1)
+
+    constraint_allowed = getattr(decision.constraints, "allowed", False)
+    result_label = "allow" if constraint_allowed else "deny"
+    router_constraint_counter_public.labels(result=result_label).inc()
+
+    try:
+        info_payload = {
+            "allowed": str(constraint_allowed),
+            "reasons": ",".join(decision.constraints.reasons),
+        }
+        router_constraint_snapshot_info.info(info_payload)
+    except Exception:
+        pass
+
+    try:
+        router_policy_info.info(
+            {
+                "route": decision.policy.route,
+                "score": f"{decision.policy.score:.3f}",
+            }
+        )
+    except Exception:
+        pass
+
+    advisors = getattr(decision, "advisors", {}) or {}
+    slot05 = advisors.get("slot05")
+    slot08 = advisors.get("slot08")
+
+    if slot05 is not None:
+        router_advisor_slot05_gauge.set(float(slot05.score))
+    if slot08 is not None:
+        router_advisor_slot08_gauge.set(float(slot08.score))
+
+    router_final_score_gauge.set(float(decision.final_score))
 
 
 def _generate_payload_for_registry(registry):
