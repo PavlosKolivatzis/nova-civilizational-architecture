@@ -15,6 +15,8 @@ from orchestrator.router.constraints import _tri_signal_from_request as _tri_sig
 from orchestrator.router.constraints import _slot07_state as _slot07_state  # type: ignore
 from orchestrator.router.constraints import _slot10_state as _slot10_state  # type: ignore
 from orchestrator.router.constraints import _current_thresholds as _current_thresholds  # type: ignore
+from orchestrator.temporal.ledger import TemporalLedger
+from orchestrator.temporal.engine import TemporalEngine
 
 
 @dataclass
@@ -38,8 +40,9 @@ class GovernanceResult:
 class GovernanceEngine:
     """Enforces system-wide governance rules and ethical invariants."""
 
-    def __init__(self, ledger: Optional[GovernanceLedger] = None):
+    def __init__(self, ledger: Optional[GovernanceLedger] = None, temporal_ledger: Optional[TemporalLedger] = None):
         self._ledger = ledger or GovernanceLedger()
+        self._temporal_engine = TemporalEngine(temporal_ledger or TemporalLedger())
         self._last_result: Optional[GovernanceResult] = None
 
     def evaluate(
@@ -54,11 +57,14 @@ class GovernanceEngine:
         slot07 = state.get("slot07") or _slot07_state(state)
         slot10 = state.get("slot10") or _slot10_state(state)
 
+        temporal_snapshot = self._temporal_engine.compute(state)
+
         snapshot = {
             "tri_signal": tri_signal,
             "slot07": slot07,
             "slot10": slot10,
             "thresholds": thresholds,
+            "temporal": temporal_snapshot.to_dict(),
         }
 
         if routing_decision:
@@ -102,7 +108,13 @@ class GovernanceEngine:
         metadata = {
             "stability_score": float(state.get("stability_score", 1.0) or 1.0),
             "policy_score": float(state.get("policy_score", 0.0) or 0.0),
+            "temporal_convergence": temporal_snapshot.convergence_score,
+            "temporal_penalty": temporal_snapshot.divergence_penalty,
         }
+
+        if allowed and temporal_snapshot.temporal_drift > thresholds.get("temporal_drift_threshold", 0.3):
+            allowed = False
+            reason = "temporal_drift_high"
 
         result = GovernanceResult(
             allowed=allowed,
