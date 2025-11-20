@@ -876,3 +876,14 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
     if orch and slot_fn:
         return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
     return None
+    @app.get("/temporal/snapshot")
+    async def temporal_snapshot():
+        return {"status": "pending"}
+
+    @app.get("/temporal/ledger")
+    async def temporal_ledger():
+        return {"entries": []}
+
+    @app.get("/temporal/debug")
+    async def temporal_debug():
+        return {"engine": "pending"}

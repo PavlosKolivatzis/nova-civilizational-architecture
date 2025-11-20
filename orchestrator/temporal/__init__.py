@@ -1,0 +1,1 @@
+"""Temporal intelligence placeholder module."""

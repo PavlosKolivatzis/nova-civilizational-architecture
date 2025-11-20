@@ -150,6 +150,13 @@ router_final_score_gauge = Gauge(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Temporal placeholder metric (Phase-6 scaffold)
+temporal_scaffold_gauge = Gauge(
+    "nova_temporal_placeholder",
+    "Placeholder temporal readiness gauge",
+    registry=_PUBLIC_REGISTRY,
+)
+
 
 # --- LightClock & System Health metrics ------------------------------------
 lightclock_phase_lock_gauge = Gauge(

@@ -58,10 +58,12 @@ DOCUMENTED_KEYS = {
     "governance.ethics",
     "governance.policy_scores",
     "governance.final_decision",
+    "temporal.snapshot",
+    "temporal.ledger_head",
 }
 
 # Valid key pattern (no stray 'test.' matches)
-VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router|governance)\.[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*\b")
+VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router|governance|temporal)\.[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*\b")
 
 # Mirror API call patterns to extract actual context keys
 PUBLISH_RE = re.compile(r'publish\(\s*["\']((?: slot\d{2}|router|governance)\.[a-z0-9_.]+)["\']', re.I)

@@ -1,0 +1,16 @@
+schema: nova_contract/v1
+contract_id: temporal_consistency@1
+title: Temporal Consistency Snapshot
+description: Placeholder contract for Phase-6 temporal intelligence layer
+version: "1.0.0"
+slots:
+  - id: 0
+    name: Temporal Engine
+    role: publisher
+fields:
+  - name: timestamp
+    type: float
+    description: Event timestamp (epoch seconds)
+  - name: node_clock
+    type: float
+    description: Local node clock used for drift calculations
