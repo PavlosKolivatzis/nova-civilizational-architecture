@@ -35,6 +35,7 @@ from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.health import health_payload, prometheus_metrics
 from orchestrator.router.epistemic_router import EpistemicRouter
 from orchestrator.governance import GovernanceEngine, GovernanceLedger
+from orchestrator.temporal import TemporalLedger
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,7 @@ router = create_router(monitor)
 deterministic_router = EpistemicRouter()
 governance_ledger = GovernanceLedger()
 governance_engine = GovernanceEngine(governance_ledger)
+temporal_ledger = TemporalLedger()
 configure_logging(level="INFO", json_format=True)
 
 # Optional: configure fallbacks
@@ -876,14 +878,19 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
     if orch and slot_fn:
         return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
     return None
-    @app.get("/temporal/snapshot")
-    async def temporal_snapshot():
-        return {"status": "pending"}
+@app.get("/temporal/snapshot")
+async def temporal_snapshot():
+    return {"snapshot": temporal_ledger.head()}
 
-    @app.get("/temporal/ledger")
-    async def temporal_ledger():
-        return {"entries": []}
 
-    @app.get("/temporal/debug")
-    async def temporal_debug():
-        return {"engine": "pending"}
+@app.get("/temporal/ledger")
+async def temporal_ledger_endpoint():
+    return {"entries": temporal_ledger.snapshot()}
+
+
+@app.get("/temporal/debug")
+async def temporal_debug():
+    return {
+        "entries": len(temporal_ledger.snapshot()),
+        "head": temporal_ledger.head(),
+    }
