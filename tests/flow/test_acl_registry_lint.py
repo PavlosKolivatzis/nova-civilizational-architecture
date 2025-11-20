@@ -54,15 +54,19 @@ DOCUMENTED_KEYS = {
     "router.constraint_snapshot",
     "router.anr_policy",
     "router.final_route",
+    "governance.snapshot",
+    "governance.ethics",
+    "governance.policy_scores",
+    "governance.final_decision",
 }
 
 # Valid key pattern (no stray 'test.' matches)
-VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router)\.[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*\b")
+VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router|governance)\.[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*\b")
 
 # Mirror API call patterns to extract actual context keys
-PUBLISH_RE = re.compile(r'publish\(\s*["\']((?: slot\d{2}|router)\.[a-z0-9_.]+)["\']', re.I)
-GET_RE     = re.compile(r'get_context\(\s*["\']((?: slot\d{2}|router)\.[a-z0-9_.]+)["\']', re.I)
-QUERY_RE   = re.compile(r'query\(\s*["\']((?: slot\d{2}|router)\.[a-z0-9_.]+)["\']', re.I)
+PUBLISH_RE = re.compile(r'publish\(\s*["\']((?: slot\d{2}|router|governance)\.[a-z0-9_.]+)["\']', re.I)
+GET_RE     = re.compile(r'get_context\(\s*["\']((?: slot\d{2}|router|governance)\.[a-z0-9_.]+)["\']', re.I)
+QUERY_RE   = re.compile(r'query\(\s*["\']((?: slot\d{2}|router|governance)\.[a-z0-9_.]+)["\']', re.I)
 
 # Allowlisted test-only keys/prefixes
 ALLOWED_TEST_KEYS = {"slot07.test_data", "slot07.rate_test", "slot07.test", "slot04.get", "slot08.get"}

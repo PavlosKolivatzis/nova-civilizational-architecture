@@ -34,6 +34,7 @@ from orchestrator.core.event_bus import Event, EventBus
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.health import health_payload, prometheus_metrics
 from orchestrator.router.epistemic_router import EpistemicRouter
+from orchestrator.governance import GovernanceEngine, GovernanceLedger
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,8 @@ monitor = PerformanceMonitor()
 bus = EventBus(monitor=monitor)
 router = create_router(monitor)
 deterministic_router = EpistemicRouter()
+governance_ledger = GovernanceLedger()
+governance_engine = GovernanceEngine(governance_ledger)
 configure_logging(level="INFO", json_format=True)
 
 # Optional: configure fallbacks
@@ -682,18 +685,53 @@ if FastAPI is not None:
     @app.post("/router/decide")
     async def router_decide(payload: dict | None = None):
         """Deterministic routing decision endpoint."""
-        decision = deterministic_router.decide(payload or {})
-        return decision.to_dict()
+        payload = payload or {}
+        precheck = governance_engine.evaluate(payload, record=False)
+        if not precheck.allowed:
+            return {
+                "route": "hold",
+                "governance": precheck.to_dict(),
+            }
+
+        decision = deterministic_router.decide(payload)
+        decision_dict = decision.to_dict()
+        enriched_state = dict(payload)
+        enriched_state["routing_decision"] = decision_dict
+        final_governance = governance_engine.evaluate(
+            enriched_state,
+            routing_decision=decision_dict,
+            record=True,
+        )
+        response = dict(decision_dict)
+        response["governance"] = final_governance.to_dict()
+        return response
 
     @app.get("/router/debug")
     async def router_debug():
         """Return the latest routing decision (or generate one with safe defaults)."""
-        last = deterministic_router.last_decision
-        if last is None:
-            last = deterministic_router.decide({})
-        body = last.to_dict()
+        last_decision = deterministic_router.last_decision
+        if last_decision is None:
+            last_decision = deterministic_router.decide({})
+        body = last_decision.to_dict()
         body.setdefault("metadata", {})["mode"] = "deterministic"
+        governance = governance_engine.last_result
+        if governance:
+            body["governance"] = governance.to_dict()
         return body
+
+    @app.post("/governance/evaluate")
+    async def governance_evaluate(payload: dict | None = None):
+        """Evaluate governance state directly."""
+        result = governance_engine.evaluate(payload or {})
+        return result.to_dict()
+
+    @app.get("/governance/debug")
+    async def governance_debug():
+        """Return last governance evaluation."""
+        last = governance_engine.last_result
+        if last is None:
+            last = governance_engine.evaluate({}, record=False)
+        return last.to_dict()
 
     # Phase 10: FEP (Federated Ethical Protocol) endpoints
     @app.post("/phase10/fep/proposal")
