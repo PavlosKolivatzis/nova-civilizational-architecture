@@ -151,9 +151,34 @@ router_final_score_gauge = Gauge(
 )
 
 # Temporal placeholder metric (Phase-6 scaffold)
-temporal_scaffold_gauge = Gauge(
-    "nova_temporal_placeholder",
-    "Placeholder temporal readiness gauge",
+temporal_drift_gauge = Gauge(
+    "nova_temporal_drift",
+    "Temporal drift between successive TRI snapshots",
+    registry=_INTERNAL_REGISTRY,
+)
+temporal_variance_gauge = Gauge(
+    "nova_temporal_variance",
+    "Variance of recent TRI coherence values",
+    registry=_INTERNAL_REGISTRY,
+)
+temporal_prediction_error_gauge = Gauge(
+    "nova_temporal_prediction_error",
+    "Prediction error between expected and observed coherence",
+    registry=_INTERNAL_REGISTRY,
+)
+temporal_convergence_gauge = Gauge(
+    "nova_temporal_convergence",
+    "Temporal convergence metric",
+    registry=_INTERNAL_REGISTRY,
+)
+temporal_snapshot_timestamp_gauge = Gauge(
+    "nova_temporal_snapshot_timestamp",
+    "Timestamp of last temporal snapshot",
+    registry=_INTERNAL_REGISTRY,
+)
+temporal_router_state_gauge = Gauge(
+    "nova_temporal_router_state",
+    "Public-safe temporal router readiness",
     registry=_PUBLIC_REGISTRY,
 )
 
@@ -1045,3 +1070,9 @@ def get_internal_metrics_response():
     """Get internal Prometheus metrics response."""
     _refresh_metrics()
     return _generate_payload_for_registry(_INTERNAL_REGISTRY)
+
+
+def get_temporal_metrics_response():
+    """Public-safe temporal metrics (Phase-6)."""
+    _refresh_metrics()
+    return _generate_payload_for_registry(_PUBLIC_REGISTRY)

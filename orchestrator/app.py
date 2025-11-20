@@ -894,3 +894,14 @@ async def temporal_debug():
         "entries": len(temporal_ledger.snapshot()),
         "head": temporal_ledger.head(),
     }
+
+
+@app.get("/metrics/temporal")
+async def metrics_temporal() -> Response:
+    flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
+    if flag != "1":
+        return Response(content=b"", status_code=404, media_type="text/plain")
+    from orchestrator.prometheus_metrics import get_temporal_metrics_response
+
+    data, content_type = get_temporal_metrics_response()
+    return Response(content=data, media_type=content_type)
