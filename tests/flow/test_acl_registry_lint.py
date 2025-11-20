@@ -50,7 +50,10 @@ DOCUMENTED_KEYS = {
     "router.current_decision_id",
     "router.anr_reward_immediate",
     "router.anr_reward_deployment",
-    "router.anr_explain"
+    "router.anr_explain",
+    "router.constraint_snapshot",
+    "router.anr_policy",
+    "router.final_route",
 }
 
 # Valid key pattern (no stray 'test.' matches)
