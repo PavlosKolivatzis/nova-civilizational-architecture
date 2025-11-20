@@ -3,10 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from orchestrator.temporal.engine import TemporalEngine, TemporalSnapshot
+from orchestrator.temporal.engine import TemporalEngine
 from orchestrator.temporal.ledger import TemporalLedger
-from orchestrator.temporal import TemporalConsistency  # placeholder
-from orchestrator.temporal.metrics import record_temporal_metrics
 from orchestrator.thresholds.manager import snapshot_thresholds
 
 
@@ -40,6 +38,14 @@ class TemporalConstraintEngine:
         prediction_threshold = thresholds.get("temporal_prediction_error_threshold", 0.2)
         min_coherence = thresholds.get("min_temporal_coherence", 0.7)
 
+        tri_signal = payload.get("tri_signal") or {}
+        if "tri_coherence" not in tri_signal:
+            return TemporalConstraintResult(
+                allowed=True,
+                reason="temporal_data_missing",
+                snapshot={"tri_signal": tri_signal},
+            )
+
         snapshot = self._engine.compute(payload)
         allowed = True
         reason = "ok"
@@ -62,4 +68,3 @@ class TemporalConstraintEngine:
             snapshot=snapshot.to_dict(),
             penalty=penalty,
         )
-

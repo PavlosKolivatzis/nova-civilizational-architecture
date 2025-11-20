@@ -93,7 +93,8 @@ def load_ontology_contract_refs() -> Set[str]:
     with ONTOLOGY_PATH.open("r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
     refs: Set[str] = set()
-    _collect_contract_refs_from_obj(data.get("frameworks", []), refs)
+    for section in ("frameworks", "coordination_frameworks"):
+        _collect_contract_refs_from_obj(data.get(section, []), refs)
     return refs
 
 

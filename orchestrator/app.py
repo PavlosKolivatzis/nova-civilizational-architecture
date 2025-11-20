@@ -34,8 +34,10 @@ from orchestrator.core.event_bus import Event, EventBus
 from orchestrator.core.performance_monitor import PerformanceMonitor
 from orchestrator.health import health_payload, prometheus_metrics
 from orchestrator.router.epistemic_router import EpistemicRouter
+from orchestrator.router.temporal_constraints import TemporalConstraintEngine
 from orchestrator.governance import GovernanceEngine, GovernanceLedger
 from orchestrator.temporal import TemporalLedger
+from orchestrator.temporal.adapters import read_temporal_snapshot, read_temporal_ledger_head
 
 logger = logging.getLogger(__name__)
 
@@ -88,10 +90,11 @@ else:
 monitor = PerformanceMonitor()
 bus = EventBus(monitor=monitor)
 router = create_router(monitor)
-deterministic_router = EpistemicRouter()
+temporal_ledger = TemporalLedger()
+temporal_constraint_engine = TemporalConstraintEngine(ledger=temporal_ledger)
+deterministic_router = EpistemicRouter(temporal_engine=temporal_constraint_engine)
 governance_ledger = GovernanceLedger()
 governance_engine = GovernanceEngine(governance_ledger)
-temporal_ledger = TemporalLedger()
 configure_logging(level="INFO", json_format=True)
 
 # Optional: configure fallbacks
@@ -693,6 +696,11 @@ if FastAPI is not None:
             return {
                 "route": "hold",
                 "governance": precheck.to_dict(),
+                "constraints": {
+                    "allowed": False,
+                    "reasons": ["governance_precheck"],
+                    "snapshot": {},
+                },
             }
 
         decision = deterministic_router.decide(payload)
@@ -878,14 +886,23 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
     if orch and slot_fn:
         return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
     return None
+
+
 @app.get("/temporal/snapshot")
 async def temporal_snapshot():
+    mirror_snapshot = read_temporal_snapshot("temporal_api")
+    if mirror_snapshot:
+        return {"snapshot": mirror_snapshot}
     return {"snapshot": temporal_ledger.head()}
 
 
 @app.get("/temporal/ledger")
 async def temporal_ledger_endpoint():
-    return {"entries": temporal_ledger.snapshot()}
+    entries = temporal_ledger.snapshot()
+    if entries:
+        return {"entries": entries}
+    head = read_temporal_ledger_head("temporal_api")
+    return {"entries": [head] if head else []}
 
 
 @app.get("/temporal/debug")

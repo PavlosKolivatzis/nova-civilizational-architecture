@@ -102,7 +102,43 @@ def _configure_production_access_rules(mirror) -> None:
             "slot03_emotional_matrix",
             "slot06_cultural_synthesis",
             "slot07_production_controls"
-        ]
+        ],
+
+        # Router & governance contexts
+        "router.constraint_snapshot": [
+            "slot07_production_controls",
+            "slot10_civilizational_deployment",
+            "governance"
+        ],
+        "router.anr_policy": [
+            "slot07_production_controls",
+            "slot10_civilizational_deployment",
+            "governance"
+        ],
+        "router.final_route": [
+            "slot07_production_controls",
+            "slot10_civilizational_deployment",
+            "governance"
+        ],
+
+        # Temporal contexts
+        "temporal.snapshot": [
+            "router",
+            "governance",
+            "slot07_production_controls",
+            "slot10_civilizational_deployment",
+            "temporal_api"
+        ],
+        "temporal.ledger_head": [
+            "governance",
+            "slot10_civilizational_deployment",
+            "temporal_api"
+        ],
+        "temporal.router_modifiers": [
+            "governance",
+            "slot07_production_controls",
+            "slot10_civilizational_deployment"
+        ],
     }
 
     mirror.configure_access_rules(production_rules)

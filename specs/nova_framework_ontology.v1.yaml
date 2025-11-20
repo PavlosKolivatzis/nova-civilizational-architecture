@@ -676,6 +676,25 @@ coordination_frameworks:
       fallback_mode: isolated_autonomy
     interfaces: {upstream: [Slot10, CRR, MSE], downstream: [external_nova_nodes]}
 
+  - id: TemporalIntegrity
+    slot_id: null
+    name: Temporal Consistency Engine
+    purpose: "Compute temporal drift/variance and publish temporal_consistency@1 for router and governance layers"
+    category: temporal_governance
+    inputs: [tri_truth_signal@1, slot07_production@2, router_decision_stream, governance_state]
+    outputs: [temporal_consistency@1]
+    state_variables: [temporal_drift, temporal_variance, prediction_error]
+    transformations:
+      - name: temporal_snapshot_generation
+        in: [tri_truth_signal@1, slot07_production@2, governance_state]
+        out: [temporal_consistency@1]
+        rule: "Temporal ledger delta + LightClock gate alignment"
+        impl_ref: "orchestrator.temporal.engine.TemporalEngine"
+    integration:
+      feeds_to: [Governance, Router]
+      observes: [Slot07, Slot10]
+      mode: read_only_observer
+
 # ---------- Validation & Testing ----------
 validation:
   required_frameworks: [TruthAnchor, deltaTHRESH, TRI_Engine, Constellation, WisdomGovernor, DistortionProtection, ARC]

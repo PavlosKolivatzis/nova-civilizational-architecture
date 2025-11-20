@@ -35,6 +35,11 @@ temporal_convergence_gauge = _get_or_register_gauge(
     "Temporal convergence score",
     registry=nova_internal_registry,
 )
+temporal_divergence_gauge = _get_or_register_gauge(
+    "nova_temporal_divergence",
+    "Temporal divergence penalty",
+    registry=nova_internal_registry,
+)
 temporal_snapshot_timestamp_gauge = _get_or_register_gauge(
     "nova_temporal_snapshot_timestamp",
     "Timestamp of last temporal snapshot (epoch seconds)",
@@ -53,5 +58,6 @@ def record_temporal_metrics(snapshot) -> None:
     temporal_variance_gauge.set(snapshot.temporal_variance)
     temporal_prediction_error_gauge.set(snapshot.prediction_error)
     temporal_convergence_gauge.set(snapshot.convergence_score)
+    temporal_divergence_gauge.set(snapshot.divergence_penalty)
     temporal_snapshot_timestamp_gauge.set(snapshot.timestamp)
     temporal_router_state_gauge.set(1.0 if snapshot.gate_state else 0.0)

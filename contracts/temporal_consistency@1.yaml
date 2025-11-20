@@ -1,16 +1,62 @@
 schema: nova_contract/v1
 contract_id: temporal_consistency@1
 title: Temporal Consistency Snapshot
-description: Placeholder contract for Phase-6 temporal intelligence layer
+description: Canonical temporal drift snapshot emitted by the Temporal Engine
 version: "1.0.0"
 slots:
   - id: 0
     name: Temporal Engine
     role: publisher
+    description: Emits canonical temporal snapshots
+  - id: 7
+    name: Slot07 Production Controls
+    role: consumer
+    description: Consumes temporal penalties/backpressure indicators
+  - id: 10
+    name: Slot10 LightClock Gatekeeper
+    role: consumer
+    description: Aligns deployment gates with temporal integrity
+  - id: 11
+    name: Governance Layer
+    role: consumer
+    description: Evaluates system-wide temporal stability before allowing action
 fields:
   - name: timestamp
     type: float
-    description: Event timestamp (epoch seconds)
+    description: Event timestamp (epoch seconds, UTC)
   - name: node_clock
     type: float
-    description: Local node clock used for drift calculations
+    description: Local monotonic node clock
+  - name: tri_coherence
+    type: float
+    description: TRI coherence at snapshot time (0-1)
+  - name: tri_drift_z
+    type: float
+    description: TRI drift Z-score vs prior baseline
+  - name: temporal_drift
+    type: float
+    description: Absolute coherence delta vs previous snapshot
+  - name: temporal_variance
+    type: float
+    description: Rolling variance of last N coherence samples
+  - name: prediction_error
+    type: float
+    description: Absolute delta between predicted and observed coherence
+  - name: convergence_score
+    type: float
+    description: Temporal convergence score (0-1, higher is better)
+  - name: divergence_penalty
+    type: float
+    description: Penalty term derived from variance + prediction_error
+  - name: slot07_mode
+    type: string
+    description: Slot07 production mode at capture time
+  - name: gate_state
+    type: bool
+    description: Whether Slot10 LightClock gate was open
+  - name: governance_state
+    type: string
+    description: Governance decision state (ok|hold|ethics_block|drift)
+  - name: hash
+    type: string
+    description: SHA3-256 hash of previous snapshot + current payload (ledger chain)

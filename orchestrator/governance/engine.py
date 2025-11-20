@@ -16,7 +16,12 @@ from orchestrator.router.constraints import _slot07_state as _slot07_state  # ty
 from orchestrator.router.constraints import _slot10_state as _slot10_state  # type: ignore
 from orchestrator.router.constraints import _current_thresholds as _current_thresholds  # type: ignore
 from orchestrator.temporal.ledger import TemporalLedger
-from orchestrator.temporal.engine import TemporalEngine
+from orchestrator.temporal.engine import TemporalEngine, TemporalSnapshot
+from orchestrator.temporal.adapters import (
+    read_temporal_snapshot,
+    read_temporal_router_modifiers,
+    read_temporal_ledger_head,
+)
 
 
 @dataclass
@@ -57,15 +62,27 @@ class GovernanceEngine:
         slot07 = state.get("slot07") or _slot07_state(state)
         slot10 = state.get("slot10") or _slot10_state(state)
 
-        temporal_snapshot = self._temporal_engine.compute(state)
+        existing_temporal = read_temporal_snapshot("governance")
+        if existing_temporal:
+            temporal_snapshot = TemporalSnapshot.from_dict(existing_temporal)
+            temporal_payload = dict(existing_temporal)
+        else:
+            temporal_snapshot = self._temporal_engine.compute(state)
+            temporal_payload = temporal_snapshot.to_dict()
 
         snapshot = {
             "tri_signal": tri_signal,
             "slot07": slot07,
             "slot10": slot10,
             "thresholds": thresholds,
-            "temporal": temporal_snapshot.to_dict(),
+            "temporal": temporal_payload,
         }
+        ledger_head = read_temporal_ledger_head("governance")
+        if ledger_head:
+            snapshot["temporal_ledger_head"] = ledger_head
+        router_modifiers = read_temporal_router_modifiers("governance")
+        if router_modifiers:
+            snapshot["temporal_router_modifiers"] = router_modifiers
 
         if routing_decision:
             snapshot["routing_decision"] = routing_decision
@@ -111,10 +128,16 @@ class GovernanceEngine:
             "temporal_convergence": temporal_snapshot.convergence_score,
             "temporal_penalty": temporal_snapshot.divergence_penalty,
         }
+        if router_modifiers:
+            metadata["temporal_router_modifiers"] = router_modifiers
 
         if allowed and temporal_snapshot.temporal_drift > thresholds.get("temporal_drift_threshold", 0.3):
             allowed = False
             reason = "temporal_drift_high"
+        prediction_threshold = thresholds.get("temporal_prediction_error_threshold", 0.2)
+        if allowed and temporal_snapshot.prediction_error > prediction_threshold:
+            allowed = False
+            reason = "temporal_prediction_error"
 
         result = GovernanceResult(
             allowed=allowed,

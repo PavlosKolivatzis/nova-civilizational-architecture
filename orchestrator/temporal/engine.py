@@ -53,6 +53,24 @@ class TemporalSnapshot:
             "divergence_penalty": self.divergence_penalty,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "TemporalSnapshot":
+        """Construct a snapshot object from a semantic mirror payload."""
+        return cls(
+            timestamp=_safe_float(data.get("timestamp"), default=time.time()),
+            tri_coherence=_safe_float(data.get("tri_coherence")),
+            tri_drift_z=_safe_float(data.get("tri_drift_z")),
+            slot07_mode=str(data.get("slot07_mode", "UNKNOWN")).upper(),
+            gate_state=bool(data.get("gate_state", True)),
+            governance_state=str(data.get("governance_state", "ok")),
+            prediction_error=_safe_float(data.get("prediction_error")),
+            temporal_drift=_safe_float(data.get("temporal_drift")),
+            temporal_variance=_safe_float(data.get("temporal_variance")),
+            convergence_score=_safe_float(data.get("convergence_score"), default=1.0),
+            divergence_penalty=_safe_float(data.get("divergence_penalty")),
+            raw=dict(data),
+        )
+
 
 class TemporalEngine:
     """Temporal core computation leveraging the temporal ledger."""

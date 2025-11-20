@@ -171,6 +171,11 @@ temporal_convergence_gauge = Gauge(
     "Temporal convergence metric",
     registry=_INTERNAL_REGISTRY,
 )
+temporal_divergence_gauge = Gauge(
+    "nova_temporal_divergence",
+    "Temporal divergence penalty",
+    registry=_INTERNAL_REGISTRY,
+)
 temporal_snapshot_timestamp_gauge = Gauge(
     "nova_temporal_snapshot_timestamp",
     "Timestamp of last temporal snapshot",

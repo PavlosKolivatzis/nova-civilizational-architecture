@@ -19,7 +19,9 @@
       "Bash(cat:*)",
       "Bash(npm run nova:status:*)",
       "Bash(bash tools/nova-welcome.sh:*)",
-      "Bash(powershell -NoLogo -NoProfile -Command \".\\tools\\nova-welcome.ps1 -Compact\")"
+      "Bash(powershell -NoLogo -NoProfile -Command \".\\tools\\nova-welcome.ps1 -Compact\")",
+      "Bash(NOVA_SLOT01_ROOT_MODE=0 python -m pytest:*)",
+      "Bash(NOVA_ENABLE_PROMETHEUS=1 NOVA_SLOT01_ROOT_MODE=1 python:*)"
     ],
     "deny": [],
     "ask": []

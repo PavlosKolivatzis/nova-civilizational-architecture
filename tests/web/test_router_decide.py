@@ -28,6 +28,10 @@ def test_router_decide_endpoint(monkeypatch):
     else:
         assert "constraints" in body
         assert "policy" in body
+    if "metadata" in body and isinstance(body["metadata"], dict):
+        temporal_meta = body["metadata"].get("temporal")
+        if temporal_meta:
+            assert "allowed" in temporal_meta
 
 
 def test_router_debug_endpoint(monkeypatch):

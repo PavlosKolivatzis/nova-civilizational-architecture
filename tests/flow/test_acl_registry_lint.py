@@ -60,6 +60,7 @@ DOCUMENTED_KEYS = {
     "governance.final_decision",
     "temporal.snapshot",
     "temporal.ledger_head",
+    "temporal.router_modifiers",
 }
 
 # Valid key pattern (no stray 'test.' matches)
