@@ -37,20 +37,32 @@ except Exception:  # pragma: no cover - keep manager importable without metrics
 
 @dataclass(frozen=True)
 class ThresholdConfig:
-    # Slot07 – Production Controls
+    # Slot07 - Production Controls
     slot07_stability_threshold: float = 0.03
     slot07_tri_drift_threshold: float = 2.2
     slot07_stability_threshold_tri: float = 0.05
 
-    # TRI – Truth signal integrity
+    # TRI - Truth signal integrity
     tri_min_coherence: float = 0.65
     tri_max_jitter: float = 0.30
 
-    # Slot06 – Cultural Synthesis
+    # Slot06 - Cultural Synthesis
     slot06_risk_threshold: float = 0.40
 
-    # Slot03 – Emotional Matrix
+    # Slot03 - Emotional Matrix
     slot03_narrative_shift_threshold: float = 0.55
+
+    # Temporal – Phase 6
+    temporal_drift_threshold: float = 0.3
+    temporal_variance_threshold: float = 0.1
+    temporal_prediction_error_threshold: float = 0.2
+    min_temporal_coherence: float = 0.7
+
+    # Temporal – Phase 6
+    temporal_drift_threshold: float = 0.3
+    temporal_variance_threshold: float = 0.1
+    temporal_prediction_error_threshold: float = 0.2
+    min_temporal_coherence: float = 0.7
 
 
 # ------------------------------------------------------------
@@ -132,3 +144,7 @@ def reset_threshold_manager_for_tests() -> None:
 if False:  # pragma: no cover
     os.getenv("NOVA_SLOT07_TRI_DRIFT_THRESHOLD")
     os.getenv("NOVA_SLOT07_STABILITY_THRESHOLD_TRI")
+    os.getenv("NOVA_TEMPORAL_DRIFT_THRESHOLD")
+    os.getenv("NOVA_TEMPORAL_VARIANCE_THRESHOLD")
+    os.getenv("NOVA_TEMPORAL_PREDICTION_ERROR_THRESHOLD")
+    os.getenv("NOVA_MIN_TEMPORAL_COHERENCE")
