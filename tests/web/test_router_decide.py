@@ -23,8 +23,11 @@ def test_router_decide_endpoint(monkeypatch):
     assert response.status_code == 200
     body = response.json()
     assert "route" in body
-    assert "constraints" in body
-    assert "policy" in body
+    if body["route"] == "hold":
+        assert "governance" in body
+    else:
+        assert "constraints" in body
+        assert "policy" in body
 
 
 def test_router_debug_endpoint(monkeypatch):
