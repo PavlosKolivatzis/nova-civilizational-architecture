@@ -122,7 +122,7 @@ def test_acl_key_format():
     """Test that all documented keys follow proper naming convention."""
     for key in DOCUMENTED_KEYS:
         assert VALID_KEY_RE.match(key), f"Invalid key format: {key}"
-        assert key.startswith(("slot", "router", "governance")), f"Key should start with 'slot', 'router', or 'governance': {key}"
+        assert key.startswith(("slot", "router", "governance", "temporal")), f"Key should start with 'slot', 'router', 'governance', or 'temporal': {key}"
 
 
 if __name__ == "__main__":
