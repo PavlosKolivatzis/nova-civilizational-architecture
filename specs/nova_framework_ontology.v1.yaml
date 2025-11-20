@@ -113,6 +113,30 @@ signals:
     enum: ["green", "amber", "red"]
     desc: "Operational truth band classification used by downstream gates"
 
+  temporal_drift:
+    type: Scalar
+    range: [0, 1]
+    unit: "coherence_delta"
+    desc: "Absolute coherence delta between consecutive temporal snapshots"
+  temporal_variance:
+    type: Scalar
+    range: [0, 1]
+    unit: "coherence_variance"
+    desc: "Rolling variance of recent TRI coherence readings"
+  temporal_prediction_error:
+    type: Scalar
+    range: [0, 1]
+    unit: "coherence_delta"
+    desc: "Absolute difference between predicted versus observed coherence"
+  temporal_convergence_score:
+    type: Scalar
+    range: [0, 1]
+    desc: "Normalized temporal convergence score (1=stable)"
+  temporal_divergence_penalty:
+    type: Scalar
+    range: [0, 1]
+    desc: "Penalty term derived from variance plus prediction error"
+
   # Convergence rate signals (ADMM/federated consensus)
   kappa_state:
     type: Scalar
@@ -218,6 +242,29 @@ ledgers:
     entries:
       - {type: truth_anchor, fields: [timestamp, claim_hash, attest_hash, prev_hash, signature], hash_method: blake2b, verifier: Slot01}
       - {type: audit_checkpoint, fields: [timestamp, state_snapshot_hash, prev_hash, verifier_id], verifier: Slot09}
+
+  temporal_ledger:
+    purpose: "Monotonic temporal coherence record for router/governance gating"
+    storage: {backend: filesystem, path: ".temporal_ledger/", format: jsonl}
+    integrity: {hash_chained: true, monotonic_timestamp: true}
+    entries:
+      - type: temporal_consistency_snapshot
+        fields:
+          [
+            timestamp,
+            tri_coherence,
+            tri_drift_z,
+            temporal_drift,
+            temporal_variance,
+            temporal_prediction_error,
+            temporal_convergence_score,
+            temporal_divergence_penalty,
+            slot07_mode,
+            gate_state,
+            governance_state,
+            hash,
+          ]
+        contract: temporal_consistency@1
 
 # ---------- Role Separation (Architectural Invariant) ----------
 role_separation:
@@ -683,17 +730,24 @@ coordination_frameworks:
     category: temporal_governance
     inputs: [tri_truth_signal@1, slot07_production@2, router_decision_stream, governance_state]
     outputs: [temporal_consistency@1]
-    state_variables: [temporal_drift, temporal_variance, prediction_error]
+    state_variables: [temporal_drift, temporal_variance, temporal_prediction_error, temporal_convergence_score, temporal_divergence_penalty]
     transformations:
       - name: temporal_snapshot_generation
         in: [tri_truth_signal@1, slot07_production@2, governance_state]
         out: [temporal_consistency@1]
         rule: "Temporal ledger delta + LightClock gate alignment"
         impl_ref: "orchestrator.temporal.engine.TemporalEngine"
+      - name: temporal_ledger_append
+        in: [temporal_consistency@1]
+        out: [temporal_ledger_entry]
+        rule: "Append canonical snapshot to hash-chained temporal ledger"
+        impl_ref: "orchestrator.temporal.ledger.TemporalLedger"
     integration:
       feeds_to: [Governance, Router]
       observes: [Slot07, Slot10]
       mode: read_only_observer
+      ledger: temporal_ledger
+    interfaces: {upstream: [TRI_Engine, Slot07, Slot10], downstream: [Governance, Router]}
 
 # ---------- Validation & Testing ----------
 validation:
