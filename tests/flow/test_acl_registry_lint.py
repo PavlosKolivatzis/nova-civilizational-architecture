@@ -64,6 +64,7 @@ DOCUMENTED_KEYS = {
     "temporal.router_modifiers",
     "predictive.prediction_snapshot",
     "predictive.ledger_head",
+    "predictive.router_modifiers",
 }
 
 # Valid key pattern (no stray 'test.' matches)

@@ -10,6 +10,8 @@ from orchestrator.router.advisors.slot05 import score_slot05
 from orchestrator.router.advisors.slot08 import score_slot08
 from orchestrator.router.temporal_constraints import TemporalConstraintEngine, TemporalConstraintResult
 from orchestrator.temporal.adapters import publish_router_modifiers
+from orchestrator.predictive.adapters import read_predictive_snapshot
+from orchestrator.thresholds import get_threshold
 
 try:
     from orchestrator.semantic_mirror import publish as mirror_publish
@@ -59,6 +61,54 @@ class EpistemicRouter:
         payload.setdefault("governance", request.get("governance", {}))
         return payload
 
+    def _read_predictive_snapshot(self) -> Dict[str, Any] | None:
+        try:
+            snapshot = read_predictive_snapshot("router")
+        except Exception:
+            return None
+        return snapshot
+
+    def _apply_predictive_modifiers(
+        self,
+        constraints: ConstraintResult,
+        initial_score: float,
+    ) -> Dict[str, Any]:
+        snapshot = self._read_predictive_snapshot()
+        collapse_threshold = get_threshold("predictive_collapse_threshold")
+        accel_threshold = get_threshold("predictive_acceleration_threshold")
+
+        meta = {
+            "predictive_allowed": True,
+            "predictive_penalty": 0.0,
+            "collapse_risk": 0.0,
+            "reason": None,
+            "predictive_score": initial_score,
+        }
+        if not snapshot:
+            return meta
+
+        collapse_risk = float(snapshot.get("collapse_risk", snapshot.get("predictive_collapse_risk", 0.0)))
+        drift_accel = abs(float(snapshot.get("drift_acceleration", 0.0)))
+        penalty = min(1.0, drift_accel / max(accel_threshold, 1e-6))
+        meta.update(
+            {
+                "predictive_penalty": penalty,
+                "collapse_risk": collapse_risk,
+            }
+        )
+
+        if collapse_risk >= collapse_threshold:
+            meta["predictive_allowed"] = False
+            meta["reason"] = "foresight_hold"
+            meta["predictive_score"] = 0.0
+            if "foresight_hold" not in constraints.reasons:
+                constraints.reasons.append("foresight_hold")
+        else:
+            meta["predictive_score"] = max(0.0, initial_score - penalty)
+            if penalty > 0:
+                meta["reason"] = "penalty"
+        return meta
+
     def _publish_decision(self, decision: RouterDecision) -> None:
         if not mirror_publish:
             return
@@ -88,6 +138,17 @@ class EpistemicRouter:
                     "snapshot": temporal_meta.get("snapshot", {}),
                 }
             )
+        predictive_meta = (decision.metadata or {}).get("predictive") if decision.metadata else None
+        if predictive_meta and mirror_publish:
+            try:
+                mirror_publish(
+                    "predictive.router_modifiers",
+                    predictive_meta,
+                    "router",
+                    ttl=120.0,
+                )
+            except Exception:
+                logger.debug("Failed to publish predictive modifiers", exc_info=True)
 
     def decide(self, request: Dict[str, Any] | None) -> RouterDecision:
         request = request or {}
@@ -119,9 +180,18 @@ class EpistemicRouter:
         if temporal_penalty:
             final_score = max(0.0, final_score - temporal_penalty)
 
+        predictive_meta = self._apply_predictive_modifiers(constraints, final_score)
+        final_score = predictive_meta["predictive_score"]
+        predictive_allowed = predictive_meta["predictive_allowed"]
+
         if not constraints.allowed:
             final_route = "safe_mode"
             final_score = 0.0
+        elif not predictive_allowed:
+            final_route = "safe_mode"
+            final_score = 0.0
+            if "foresight_hold" not in constraints.reasons:
+                constraints.reasons.append("foresight_hold")
         else:
             final_route = policy.route
             if policy.route != "safe_mode" and final_score < 0.4:
@@ -138,6 +208,12 @@ class EpistemicRouter:
                 "temporal_allowed": temporal_result.allowed,
                 "temporal_penalty": temporal_penalty,
                 "temporal": temporal_result.to_dict(),
+                "predictive": {
+                    "predictive_allowed": predictive_meta["predictive_allowed"],
+                    "predictive_penalty": predictive_meta["predictive_penalty"],
+                    "collapse_risk": predictive_meta["collapse_risk"],
+                    "reason": predictive_meta["reason"],
+                },
             },
         )
 

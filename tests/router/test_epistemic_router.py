@@ -3,6 +3,7 @@ from orchestrator.router.epistemic_router import EpistemicRouter
 from orchestrator.router.anr_static_policy import StaticPolicyEngine, StaticPolicyConfig
 from orchestrator.router.temporal_constraints import TemporalConstraintResult
 from orchestrator.semantic_mirror import get_semantic_mirror, reset_semantic_mirror
+from orchestrator.thresholds import reset_threshold_manager_for_tests
 
 
 class _StaticTemporalEngine:
@@ -109,3 +110,44 @@ def test_router_publishes_temporal_router_modifiers():
         assert "snapshot" in data
     finally:
         reset_semantic_mirror()
+
+
+def test_predictive_penalty_reduces_score(monkeypatch):
+    monkeypatch.setenv("NOVA_PREDICTIVE_COLLAPSE_THRESHOLD", "0.9")
+    monkeypatch.setenv("NOVA_PREDICTIVE_ACCELERATION_THRESHOLD", "1.0")
+    reset_threshold_manager_for_tests()
+
+    def fake_snapshot(requester):
+        return {"collapse_risk": 0.2, "drift_acceleration": 0.5}
+
+    monkeypatch.setattr(
+        "orchestrator.router.epistemic_router.read_predictive_snapshot",
+        fake_snapshot,
+    )
+    router = EpistemicRouter()
+    decision = router.decide({"tri_signal": {"tri_coherence": 0.95}, "slot07": {"mode": "BASELINE"}, "slot10": {"passed": True}})
+    assert decision.route in ("primary", "low_trust")
+    predictive_meta = decision.metadata["predictive"]
+    assert predictive_meta["predictive_allowed"] is True
+    assert predictive_meta["predictive_penalty"] > 0.0
+    assert decision.final_score < decision.policy.score
+
+
+def test_predictive_collapse_forces_safe_mode(monkeypatch):
+    monkeypatch.setenv("NOVA_PREDICTIVE_COLLAPSE_THRESHOLD", "0.5")
+    monkeypatch.setenv("NOVA_PREDICTIVE_ACCELERATION_THRESHOLD", "1.0")
+    reset_threshold_manager_for_tests()
+
+    def fake_snapshot(requester):
+        return {"collapse_risk": 0.9, "drift_acceleration": 0.1}
+
+    monkeypatch.setattr(
+        "orchestrator.router.epistemic_router.read_predictive_snapshot",
+        fake_snapshot,
+    )
+    router = EpistemicRouter()
+    decision = router.decide(
+        {"tri_signal": {"tri_coherence": 0.95}, "slot07": {"mode": "BASELINE"}, "slot10": {"passed": True}}
+    )
+    assert decision.route == "safe_mode"
+    assert decision.metadata["predictive"]["reason"] == "foresight_hold"
