@@ -31,6 +31,7 @@ from orchestrator.predictive.adapters import (
 from orchestrator.predictive.pattern_detector import detect_patterns, PatternAlert
 from orchestrator.predictive.consistency import compute_consistency_gap, ConsistencyProfile
 from orchestrator.predictive.memory_resonance import get_memory_window
+from orchestrator.predictive.ris_calculator import compute_ris, ris_to_dict
 
 try:  # pragma: no cover - metrics optional
     from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap
@@ -295,6 +296,9 @@ class GovernanceEngine:
             # Sample TRSI for memory resonance (RC - Step 7)
             self._sample_memory_resonance(temporal_snapshot, predictive_payload.get("timestamp", 0.0))
 
+            # Compute RIS for RC attestation (RC - Step 8)
+            self._compute_and_publish_ris(temporal_snapshot, predictive_payload.get("timestamp", 0.0))
+
         return result
 
     def _detect_and_debounce_patterns(
@@ -436,6 +440,61 @@ class GovernanceEngine:
         sample_count = len(memory_window.trsi_history)
         if sample_count % 6 == 0:  # Every 6 hours
             memory_window.publish_to_mirror(ttl=3600.0)  # 1 hour TTL
+
+    def _compute_and_publish_ris(self, temporal_snapshot: TemporalSnapshot, timestamp: float) -> None:
+        """
+        Compute Resonance Integrity Score (RIS) for RC attestation (Phase 7.0-RC).
+
+        RIS = sqrt(M_s × E_c)
+        Where:
+            M_s = Memory Stability (7-day TRSI rolling window)
+            E_c = Ethical Compliance (Slot06 principle_preservation or governance fallback)
+
+        Publishes RIS to semantic mirror and Prometheus.
+
+        Args:
+            temporal_snapshot: Current temporal state
+            timestamp: Event timestamp
+        """
+        import os
+
+        if os.getenv("NOVA_ENABLE_MEMORY_RESONANCE", "false").lower() != "true":
+            return  # RIS requires memory resonance enabled
+
+        # Get memory window and compute stability
+        memory_window = get_memory_window()
+        memory_stability = memory_window.compute_memory_stability()
+
+        # Compute RIS (ethical compliance resolved via hierarchy in ris_calculator)
+        ris = compute_ris(memory_stability=memory_stability)
+
+        # Store in governance state
+        self._state["ris_score"] = ris
+
+        # Publish to semantic mirror (key: predictive.ris_score)
+        if mirror_publish:
+            try:
+                ris_snapshot = ris_to_dict(
+                    ris=ris,
+                    memory_stability=memory_stability,
+                    ethical_compliance=1.0,  # Resolved internally by compute_ris
+                    timestamp=timestamp
+                )
+                mirror_publish(
+                    "predictive.ris_score",
+                    ris_snapshot,
+                    "governance",
+                    ttl=3600.0  # 1 hour TTL
+                )
+            except Exception:  # pragma: no cover
+                pass  # Fail silently (observability, not critical path)
+
+        # Record to Prometheus
+        try:
+            from orchestrator.prometheus_metrics import record_ris_score
+            record_ris_score(ris)
+        except Exception:  # pragma: no cover
+            pass  # Metrics optional
 
     def _publish_to_mirror(self, result: GovernanceResult) -> None:
         if not mirror_publish:

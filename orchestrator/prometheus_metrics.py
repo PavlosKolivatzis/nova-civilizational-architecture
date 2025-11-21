@@ -281,6 +281,11 @@ memory_stability_gauge = _get_or_register_gauge(
     "7-day rolling TRSI stability score (mean - stdev)",
     registry=_INTERNAL_REGISTRY,
 )
+ris_score_gauge = _get_or_register_gauge(
+    "nova_ris_score",
+    "Resonance Integrity Score for RC attestation (sqrt(M_s × E_c))",
+    registry=_INTERNAL_REGISTRY,
+)
 
 
 # --- LightClock & System Health metrics ------------------------------------
@@ -1246,3 +1251,13 @@ def record_memory_stability(stability_score: float) -> None:
         stability_score: Memory stability score [0.0, 1.0] from MemoryResonanceWindow
     """
     memory_stability_gauge.set(_clamp_unit(stability_score))
+
+
+def record_ris_score(ris: float) -> None:
+    """
+    Record Resonance Integrity Score (RIS) for RC attestation (Phase 7.0-RC).
+
+    Args:
+        ris: RIS score [0.0, 1.0] computed as sqrt(M_s × E_c)
+    """
+    ris_score_gauge.set(_clamp_unit(ris))

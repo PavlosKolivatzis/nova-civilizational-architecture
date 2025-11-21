@@ -68,6 +68,7 @@ DOCUMENTED_KEYS = {
     "predictive.pattern_alert",
     "predictive.consistency_gap",
     "predictive.memory_resonance",
+    "predictive.ris_score",
 }
 
 # Valid key pattern (no stray 'test.' matches)
