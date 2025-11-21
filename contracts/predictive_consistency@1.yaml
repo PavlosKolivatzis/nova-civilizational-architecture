@@ -1,0 +1,49 @@
+schema: nova_contract/v1
+contract_id: predictive_consistency@1
+title: Predictive Consistency Snapshot
+description: Canonical foresight snapshot emitted by the Predictive Trajectory Engine (Phase-7)
+version: "1.0.0"
+slots:
+  - id: 0
+    name: Predictive Trajectory Engine
+    role: publisher
+    description: Emits deterministic foresight snapshots derived from temporal ledger deltas
+  - id: 11
+    name: Governance Layer
+    role: consumer
+    description: Applies foresight hold and trajectory analysis based on predicted collapse risk
+  - id: 12
+    name: Router (Epistemic)
+    role: consumer
+    description: Adjusts routing policy using predictive penalties/safe corridors
+fields:
+  - name: timestamp
+    type: float
+    description: Epoch seconds when the prediction was generated
+  - name: horizon_seconds
+    type: float
+    description: Lookahead horizon used for the projection
+  - name: tri_coherence
+    type: float
+    description: Current coherence level used as baseline for prediction
+  - name: drift_velocity
+    type: float
+    description: First derivative of TRI drift_z (Δ drift / Δ t)
+  - name: drift_acceleration
+    type: float
+    description: Second derivative of TRI drift_z (Δ velocity / Δ t)
+  - name: stability_pressure
+    type: float
+    description: Aggregated Slot07 pressure and temporal variance score
+  - name: collapse_risk
+    type: float
+    description: Normalized collapse likelihood (0-1) based on velocity/acceleration/pressure
+  - name: safe_corridor
+    type: bool
+    description: Whether projected coherence remains within safe bounds across the horizon
+  - name: source_snapshot_hash
+    type: string
+    description: Hash reference to the temporal ledger entry that seeded this prediction
+  - name: metadata
+    type: map
+    description: Additional deterministic context (e.g., slot07_mode, gate_state, governance_state)

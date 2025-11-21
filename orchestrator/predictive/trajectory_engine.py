@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 
 from orchestrator.temporal.engine import TemporalSnapshot
 from orchestrator.thresholds import get_threshold
+from orchestrator.predictive.ledger import PredictiveLedger
 
 try:  # pragma: no cover - semantic mirror optional in tests
     from orchestrator.semantic_mirror import publish as mirror_publish
@@ -42,9 +43,11 @@ class PredictiveSnapshot:
 class PredictiveTrajectoryEngine:
     """Deterministic predictor built on temporal snapshots."""
 
-    def __init__(self):
+    def __init__(self, ledger: PredictiveLedger | None = None, horizon_seconds: float = 60.0):
         self._last_snapshot: Optional[TemporalSnapshot] = None
         self._last_velocity: float = 0.0
+        self._ledger = ledger or PredictiveLedger()
+        self._horizon_seconds = float(horizon_seconds)
 
     def predict(self, temporal: TemporalSnapshot) -> PredictiveSnapshot:
         prev_snapshot = self._last_snapshot
@@ -72,6 +75,7 @@ class PredictiveTrajectoryEngine:
 
         self._last_snapshot = temporal
         self._last_velocity = velocity
+        self._append_to_ledger(snapshot, temporal)
         self._publish_snapshot(snapshot)
         return snapshot
 
@@ -130,5 +134,27 @@ class PredictiveTrajectoryEngine:
                 "predictive",
                 ttl=180.0,
             )
+        except Exception:
+            return
+
+    def _append_to_ledger(self, snapshot: PredictiveSnapshot, temporal: TemporalSnapshot) -> None:
+        payload = {
+            "timestamp": snapshot.timestamp,
+            "horizon_seconds": self._horizon_seconds,
+            "tri_coherence": temporal.tri_coherence,
+            "drift_velocity": snapshot.drift_velocity,
+            "drift_acceleration": snapshot.drift_acceleration,
+            "stability_pressure": snapshot.stability_pressure,
+            "predictive_collapse_risk": snapshot.collapse_risk,
+            "predictive_safe_corridor": snapshot.safe_corridor,
+            "source_snapshot_hash": temporal.raw.get("hash", "") if isinstance(temporal.raw, dict) else "",
+            "metadata": {
+                "slot07_mode": temporal.slot07_mode,
+                "gate_state": temporal.gate_state,
+                "governance_state": temporal.governance_state,
+            },
+        }
+        try:
+            self._ledger.append(payload)
         except Exception:
             return

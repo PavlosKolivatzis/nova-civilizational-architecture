@@ -137,6 +137,28 @@ signals:
     range: [0, 1]
     desc: "Penalty term derived from variance plus prediction error"
 
+  drift_velocity:
+    type: Scalar
+    range: [-5, 5]
+    unit: "drift_per_second"
+    desc: "First derivative of TRI drift_z across the temporal ledger"
+  drift_acceleration:
+    type: Scalar
+    range: [-5, 5]
+    unit: "drift_per_second^2"
+    desc: "Second derivative of TRI drift_z"
+  stability_pressure:
+    type: Scalar
+    range: [0, 5]
+    desc: "Aggregated Slot07 pressure + temporal variance normalization"
+  predictive_collapse_risk:
+    type: Scalar
+    range: [0, 1]
+    desc: "Normalized collapse likelihood derived from predictive trajectory engine"
+  predictive_safe_corridor:
+    type: Bool
+    desc: "Whether predicted coherence stays within safe bounds for the governance horizon"
+
   # Convergence rate signals (ADMM/federated consensus)
   kappa_state:
     type: Scalar
@@ -265,6 +287,26 @@ ledgers:
             hash,
           ]
         contract: temporal_consistency@1
+
+  foresight_ledger:
+    purpose: "Hash-chained foresight ledger capturing predictive consistency snapshots"
+    storage: {backend: filesystem, path: ".foresight_ledger/", format: jsonl}
+    integrity: {hash_chained: true, monotonic_timestamp: true}
+    entries:
+      - type: predictive_consistency_snapshot
+        fields:
+          [
+            timestamp,
+            horizon_seconds,
+            tri_coherence,
+            drift_velocity,
+            drift_acceleration,
+            stability_pressure,
+            predictive_collapse_risk,
+            predictive_safe_corridor,
+            source_snapshot_hash,
+          ]
+        contract: predictive_consistency@1
 
 # ---------- Role Separation (Architectural Invariant) ----------
 role_separation:
@@ -748,6 +790,32 @@ coordination_frameworks:
       mode: read_only_observer
       ledger: temporal_ledger
     interfaces: {upstream: [TRI_Engine, Slot07, Slot10], downstream: [Governance, Router]}
+
+  - id: PredictiveForesight
+    slot_id: null
+    name: Predictive Trajectory Engine
+    purpose: "Compute foresight trajectories and publish predictive_consistency@1"
+    category: temporal_governance
+    inputs: [temporal_consistency@1, router_decision_stream, governance_state]
+    outputs: [predictive_consistency@1]
+    state_variables: [drift_velocity, drift_acceleration, stability_pressure, predictive_collapse_risk, predictive_safe_corridor]
+    transformations:
+      - name: predictive_snapshot_generation
+        in: [temporal_consistency@1, governance_state]
+        out: [predictive_consistency@1]
+        rule: "Deterministic velocity/acceleration calculation over temporal ledger windows"
+        impl_ref: "orchestrator.predictive.trajectory_engine.PredictiveTrajectoryEngine"
+      - name: foresight_ledger_append
+        in: [predictive_consistency@1]
+        out: [foresight_ledger_entry]
+        rule: "Append predictive snapshot to hash-chained foresight ledger"
+        impl_ref: "orchestrator.predictive.ledger.PredictiveLedger"
+    integration:
+      feeds_to: [Governance, Router]
+      observes: [Slot07, Slot10]
+      mode: read_only_observer
+      ledger: foresight_ledger
+    interfaces: {upstream: [TemporalIntegrity], downstream: [Governance, Router]}
 
 # ---------- Validation & Testing ----------
 validation:

@@ -1,4 +1,5 @@
 from orchestrator.predictive.trajectory_engine import PredictiveTrajectoryEngine
+from orchestrator.predictive.ledger import PredictiveLedger
 from orchestrator.temporal.engine import TemporalSnapshot
 
 
@@ -58,3 +59,13 @@ def test_pressure_spike_increases_risk():
         )
     )
     assert snap.collapse_risk > 0.0
+
+
+def test_predictive_engine_appends_ledger():
+    ledger = PredictiveLedger()
+    engine = PredictiveTrajectoryEngine(ledger=ledger, horizon_seconds=30.0)
+    engine.predict(mock_snapshot(timestamp=50.0, tri_coherence=0.88, tri_drift_z=0.1))
+    head = ledger.head()
+    assert head is not None
+    assert head["entry"]["horizon_seconds"] == 30.0
+    assert "drift_velocity" in head["entry"]

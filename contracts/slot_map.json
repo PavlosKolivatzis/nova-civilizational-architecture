@@ -339,7 +339,8 @@
       "slot06_cultural@2",
       "slot07_production@2",
       "slot04-07-belief-state",
-      "temporal_consistency@1"
+      "temporal_consistency@1",
+      "predictive_consistency@1"
     ]
   },
   "configuration": {
