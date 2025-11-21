@@ -1,0 +1,113 @@
+schema: nova_contract/v1
+contract_id: predictive_pattern_alert@1
+title: Emergent Pattern Detection Alert
+description: Stateless detection of governance oscillation, predictive creep, and escalation loops (Phase 7 Step 5)
+version: "1.0.0"
+slots:
+  - id: 11
+    name: Governance Engine
+    role: publisher
+    description: Detects emergent patterns in governance/router/predictive history with debouncing
+  - id: 11
+    name: Governance Layer
+    role: consumer
+    description: Uses pattern alerts for proactive governance adjustments
+  - id: 12
+    name: Router (Epistemic)
+    role: consumer
+    description: Adjusts routing based on detected escalation patterns
+  - id: 7
+    name: Slot07 Production Controls
+    role: consumer
+    description: Responds to escalation loops with backpressure
+  - id: 10
+    name: Slot10 Deployment
+    role: consumer
+    description: Gates deployments during detected instability patterns
+
+fields:
+  - name: pattern_type
+    type: string
+    description: Type of detected pattern
+    enum:
+      - governance_oscillation
+      - predictive_creep
+      - escalation_loop
+
+  - name: severity
+    type: float
+    description: Pattern severity score (0-1)
+    range: [0.0, 1.0]
+
+  - name: window_start
+    type: float
+    description: Start timestamp of detection window
+
+  - name: window_end
+    type: float
+    description: End timestamp of detection window
+
+  - name: metadata
+    type: map
+    description: Pattern-specific diagnostic data
+    fields:
+      - name: toggle_count
+        type: integer
+        description: "(oscillation) Number of allow/hold toggles"
+      - name: creep_ticks
+        type: integer
+        description: "(creep) Consecutive ticks of monotonic drift acceleration"
+      - name: penalty_count
+        type: integer
+        description: "(escalation) Number of penalties for same route"
+      - name: affected_route
+        type: string
+        description: "(escalation) Route ID experiencing repeated penalties"
+      - name: coherence_level
+        type: float
+        description: "(creep) TRI coherence during drift acceleration"
+      - name: stability_pressure
+        type: float
+        description: "(escalation) Slot07 stability pressure during loop"
+
+patterns:
+  governance_oscillation:
+    description: "Allow/hold toggles >3 times in detection window"
+    trigger: "toggle_count > 3"
+    severity_calculation: "min(1.0, toggle_count / 10.0)"
+
+  predictive_creep:
+    description: "Monotonic drift acceleration (≥5 ticks) + high coherence (≥0.7)"
+    trigger: "creep_ticks >= 5 AND coherence >= 0.7"
+    severity_calculation: "min(1.0, creep_ticks / 10.0)"
+
+  escalation_loop:
+    description: "Same route penalized ≥4 times + low stability pressure (<2.0)"
+    trigger: "penalty_count >= 4 AND stability_pressure < 2.0"
+    severity_calculation: "min(1.0, penalty_count / 8.0)"
+
+debouncing:
+  cooldown_ticks: 20
+  description: "Prevents alert spam by suppressing repeated patterns for cooldown window"
+  env_var: NOVA_PREDICTIVE_PATTERN_COOLDOWN
+
+semantic_mirror:
+  key: predictive.pattern_alert
+  ttl: 180
+  publisher: governance
+  readers:
+    - governance
+    - router
+    - slot07_production_controls
+    - slot10_civilizational_deployment
+
+feature_flag:
+  env_var: NOVA_ENABLE_EPD
+  default: false
+  description: "Enable Emergent Pattern Detector"
+
+ontology_ref: specs/nova_framework_ontology.v1.yaml
+related_contracts:
+  - predictive_snapshot@1
+  - predictive_consistency_gap@1
+  - governance_state@1

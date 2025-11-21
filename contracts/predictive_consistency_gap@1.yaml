@@ -1,49 +1,92 @@
-# predictive_consistency_gap@1
-# Multi-Slot Consistency Gap Contract
-# Phase 7 Step 6: Cross-slot conflict detection
-
-version: 1
+schema: nova_contract/v1
 contract_id: predictive_consistency_gap@1
+title: Multi-Slot Consistency Gap Profile
 description: |
   Vector-based consistency profile detecting conflicts between slots:
   - Safety ↔ Production (Slot03 ↔ Slot07)
   - Culture ↔ Deployment (Slot06 ↔ Slot10)
   - Predictive ↔ Production (PTE ↔ Slot07)
+version: "1.0.0"
+
+slots:
+  - id: 11
+    name: Governance Engine
+    role: publisher
+    description: Computes cross-slot consistency gaps for governance gating
+  - id: 11
+    name: Governance Layer
+    role: consumer
+    description: Blocks operations when gap >= 0.6 or severity >= 0.7
+  - id: 12
+    name: Router (Epistemic)
+    role: consumer
+    description: Adjusts routing based on detected slot conflicts
+  - id: 7
+    name: Slot07 Production Controls
+    role: consumer
+    description: Adjusts backpressure based on safety/culture conflicts
+  - id: 10
+    name: Slot10 Deployment
+    role: consumer
+    description: Gates deployments during high consistency gaps
 
 fields:
-  score:
+  - name: score
     type: float
     range: [0.0, 1.0]
     description: "Composite consistency gap (weighted sum of components)"
 
-  components:
-    type: map<string, float>
+  - name: components
+    type: map
     description: "Individual conflict scores by type"
-    keys:
-      - safety_production_conflict
-      - culture_deployment_conflict
-      - production_predictive_conflict
+    fields:
+      - name: safety_production_conflict
+        type: float
+        range: [0.0, 1.0]
+      - name: culture_deployment_conflict
+        type: float
+        range: [0.0, 1.0]
+      - name: production_predictive_conflict
+        type: float
+        range: [0.0, 1.0]
 
-  conflicting_slots:
-    type: list<string>
+  - name: conflicting_slots
+    type: list
     description: "Slot IDs in conflict (e.g., ['slot03', 'slot07'])"
 
-  severity:
+  - name: severity
     type: float
     range: [0.0, 1.0]
     description: "Maximum component conflict (worst-case severity)"
 
-  caused_by:
-    type: list<string>
+  - name: caused_by
+    type: list
     description: "EPD pattern types that contributed to inconsistency"
 
-  source_snapshot_hash:
+  - name: source_snapshot_hash
     type: string
     description: "Predictive snapshot hash for audit trail"
 
-  timestamp:
+  - name: timestamp
     type: float
     description: "Profile generation timestamp"
+
+conflicts:
+  safety_production:
+    description: "High threat (slot03) + low pressure (slot07) → conflict"
+    trigger: "threat >= 0.6 AND pressure < 0.4"
+
+  culture_deployment:
+    description: "High residual risk (slot06) + active deployment (slot10) → conflict"
+    trigger: "residual_risk >= 0.5 AND phase IN ['deploying', 'rolling', 'active']"
+
+  production_predictive:
+    description: "High collapse risk (PTE) + open production (slot07) → conflict"
+    trigger: "collapse_risk >= 0.6 AND mode IN ['BASELINE', 'FULL']"
+
+composite_scoring:
+  formula: "gap_score = 0.35×safety + 0.30×culture + 0.35×predictive"
+  severity: "max(component_conflicts)"
 
 thresholds:
   gap_threshold: 0.6  # Governance hold if score >= 0.6
@@ -59,8 +102,14 @@ semantic_mirror:
     - slot07_production_controls
     - slot10_civilizational_deployment
 
+feature_flag:
+  env_var: NOVA_ENABLE_MSC
+  default: false
+  description: "Enable Multi-Slot Consistency"
+
 ontology_ref: specs/nova_framework_ontology.v1.yaml
 related_contracts:
-  - predictive_consistency@1
+  - predictive_snapshot@1
+  - predictive_pattern_alert@1
   - tri_truth_signal@1
   - slot07_production@2

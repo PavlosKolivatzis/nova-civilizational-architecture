@@ -1,0 +1,80 @@
+schema: nova_contract/v1
+contract_id: predictive_snapshot@1
+title: Predictive Trajectory Snapshot
+description: Forward-projected temporal trajectory from Predictive Trajectory Engine (Phase 7)
+version: "1.0.0"
+slots:
+  - id: 0
+    name: Predictive Trajectory Engine
+    role: publisher
+    description: Emits deterministic foresight snapshots derived from temporal ledger deltas
+  - id: 11
+    name: Governance Layer
+    role: consumer
+    description: Applies foresight hold and trajectory analysis based on predicted collapse risk
+  - id: 12
+    name: Router (Epistemic)
+    role: consumer
+    description: Adjusts routing policy using predictive penalties/safe corridors
+
+fields:
+  - name: timestamp
+    type: float
+    description: Epoch seconds when the prediction was generated
+
+  - name: horizon_seconds
+    type: float
+    description: Lookahead horizon used for the projection
+
+  - name: tri_coherence
+    type: float
+    description: Current coherence level used as baseline for prediction
+
+  - name: drift_velocity
+    type: float
+    description: First derivative of TRI drift_z (Δ drift / Δ t)
+
+  - name: drift_acceleration
+    type: float
+    description: Second derivative of TRI drift_z (Δ velocity / Δ t)
+
+  - name: stability_pressure
+    type: float
+    description: Aggregated Slot07 pressure and temporal variance score
+
+  - name: collapse_risk
+    type: float
+    description: Normalized collapse likelihood (0-1) based on velocity/acceleration/pressure
+    range: [0.0, 1.0]
+
+  - name: safe_corridor
+    type: bool
+    description: Whether projected coherence remains within safe bounds across the horizon
+
+  - name: source_snapshot_hash
+    type: string
+    description: Hash reference to the temporal ledger entry that seeded this prediction
+
+  - name: metadata
+    type: map
+    description: Additional deterministic context (e.g., slot07_mode, gate_state, governance_state)
+
+semantic_mirror:
+  key: predictive.prediction_snapshot
+  ttl: 180
+  publisher: predictive_trajectory_engine
+  readers:
+    - governance
+    - router
+    - slot07_production_controls
+    - slot10_civilizational_deployment
+
+thresholds:
+  collapse_threshold: 0.8  # Governance hold if collapse_risk >= 0.8
+  acceleration_threshold: 0.4  # Warning if drift_acceleration >= 0.4
+
+ontology_ref: specs/nova_framework_ontology.v1.yaml
+related_contracts:
+  - temporal_consistency@1
+  - tri_truth_signal@1
+  - slot07_production@2
