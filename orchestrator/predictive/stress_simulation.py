@@ -356,7 +356,7 @@ class StressSimulator:
         else:
             recovery_rate = 1.0
 
-        return RecoveryMetrics(
+        metrics = RecoveryMetrics(
             baseline_ris=self._baseline_ris,
             baseline_stability=self._baseline_stability or 0.0,
             min_ris=self._min_ris,
@@ -367,6 +367,21 @@ class StressSimulator:
             recovered=recovered,
             recovery_rate=recovery_rate
         )
+
+        # Record Prometheus metrics (Phase 7.0-RC Step 5)
+        try:
+            from orchestrator.prometheus_metrics import record_stress_recovery
+            record_stress_recovery({
+                "recovery_rate": recovery_rate,
+                "baseline_ris": self._baseline_ris,
+                "recovery_time_hours": recovery_tick if recovery_tick is not None else max_ticks,
+                "max_deviation": abs(self._baseline_ris - self._min_ris),
+                "timestamp": time.time()
+            })
+        except Exception:  # pragma: no cover
+            pass  # Fail silently
+
+        return metrics
 
     def get_stress_state(self) -> StressState:
         """Get current stress state."""

@@ -60,7 +60,16 @@ def compute_ris(
     ris = math.sqrt(ris_raw)
 
     # Final clamping (should be redundant, but defensive)
-    return max(0.0, min(1.0, ris))
+    ris_final = max(0.0, min(1.0, ris))
+
+    # Record Prometheus metrics (Phase 7.0-RC Step 5)
+    try:
+        from orchestrator.prometheus_metrics import record_ris
+        record_ris(ris_final, m_s, e_c)
+    except Exception:  # pragma: no cover
+        pass  # Fail silently
+
+    return ris_final
 
 
 def _resolve_ethical_compliance(explicit_value: Optional[float]) -> float:

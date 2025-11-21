@@ -281,9 +281,32 @@ memory_stability_gauge = _get_or_register_gauge(
     "7-day rolling TRSI stability score (mean - stdev)",
     registry=_INTERNAL_REGISTRY,
 )
+memory_samples_gauge = _get_or_register_gauge(
+    "nova_memory_samples",
+    "Number of TRSI samples in rolling window",
+    registry=_INTERNAL_REGISTRY,
+)
+memory_volatility_gauge = _get_or_register_gauge(
+    "nova_memory_volatility",
+    "7-day TRSI volatility (standard deviation)",
+    registry=_INTERNAL_REGISTRY,
+)
+memory_trend_gauge = _get_or_register_gauge(
+    "nova_memory_trend_24h",
+    "TRSI trend over last 24 hours",
+    registry=_INTERNAL_REGISTRY,
+)
+
+# Phase 7.0-RC: RIS (Resonance Integrity Score)
 ris_score_gauge = _get_or_register_gauge(
     "nova_ris_score",
     "Resonance Integrity Score for RC attestation (sqrt(M_s × E_c))",
+    registry=_INTERNAL_REGISTRY,
+)
+ris_component_gauge = _get_or_register_gauge(
+    "nova_ris_component",
+    "Individual RIS component scores",
+    labelnames=("component_type",),
     registry=_INTERNAL_REGISTRY,
 )
 
@@ -296,6 +319,26 @@ stress_injection_active_gauge = _get_or_register_gauge(
 stress_recovery_rate_gauge = _get_or_register_gauge(
     "nova_stress_recovery_rate",
     "Normalized recovery rate after stress injection [0.0, 1.0]",
+    registry=_INTERNAL_REGISTRY,
+)
+stress_baseline_gauge = _get_or_register_gauge(
+    "nova_stress_baseline_ris",
+    "Baseline RIS before stress injection",
+    registry=_INTERNAL_REGISTRY,
+)
+stress_recovery_ticks_gauge = _get_or_register_gauge(
+    "nova_stress_ticks_to_recover",
+    "Number of ticks to recover to 90% baseline",
+    registry=_INTERNAL_REGISTRY,
+)
+stress_max_deviation_gauge = _get_or_register_gauge(
+    "nova_stress_max_deviation",
+    "Maximum RIS deviation during stress test",
+    registry=_INTERNAL_REGISTRY,
+)
+stress_last_run_gauge = _get_or_register_gauge(
+    "nova_stress_last_run_timestamp",
+    "Unix timestamp of last stress simulation",
     registry=_INTERNAL_REGISTRY,
 )
 stress_injection_counter = _get_or_register_counter(
@@ -312,6 +355,19 @@ stress_min_ris_gauge = _get_or_register_gauge(
 stress_min_stability_gauge = _get_or_register_gauge(
     "nova_stress_min_stability",
     "Minimum memory stability observed during stress test",
+    registry=_INTERNAL_REGISTRY,
+)
+
+# Phase 7.0-RC: RC Criteria Gates
+rc_gate_status_gauge = _get_or_register_gauge(
+    "nova_rc_gate_status",
+    "RC criteria gate pass/fail status (1=pass, 0=fail)",
+    labelnames=("gate_name",),
+    registry=_INTERNAL_REGISTRY,
+)
+rc_overall_pass_gauge = _get_or_register_gauge(
+    "nova_rc_overall_pass",
+    "Overall RC criteria pass status (1=pass, 0=fail)",
     registry=_INTERNAL_REGISTRY,
 )
 
@@ -1127,6 +1183,83 @@ def update_secrets_baseline_metrics() -> None:
         logger.debug(f"Could not update secrets baseline metrics: {e}")
 
 
+# --- Phase 7.0-RC Step 5: Recording functions for RC monitoring ---
+
+def _clamp_unit(value: float) -> float:
+    """Clamp value to [0.0, 1.0] range."""
+    return max(0.0, min(1.0, value))
+
+
+def record_memory_resonance(stats: dict) -> None:
+    """
+    Record memory resonance window statistics.
+
+    Args:
+        stats: Dictionary with keys: stability, count, stdev, trend_24h
+    """
+    memory_stability_gauge.set(_clamp_unit(stats.get("stability", 0.5)))
+    memory_samples_gauge.set(stats.get("count", 0))
+    memory_volatility_gauge.set(_clamp_unit(stats.get("stdev", 0.0)))
+    memory_trend_gauge.set(stats.get("trend_24h", 0.0))
+
+
+def record_ris(ris_score: float, memory_stability: float, ethics_score: float) -> None:
+    """
+    Record RIS composite and component scores.
+
+    Args:
+        ris_score: Composite RIS (sqrt(memory × ethics))
+        memory_stability: Memory stability component [0.0, 1.0]
+        ethics_score: Ethics compliance component [0.0, 1.0]
+    """
+    ris_score_gauge.set(_clamp_unit(ris_score))
+    ris_component_gauge.labels(component_type="memory_stability").set(_clamp_unit(memory_stability))
+    ris_component_gauge.labels(component_type="ethics_compliance").set(_clamp_unit(ethics_score))
+
+
+def record_stress_recovery(metrics: dict) -> None:
+    """
+    Record stress simulation results.
+
+    Args:
+        metrics: Dictionary with keys: recovery_rate, baseline_ris,
+                 recovery_time_hours, max_deviation, timestamp
+    """
+    import time
+
+    stress_recovery_rate_gauge.set(_clamp_unit(metrics.get("recovery_rate", 0.0)))
+    stress_baseline_gauge.set(_clamp_unit(metrics.get("baseline_ris", 0.0)))
+    stress_recovery_ticks_gauge.set(metrics.get("recovery_time_hours", 0))
+    stress_max_deviation_gauge.set(_clamp_unit(metrics.get("max_deviation", 0.0)))
+    stress_last_run_gauge.set(metrics.get("timestamp", time.time()))
+
+
+def record_rc_criteria(criteria: dict) -> None:
+    """
+    Record RC gate pass/fail status.
+
+    Args:
+        criteria: Dictionary with keys: memory_stability_pass, ris_pass,
+                  stress_recovery_pass, samples_sufficient, overall_pass
+    """
+    # Individual gates
+    rc_gate_status_gauge.labels(gate_name="memory_stability").set(
+        1.0 if criteria.get("memory_stability_pass") else 0.0
+    )
+    rc_gate_status_gauge.labels(gate_name="ris_score").set(
+        1.0 if criteria.get("ris_pass") else 0.0
+    )
+    rc_gate_status_gauge.labels(gate_name="stress_recovery").set(
+        1.0 if criteria.get("stress_recovery_pass") else 0.0
+    )
+    rc_gate_status_gauge.labels(gate_name="samples_sufficient").set(
+        1.0 if criteria.get("samples_sufficient") else 0.0
+    )
+
+    # Overall
+    rc_overall_pass_gauge.set(1.0 if criteria.get("overall_pass") else 0.0)
+
+
 def _refresh_metrics() -> None:
     update_slot6_metrics()
     update_flag_metrics()
@@ -1302,17 +1435,3 @@ def record_stress_injection(mode: str, active: bool) -> None:
     stress_injection_active_gauge.set(1.0 if active else 0.0)
     if active:
         stress_injection_counter.labels(mode=mode).inc()
-
-
-def record_stress_recovery(recovery_rate: float, min_ris: float, min_stability: float) -> None:
-    """
-    Record stress recovery metrics (Phase 7.0-RC stress simulation).
-
-    Args:
-        recovery_rate: Normalized recovery rate [0.0, 1.0]
-        min_ris: Minimum RIS observed during stress
-        min_stability: Minimum memory stability observed during stress
-    """
-    stress_recovery_rate_gauge.set(_clamp_unit(recovery_rate))
-    stress_min_ris_gauge.set(_clamp_unit(min_ris))
-    stress_min_stability_gauge.set(_clamp_unit(min_stability))

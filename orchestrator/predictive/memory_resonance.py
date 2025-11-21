@@ -191,23 +191,30 @@ class MemoryResonanceWindow:
 
     def publish_to_mirror(self, ttl: float = 300.0) -> None:
         """
-        Publish memory resonance state to semantic mirror.
+        Publish memory resonance state to semantic mirror and Prometheus.
 
         Args:
             ttl: Time-to-live in seconds (default: 300 = 5 minutes)
         """
-        if not mirror_publish:
-            return
+        # Publish to semantic mirror
+        if mirror_publish:
+            try:
+                mirror_publish(
+                    "predictive.memory_resonance",
+                    self.to_dict(),
+                    "governance",
+                    ttl=ttl
+                )
+            except Exception:  # pragma: no cover
+                pass  # Fail silently (observability, not critical path)
 
+        # Record Prometheus metrics (Phase 7.0-RC Step 5)
         try:
-            mirror_publish(
-                "predictive.memory_resonance",
-                self.to_dict(),
-                "governance",
-                ttl=ttl
-            )
+            from orchestrator.prometheus_metrics import record_memory_resonance
+            stats = self.get_window_stats()
+            record_memory_resonance(stats)
         except Exception:  # pragma: no cover
-            pass  # Fail silently (observability, not critical path)
+            pass  # Fail silently
 
 
 # Singleton instance for system-wide memory tracking
