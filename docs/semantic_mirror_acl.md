@@ -39,6 +39,7 @@
 | `governance.ethics` | Governance Engine | * | 300s | Per-rule ethical evaluation results |
 | `governance.policy_scores` | Governance Engine | * | 300s | Aggregated governance metrics |
 | `governance.final_decision` | Governance Engine | * | 300s | Final governance verdict with metadata |
+| `governance.trajectory_warning` | Governance Engine | * | 180s | Predictive warning metadata when foresight triggers |
 
 ## Temporal Context Keys
 
@@ -48,6 +49,7 @@
 | `temporal.ledger_head` | Temporal Engine | governance, slot10_civilizational_deployment, temporal_api | 300s | Serialized ledger head for audit |
 | `temporal.router_modifiers` | Epistemic Router | governance, slot07_production_controls, slot10_civilizational_deployment | 180s | Temporal penalties/allowances applied to routing |
 | `predictive.prediction_snapshot` | Predictive Trajectory Engine | governance, router, slot07_production_controls, slot10_civilizational_deployment | 180s | Forward-projected temporal snapshot (velocity/acceleration/risks) |
+| `predictive.ledger_head` | Predictive Trajectory Engine | governance, router | 300s | Latest foresight ledger entry (hash chained) |
 
 ### Test-only keys (ignored by linter)
 - slot07.test_data

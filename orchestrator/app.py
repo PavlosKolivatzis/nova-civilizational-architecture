@@ -38,6 +38,7 @@ from orchestrator.router.temporal_constraints import TemporalConstraintEngine
 from orchestrator.governance import GovernanceEngine, GovernanceLedger
 from orchestrator.temporal import TemporalLedger
 from orchestrator.temporal.adapters import read_temporal_snapshot, read_temporal_ledger_head
+from orchestrator.predictive import PredictiveLedger, PredictiveTrajectoryEngine
 
 logger = logging.getLogger(__name__)
 
@@ -92,9 +93,15 @@ bus = EventBus(monitor=monitor)
 router = create_router(monitor)
 temporal_ledger = TemporalLedger()
 temporal_constraint_engine = TemporalConstraintEngine(ledger=temporal_ledger)
+predictive_ledger = PredictiveLedger()
+predictive_engine = PredictiveTrajectoryEngine(ledger=predictive_ledger)
 deterministic_router = EpistemicRouter(temporal_engine=temporal_constraint_engine)
 governance_ledger = GovernanceLedger()
-governance_engine = GovernanceEngine(governance_ledger)
+governance_engine = GovernanceEngine(
+    governance_ledger,
+    temporal_ledger=temporal_ledger,
+    predictive_engine=predictive_engine,
+)
 configure_logging(level="INFO", json_format=True)
 
 # Optional: configure fallbacks
@@ -910,6 +917,19 @@ async def temporal_debug():
     return {
         "entries": len(temporal_ledger.snapshot()),
         "head": temporal_ledger.head(),
+    }
+
+
+@app.get("/predictive/ledger")
+async def predictive_ledger_endpoint():
+    return {"entries": predictive_ledger.snapshot()}
+
+
+@app.get("/predictive/debug")
+async def predictive_debug():
+    return {
+        "entries": len(predictive_ledger.snapshot()),
+        "head": predictive_ledger.head(),
     }
 
 

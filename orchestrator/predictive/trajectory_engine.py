@@ -39,6 +39,18 @@ class PredictiveSnapshot:
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "PredictiveSnapshot":
+        return cls(
+            drift_velocity=float(data.get("drift_velocity", 0.0)),
+            drift_acceleration=float(data.get("drift_acceleration", 0.0)),
+            stability_pressure=float(data.get("stability_pressure", 0.0)),
+            collapse_risk=float(data.get("collapse_risk", 0.0)),
+            safe_corridor=bool(data.get("safe_corridor", False)),
+            timestamp=float(data.get("timestamp", 0.0)),
+            raw=dict(data),
+        )
+
 
 class PredictiveTrajectoryEngine:
     """Deterministic predictor built on temporal snapshots."""
@@ -156,5 +168,10 @@ class PredictiveTrajectoryEngine:
         }
         try:
             self._ledger.append(payload)
+            if mirror_publish:
+                try:  # pragma: no cover - optional publish
+                    mirror_publish("predictive.ledger_head", payload, "predictive", ttl=300.0)
+                except Exception:
+                    pass
         except Exception:
             return

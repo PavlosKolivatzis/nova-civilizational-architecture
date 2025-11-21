@@ -52,17 +52,15 @@ class ThresholdConfig:
     # Slot03 - Emotional Matrix
     slot03_narrative_shift_threshold: float = 0.55
 
-    # Temporal – Phase 6
     temporal_drift_threshold: float = 0.3
     temporal_variance_threshold: float = 0.1
     temporal_prediction_error_threshold: float = 0.2
     min_temporal_coherence: float = 0.7
 
-    # Temporal – Phase 6
-    temporal_drift_threshold: float = 0.3
-    temporal_variance_threshold: float = 0.1
-    temporal_prediction_error_threshold: float = 0.2
-    min_temporal_coherence: float = 0.7
+    # Predictive – Phase 7
+    predictive_collapse_threshold: float = 0.8
+    predictive_acceleration_threshold: float = 0.4
+    predictive_history_window: float = 5.0
 
 
 # ------------------------------------------------------------
@@ -148,3 +146,6 @@ if False:  # pragma: no cover
     os.getenv("NOVA_TEMPORAL_VARIANCE_THRESHOLD")
     os.getenv("NOVA_TEMPORAL_PREDICTION_ERROR_THRESHOLD")
     os.getenv("NOVA_MIN_TEMPORAL_COHERENCE")
+    os.getenv("NOVA_PREDICTIVE_COLLAPSE_THRESHOLD")
+    os.getenv("NOVA_PREDICTIVE_ACCELERATION_THRESHOLD")
+    os.getenv("NOVA_PREDICTIVE_HISTORY_WINDOW")
