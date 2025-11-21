@@ -1,12 +1,16 @@
-# Nova Framework Ontology v1.0.0
+# Nova Framework Ontology v1.1.0
 # Translation-neutral contracts for Nova's cognitive architecture
 # Grounded in Universal Structure Mathematics (USM)
 
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.0.0
-  date: 2025-11-18
+  version: 1.1.0
+  date: 2025-11-21
+  changelog:
+    - version: 1.1.0
+      date: 2025-11-21
+      changes: "Phase 7 integration - Added Predictive Foresight Framework (PFF) with EPD and MSC; 69 new tests"
   license: CC-BY-4.0
   scientific_foundation:
     theory: Universal Structure Mathematics (USM)
@@ -793,29 +797,62 @@ coordination_frameworks:
 
   - id: PredictiveForesight
     slot_id: null
-    name: Predictive Trajectory Engine
-    purpose: "Compute foresight trajectories and publish predictive_consistency@1"
+    name: Predictive Foresight Framework
+    purpose: "Forward-project temporal trajectories, detect emergent patterns, and validate cross-slot consistency"
     category: temporal_governance
-    inputs: [temporal_consistency@1, router_decision_stream, governance_state]
-    outputs: [predictive_consistency@1]
-    state_variables: [drift_velocity, drift_acceleration, stability_pressure, predictive_collapse_risk, predictive_safe_corridor]
+    inputs: [temporal_consistency@1, router_decision_stream, governance_state, slot03_safety_state, slot06_culture_state, slot07_production@2, slot10_deployment_state]
+    outputs: [predictive_snapshot@1, predictive_pattern_alert@1, predictive_consistency_gap@1]
+    state_variables:
+      trajectory: [drift_velocity, drift_acceleration, stability_pressure, predictive_collapse_risk, predictive_safe_corridor]
+      pattern_detection: [pattern_alerts, active_patterns, debounce_state, cooldown_ticks]
+      consistency: [consistency_gap_score, conflicting_slots, gap_components, severity, caused_by_patterns]
+    feature_flags:
+      NOVA_ENABLE_EPD: {default: false, desc: "Enable Emergent Pattern Detector"}
+      NOVA_ENABLE_MSC: {default: false, desc: "Enable Multi-Slot Consistency"}
+      NOVA_PREDICTIVE_PATTERN_COOLDOWN: {default: 20, desc: "Pattern alert debounce window (ticks)"}
     transformations:
       - name: predictive_snapshot_generation
         in: [temporal_consistency@1, governance_state]
-        out: [predictive_consistency@1]
+        out: [predictive_snapshot@1]
         rule: "Deterministic velocity/acceleration calculation over temporal ledger windows"
         impl_ref: "orchestrator.predictive.trajectory_engine.PredictiveTrajectoryEngine"
+        contract: "contracts/predictive_snapshot@1.yaml"
       - name: foresight_ledger_append
-        in: [predictive_consistency@1]
+        in: [predictive_snapshot@1]
         out: [foresight_ledger_entry]
         rule: "Append predictive snapshot to hash-chained foresight ledger"
         impl_ref: "orchestrator.predictive.ledger.PredictiveLedger"
+      - name: pattern_detection
+        in: [predictive_history, governance_history, router_history]
+        out: [predictive_pattern_alert@1]
+        rule: "Stateless detection of governance oscillation, predictive creep, escalation loops with debouncing"
+        impl_ref: "orchestrator.predictive.pattern_detector.detect_patterns"
+        contract: "contracts/predictive_pattern_alert@1.yaml"
+        patterns:
+          - governance_oscillation: "Allow/hold toggles >3 times in window"
+          - predictive_creep: "Monotonic drift acceleration (≥5 ticks) + high coherence (≥0.7)"
+          - escalation_loop: "Same route penalized ≥4 times + low stability pressure (<2.0)"
+        debouncing: "Cooldown windows prevent alert spam (configurable via NOVA_PREDICTIVE_PATTERN_COOLDOWN)"
+      - name: consistency_gap_computation
+        in: [slot03_safety_state, slot06_culture_state, slot07_production@2, slot10_deployment_state, predictive_snapshot@1, predictive_pattern_alert@1]
+        out: [predictive_consistency_gap@1]
+        rule: "Vector-based cross-slot conflict detection with dual-threshold gating"
+        impl_ref: "orchestrator.predictive.consistency.compute_consistency_gap"
+        contract: "contracts/predictive_consistency_gap@1.yaml"
+        conflicts:
+          - safety_production: "High threat (slot03) + low pressure (slot07) → conflict"
+          - culture_deployment: "High residual risk (slot06) + active deployment (slot10) → conflict"
+          - production_predictive: "High collapse risk (PTE) + open production (slot07) → conflict"
+        composite_scoring: "gap_score = 0.35×safety + 0.30×culture + 0.35×predictive"
+        severity: "max(component_conflicts)"
+        gating: "Block if gap_score ≥ 0.6 OR severity ≥ 0.7"
     integration:
       feeds_to: [Governance, Router]
-      observes: [Slot07, Slot10]
+      observes: [Slot03, Slot06, Slot07, Slot10, TemporalIntegrity]
       mode: read_only_observer
       ledger: foresight_ledger
-    interfaces: {upstream: [TemporalIntegrity], downstream: [Governance, Router]}
+      gating: "Dual-threshold governance blocking via MSC"
+    interfaces: {upstream: [TemporalIntegrity, Slot03, Slot06, Slot07, Slot10], downstream: [Governance, Router]}
 
 # ---------- Validation & Testing ----------
 validation:
@@ -852,13 +889,18 @@ validation:
       conclusion: "Necessary component"
 
   empirical_validation:
-    test_cases: 1082
+    test_cases: 1577
     accuracy: 0.997
     false_positive_rate: 0.042
     dataset:
       positive: 543
       negative: 543
       adversarial: 200
+    phase_7_additions:
+      predictive_trajectory: 15
+      emergent_pattern_detector: 23
+      multi_slot_consistency: 31
+      total_phase_7: 69
 
 testing:
   reproducibility:
@@ -870,10 +912,14 @@ testing:
     - {name: arc_reproduction, command: "make reproduce-arc-experiment", runtime: "50min"}
     - {name: ablation_validation, command: "make arc-ablation"}
     - {name: adversarial_robustness, command: "pytest tests/test_adversarial.py", target_fpr: 0.05}
+    - {name: predictive_trajectory, command: "pytest tests/predictive/ -q", test_count: 15}
+    - {name: emergent_pattern_detector, command: "pytest tests/predictive/test_pattern_detector.py tests/governance/test_pattern_detection_integration.py -q", test_count: 23}
+    - {name: multi_slot_consistency, command: "pytest tests/predictive/test_consistency.py tests/governance/test_consistency_integration.py -q", test_count: 31}
 
 # ---------- Metrics & Observability ----------
 metrics:
   prometheus:
+    # Core USM & Architecture Metrics
     - {name: nova_spectral_entropy_H, from: spectral_entropy_H}
     - {name: nova_equilibrium_ratio_rho, from: equilibrium_ratio_rho}
     - {name: nova_wisdom_eta_value, from: eta}
@@ -883,6 +929,18 @@ metrics:
     - {name: nova_tri_coherence, from: tri_coherence}
     - {name: nova_arc_precision, from: precision}
     - {name: nova_arc_recall, from: recall}
+
+    # Predictive Foresight Framework (Phase 7)
+    - {name: nova_predictive_collapse_risk, from: predictive_collapse_risk, desc: "Forward-projected collapse probability [0..1]"}
+    - {name: nova_predictive_safe_corridor, from: predictive_safe_corridor, desc: "Safe operation range [0..1]"}
+    - {name: nova_predictive_drift_velocity, from: drift_velocity, desc: "Rate of temporal drift"}
+    - {name: nova_predictive_drift_acceleration, from: drift_acceleration, desc: "Acceleration magnitude"}
+    - {name: nova_predictive_warning_total, from: foresight_warnings, type: counter, labels: [reason], desc: "Pattern/foresight alerts by type"}
+    - {name: nova_predictive_consistency_gap, from: consistency_gap_score, desc: "Composite cross-slot conflict score [0..1]"}
+    - {name: nova_predictive_consistency_severity, from: severity, desc: "Maximum component conflict [0..1]"}
+    - {name: nova_predictive_consistency_safety_prod, from: safety_production_conflict, desc: "Safety-production conflict [0..1]"}
+    - {name: nova_predictive_consistency_culture_deploy, from: culture_deployment_conflict, desc: "Culture-deployment conflict [0..1]"}
+    - {name: nova_predictive_consistency_prod_predictive, from: production_predictive_conflict, desc: "Production-predictive conflict [0..1]"}
 
 # ---------- ANALYTIC INSTRUMENTS (Active Meta-Tools) ----------
 # PAD.E.L and INF-o-INITY are now **analytic instruments** under ARC, not standalone slots.
