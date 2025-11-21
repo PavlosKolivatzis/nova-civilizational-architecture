@@ -52,6 +52,7 @@
 | `predictive.ledger_head` | Predictive Trajectory Engine | governance, router | 300s | Latest foresight ledger entry (hash chained) |
 | `predictive.router_modifiers` | Epistemic Router | governance, slot07_production_controls, slot10_civilizational_deployment | 180s | Predictive penalties/safe-corridor metadata for routing |
 | `predictive.pattern_alert` | Governance Engine | router, governance, slot07_production_controls, slot10_civilizational_deployment | 180s | Emergent pattern detection alerts (oscillation/creep/escalation) with debounced metadata |
+| `predictive.consistency_gap` | Governance Engine | router, governance, slot07_production_controls, slot10_civilizational_deployment | 180s | Multi-slot consistency gap profile with component breakdown (safety/culture/predictive conflicts) |
 
 ### Test-only keys (ignored by linter)
 - slot07.test_data
