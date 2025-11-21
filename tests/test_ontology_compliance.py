@@ -171,8 +171,8 @@ def test_coordination_frameworks_defined(ontology_loader):
 
     coord_frameworks = {cf["id"] for cf in ontology["coordination_frameworks"]}
 
-    # Check coordination frameworks (including TemporalIntegrity) present
-    expected = {"CRR", "MSE", "EVF", "NEM", "PAG", "FB", "TemporalIntegrity"}
+    # Check coordination frameworks (including Phase-7 foresight modules) present
+    expected = {"CRR", "MSE", "EVF", "NEM", "PAG", "FB", "TemporalIntegrity", "PredictiveForesight"}
     assert coord_frameworks == expected
 
 
