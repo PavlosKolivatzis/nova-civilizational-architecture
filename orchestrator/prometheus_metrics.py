@@ -287,6 +287,34 @@ ris_score_gauge = _get_or_register_gauge(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Phase 7.0-RC: Stress Simulation (resilience testing)
+stress_injection_active_gauge = _get_or_register_gauge(
+    "nova_stress_injection_active",
+    "Stress injection active state (1=active, 0=inactive)",
+    registry=_INTERNAL_REGISTRY,
+)
+stress_recovery_rate_gauge = _get_or_register_gauge(
+    "nova_stress_recovery_rate",
+    "Normalized recovery rate after stress injection [0.0, 1.0]",
+    registry=_INTERNAL_REGISTRY,
+)
+stress_injection_counter = _get_or_register_counter(
+    "nova_stress_injection_total",
+    "Total stress injection events by mode",
+    labelnames=("mode",),
+    registry=_INTERNAL_REGISTRY,
+)
+stress_min_ris_gauge = _get_or_register_gauge(
+    "nova_stress_min_ris",
+    "Minimum RIS observed during stress test",
+    registry=_INTERNAL_REGISTRY,
+)
+stress_min_stability_gauge = _get_or_register_gauge(
+    "nova_stress_min_stability",
+    "Minimum memory stability observed during stress test",
+    registry=_INTERNAL_REGISTRY,
+)
+
 
 # --- LightClock & System Health metrics ------------------------------------
 lightclock_phase_lock_gauge = Gauge(
@@ -1261,3 +1289,30 @@ def record_ris_score(ris: float) -> None:
         ris: RIS score [0.0, 1.0] computed as sqrt(M_s × E_c)
     """
     ris_score_gauge.set(_clamp_unit(ris))
+
+
+def record_stress_injection(mode: str, active: bool) -> None:
+    """
+    Record stress injection state (Phase 7.0-RC stress simulation).
+
+    Args:
+        mode: Stress mode ("drift", "jitter", "combined")
+        active: Whether injection is currently active
+    """
+    stress_injection_active_gauge.set(1.0 if active else 0.0)
+    if active:
+        stress_injection_counter.labels(mode=mode).inc()
+
+
+def record_stress_recovery(recovery_rate: float, min_ris: float, min_stability: float) -> None:
+    """
+    Record stress recovery metrics (Phase 7.0-RC stress simulation).
+
+    Args:
+        recovery_rate: Normalized recovery rate [0.0, 1.0]
+        min_ris: Minimum RIS observed during stress
+        min_stability: Minimum memory stability observed during stress
+    """
+    stress_recovery_rate_gauge.set(_clamp_unit(recovery_rate))
+    stress_min_ris_gauge.set(_clamp_unit(min_ris))
+    stress_min_stability_gauge.set(_clamp_unit(min_stability))
