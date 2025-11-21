@@ -61,10 +61,11 @@ DOCUMENTED_KEYS = {
     "temporal.snapshot",
     "temporal.ledger_head",
     "temporal.router_modifiers",
+    "predictive.prediction_snapshot",
 }
 
 # Valid key pattern (no stray 'test.' matches)
-VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router|governance|temporal)\.[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*\b")
+VALID_KEY_RE = re.compile(r"\b(?:slot\d{2}|router|governance|temporal|predictive)\.[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*\b")
 
 # Mirror API call patterns to extract actual context keys
 PUBLISH_RE = re.compile(r'publish\(\s*["\']((?: slot\d{2}|router|governance)\.[a-z0-9_.]+)["\']', re.I)
@@ -123,7 +124,9 @@ def test_acl_key_format():
     """Test that all documented keys follow proper naming convention."""
     for key in DOCUMENTED_KEYS:
         assert VALID_KEY_RE.match(key), f"Invalid key format: {key}"
-        assert key.startswith(("slot", "router", "governance", "temporal")), f"Key should start with 'slot', 'router', 'governance', or 'temporal': {key}"
+        assert key.startswith(("slot", "router", "governance", "temporal", "predictive")), (
+            f"Key should start with 'slot', 'router', 'governance', 'temporal', or 'predictive': {key}"
+        )
 
 
 if __name__ == "__main__":

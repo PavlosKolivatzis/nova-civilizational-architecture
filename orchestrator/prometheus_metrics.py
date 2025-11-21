@@ -20,6 +20,27 @@ _INTERNAL_REGISTRY = nova_internal_registry
 _PUBLIC_REGISTRY = nova_public_registry
 # Backward compatibility for modules importing _REGISTRY directly
 _REGISTRY = _INTERNAL_REGISTRY
+
+
+def _collector_from_registry(registry, name: str):
+    mapping = getattr(registry, "_names_to_collectors", None)
+    if mapping:
+        return mapping.get(name)
+    return None
+
+
+def _get_or_register_info(name: str, documentation: str, registry):
+    existing = _collector_from_registry(registry, name)
+    if existing:
+        return existing
+    return Info(name, documentation, registry=registry)
+
+
+def _get_or_register_gauge(name: str, documentation: str, *, labelnames=(), registry, **kwargs):
+    existing = _collector_from_registry(registry, name)
+    if existing:
+        return existing
+    return Gauge(name, documentation, labelnames=labelnames, registry=registry, **kwargs)
 logger = logging.getLogger(__name__)
 
 # --- Build provenance metric ------------------------------------
@@ -40,12 +61,12 @@ def _get_git_sha_short():
     return getenv('NOVA_BUILD_SHA', 'unknown')
 
 # Build info metric (constant labels for deployment traceability)
-build_info_internal = Info(
+build_info_internal = _get_or_register_info(
     'nova_build',
     'Nova build information for deployment traceability',
     registry=_INTERNAL_REGISTRY,
 )
-build_info_public = Info(
+build_info_public = _get_or_register_info(
     'nova_build',
     'Nova build information for deployment traceability',
     registry=_PUBLIC_REGISTRY,
@@ -151,37 +172,37 @@ router_final_score_gauge = Gauge(
 )
 
 # Temporal placeholder metric (Phase-6 scaffold)
-temporal_drift_gauge = Gauge(
+temporal_drift_gauge = _get_or_register_gauge(
     "nova_temporal_drift",
     "Temporal drift between successive TRI snapshots",
     registry=_INTERNAL_REGISTRY,
 )
-temporal_variance_gauge = Gauge(
+temporal_variance_gauge = _get_or_register_gauge(
     "nova_temporal_variance",
     "Variance of recent TRI coherence values",
     registry=_INTERNAL_REGISTRY,
 )
-temporal_prediction_error_gauge = Gauge(
+temporal_prediction_error_gauge = _get_or_register_gauge(
     "nova_temporal_prediction_error",
     "Prediction error between expected and observed coherence",
     registry=_INTERNAL_REGISTRY,
 )
-temporal_convergence_gauge = Gauge(
+temporal_convergence_gauge = _get_or_register_gauge(
     "nova_temporal_convergence",
     "Temporal convergence metric",
     registry=_INTERNAL_REGISTRY,
 )
-temporal_divergence_gauge = Gauge(
+temporal_divergence_gauge = _get_or_register_gauge(
     "nova_temporal_divergence",
     "Temporal divergence penalty",
     registry=_INTERNAL_REGISTRY,
 )
-temporal_snapshot_timestamp_gauge = Gauge(
+temporal_snapshot_timestamp_gauge = _get_or_register_gauge(
     "nova_temporal_snapshot_timestamp",
     "Timestamp of last temporal snapshot",
     registry=_INTERNAL_REGISTRY,
 )
-temporal_router_state_gauge = Gauge(
+temporal_router_state_gauge = _get_or_register_gauge(
     "nova_temporal_router_state",
     "Public-safe temporal router readiness",
     registry=_PUBLIC_REGISTRY,

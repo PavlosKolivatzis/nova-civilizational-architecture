@@ -47,6 +47,7 @@
 | `temporal.snapshot` | Temporal Engine | router, governance, slot07_production_controls, slot10_civilizational_deployment, temporal_api | 300s | Latest temporal drift/variance snapshot |
 | `temporal.ledger_head` | Temporal Engine | governance, slot10_civilizational_deployment, temporal_api | 300s | Serialized ledger head for audit |
 | `temporal.router_modifiers` | Epistemic Router | governance, slot07_production_controls, slot10_civilizational_deployment | 180s | Temporal penalties/allowances applied to routing |
+| `predictive.prediction_snapshot` | Predictive Trajectory Engine | governance, router, slot07_production_controls, slot10_civilizational_deployment | 180s | Forward-projected temporal snapshot (velocity/acceleration/risks) |
 
 ### Test-only keys (ignored by linter)
 - slot07.test_data
