@@ -14,6 +14,12 @@ try:  # pragma: no cover - semantic mirror optional in tests
 except Exception:  # pragma: no cover
     mirror_publish = None  # type: ignore[assignment]
 
+try:  # pragma: no cover - metrics optional
+    from orchestrator.prometheus_metrics import record_predictive_physics
+except Exception:  # pragma: no cover
+    def record_predictive_physics(snapshot) -> None:  # type: ignore[misc]
+        return
+
 
 def _safe_threshold(name: str, default: float) -> float:
     try:
@@ -87,6 +93,7 @@ class PredictiveTrajectoryEngine:
 
         self._last_snapshot = temporal
         self._last_velocity = velocity
+        record_predictive_physics(snapshot)
         self._append_to_ledger(snapshot, temporal)
         self._publish_snapshot(snapshot)
         return snapshot

@@ -139,6 +139,21 @@ def _configure_production_access_rules(mirror) -> None:
             "slot07_production_controls",
             "slot10_civilizational_deployment"
         ],
+        "predictive.prediction_snapshot": [
+            "router",
+            "governance",
+            "slot07_production_controls",
+            "slot10_civilizational_deployment"
+        ],
+        "predictive.ledger_head": [
+            "governance",
+            "router"
+        ],
+        "predictive.router_modifiers": [
+            "governance",
+            "slot07_production_controls",
+            "slot10_civilizational_deployment"
+        ],
     }
 
     mirror.configure_access_rules(production_rules)

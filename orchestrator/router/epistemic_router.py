@@ -13,6 +13,12 @@ from orchestrator.temporal.adapters import publish_router_modifiers
 from orchestrator.predictive.adapters import read_predictive_snapshot
 from orchestrator.thresholds import get_threshold
 
+try:  # pragma: no cover - metrics optional
+    from orchestrator.prometheus_metrics import record_predictive_penalty
+except Exception:  # pragma: no cover
+    def record_predictive_penalty(value: float) -> None:  # type: ignore[misc]
+        return
+
 try:
     from orchestrator.semantic_mirror import publish as mirror_publish
 except Exception:  # pragma: no cover
@@ -183,6 +189,7 @@ class EpistemicRouter:
         predictive_meta = self._apply_predictive_modifiers(constraints, final_score)
         final_score = predictive_meta["predictive_score"]
         predictive_allowed = predictive_meta["predictive_allowed"]
+        record_predictive_penalty(predictive_meta["predictive_penalty"])
 
         if not constraints.allowed:
             final_route = "safe_mode"

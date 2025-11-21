@@ -29,6 +29,12 @@ from orchestrator.predictive.adapters import (
     read_predictive_ledger_head,
 )
 
+try:  # pragma: no cover - metrics optional
+    from orchestrator.prometheus_metrics import record_predictive_warning
+except Exception:  # pragma: no cover
+    def record_predictive_warning(reason: str | None = None) -> None:  # type: ignore[misc]
+        return
+
 
 @dataclass
 class GovernanceResult:
@@ -184,9 +190,10 @@ class GovernanceEngine:
             allowed = False
             reason = "foresight_hold"
             metadata["foresight_reason"] = "predictive_collapse"
+            metadata["foresight_warning"] = "predictive_collapse"
 
-        if not allowed and reason == "foresight_hold":
-            metadata["foresight_warning"] = "collapse_risk"
+        if not allowed and reason == "foresight_hold" and "foresight_warning" not in metadata:
+            metadata["foresight_warning"] = "predictive_collapse"
         else:
             history_ready = len(self._predictive_history) >= self._predictive_history_window
             if history_ready:
@@ -207,11 +214,15 @@ class GovernanceEngine:
             metadata=metadata,
         )
 
+        warning_label = metadata.get("foresight_warning")
+
         if record:
             self._last_result = result
             self._ledger.append(result.to_dict())
             record_governance_result(result)
             self._publish_to_mirror(result)
+            if warning_label:
+                record_predictive_warning(warning_label)
         return result
 
     def _publish_to_mirror(self, result: GovernanceResult) -> None:

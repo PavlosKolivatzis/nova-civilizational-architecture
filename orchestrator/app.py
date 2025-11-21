@@ -942,3 +942,14 @@ async def metrics_temporal() -> Response:
 
     data, content_type = get_temporal_metrics_response()
     return Response(content=data, media_type=content_type)
+
+
+@app.get("/metrics/predictive")
+async def metrics_predictive() -> Response:
+    flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
+    if flag != "1":
+        return Response(content=b"", status_code=404, media_type="text/plain")
+    from orchestrator.prometheus_metrics import get_predictive_metrics_response
+
+    data, content_type = get_predictive_metrics_response()
+    return Response(content=data, media_type=content_type)

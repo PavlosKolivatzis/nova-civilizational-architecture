@@ -477,6 +477,9 @@ def _configure_default_access_rules(mirror: SemanticMirror) -> None:
         "temporal.snapshot": ["router", "governance", "slot07_production_controls", "slot10_civilizational_deployment", "temporal_api"],
         "temporal.ledger_head": ["governance", "slot10_civilizational_deployment", "temporal_api"],
         "temporal.router_modifiers": ["governance", "slot07_production_controls", "slot10_civilizational_deployment"],
+        "predictive.prediction_snapshot": ["router", "governance", "slot07_production_controls", "slot10_civilizational_deployment"],
+        "predictive.ledger_head": ["governance", "router"],
+        "predictive.router_modifiers": ["governance", "slot07_production_controls", "slot10_civilizational_deployment"],
     }
 
     mirror.configure_access_rules(default_rules)

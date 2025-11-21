@@ -4,7 +4,7 @@ import logging
 
 from prometheus_client import Gauge, Counter, Histogram, Info, generate_latest, CONTENT_TYPE_LATEST
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, Optional
 import subprocess
 from time import strftime, gmtime
 from os import getenv
@@ -41,6 +41,13 @@ def _get_or_register_gauge(name: str, documentation: str, *, labelnames=(), regi
     if existing:
         return existing
     return Gauge(name, documentation, labelnames=labelnames, registry=registry, **kwargs)
+
+
+def _get_or_register_counter(name: str, documentation: str, *, labelnames=(), registry):
+    existing = _collector_from_registry(registry, name)
+    if existing:
+        return existing
+    return Counter(name, documentation, labelnames=labelnames, registry=registry)
 logger = logging.getLogger(__name__)
 
 # --- Build provenance metric ------------------------------------
@@ -206,6 +213,39 @@ temporal_router_state_gauge = _get_or_register_gauge(
     "nova_temporal_router_state",
     "Public-safe temporal router readiness",
     registry=_PUBLIC_REGISTRY,
+)
+
+# Predictive metrics (Phase-7)
+predictive_collapse_risk_gauge = _get_or_register_gauge(
+    "nova_predictive_collapse_risk",
+    "Predictive collapse likelihood (0-1)",
+    registry=_INTERNAL_REGISTRY,
+)
+predictive_acceleration_gauge = _get_or_register_gauge(
+    "nova_predictive_acceleration",
+    "Absolute predictive drift acceleration",
+    registry=_INTERNAL_REGISTRY,
+)
+predictive_safe_corridor_gauge = _get_or_register_gauge(
+    "nova_predictive_safe_corridor",
+    "Predictive safe corridor status (internal)",
+    registry=_INTERNAL_REGISTRY,
+)
+predictive_safe_corridor_public_gauge = _get_or_register_gauge(
+    "nova_predictive_safe_corridor_public",
+    "Public-safe predictive safe corridor indicator",
+    registry=_PUBLIC_REGISTRY,
+)
+predictive_penalty_gauge = _get_or_register_gauge(
+    "nova_predictive_penalty",
+    "Latest predictive routing penalty",
+    registry=_INTERNAL_REGISTRY,
+)
+predictive_warning_counter = _get_or_register_counter(
+    "nova_predictive_warning_total",
+    "Count of predictive warnings/foresight holds",
+    labelnames=("reason",),
+    registry=_INTERNAL_REGISTRY,
 )
 
 
@@ -1102,3 +1142,47 @@ def get_temporal_metrics_response():
     """Public-safe temporal metrics (Phase-6)."""
     _refresh_metrics()
     return _generate_payload_for_registry(_PUBLIC_REGISTRY)
+
+
+def get_predictive_metrics_response():
+    """Predictive metrics response (Phase-7)."""
+    _refresh_metrics()
+    return _generate_payload_for_registry(_INTERNAL_REGISTRY)
+
+
+def _clamp_unit(value: float) -> float:
+    try:
+        return max(0.0, min(1.0, float(value)))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def record_predictive_physics(snapshot) -> None:
+    """Record predictive physics metrics from the trajectory engine."""
+    if snapshot is None:
+        return
+    data = snapshot.to_dict() if hasattr(snapshot, "to_dict") else dict(snapshot)
+    collapse = _clamp_unit(data.get("collapse_risk", data.get("predictive_collapse_risk", 0.0)))
+    predictive_collapse_risk_gauge.set(collapse)
+
+    try:
+        accel = abs(float(data.get("drift_acceleration", 0.0)))
+    except (TypeError, ValueError):
+        accel = 0.0
+    predictive_acceleration_gauge.set(accel)
+
+    safe = bool(data.get("safe_corridor", data.get("predictive_safe_corridor", False)))
+    safe_value = 1.0 if safe else 0.0
+    predictive_safe_corridor_gauge.set(safe_value)
+    predictive_safe_corridor_public_gauge.set(safe_value)
+
+
+def record_predictive_penalty(penalty: float) -> None:
+    """Record predictive routing penalties."""
+    predictive_penalty_gauge.set(_clamp_unit(penalty))
+
+
+def record_predictive_warning(reason: Optional[str] = None) -> None:
+    """Increment predictive warning counter."""
+    label = reason or "unknown"
+    predictive_warning_counter.labels(reason=label).inc()
