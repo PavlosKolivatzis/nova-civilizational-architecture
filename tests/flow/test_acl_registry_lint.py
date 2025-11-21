@@ -70,6 +70,7 @@ DOCUMENTED_KEYS = {
     "predictive.memory_resonance",
     "predictive.ris_score",
     "predictive.stress_snapshot",
+    "governance.rc_attestation",
 }
 
 # Valid key pattern (no stray 'test.' matches)
