@@ -3,6 +3,7 @@ from orchestrator.router.epistemic_router import EpistemicRouter
 from orchestrator.router.temporal_constraints import TemporalConstraintEngine
 from orchestrator.temporal.ledger import TemporalLedger
 from orchestrator.semantic_mirror import reset_semantic_mirror
+from orchestrator.thresholds import reset_threshold_manager_for_tests
 
 
 def _seed_ledger(coherences):
@@ -58,7 +59,10 @@ def test_prediction_error_triggers_governance_hold():
     assert result.reason == "temporal_prediction_error"
 
 
-def test_high_variance_only_penalizes_router():
+def test_high_variance_only_penalizes_router(monkeypatch):
+    monkeypatch.setenv("NOVA_PREDICTIVE_COLLAPSE_THRESHOLD", "1.5")
+    monkeypatch.setenv("NOVA_PREDICTIVE_ACCELERATION_THRESHOLD", "10.0")
+    reset_threshold_manager_for_tests()
     ledger = _seed_ledger([0.0, 1.0, 0.0, 1.0])
     router = EpistemicRouter(temporal_engine=TemporalConstraintEngine(ledger=ledger))
     decision = router.decide(
