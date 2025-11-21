@@ -248,6 +248,33 @@ predictive_warning_counter = _get_or_register_counter(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Phase 7 Step 6: Multi-Slot Consistency (MSC) metrics
+consistency_gap_gauge = _get_or_register_gauge(
+    "nova_predictive_consistency_gap",
+    "Composite consistency gap score (0..1)",
+    registry=_INTERNAL_REGISTRY,
+)
+consistency_severity_gauge = _get_or_register_gauge(
+    "nova_predictive_consistency_severity",
+    "Maximum component conflict severity (0..1)",
+    registry=_INTERNAL_REGISTRY,
+)
+consistency_safety_prod_gauge = _get_or_register_gauge(
+    "nova_predictive_consistency_safety_prod",
+    "Safety-production conflict component (0..1)",
+    registry=_INTERNAL_REGISTRY,
+)
+consistency_culture_deploy_gauge = _get_or_register_gauge(
+    "nova_predictive_consistency_culture_deploy",
+    "Culture-deployment conflict component (0..1)",
+    registry=_INTERNAL_REGISTRY,
+)
+consistency_prod_predictive_gauge = _get_or_register_gauge(
+    "nova_predictive_consistency_prod_predictive",
+    "Production-predictive conflict component (0..1)",
+    registry=_INTERNAL_REGISTRY,
+)
+
 
 # --- LightClock & System Health metrics ------------------------------------
 lightclock_phase_lock_gauge = Gauge(
@@ -1186,3 +1213,19 @@ def record_predictive_warning(reason: Optional[str] = None) -> None:
     """Increment predictive warning counter."""
     label = reason or "unknown"
     predictive_warning_counter.labels(reason=label).inc()
+
+
+def record_consistency_gap(gap_profile: dict) -> None:
+    """
+    Record multi-slot consistency gap metrics (Step 6).
+
+    Args:
+        gap_profile: ConsistencyProfile.to_dict() output
+    """
+    consistency_gap_gauge.set(_clamp_unit(gap_profile.get("score", 0.0)))
+    consistency_severity_gauge.set(_clamp_unit(gap_profile.get("severity", 0.0)))
+
+    components = gap_profile.get("components", {})
+    consistency_safety_prod_gauge.set(_clamp_unit(components.get("safety_production_conflict", 0.0)))
+    consistency_culture_deploy_gauge.set(_clamp_unit(components.get("culture_deployment_conflict", 0.0)))
+    consistency_prod_predictive_gauge.set(_clamp_unit(components.get("production_predictive_conflict", 0.0)))

@@ -29,11 +29,14 @@ from orchestrator.predictive.adapters import (
     read_predictive_ledger_head,
 )
 from orchestrator.predictive.pattern_detector import detect_patterns, PatternAlert
+from orchestrator.predictive.consistency import compute_consistency_gap, ConsistencyProfile
 
 try:  # pragma: no cover - metrics optional
-    from orchestrator.prometheus_metrics import record_predictive_warning
+    from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap
 except Exception:  # pragma: no cover
     def record_predictive_warning(reason: str | None = None) -> None:  # type: ignore[misc]
+        return
+    def record_consistency_gap(gap_profile: dict) -> None:  # type: ignore[misc]
         return
 
 
@@ -236,6 +239,28 @@ class GovernanceEngine:
                 for alert in pattern_alerts
             ]
 
+        # MSC: Multi-slot consistency gap detection (Step 6)
+        consistency_profile = self._compute_consistency_gap(
+            state=state,
+            slot07=slot07,
+            predictive_snapshot=predictive_snapshot,
+            pattern_alerts=pattern_alerts,
+            thresholds=thresholds
+        )
+        if consistency_profile:
+            metadata["consistency_gap"] = consistency_profile.to_dict()
+
+            # Governance gating based on consistency
+            gap_threshold = thresholds.get("consistency_gap_threshold", 0.6)
+            severity_threshold = thresholds.get("consistency_severity_threshold", 0.7)
+
+            if (consistency_profile.gap_score >= gap_threshold or
+                consistency_profile.severity >= severity_threshold):
+                if allowed:  # Only downgrade if not already blocked
+                    allowed = False
+                    reason = "consistency_gap"
+                    metadata["consistency_reason"] = f"gap={consistency_profile.gap_score:.2f}, severity={consistency_profile.severity:.2f}"
+
         result = GovernanceResult(
             allowed=allowed,
             reason=reason,
@@ -262,6 +287,9 @@ class GovernanceEngine:
             # Publish pattern alerts and increment metrics
             for alert in pattern_alerts:
                 record_predictive_warning(reason=f"pattern_{alert.pattern_type}")
+            # Record consistency gap metrics (Step 6)
+            if consistency_profile:
+                record_consistency_gap(consistency_profile.to_dict())
         return result
 
     def _detect_and_debounce_patterns(
@@ -323,6 +351,52 @@ class GovernanceEngine:
 
         return new_alerts
 
+    def _compute_consistency_gap(
+        self,
+        state: Dict[str, Any],
+        slot07: Dict[str, Any],
+        predictive_snapshot: PredictiveSnapshot,
+        pattern_alerts: list[PatternAlert],
+        thresholds: Dict[str, Any]
+    ) -> Optional[ConsistencyProfile]:
+        """
+        Compute multi-slot consistency gap (Step 6).
+
+        Reads slot states from semantic mirror and computes cross-slot conflicts.
+        """
+        import os
+
+        if os.getenv("NOVA_ENABLE_MSC", "false").lower() != "true":
+            return None
+
+        # Read slot states from semantic mirror (would use mirror.read in production)
+        # For now, extract from state dict
+        slot03_state = state.get("slot03", {})
+        slot06_state = state.get("slot06", {})
+        slot10_state = state.get("slot10", {})
+
+        # Convert pattern alerts to dict format
+        alert_dicts = [
+            {
+                "type": alert.pattern_type,
+                "severity": alert.severity
+            }
+            for alert in pattern_alerts
+        ]
+
+        # Compute consistency profile
+        profile = compute_consistency_gap(
+            slot03_state=slot03_state,
+            slot06_state=slot06_state,
+            slot07_state=slot07,
+            slot10_state=slot10_state,
+            predictive_snapshot=predictive_snapshot.to_dict(),
+            pattern_alerts=alert_dicts,
+            timestamp=predictive_snapshot.timestamp
+        )
+
+        return profile
+
     def _publish_to_mirror(self, result: GovernanceResult) -> None:
         if not mirror_publish:
             return
@@ -360,6 +434,15 @@ class GovernanceEngine:
                 mirror_publish(
                     "predictive.pattern_alert",
                     pattern_alerts,
+                    "governance",
+                    ttl=180.0
+                )
+            # Publish consistency gap (Step 6)
+            consistency_gap = result.metadata.get("consistency_gap")
+            if consistency_gap:
+                mirror_publish(
+                    "predictive.consistency_gap",
+                    consistency_gap,
                     "governance",
                     ttl=180.0
                 )
