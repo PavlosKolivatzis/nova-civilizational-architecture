@@ -275,6 +275,13 @@ consistency_prod_predictive_gauge = _get_or_register_gauge(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Phase 7.0-RC: Memory Resonance (7-day TRSI stability tracking)
+memory_stability_gauge = _get_or_register_gauge(
+    "nova_memory_stability",
+    "7-day rolling TRSI stability score (mean - stdev)",
+    registry=_INTERNAL_REGISTRY,
+)
+
 
 # --- LightClock & System Health metrics ------------------------------------
 lightclock_phase_lock_gauge = Gauge(
@@ -1229,3 +1236,13 @@ def record_consistency_gap(gap_profile: dict) -> None:
     consistency_safety_prod_gauge.set(_clamp_unit(components.get("safety_production_conflict", 0.0)))
     consistency_culture_deploy_gauge.set(_clamp_unit(components.get("culture_deployment_conflict", 0.0)))
     consistency_prod_predictive_gauge.set(_clamp_unit(components.get("production_predictive_conflict", 0.0)))
+
+
+def record_memory_stability(stability_score: float) -> None:
+    """
+    Record memory stability from 7-day rolling TRSI window (Phase 7.0-RC).
+
+    Args:
+        stability_score: Memory stability score [0.0, 1.0] from MemoryResonanceWindow
+    """
+    memory_stability_gauge.set(_clamp_unit(stability_score))

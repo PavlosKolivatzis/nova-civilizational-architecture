@@ -67,6 +67,7 @@ DOCUMENTED_KEYS = {
     "predictive.router_modifiers",
     "predictive.pattern_alert",
     "predictive.consistency_gap",
+    "predictive.memory_resonance",
 }
 
 # Valid key pattern (no stray 'test.' matches)

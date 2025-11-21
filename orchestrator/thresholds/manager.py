@@ -151,3 +151,4 @@ if False:  # pragma: no cover
     os.getenv("NOVA_PREDICTIVE_HISTORY_WINDOW")
     os.getenv("NOVA_CONSISTENCY_GAP_THRESHOLD")
     os.getenv("NOVA_CONSISTENCY_SEVERITY_THRESHOLD")
+    os.getenv("NOVA_ENABLE_MEMORY_RESONANCE")

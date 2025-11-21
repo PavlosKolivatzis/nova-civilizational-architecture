@@ -30,6 +30,7 @@ from orchestrator.predictive.adapters import (
 )
 from orchestrator.predictive.pattern_detector import detect_patterns, PatternAlert
 from orchestrator.predictive.consistency import compute_consistency_gap, ConsistencyProfile
+from orchestrator.predictive.memory_resonance import get_memory_window
 
 try:  # pragma: no cover - metrics optional
     from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap
@@ -290,6 +291,10 @@ class GovernanceEngine:
             # Record consistency gap metrics (Step 6)
             if consistency_profile:
                 record_consistency_gap(consistency_profile.to_dict())
+
+            # Sample TRSI for memory resonance (RC - Step 7)
+            self._sample_memory_resonance(temporal_snapshot, predictive_payload.get("timestamp", 0.0))
+
         return result
 
     def _detect_and_debounce_patterns(
@@ -396,6 +401,41 @@ class GovernanceEngine:
         )
 
         return profile
+
+    def _sample_memory_resonance(self, temporal_snapshot: TemporalSnapshot, timestamp: float) -> None:
+        """
+        Sample TRSI for memory resonance tracking (Phase 7.0-RC).
+
+        Extracts TRSI from temporal snapshot and adds to 7-day rolling window.
+        Publishes memory stability to semantic mirror.
+
+        Args:
+            temporal_snapshot: Current temporal state
+            timestamp: Event timestamp
+        """
+        import os
+
+        if os.getenv("NOVA_ENABLE_MEMORY_RESONANCE", "false").lower() != "true":
+            return
+
+        # Get memory window singleton
+        memory_window = get_memory_window()
+
+        # Extract TRSI from temporal convergence score
+        # (temporal_convergence_score is the canonical TRSI metric)
+        trsi_value = temporal_snapshot.convergence_score
+
+        # Add sample to rolling window
+        memory_window.add_sample(
+            trsi_value=trsi_value,
+            timestamp=timestamp,
+            source="temporal_engine"
+        )
+
+        # Publish to semantic mirror (every Nth sample to reduce overhead)
+        sample_count = len(memory_window.trsi_history)
+        if sample_count % 6 == 0:  # Every 6 hours
+            memory_window.publish_to_mirror(ttl=3600.0)  # 1 hour TTL
 
     def _publish_to_mirror(self, result: GovernanceResult) -> None:
         if not mirror_publish:
