@@ -28,6 +28,7 @@ from orchestrator.predictive.adapters import (
     read_predictive_snapshot,
     read_predictive_ledger_head,
 )
+from orchestrator.predictive.pattern_detector import detect_patterns, PatternAlert
 
 try:  # pragma: no cover - metrics optional
     from orchestrator.prometheus_metrics import record_predictive_warning
@@ -69,6 +70,9 @@ class GovernanceEngine:
         self._predictive_engine = predictive_engine or PredictiveTrajectoryEngine()
         self._predictive_history_window = max(1, int(predictive_history_window))
         self._predictive_history: Deque[Dict[str, Any]] = deque(maxlen=self._predictive_history_window)
+        self._governance_history: Deque[Dict[str, Any]] = deque(maxlen=50)  # EPD history
+        self._router_history: Deque[Dict[str, Any]] = deque(maxlen=50)  # EPD history
+        self._active_patterns: Dict[str, PatternAlert] = {}  # Debounce state
         self._last_result: Optional[GovernanceResult] = None
 
     def evaluate(
@@ -105,6 +109,15 @@ class GovernanceEngine:
             self._predictive_history_window = history_window
 
         self._predictive_history.append(dict(predictive_payload))
+
+        # Step 5: Detect emergent patterns (EPD)
+        if routing_decision:
+            self._router_history.append({
+                "timestamp": predictive_payload.get("timestamp", 0.0),
+                "route": routing_decision.get("route", "unknown"),
+                "penalty": routing_decision.get("penalty", 0.0),
+                "stability_pressure": predictive_payload.get("stability_pressure", 0.0),
+            })
 
         snapshot = {
             "tri_signal": tri_signal,
@@ -206,6 +219,23 @@ class GovernanceEngine:
 
         metadata["predictive_history_window"] = self._predictive_history_window
 
+        # EPD pattern detection with debouncing (include current decision)
+        pattern_alerts = self._detect_and_debounce_patterns(thresholds, {
+            "timestamp": predictive_payload.get("timestamp", 0.0),
+            "allowed": allowed,
+            "reason": reason,
+        })
+        if pattern_alerts:
+            metadata["pattern_alerts"] = [
+                {
+                    "type": alert.pattern_type,
+                    "severity": alert.severity,
+                    "window": (alert.window_start, alert.window_end),
+                    "metadata": alert.metadata
+                }
+                for alert in pattern_alerts
+            ]
+
         result = GovernanceResult(
             allowed=allowed,
             reason=reason,
@@ -218,12 +248,80 @@ class GovernanceEngine:
 
         if record:
             self._last_result = result
+            # Update governance history for EPD
+            self._governance_history.append({
+                "timestamp": predictive_payload.get("timestamp", 0.0),
+                "allowed": allowed,
+                "reason": reason,
+            })
             self._ledger.append(result.to_dict())
             record_governance_result(result)
             self._publish_to_mirror(result)
             if warning_label:
                 record_predictive_warning(warning_label)
+            # Publish pattern alerts and increment metrics
+            for alert in pattern_alerts:
+                record_predictive_warning(reason=f"pattern_{alert.pattern_type}")
         return result
+
+    def _detect_and_debounce_patterns(
+        self,
+        thresholds: Dict[str, Any],
+        current_decision: Optional[Dict[str, Any]] = None
+    ) -> list[PatternAlert]:
+        """
+        Detect patterns with debouncing logic (Gemini-3.0 requirement).
+
+        Args:
+            thresholds: Current threshold configuration
+            current_decision: Current governance decision to include in history
+
+        Returns list of new alerts (debounced). Manages active_patterns state.
+        """
+        import os
+
+        if os.getenv("NOVA_ENABLE_EPD", "false").lower() != "true":
+            return []
+
+        # Get detection window from thresholds
+        window_size = int(thresholds.get("epd_window_size", 20))
+        cooldown_ticks = int(os.getenv("NOVA_PREDICTIVE_PATTERN_COOLDOWN", "20"))
+
+        # Include current decision in history for detection
+        gov_history = list(self._governance_history)
+        if current_decision:
+            gov_history.append(current_decision)
+
+        # Run pattern detection
+        detected = detect_patterns(
+            predictive_history=list(self._predictive_history),
+            governance_history=gov_history,
+            router_history=list(self._router_history),
+            window_size=window_size
+        )
+
+        # Filter out debounced patterns
+        new_alerts = []
+        for alert in detected:
+            if alert.pattern_type not in self._active_patterns:
+                # New pattern - add to active set
+                self._active_patterns[alert.pattern_type] = {
+                    "alert": alert,
+                    "ticks": 0
+                }
+                new_alerts.append(alert)
+
+        # Age out cooldowns
+        expired = []
+        for pattern_type, state in self._active_patterns.items():
+            state["ticks"] += 1
+            if state["ticks"] >= cooldown_ticks:
+                expired.append(pattern_type)
+
+        for pattern_type in expired:
+            del self._active_patterns[pattern_type]
+
+        return new_alerts
 
     def _publish_to_mirror(self, result: GovernanceResult) -> None:
         if not mirror_publish:
@@ -255,6 +353,15 @@ class GovernanceEngine:
                     },
                     "governance",
                     ttl=180.0,
+                )
+            # Publish pattern alerts (Step 5)
+            pattern_alerts = result.metadata.get("pattern_alerts", [])
+            if pattern_alerts:
+                mirror_publish(
+                    "predictive.pattern_alert",
+                    pattern_alerts,
+                    "governance",
+                    ttl=180.0
                 )
         except Exception:
             return
