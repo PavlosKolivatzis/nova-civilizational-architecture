@@ -1,5 +1,5 @@
 """Health monitoring for Slot09 Distortion Protection (Hybrid v3.1.0)."""
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import threading
 
 # --- import healthkit (with graceful fallback) --------------------------------
@@ -36,7 +36,7 @@ except Exception:
 NAME = "slot09_distortion_protection"
 VERSION = "3.1.0-hybrid"
 
-_HYBRID_PROBE_RESULT: Dict[str, Any] | None = None
+_HYBRID_PROBE_RESULT: Optional[Dict[str, Any]] = None
 _HYBRID_PROBE_LOCK = threading.Lock()
 
 _CAPS = [

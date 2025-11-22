@@ -23,7 +23,9 @@
       "Bash(NOVA_SLOT01_ROOT_MODE=0 python -m pytest:*)",
       "Bash(NOVA_ENABLE_PROMETHEUS=1 NOVA_SLOT01_ROOT_MODE=1 python:*)",
       "Bash(git push)",
-      "Bash(powershell -Command \"(Get-Content ''C:\\code\\nova-civilizational-architecture\\orchestrator\\prometheus_metrics.py'' | Measure-Object -Line).Lines\")"
+      "Bash(powershell -Command \"(Get-Content ''C:\\code\\nova-civilizational-architecture\\orchestrator\\prometheus_metrics.py'' | Measure-Object -Line).Lines\")",
+      "Bash(pytest:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

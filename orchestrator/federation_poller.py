@@ -274,7 +274,7 @@ def _loop():
         with _timed(metrics["pull_seconds"]):
             params = _quality_params()
             peer_ids: list[str] = []
-            success_timestamp: float | None = None
+            success_timestamp: Optional[float] = None
             try:
                 peers, checkpoint, peer_stats = get_peer_metrics(timeout=TIMEOUT)
                 peer_ids = [getattr(peer, "id", str(peer)) for peer in peers]
