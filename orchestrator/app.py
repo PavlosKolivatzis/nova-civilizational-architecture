@@ -16,6 +16,7 @@ import pkgutil
 import sys
 import time
 from contextlib import asynccontextmanager
+from typing import Optional
 
 import nova.slots as nova_slots
 from src_bootstrap import ensure_src_on_path
@@ -695,7 +696,7 @@ if FastAPI is not None:
         return Response(content=data, media_type=content_type)
 
     @app.post("/router/decide")
-    async def router_decide(payload: dict | None = None):
+    async def router_decide(payload: Optional[dict] = None):
         """Deterministic routing decision endpoint."""
         payload = payload or {}
         precheck = governance_engine.evaluate(payload, record=False)
@@ -737,7 +738,7 @@ if FastAPI is not None:
         return body
 
     @app.post("/governance/evaluate")
-    async def governance_evaluate(payload: dict | None = None):
+    async def governance_evaluate(payload: Optional[dict] = None):
         """Evaluate governance state directly."""
         result = governance_engine.evaluate(payload or {})
         return result.to_dict()
