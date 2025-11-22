@@ -300,21 +300,20 @@ def generate_attestation(
 
             from nova.ledger.factory import create_ledger_store
             from nova.ledger.model import RecordKind
-            from nova.crypto.pqc_keyring import PQCKeyring
+            from nova.crypto.keyring_persistence import sign_with_persistent_key
             import asyncio
 
             store = create_ledger_store()
             anchor_id = f"rc_validation_{attestation['phase']}"
 
-            # Sign attestation with PQC (Dilithium2)
+            # Sign attestation with PQC (Dilithium2) using persistent keypair
             canonical_msg = json.dumps(
                 {"attestation_hash": attestation["attestation_hash"], "phase": attestation["phase"]},
                 sort_keys=True, separators=(",", ":")
             ).encode("utf-8")
 
-            # Generate ephemeral keypair for RC attestation (production: use persistent key)
-            pk, sk = PQCKeyring.generate_keypair()
-            sig_bytes = PQCKeyring.sign(sk, canonical_msg)
+            # Sign with persistent key (stored in ~/.nova/keyring/pqc_key_01.json)
+            sig_bytes = sign_with_persistent_key(canonical_msg)
 
             # Append RC attestation to ledger with PQC signature
             if hasattr(store, 'append') and asyncio.iscoroutinefunction(store.append):
