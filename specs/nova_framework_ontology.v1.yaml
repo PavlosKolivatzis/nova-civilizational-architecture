@@ -5,9 +5,12 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.1.0
-  date: 2025-11-21
+  version: 1.2.0
+  date: 2025-11-22
   changelog:
+    - version: 1.2.0
+      date: 2025-11-22
+      changes: "Phase 7.0-RC - Added Release Candidate Validation Framework: Memory Resonance, RIS Calculator, Stress Simulation, RC Attestation, Prometheus Metrics; 63 new tests"
     - version: 1.1.0
       date: 2025-11-21
       changes: "Phase 7 integration - Added Predictive Foresight Framework (PFF) with EPD and MSC; 69 new tests"
@@ -853,6 +856,93 @@ coordination_frameworks:
       ledger: foresight_ledger
       gating: "Dual-threshold governance blocking via MSC"
     interfaces: {upstream: [TemporalIntegrity, Slot03, Slot06, Slot07, Slot10], downstream: [Governance, Router]}
+
+  - id: RCValidation
+    slot_id: null
+    name: Release Candidate Validation Framework
+    purpose: "Validate production readiness through memory resonance, integrity scoring, and stress recovery metrics"
+    category: production_governance
+    inputs: [temporal_consistency@1, predictive_snapshot@1, governance_state, slot07_production@2]
+    outputs: [rc_attestation@1, rc_criteria_result@1, memory_resonance_stats@1]
+    state_variables:
+      memory_window: [trsi_samples, stability, mean_trsi, volatility, trend_24h]
+      ris: [ris_score, memory_stability_component, ethical_compliance_component]
+      stress_metrics: [recovery_rate, baseline_ris, min_ris, final_ris, recovery_ticks]
+    feature_flags:
+      NOVA_RC_MEMORY_WINDOW_DAYS: {default: 7, desc: "Rolling window for TRSI stability (days)"}
+      NOVA_RC_MIN_SAMPLES: {default: 24, desc: "Minimum samples for RC validation"}
+    transformations:
+      - name: memory_resonance_tracking
+        in: [temporal_consistency@1]
+        out: [memory_resonance_stats@1]
+        rule: "7-day rolling TRSI window with stability = mean - stdev"
+        impl_ref: "orchestrator.predictive.memory_resonance.MemoryResonanceWindow"
+        thresholds:
+          memory_stability: {min: 0.80, desc: "Minimum 7-day TRSI stability for RC promotion"}
+      - name: ris_computation
+        in: [memory_resonance_stats@1, governance_state]
+        out: [ris_score]
+        rule: "RIS = sqrt(memory_stability × ethical_compliance)"
+        impl_ref: "orchestrator.predictive.ris_calculator.compute_ris"
+        formula: "RIS = sqrt(M_s × E_c) where M_s = memory stability, E_c = ethics compliance"
+        thresholds:
+          ris_score: {min: 0.75, desc: "Minimum RIS for RC promotion"}
+      - name: stress_simulation
+        in: [ris_score, predictive_snapshot@1]
+        out: [stress_metrics]
+        rule: "Inject drift/shock, measure recovery rate to baseline within 24h window"
+        impl_ref: "orchestrator.predictive.stress_simulation.StressSimulator"
+        thresholds:
+          recovery_rate: {min: 0.90, desc: "Minimum stress recovery rate for RC promotion"}
+      - name: rc_attestation_generation
+        in: [memory_resonance_stats@1, ris_score, stress_metrics, governance_state]
+        out: [rc_attestation@1]
+        rule: "Deterministic SHA-256 attestation with JSON Schema 2020-12 validation"
+        impl_ref: "scripts.generate_rc_attestation.generate_attestation"
+        contract: "contracts/attestation/phase-7.0-rc.schema.json"
+        hash_method: "SHA-256 (canonical JSON, excluding signature and hash)"
+      - name: rc_criteria_evaluation
+        in: [memory_resonance_stats@1, ris_score, stress_metrics]
+        out: [rc_criteria_result@1]
+        rule: "Evaluate pass/fail against all RC thresholds"
+        impl_ref: "scripts.generate_rc_attestation.evaluate_rc_criteria"
+        criteria:
+          - memory_stability: "≥ 0.80 (7-day sustained)"
+          - ris_score: "≥ 0.75 (continuous)"
+          - stress_recovery: "≥ 0.90 (within 24h)"
+          - samples: "≥ 24 (minimum 1 day hourly)"
+          - ethics_violations: "= 0 (zero tolerance)"
+        overall_pass: "All criteria must pass"
+    observability:
+      prometheus_metrics:
+        - {name: nova_memory_stability, type: gauge, desc: "7-day rolling TRSI stability"}
+        - {name: nova_ris_score, type: gauge, desc: "Resonance Integrity Score composite"}
+        - {name: nova_ris_component, type: gauge, labels: [component_type], desc: "RIS component scores"}
+        - {name: nova_stress_recovery_rate, type: gauge, desc: "Stress recovery rate"}
+        - {name: nova_rc_gate_status, type: gauge, labels: [gate_name], desc: "RC criteria gate status (1=pass, 0=fail)"}
+        - {name: nova_rc_overall_pass, type: gauge, desc: "Overall RC criteria pass/fail"}
+      recording_functions:
+        - {name: record_memory_resonance, ref: "orchestrator.prometheus_metrics.record_memory_resonance"}
+        - {name: record_ris, ref: "orchestrator.prometheus_metrics.record_ris"}
+        - {name: record_stress_recovery, ref: "orchestrator.prometheus_metrics.record_stress_recovery"}
+        - {name: record_rc_criteria, ref: "orchestrator.prometheus_metrics.record_rc_criteria"}
+    integration:
+      feeds_to: [CI/CD, Production Deployment]
+      observes: [TemporalIntegrity, PredictiveForesight, Governance, Slot07]
+      mode: validation_gate
+      ledger: rc_attestation_ledger
+      ci_workflow: ".github/workflows/rc-validation.yml (weekly Monday 10:00 UTC)"
+    interfaces: {upstream: [TemporalIntegrity, PredictiveForesight, Governance, Slot07], downstream: [CI/CD, Deployment]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/predictive/test_memory_resonance.py", count: 8}
+        - {file: "tests/predictive/test_ris_calculator.py", count: 8}
+        - {file: "tests/predictive/test_stress_simulation.py", count: 11}
+        - {file: "tests/attestation/test_rc_attestation.py", count: 23}
+        - {file: "tests/metrics/test_rc_prometheus_metrics.py", count: 13}
+      integration_tests:
+        - {file: "scripts/validate_rc_e2e.py", desc: "E2E validation of all 5 RC steps"}
+      total: 63
 
 # ---------- Validation & Testing ----------
 validation:
