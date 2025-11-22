@@ -1,0 +1,81 @@
+schema: nova_contract/v1
+contract_id: rc_criteria_result@1
+title: RC Criteria Evaluation Result
+description: Pass/fail results for all Release Candidate promotion criteria (Phase 7.0-RC)
+version: "1.0.0"
+slots:
+  - id: 0
+    name: RC Attestation Generator
+    role: publisher
+    description: Evaluates all RC thresholds and emits pass/fail results
+  - id: 11
+    name: CI/CD Pipeline
+    role: consumer
+    description: Gates production deployment based on overall_pass status
+
+fields:
+  - name: memory_stability_pass
+    type: bool
+    description: Memory stability >= 0.80 (7-day sustained)
+
+  - name: ris_pass
+    type: bool
+    description: RIS score >= 0.75 (continuous)
+
+  - name: stress_recovery_pass
+    type: bool
+    description: Stress recovery rate >= 0.90 (within 24h)
+
+  - name: samples_sufficient
+    type: bool
+    description: Sample count >= 24 (minimum 1 day hourly)
+
+  - name: ethics_violations_zero
+    type: bool
+    description: Zero ethics violations detected (zero tolerance)
+
+  - name: overall_pass
+    type: bool
+    description: All individual criteria passed (AND gate)
+
+  - name: timestamp
+    type: float
+    description: Epoch timestamp when criteria were evaluated
+
+  - name: memory_stability_value
+    type: float
+    description: Actual memory stability value
+    range: [0.0, 1.0]
+
+  - name: ris_value
+    type: float
+    description: Actual RIS score
+    range: [0.0, 1.0]
+
+  - name: stress_recovery_value
+    type: float
+    description: Actual stress recovery rate
+    range: [0.0, 1.0]
+
+  - name: sample_count
+    type: int
+    description: Actual number of samples in memory window
+
+semantic_mirror:
+  key: rc_validation.criteria_result
+  ttl: 600
+  publisher: rc_attestation_generator
+  readers:
+    - ci_cd_pipeline
+    - prometheus_exporter
+
+thresholds:
+  memory_stability: 0.80
+  ris_score: 0.75
+  stress_recovery: 0.90
+  min_samples: 24
+
+ontology_ref: specs/nova_framework_ontology.v1.yaml
+related_contracts:
+  - memory_resonance_stats@1
+  - rc_attestation@1

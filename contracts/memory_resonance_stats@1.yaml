@@ -1,0 +1,65 @@
+schema: nova_contract/v1
+contract_id: memory_resonance_stats@1
+title: Memory Resonance Statistics
+description: Rolling 7-day TRSI stability window statistics for RC validation (Phase 7.0-RC)
+version: "1.0.0"
+slots:
+  - id: 0
+    name: Memory Resonance Window
+    role: publisher
+    description: Tracks 7-day rolling TRSI samples and computes stability metrics
+  - id: 11
+    name: RC Validation
+    role: consumer
+    description: Uses memory stability as input to RIS calculation and RC criteria evaluation
+
+fields:
+  - name: count
+    type: int
+    description: Number of TRSI samples in the current window
+
+  - name: mean
+    type: float
+    description: Mean TRSI value across the window
+
+  - name: stdev
+    type: float
+    description: Standard deviation (volatility) of TRSI samples
+
+  - name: stability
+    type: float
+    description: Memory stability score (mean - stdev)
+    range: [0.0, 1.0]
+
+  - name: trend_24h
+    type: float
+    description: 24-hour trend gradient (positive = improving, negative = degrading)
+
+  - name: window_start
+    type: float
+    description: Epoch timestamp of oldest sample in window
+
+  - name: window_end
+    type: float
+    description: Epoch timestamp of newest sample in window
+
+  - name: source
+    type: string
+    description: Source identifier for samples (e.g., "e2e_validation", "production")
+
+semantic_mirror:
+  key: rc_validation.memory_resonance_stats
+  ttl: 300
+  publisher: memory_resonance_window
+  readers:
+    - rc_validation
+    - prometheus_exporter
+
+thresholds:
+  min_stability: 0.80  # RC promotion requires stability >= 0.80
+  min_samples: 24      # Minimum 1 day of hourly samples
+
+ontology_ref: specs/nova_framework_ontology.v1.yaml
+related_contracts:
+  - temporal_consistency@1
+  - rc_criteria_result@1
