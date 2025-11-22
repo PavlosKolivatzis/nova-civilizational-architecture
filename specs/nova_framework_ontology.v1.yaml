@@ -5,9 +5,12 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.2.0
+  version: 1.3.0
   date: 2025-11-22
   changelog:
+    - version: 1.3.0
+      date: 2025-11-22
+      changes: "Phase 14 Ledger Integration - RC attestations persisted to immutable ledger with PQC signatures (Dilithium2), Merkle checkpoints, persistent keyring, query API; 18 new tests"
     - version: 1.2.0
       date: 2025-11-22
       changes: "Phase 7.0-RC - Added Release Candidate Validation Framework: Memory Resonance, RIS Calculator, Stress Simulation, RC Attestation, Prometheus Metrics; 63 new tests"
@@ -913,6 +916,36 @@ coordination_frameworks:
           - samples: "≥ 24 (minimum 1 day hourly)"
           - ethics_violations: "= 0 (zero tolerance)"
         overall_pass: "All criteria must pass"
+      - name: ledger_persistence
+        in: [rc_attestation@1]
+        out: [ledger_record]
+        rule: "Append attestation to Phase 14 immutable ledger with PQC signature and Merkle checkpoint"
+        impl_ref: "nova.ledger.factory.create_ledger_store"
+        phase14_integration:
+          record_kind: "RC_ATTESTATION"
+          anchor_id: "rc_validation_{phase}"
+          slot: "00"
+          pqc_signature:
+            algorithm: "Dilithium2 (NIST ML-DSA)"
+            key_storage: "~/.nova/keyring/pqc_key_01.json"
+            signature_size: "2420 bytes"
+            message: "Canonical JSON of {attestation_hash, phase}"
+          merkle_checkpoint:
+            algorithm: "SHA3-256"
+            span: "All RC attestations in chain"
+            checkpoint_id: "rc_cp_{phase}_{timestamp}"
+          hash_chain:
+            algorithm: "SHA3-256"
+            prev_hash: "Link to previous RC attestation"
+            continuity: "Verified on append"
+          query_api:
+            - {name: get_rc_chain, desc: "Retrieve all attestations for phase"}
+            - {name: get_rc_attestation_by_hash, desc: "Find by attestation_hash"}
+            - {name: verify_rc_chain, desc: "Verify hash chain integrity"}
+            - {name: get_rc_summary, desc: "Summary statistics"}
+        feature_flags:
+          NOVA_KEYRING_DIR: {default: "~/.nova/keyring/", desc: "PQC keyring directory"}
+          NOVA_PQC_KEYFILE: {default: "<keyring_dir>/pqc_key_01.json", desc: "PQC keyfile path"}
     observability:
       prometheus_metrics:
         - {name: nova_memory_stability, type: gauge, desc: "7-day rolling TRSI stability"}
