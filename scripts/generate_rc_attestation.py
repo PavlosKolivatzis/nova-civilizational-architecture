@@ -20,6 +20,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
@@ -318,7 +319,7 @@ def generate_attestation(
             # Append RC attestation to ledger with PQC signature
             if hasattr(store, 'append') and asyncio.iscoroutinefunction(store.append):
                 # Async store (PostgreSQL)
-                asyncio.run(store.append(
+                record = asyncio.run(store.append(
                     anchor_id=anchor_id,
                     slot="00",  # Slot 0 = RC validation system
                     kind=RecordKind.RC_ATTESTATION,
@@ -329,7 +330,7 @@ def generate_attestation(
                 ))
             else:
                 # Sync store (in-memory)
-                store.append(
+                record = store.append(
                     anchor_id=anchor_id,
                     slot="00",
                     kind=RecordKind.RC_ATTESTATION,
@@ -338,6 +339,47 @@ def generate_attestation(
                     version=attestation.get("schema_version", "7.0-rc-v1"),
                     sig=sig_bytes
                 )
+
+            # Create Merkle checkpoint for RC validation chain
+            try:
+                chain = store.get_chain(anchor_id)
+                if len(chain) >= 1:
+                    # Create checkpoint spanning all RC attestations
+                    start_rid = chain[0].rid
+                    end_rid = chain[-1].rid
+
+                    if hasattr(store, 'span_for_checkpoint') and asyncio.iscoroutinefunction(store.span_for_checkpoint):
+                        # Async checkpoint (PostgreSQL)
+                        span_info = asyncio.run(store.span_for_checkpoint(anchor_id))
+                        if span_info:
+                            from nova.ledger.checkpoint_types import Checkpoint
+                            checkpoint = Checkpoint(
+                                id=f"rc_cp_{attestation['phase']}_{int(time.time())}",
+                                anchor_id=anchor_id,
+                                merkle_root=span_info["merkle_root"],
+                                start_rid=span_info["start_rid"],
+                                end_rid=span_info["end_rid"],
+                                prev_root=span_info.get("prev_root")
+                            )
+                            asyncio.run(store.persist_checkpoint(checkpoint))
+                    else:
+                        # In-memory checkpoint
+                        from nova.ledger.merkle import merkle_root
+                        hashes = [bytes.fromhex(r.hash) for r in chain]
+                        root = merkle_root(hashes)
+
+                        from nova.ledger.checkpoint_types import Checkpoint
+                        checkpoint = Checkpoint(
+                            id=f"rc_cp_{attestation['phase']}_{int(time.time())}",
+                            anchor_id=anchor_id,
+                            merkle_root=root.hex(),
+                            start_rid=start_rid,
+                            end_rid=end_rid
+                        )
+                        # In-memory store doesn't persist checkpoints, just note creation
+            except Exception as cp_err:
+                # Non-fatal: checkpoint creation failed
+                print(f"Warning: Failed to create Merkle checkpoint: {cp_err}", file=sys.stderr)
         except Exception as e:
             # Non-fatal: RC attestation still written to file
             import sys

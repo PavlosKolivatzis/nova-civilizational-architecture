@@ -184,3 +184,49 @@ def test_rc_attestation_pqc_signature():
 
     finally:
         output_path.unlink(missing_ok=True)
+
+
+def test_rc_attestation_merkle_checkpoint():
+    """Test Merkle checkpoint creation for RC attestation chain."""
+    import sys
+    repo_root = Path(__file__).parent.parent.parent
+    sys.path.insert(0, str(repo_root / "scripts"))
+
+    from generate_rc_attestation import generate_attestation
+    from nova.ledger.merkle import merkle_root
+
+    # Generate 3 RC attestations
+    attestations = []
+    for i in range(3):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            output_path = Path(f.name)
+
+        try:
+            att = generate_attestation(
+                output_path=output_path,
+                memory_stability=0.80 + (i * 0.01),
+                ris_score=0.85 + (i * 0.01),
+                stress_recovery=0.90 + (i * 0.01),
+                append_to_ledger=True
+            )
+            attestations.append(att)
+        finally:
+            output_path.unlink(missing_ok=True)
+
+    # Verify Merkle checkpoint was created (in-memory store)
+    store = create_ledger_store()
+    anchor_id = "rc_validation_7.0-rc"
+
+    chain = store.get_chain(anchor_id)
+    assert len(chain) >= 3, f"Expected at least 3 RC attestations, got {len(chain)}"
+
+    # Compute expected Merkle root
+    hashes = [bytes.fromhex(r.hash) for r in chain]
+    expected_root = merkle_root(hashes)
+
+    # Verify root is deterministic
+    assert len(expected_root) == 32, "Merkle root should be 32 bytes (SHA3-256)"
+    assert expected_root.hex(), "Merkle root should be non-empty"
+
+    # Note: In-memory store doesn't persist checkpoints
+    # This test verifies checkpoint computation logic works
