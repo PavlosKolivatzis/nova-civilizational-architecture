@@ -299,12 +299,23 @@ def generate_attestation(
 
             from nova.ledger.factory import create_ledger_store
             from nova.ledger.model import RecordKind
+            from nova.crypto.pqc_keyring import PQCKeyring
             import asyncio
 
             store = create_ledger_store()
             anchor_id = f"rc_validation_{attestation['phase']}"
 
-            # Append RC attestation to ledger
+            # Sign attestation with PQC (Dilithium2)
+            canonical_msg = json.dumps(
+                {"attestation_hash": attestation["attestation_hash"], "phase": attestation["phase"]},
+                sort_keys=True, separators=(",", ":")
+            ).encode("utf-8")
+
+            # Generate ephemeral keypair for RC attestation (production: use persistent key)
+            pk, sk = PQCKeyring.generate_keypair()
+            sig_bytes = PQCKeyring.sign(sk, canonical_msg)
+
+            # Append RC attestation to ledger with PQC signature
             if hasattr(store, 'append') and asyncio.iscoroutinefunction(store.append):
                 # Async store (PostgreSQL)
                 asyncio.run(store.append(
@@ -313,7 +324,8 @@ def generate_attestation(
                     kind=RecordKind.RC_ATTESTATION,
                     payload=attestation,
                     producer="rc_attestation_generator",
-                    version=attestation.get("schema_version", "7.0-rc-v1")
+                    version=attestation.get("schema_version", "7.0-rc-v1"),
+                    sig=sig_bytes
                 ))
             else:
                 # Sync store (in-memory)
@@ -323,7 +335,8 @@ def generate_attestation(
                     kind=RecordKind.RC_ATTESTATION,
                     payload=attestation,
                     producer="rc_attestation_generator",
-                    version=attestation.get("schema_version", "7.0-rc-v1")
+                    version=attestation.get("schema_version", "7.0-rc-v1"),
+                    sig=sig_bytes
                 )
         except Exception as e:
             # Non-fatal: RC attestation still written to file

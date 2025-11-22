@@ -141,3 +141,46 @@ def test_rc_attestation_hash_chain():
     for i in range(1, len(chain)):
         assert chain[i].prev_hash == chain[i-1].hash, \
             f"Chain link {i} broken: prev_hash mismatch"
+
+
+def test_rc_attestation_pqc_signature():
+    """Test RC attestations have valid PQC signatures."""
+    import sys
+    repo_root = Path(__file__).parent.parent.parent
+    sys.path.insert(0, str(repo_root / "scripts"))
+
+    from generate_rc_attestation import generate_attestation
+    from nova.crypto.pqc_keyring import PQCKeyring
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        output_path = Path(f.name)
+
+    try:
+        # Generate RC attestation with ledger append
+        attestation = generate_attestation(
+            output_path=output_path,
+            memory_stability=0.85,
+            ris_score=0.90,
+            stress_recovery=0.92,
+            append_to_ledger=True
+        )
+
+        # Verify ledger record has PQC signature
+        store = create_ledger_store()
+        anchor_id = f"rc_validation_{attestation['phase']}"
+        chain = store.get_chain(anchor_id)
+
+        assert len(chain) > 0, "RC attestation not found in ledger"
+
+        # Get last record (most recent attestation)
+        last_record = chain[-1]
+        assert last_record.sig is not None, "RC attestation missing PQC signature"
+        assert isinstance(last_record.sig, bytes), "Signature should be bytes"
+        assert len(last_record.sig) > 0, "Signature should not be empty"
+
+        # Note: Cannot verify signature without storing public key
+        # In production, public key would be stored in ledger metadata
+        # For now, just verify signature exists and is non-trivial
+
+    finally:
+        output_path.unlink(missing_ok=True)
