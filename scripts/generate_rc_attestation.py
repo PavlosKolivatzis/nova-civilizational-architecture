@@ -199,7 +199,8 @@ def generate_attestation(
     output_path: Path,
     memory_stability: Optional[float] = None,
     ris_score: Optional[float] = None,
-    stress_recovery: Optional[float] = None
+    stress_recovery: Optional[float] = None,
+    append_to_ledger: bool = True
 ) -> dict:
     """
     Generate RC attestation document.
@@ -209,6 +210,7 @@ def generate_attestation(
         memory_stability: Optional explicit memory stability score
         ris_score: Optional explicit RIS score
         stress_recovery: Optional explicit stress recovery rate
+        append_to_ledger: If True, append attestation to Phase 14 ledger
 
     Returns:
         dict: Complete attestation document
@@ -285,6 +287,48 @@ def generate_attestation(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(attestation, f, indent=2)
+
+    # Append to Phase 14 ledger (if enabled)
+    if append_to_ledger:
+        try:
+            import sys
+            from pathlib import Path
+            # Add src to path for ledger imports
+            repo_root = Path(__file__).parent.parent
+            sys.path.insert(0, str(repo_root / "src"))
+
+            from nova.ledger.factory import create_ledger_store
+            from nova.ledger.model import RecordKind
+            import asyncio
+
+            store = create_ledger_store()
+            anchor_id = f"rc_validation_{attestation['phase']}"
+
+            # Append RC attestation to ledger
+            if hasattr(store, 'append') and asyncio.iscoroutinefunction(store.append):
+                # Async store (PostgreSQL)
+                asyncio.run(store.append(
+                    anchor_id=anchor_id,
+                    slot="00",  # Slot 0 = RC validation system
+                    kind=RecordKind.RC_ATTESTATION,
+                    payload=attestation,
+                    producer="rc_attestation_generator",
+                    version=attestation.get("schema_version", "7.0-rc-v1")
+                ))
+            else:
+                # Sync store (in-memory)
+                store.append(
+                    anchor_id=anchor_id,
+                    slot="00",
+                    kind=RecordKind.RC_ATTESTATION,
+                    payload=attestation,
+                    producer="rc_attestation_generator",
+                    version=attestation.get("schema_version", "7.0-rc-v1")
+                )
+        except Exception as e:
+            # Non-fatal: RC attestation still written to file
+            import sys
+            print(f"Warning: Failed to append RC attestation to ledger: {e}", file=sys.stderr)
 
     return attestation
 

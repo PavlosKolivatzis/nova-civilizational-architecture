@@ -10,8 +10,12 @@ from typing import Optional
 from .store import LedgerStore
 from .store_postgres import PostgresLedgerStore
 from ..config.ledger_config import LedgerConfig
+
 # Lazy import fallback counter to avoid registration at import time
 _fallback_counter = None
+
+# Global in-memory store singleton (for test isolation and shared state)
+_memory_store_singleton: Optional[LedgerStore] = None
 
 def _get_fallback_counter():
     global _fallback_counter
@@ -40,6 +44,8 @@ def create_ledger_store(config: Optional[LedgerConfig] = None, logger: Optional[
     Returns:
         LedgerStore instance (memory or PostgreSQL backend).
     """
+    global _memory_store_singleton
+
     if config is None:
         config = LedgerConfig.from_env()
 
@@ -49,8 +55,10 @@ def create_ledger_store(config: Optional[LedgerConfig] = None, logger: Optional[
     if config.backend == "postgres":
         if not config.dsn:
             logger.warning("PostgreSQL DSN not configured, falling back to memory store")
-            ledger_persist_fallback_total.labels(reason="no_dsn").inc()
-            return LedgerStore(logger=logger)
+            _get_fallback_counter().labels(reason="no_dsn").inc()
+            if _memory_store_singleton is None:
+                _memory_store_singleton = LedgerStore(logger=logger)
+            return _memory_store_singleton
 
         try:
             return PostgresLedgerStore(
@@ -62,12 +70,18 @@ def create_ledger_store(config: Optional[LedgerConfig] = None, logger: Optional[
         except Exception as e:
             logger.error(f"Failed to create PostgreSQL store: {e}, falling back to memory store")
             _get_fallback_counter().labels(reason="connection_failed").inc()
-            return LedgerStore(logger=logger)
+            if _memory_store_singleton is None:
+                _memory_store_singleton = LedgerStore(logger=logger)
+            return _memory_store_singleton
 
     elif config.backend == "memory":
-        return LedgerStore(logger=logger)
+        if _memory_store_singleton is None:
+            _memory_store_singleton = LedgerStore(logger=logger)
+        return _memory_store_singleton
 
     else:
         logger.warning(f"Unknown ledger backend '{config.backend}', falling back to memory store")
         _get_fallback_counter().labels(reason="unknown_backend").inc()
-        return LedgerStore(logger=logger)
+        if _memory_store_singleton is None:
+            _memory_store_singleton = LedgerStore(logger=logger)
+        return _memory_store_singleton

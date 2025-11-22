@@ -28,6 +28,9 @@ class RecordKind(str, Enum):
     PQC_VERIFIED = "PQC_VERIFIED"
     PQC_KEY_ROTATED = "PQC_KEY_ROTATED"
 
+    # Phase 7: RC Validation
+    RC_ATTESTATION = "RC_ATTESTATION"
+
     # Generic
     CHECKPOINT_CREATED = "CHECKPOINT_CREATED"
 
