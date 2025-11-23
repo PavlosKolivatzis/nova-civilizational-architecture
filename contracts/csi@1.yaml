@@ -1,0 +1,51 @@
+schema: nova_contract/v1
+contract_id: csi@1
+title: Continuity Stability Index
+description: Cross-phase fusion metric for system stability (Phase 8 minimal integration)
+version: "1.0.0"
+slots:
+  - id: 0
+    name: Continuity Engine
+    role: publisher
+    description: Computes CSI from Phase 14 RC attestation ledger
+  - id: 5
+    name: Governance
+    role: consumer
+    description: Uses CSI for policy decisions
+  - id: 11
+    name: Deployment
+    role: consumer
+    description: Uses CSI for production readiness assessment
+
+fields:
+  - name: value
+    type: float
+    description: Continuity Stability Index (CSI) value in range [0.0, 1.0]
+    constraints:
+      min: 0.0
+      max: 1.0
+
+semantic_mirror:
+  key: continuity.csi
+  ttl: 3600  # 1 hour cache
+  publisher: continuity_engine
+  readers:
+    - governance
+    - deployment
+    - monitoring
+
+computation:
+  formula: "CSI = 0.3 × P6_stability + 0.3 × P7_stability + 0.4 × correlation"
+  inputs:
+    - phase_6_stability: "Stability from Phase 6 (placeholder: 0.85, future: from sealed archives)"
+    - phase_7_stability: "Average memory stability from recent RC attestations"
+    - correlation: "min(P6_stability, P7_stability)"
+  weights:
+    phase_6: 0.3
+    phase_7: 0.3
+    correlation: 0.4
+
+ontology_ref: specs/nova_framework_ontology.v1.yaml
+related_contracts:
+  - csi_breakdown@1
+  - rc_attestation@1

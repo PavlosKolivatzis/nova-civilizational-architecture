@@ -1,0 +1,102 @@
+schema: nova_contract/v1
+contract_id: csi_breakdown@1
+title: CSI Breakdown
+description: Detailed component breakdown of Continuity Stability Index (Phase 8)
+version: "1.0.0"
+slots:
+  - id: 0
+    name: Continuity Engine
+    role: publisher
+    description: Provides detailed CSI diagnostics
+  - id: 5
+    name: Governance
+    role: consumer
+    description: Analyzes component stability for policy tuning
+  - id: 11
+    name: Deployment
+    role: consumer
+    description: Reviews component metrics for deployment decisions
+
+fields:
+  - name: csi
+    type: float
+    description: Composite CSI value [0.0, 1.0]
+    constraints:
+      min: 0.0
+      max: 1.0
+
+  - name: p6_stability
+    type: float
+    description: Phase 6 stability component [0.0, 1.0]
+    constraints:
+      min: 0.0
+      max: 1.0
+
+  - name: p7_stability
+    type: float
+    description: Phase 7 stability component (average from recent RC attestations) [0.0, 1.0]
+    constraints:
+      min: 0.0
+      max: 1.0
+
+  - name: p7_ris
+    type: float
+    description: Phase 7 RIS average [0.0, 1.0]
+    constraints:
+      min: 0.0
+      max: 1.0
+
+  - name: correlation
+    type: float
+    description: Inter-phase correlation (min of P6 and P7 stability) [0.0, 1.0]
+    constraints:
+      min: 0.0
+      max: 1.0
+
+  - name: attestation_count
+    type: int
+    description: Total RC attestations in chain
+    constraints:
+      min: 0
+
+  - name: window_size
+    type: int
+    description: Analysis window size (number of recent attestations analyzed)
+    constraints:
+      min: 1
+
+  - name: weights
+    type: map
+    description: CSI component weights (p6, p7, correlation)
+    structure:
+      p6: 0.3
+      p7: 0.3
+      correlation: 0.4
+
+semantic_mirror:
+  key: continuity.csi_breakdown
+  ttl: 3600  # 1 hour cache
+  publisher: continuity_engine
+  readers:
+    - governance
+    - deployment
+    - monitoring
+    - diagnostics
+
+computation:
+  data_source: "Phase 14 ledger (get_rc_chain, get_rc_summary)"
+  algorithm:
+    - "Query RC attestations via get_rc_chain(phase)"
+    - "Extract memory_stability from recent attestations (window_size)"
+    - "Compute P7 stability as average of memory_stability values"
+    - "Extract RIS scores from recent attestations"
+    - "Compute P7 RIS as average of RIS values"
+    - "Load P6 stability (current: placeholder 0.85)"
+    - "Compute correlation = min(P6_stability, P7_stability)"
+    - "Apply CSI formula: 0.3*P6 + 0.3*P7 + 0.4*correlation"
+
+ontology_ref: specs/nova_framework_ontology.v1.yaml
+related_contracts:
+  - csi@1
+  - rc_attestation@1
+  - memory_resonance_stats@1
