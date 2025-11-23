@@ -1,9 +1,9 @@
 \# Nova Civilizational Architecture — Visual Map
 
-\*\*Version\*\*: 6.0 (Phase 16-2)  
-\*\*Status\*\*: Processual 4.0 Maturity  
-\*\*Scale\*\*: 48,000+ lines, 10 cognitive slots  
-\*\*Last Updated\*\*: 2025-11-09
+\*\*Version\*\*: 7.0 (Phase 8 + Phase 14 Integration)
+\*\*Status\*\*: Processual 4.0 Maturity
+\*\*Scale\*\*: 50,000+ lines, 10 cognitive slots
+\*\*Last Updated\*\*: 2025-11-23
 
 \---
 
@@ -49,11 +49,13 @@ graph TB
         S10\["Slot10\<br/\>Civilizational Deploy\<br/\>(1,865 LOC)"\]  
     end
 
-    subgraph Core\["💎 Core Infrastructure"\]  
-        Ledger\["Immutable Ledger\<br/\>Fact/Claim/Attest"\]  
-        ACL\["ACL Registry\<br/\>Capability Governance"\]  
-        IDS\["IDS Services\<br/\>Threat Detection"\]  
-        Config\["Config Manager\<br/\>Enhanced \+ Hot-Reload"\]  
+    subgraph Core\["💎 Core Infrastructure"\]
+        Ledger\["Immutable Ledger\<br/\>SHA3-256 Hash Chains\<br/\>Dilithium2 PQC Signatures"\]
+        RCQuery\["RC Query API\<br/\>Phase 14 Ledger Access"\]
+        CSI\["CSI Calculator\<br/\>Phase 8 Continuity"\]
+        ACL\["ACL Registry\<br/\>Capability Governance"\]
+        IDS\["IDS Services\<br/\>Threat Detection"\]
+        Config\["Config Manager\<br/\>Enhanced \+ Hot-Reload"\]
     end
 
     %% External to Orchestrator  
@@ -89,16 +91,22 @@ graph TB
     AdaptiveLinks \--\> S9  
     AdaptiveLinks \--\> S10
 
-    %% Slots to Core  
-    S1 \--\> Ledger  
-    S2 \--\> Config  
-    S6 \--\> ACL  
-    S8 \--\> IDS  
+    %% Slots to Core
+    S1 \--\> Ledger
+    S2 \--\> Config
+    S6 \--\> ACL
+    S8 \--\> IDS
     S9 \--\> IDS
 
-    %% Core to Orchestrator  
-    Ledger \--\> SemanticMirror  
+    %% Phase 14 & 8 Integration
+    Ledger \--\> RCQuery
+    RCQuery \--\> CSI
+    CSI \--\> WisdomGov
+
+    %% Core to Orchestrator
+    Ledger \--\> SemanticMirror
     Config \--\> EventBus
+    CSI \--\> Prometheus
 
     classDef external fill:\#e1f5ff,stroke:\#0277bd,stroke-width:2px  
     classDef orchestrator fill:\#fff9c4,stroke:\#f57f17,stroke-width:2px  
@@ -112,7 +120,7 @@ graph TB
     class WisdomGov,CreativityGov,Slot7Gov governors  
     class PeerStore,PeerSync,Novelty federation  
     class S1,S2,S3,S4,S5,S6,S7,S8,S9,S10 slots  
-    class Ledger,ACL,IDS,Config core  
+    class Ledger,RCQuery,CSI,ACL,IDS,Config core  
 \`\`\`
 
 \---
@@ -318,13 +326,14 @@ graph TB
 \- \`/health/config\` — Plugin system status \+ contracts  
 \- \`/metrics\` — Prometheus scrape target
 
-\#\#\# CI/CD Pipelines  
-1\. \*\*nova-ci.yml\*\* — Main test suite (703 tests passing)  
-2\. \*\*health-config-matrix.yml\*\* — Python 3.9-3.13 matrix  
-3\. \*\*contracts-freeze.yml\*\* — Contract schema protection  
-4\. \*\*contracts-nightly.yml\*\* — Nightly validation  
-5\. \*\*ids-ci.yml\*\* — IDS-specific tests  
-6\. \*\*commitlint.yml\*\* — Conventional commits enforcement
+\#\#\# CI/CD Pipelines
+1\. \*\*nova-ci.yml\*\* — Main test suite (1695 tests passing)
+2\. \*\*health-config-matrix.yml\*\* — Python 3.9-3.13 matrix
+3\. \*\*contracts-freeze.yml\*\* — Contract schema protection
+4\. \*\*contracts-nightly.yml\*\* — Nightly validation
+5\. \*\*rc-validation.yml\*\* — Weekly RC attestation (Phase 7.0-RC)
+6\. \*\*ids-ci.yml\*\* — IDS-specific tests
+7\. \*\*commitlint.yml\*\* — Conventional commits enforcement
 
 \---
 
@@ -369,7 +378,11 @@ graph TB
 
 \#\# Architecture Status
 
-\*\*Maturity\*\*: Processual 4.0 (Full Autonomous Operation)  
-\*\*Scale\*\*: 48,000+ lines across 10 slots \+ orchestrator  
-\*\*Test Coverage\*\*: 703/704 tests passing (99.9%)  
+\*\*Maturity\*\*: Processual 4.0 (Full Autonomous Operation)
+\*\*Scale\*\*: 50,000+ lines across 10 slots \+ orchestrator
+\*\*Test Coverage\*\*: 1695 tests passing (12 skipped)
 \*\*Production Ready\*\*: Yes, with comprehensive observability
+\*\*Recent Additions\*\*:
+\- Phase 8: Continuity Stability Index (CSI) cross-phase fusion
+\- Phase 14: Immutable ledger with PQC signatures (Dilithium2)
+\- Phase 7.0-RC: Release Candidate validation framework
