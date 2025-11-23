@@ -236,6 +236,28 @@ predictive_safe_corridor_public_gauge = _get_or_register_gauge(
     "Public-safe predictive safe corridor indicator",
     registry=_PUBLIC_REGISTRY,
 )
+# Continuity metrics (Phase-8)
+continuity_stability_index_gauge = _get_or_register_gauge(
+    "nova_continuity_stability_index",
+    "Continuity Stability Index (CSI) across phases",
+    registry=_INTERNAL_REGISTRY,
+)
+continuity_p6_stability_gauge = _get_or_register_gauge(
+    "nova_continuity_p6_stability",
+    "Phase 6 stability component of CSI",
+    registry=_INTERNAL_REGISTRY,
+)
+continuity_p7_stability_gauge = _get_or_register_gauge(
+    "nova_continuity_p7_stability",
+    "Phase 7 stability component of CSI",
+    registry=_INTERNAL_REGISTRY,
+)
+continuity_correlation_gauge = _get_or_register_gauge(
+    "nova_continuity_correlation",
+    "Inter-phase correlation component of CSI",
+    registry=_INTERNAL_REGISTRY,
+)
+
 predictive_penalty_gauge = _get_or_register_gauge(
     "nova_predictive_penalty",
     "Latest predictive routing penalty",

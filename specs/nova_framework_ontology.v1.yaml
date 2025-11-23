@@ -5,9 +5,12 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.3.0
-  date: 2025-11-22
+  version: 1.4.0
+  date: 2025-11-23
   changelog:
+    - version: 1.4.0
+      date: 2025-11-23
+      changes: "Phase 8 Minimal Integration - Continuity Stability Index (CSI) calculator with cross-phase fusion; leverages Phase 14 ledger query API; 4 Prometheus metrics; 5 new tests"
     - version: 1.3.0
       date: 2025-11-22
       changes: "Phase 14 Ledger Integration - RC attestations persisted to immutable ledger with PQC signatures (Dilithium2), Merkle checkpoints, persistent keyring, query API; 18 new tests"
@@ -960,12 +963,12 @@ coordination_frameworks:
         - {name: record_stress_recovery, ref: "orchestrator.prometheus_metrics.record_stress_recovery"}
         - {name: record_rc_criteria, ref: "orchestrator.prometheus_metrics.record_rc_criteria"}
     integration:
-      feeds_to: [CI/CD, Production Deployment]
+      feeds_to: [CI/CD, Production Deployment, ContinuityEngine]
       observes: [TemporalIntegrity, PredictiveForesight, Governance, Slot07]
       mode: validation_gate
       ledger: rc_attestation_ledger
       ci_workflow: ".github/workflows/rc-validation.yml (weekly Monday 10:00 UTC)"
-    interfaces: {upstream: [TemporalIntegrity, PredictiveForesight, Governance, Slot07], downstream: [CI/CD, Deployment]}
+    interfaces: {upstream: [TemporalIntegrity, PredictiveForesight, Governance, Slot07], downstream: [CI/CD, Deployment, ContinuityEngine]}
     test_coverage:
       unit_tests:
         - {file: "tests/predictive/test_memory_resonance.py", count: 8}
@@ -976,6 +979,69 @@ coordination_frameworks:
       integration_tests:
         - {file: "scripts/validate_rc_e2e.py", desc: "E2E validation of all 5 RC steps"}
       total: 63
+
+  - id: ContinuityEngine
+    slot_id: null
+    name: Continuity Engine
+    purpose: "Phase 8 minimal integration - Compute Continuity Stability Index (CSI) from cross-phase RC attestation history"
+    category: temporal_governance
+    inputs: [rc_attestation_ledger@phase14]
+    outputs: [csi@1, csi_breakdown@1]
+    state_variables: []
+    schemas:
+      - name: csi@1
+        fields:
+          - {name: value, type: float, range: "[0.0, 1.0]", desc: "Continuity Stability Index"}
+      - name: csi_breakdown@1
+        fields:
+          - {name: csi, type: float, range: "[0.0, 1.0]", desc: "Composite CSI value"}
+          - {name: p6_stability, type: float, range: "[0.0, 1.0]", desc: "Phase 6 stability component"}
+          - {name: p7_stability, type: float, range: "[0.0, 1.0]", desc: "Phase 7 stability component"}
+          - {name: p7_ris, type: float, range: "[0.0, 1.0]", desc: "Phase 7 RIS average"}
+          - {name: correlation, type: float, range: "[0.0, 1.0]", desc: "Inter-phase correlation"}
+          - {name: attestation_count, type: int, desc: "Total RC attestations in chain"}
+          - {name: window_size, type: int, desc: "Analysis window size"}
+          - {name: weights, type: object, desc: "CSI component weights {p6: 0.3, p7: 0.3, correlation: 0.4}"}
+    transformations:
+      - name: compute_csi
+        in: [rc_attestation_ledger@phase14]
+        out: [csi@1]
+        rule: "CSI = 0.3 × P6_stability + 0.3 × P7_stability + 0.4 × correlation"
+        impl_ref: "nova.continuity.csi_calculator.compute_csi"
+        algorithm:
+          - "Query RC attestations from Phase 14 ledger via get_rc_chain()"
+          - "Extract P7 stability from recent attestations (window_size=7)"
+          - "Load P6 stability (placeholder: 0.85, future: from sealed archives)"
+          - "Compute correlation = min(P6, P7)"
+          - "Apply weighted fusion: CSI = 0.3*P6 + 0.3*P7 + 0.4*correlation"
+          - "Clamp result to [0.0, 1.0]"
+      - name: get_csi_breakdown
+        in: [rc_attestation_ledger@phase14]
+        out: [csi_breakdown@1]
+        rule: "Detailed CSI breakdown with component metrics"
+        impl_ref: "nova.continuity.csi_calculator.get_csi_breakdown"
+    observability:
+      prometheus_metrics:
+        - {name: nova_continuity_stability_index, type: gauge, desc: "Continuity Stability Index (CSI) across phases"}
+        - {name: nova_continuity_p6_stability, type: gauge, desc: "Phase 6 stability component of CSI"}
+        - {name: nova_continuity_p7_stability, type: gauge, desc: "Phase 7 stability component of CSI"}
+        - {name: nova_continuity_correlation, type: gauge, desc: "Inter-phase correlation component of CSI"}
+      recording_functions:
+        - {name: record_csi, ref: "orchestrator.prometheus_metrics (to be added)"}
+    integration:
+      feeds_from: [RCValidation, Phase14Ledger]
+      mode: analytical
+      leverages: "Phase 14 ledger query API (get_rc_chain, get_rc_summary)"
+    interfaces: {upstream: [RCValidation], downstream: [Governance, Deployment]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/continuity/test_csi_calculator.py", count: 5}
+      total: 5
+    future_extensions:
+      - "Load Phase 6 stability from sealed archives (replace placeholder)"
+      - "Add Continuity Ledger v2 for EHS (Epistemic Health Snapshot)"
+      - "Implement Anomaly Prediction from CSI trends"
+      - "Add Provenance Regeneration from ledger history"
 
 # ---------- Validation & Testing ----------
 validation:
