@@ -190,6 +190,7 @@ CSI = 0.3 × P6_stability + 0.3 × P7_stability + 0.4 × correlation
 
 | ID | Name | Implementation | Purpose | Status |
 |----|------|----------------|---------|--------|
+| RRI | Reflective Resonance Index | `orchestrator/rri.py` | Epistemic quality via reflect/forecast/counterfactual | ACTIVE |
 | TemporalIntegrity | Temporal Consistency Engine | `orchestrator/temporal/` | Temporal drift/variance tracking | ACTIVE |
 | PredictiveForesight | Predictive Foresight Framework | `orchestrator/predictive/` | Trajectory projection, pattern detection, MSC | ACTIVE |
 | RCValidation | Release Candidate Validation | `orchestrator/predictive/memory_resonance.py`, etc. | Production readiness gates | ACTIVE |
@@ -199,7 +200,6 @@ CSI = 0.3 × P6_stability + 0.3 × P7_stability + 0.4 × correlation
 
 | ID | Name | Ontology Lines | Evidence | Status |
 |----|------|----------------|----------|--------|
-| CRR | Cognitive Resonance Registry | 600-628 | `orchestrator/rri.py` (RRI ≠ CRR) | PARTIAL |
 | MSE | Meta-Statistical Engine | 631-659 | Not found | NOT IMPL |
 | EVF | Ethical Vector Field | 661-689 | Not found | NOT IMPL |
 | NEM | Neuro-Epistemic Map | 691-718 | Not found | NOT IMPL |
@@ -207,7 +207,7 @@ CSI = 0.3 × P6_stability + 0.3 × P7_stability + 0.4 × correlation
 | FB | Federation Bridge | 751-779 | Not found | NOT IMPL |
 
 **Analysis:**
-- **RRI vs CRR:** `orchestrator/rri.py` implements Reflective Resonance Index (5m window, weighted metrics). Ontology CRR = inter-slot alignment tracking. **Different frameworks.**
+- **RRI:** Implemented and now aligned with ontology (lines 600-628). Previously listed as CRR (Cognitive Resonance Registry) — naming corrected.
 - **PAG:** Phase 14 ledger provides provenance via hash chains + PQC signatures. No DAG builder for audit graph visualization (ontology line 733).
 - **MSE, EVF, NEM, FB:** Not blocking Phase 8; intended for future phases (civilizational federation, ethical weighting, cross-domain validation).
 
@@ -300,13 +300,13 @@ b1a84e8 feat(phase7): add multi-slot consistency (MSC) - Step 6 core
 - Core Slots (10): ✅ All implemented
 - Coordination Frameworks (7): 4 implemented, 3 not implemented (MSE, EVF, NEM, FB)
 
-**Implemented but Not in Ontology v1.4.0:**
-- RRI (Reflective Resonance Index) — `orchestrator/rri.py`
+**~~Implemented but Not in Ontology v1.4.0:~~** (RESOLVED)
+- ~~RRI (Reflective Resonance Index)~~ → Now in ontology v1.4.0 (lines 600-628)
 
-**Discrepancies:**
-- Ontology lists CRR (Cognitive Resonance Registry)
-- Code implements RRI (Reflective Resonance Index)
-- **Resolution Needed:** Clarify if RRI = CRR or separate frameworks
+**Discrepancies (RESOLVED):**
+- ~~Ontology listed CRR (Cognitive Resonance Registry)~~ → Updated to RRI
+- Code implements RRI (Reflective Resonance Index) → `orchestrator/rri.py`
+- **Resolution:** Ontology aligned to runtime implementation (RRI is correct)
 
 ---
 
@@ -342,7 +342,7 @@ b1a84e8 feat(phase7): add multi-slot consistency (MSC) - Step 6 core
 
 **Gaps:** 4 coordination frameworks (MSE, EVF, NEM, FB) are **meta-layer specifications for future phases**, not blockers for current operation.
 
-**Recommendation:** Document RRI vs CRR discrepancy; add CSI Prometheus metrics; proceed to Phase 9.
+**Recommendation:** ~~Document RRI vs CRR discrepancy~~ (DONE); ~~add CSI Prometheus metrics~~ (DONE); proceed to Phase 9 URF.
 
 ---
 

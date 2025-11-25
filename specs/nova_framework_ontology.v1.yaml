@@ -227,7 +227,7 @@ signals:
   resonance_index:
     type: Scalar
     range: [0, 1]
-    desc: "Mean cosine similarity across all slot outputs (CRR)"
+    desc: "Reflective resonance composite score (RRI) - 5m window of reflect/forecast/counterfactual traces"
   cross_slot_phase_error:
     type: Scalar
     desc: "Phase difference between TruthAnchor and TRI Engine outputs"
@@ -597,35 +597,35 @@ frameworks:
 # They observe and coordinate without participating in primary data flow (architectural hygiene).
 
 coordination_frameworks:
-  - id: CRR
+  - id: RRI
     slot_id: null  # Cross-cutting coordination layer
-    name: Cognitive Resonance Registry
-    purpose: "Quantify inter-slot alignment to prevent mission drift"
-    category: structural_coherence
-    inputs: [slot_outputs_all, truth_vector, tri_score, spectral_entropy_H, equilibrium_ratio_rho]
-    outputs: [resonance_index, cross_slot_phase_error, divergence_alerts]
-    state_variables: [resonance_index, phase_history, divergence_threshold]
+    name: Reflective Resonance Index
+    purpose: "Measure epistemic quality via reflection, forecasting, and counterfactual analysis"
+    category: epistemic_observability
+    inputs: [reflect_traces, ethics_forecasts, counterfactuals, total_operations]
+    outputs: [resonance_index]
+    state_variables: [resonance_index, window_history]
+    parameters: {window_seconds: 300, weights: [0.4, 0.4, 0.2]}
     transformations:
-      - name: inter_slot_alignment_tracking
-        in: [slot_outputs_all]
+      - name: windowed_resonance_calculation
+        in: [reflect_traces, ethics_forecasts, counterfactuals, total_operations]
         out: [resonance_index]
-        rule: "mean_cosine_similarity(Slot1..Slot9 embeddings)"
-        impl_ref: "src.nova.coordination.crr.alignment.track_resonance"
-      - name: semantic_drift_alerting
-        in: [resonance_index, phase_history]
-        out: [divergence_alerts]
-        rule: "alert if resonance_index < 0.7 OR phase_drift > 0.3"
-        impl_ref: "src.nova.coordination.crr.drift.detect_divergence"
-      - name: cross_slot_phase_error
-        in: [slot_outputs_all]
-        out: [cross_slot_phase_error]
-        rule: "phase_diff(Slot1.truth_vector, Slot4.tri_coherence)"
-        impl_ref: "src.nova.coordination.crr.phase.compute_error"
+        rule: "weighted_ratio = 0.4*(reflect/total) + 0.4*(forecast/total) + 0.2*(counter/total)"
+        impl_ref: "orchestrator.rri.update_from_totals"
+    observability:
+      prometheus_metrics:
+        - {name: nova_reflective_resonance_index, type: gauge, desc: "Composite reflective resonance score [0.0, 1.0]"}
+        - {name: nova_reflect_traces_total, type: counter, desc: "Total reflective trace events"}
+        - {name: nova_ethics_forecasts_total, type: counter, desc: "Total ethics forecast events"}
+        - {name: nova_counterfactuals_total, type: counter, desc: "Total counterfactual sampling events"}
     integration:
-      feeds_to: [ARC]
-      observes: [1, 2, 4, 5, 7, 9]
-      mode: read_only_observer
-    interfaces: {upstream: [ALL_SLOTS], downstream: [ARC]}
+      feeds_to: [Phase9_URF, Router, Governance]
+      mode: continuous_background
+    interfaces: {upstream: [Slot2, Slot4, Slot7], downstream: [Router, Governance]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/phase11/test_rri_health.py", count: 3}
+      total: 3
 
   - id: MSE
     slot_id: null
@@ -776,7 +776,7 @@ coordination_frameworks:
     integration:
       enables: "civilizational-scale federation"
       fallback_mode: isolated_autonomy
-    interfaces: {upstream: [Slot10, CRR, MSE], downstream: [external_nova_nodes]}
+    interfaces: {upstream: [Slot10, RRI, MSE], downstream: [external_nova_nodes]}
 
   - id: TemporalIntegrity
     slot_id: null
@@ -1163,12 +1163,12 @@ metrics:
 
 # ---------- CONTINUATION PROMPT ----------
 # Context: Nova Framework Ontology v1.0 grounded in Universal Structure Mathematics
-# State: 7 core frameworks (slots 1,2,4,5,7,9 + ARC) + 6 coordination frameworks (CRR,MSE,EVF,NEM,PAG,FB)
+# State: 7 core frameworks (slots 1,2,4,5,7,9 + ARC) + 6 coordination frameworks (RRI,MSE,EVF,NEM,PAG,FB)
 # Status: Empirically validated (99.7% accuracy, 1082 tests), USM theorems integrated
 # Architecture:
 #   Core Slots: TruthAnchor(1), ΔTHRESH(2), TRI(4), Constellation(5), WisdomGov(7), DistortionProt(9)
 #   Analytic Instruments: PAD.E.L (psychological filter), INF-o-INITY (informational filter)
-#   Coordination: CRR (coherence), MSE (validation), EVF (ethics), NEM (cognition), PAG (provenance), FB (federation)
+#   Coordination: RRI (reflective resonance), MSE (validation), EVF (ethics), NEM (cognition), PAG (provenance), FB (federation)
 # Fixes Applied:
 #   - Explicit slot mappings (1,2,4,5,7,9)
 #   - Slot01/09 full definitions (TruthAnchor, DistortionProtection)
@@ -1178,7 +1178,7 @@ metrics:
 #   - 6 coordination frameworks for integrity, adaptability, civilizational scalability
 # Integration Patterns:
 #   - arc.invoke('padel', state) / arc.invoke('infoinity', signals)
-#   - CRR.resonance_index → ARC (mission drift prevention)
+#   - RRI.resonance_index → Router/Governance (epistemic quality monitoring)
 #   - MSE.p_values → deltaTHRESH/TRI (statistical validation gates)
 #   - EVF.ethical_gradient → WisdomGovernor (continuous ethics)
 #   - NEM.neuro_epistemic_vector → WisdomGovernor (human-AI cognition loop)
