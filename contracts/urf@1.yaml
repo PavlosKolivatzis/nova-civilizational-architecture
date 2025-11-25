@@ -1,0 +1,157 @@
+id: urf
+version: "1.0.0"
+name: Unified Risk Field
+phase: 9
+description: >
+  Reconciliation of RRI (epistemic risk) and predictive_collapse_risk (temporal risk)
+  into unified risk signal for governance and routing.
+
+schema:
+  type: object
+  required:
+    - rri
+    - predictive_collapse_risk
+    - risk_gap
+    - alignment_score
+    - composite_risk
+    - timestamp
+  properties:
+    rri:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: "Reflective Resonance Index - epistemic quality from Slot 2+4 lineage"
+
+    predictive_collapse_risk:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: "Temporal collapse risk from PredictiveTrajectoryEngine (Slot 7 lineage)"
+
+    risk_gap:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: "Absolute gap between RRI and collapse_risk - divergence indicator"
+
+    alignment_score:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: "1.0 - risk_gap - perfect alignment = 1.0, complete divergence = 0.0"
+
+    composite_risk:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: "Weighted fusion of RRI and collapse_risk for unified governance signal"
+
+    weights:
+      type: object
+      required: [rri, collapse_risk]
+      properties:
+        rri:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: "Weight for epistemic risk component"
+        collapse_risk:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: "Weight for temporal risk component"
+      description: "Fusion weights (default: rri=0.4, collapse_risk=0.6)"
+
+    timestamp:
+      type: string
+      format: date-time
+      description: "ISO8601 timestamp of URF calculation"
+
+    metadata:
+      type: object
+      properties:
+        rri_source:
+          type: string
+          description: "Source gauge for RRI value"
+        collapse_risk_source:
+          type: string
+          description: "Source gauge for collapse_risk value"
+        version:
+          type: string
+          description: "URF calculator version"
+      description: "Optional metadata for provenance tracking"
+
+examples:
+  - description: "Perfect alignment - both signals agree"
+    data:
+      rri: 0.85
+      predictive_collapse_risk: 0.85
+      risk_gap: 0.0
+      alignment_score: 1.0
+      composite_risk: 0.85
+      weights:
+        rri: 0.4
+        collapse_risk: 0.6
+      timestamp: "2025-11-25T09:00:00Z"
+
+  - description: "Divergent signals - epistemic high, temporal low"
+    data:
+      rri: 0.3
+      predictive_collapse_risk: 0.8
+      risk_gap: 0.5
+      alignment_score: 0.5
+      composite_risk: 0.6
+      weights:
+        rri: 0.4
+        collapse_risk: 0.6
+      timestamp: "2025-11-25T09:05:00Z"
+
+  - description: "Convergent high risk - both signals elevated"
+    data:
+      rri: 0.2
+      predictive_collapse_risk: 0.15
+      risk_gap: 0.05
+      alignment_score: 0.95
+      composite_risk: 0.17
+      weights:
+        rri: 0.4
+        collapse_risk: 0.6
+      timestamp: "2025-11-25T09:10:00Z"
+
+integration:
+  upstream:
+    - RRI (orchestrator/rri.py)
+    - PredictiveTrajectoryEngine (orchestrator/predictive/trajectory_engine.py)
+  downstream:
+    - Router (orchestrator/router/epistemic_router.py)
+    - Governance (orchestrator/governance/engine.py)
+    - Slot10 Gatekeeper (src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py)
+
+thresholds:
+  alignment_alert: 0.5  # Alert if alignment_score < 0.5 (divergent signals)
+  composite_risk_gate: 0.7  # Block deployment if composite_risk > 0.7
+  risk_gap_conflict: 0.4  # Conflict if risk_gap > 0.4 (contradictory signals)
+
+governance_rules:
+  - condition: "alignment_score < 0.5"
+    action: "Alert operators - divergent risk signals detected"
+    severity: "WARNING"
+
+  - condition: "composite_risk > 0.7"
+    action: "Block deployment - unified risk exceeds safety threshold"
+    severity: "CRITICAL"
+
+  - condition: "risk_gap > 0.4 AND composite_risk > 0.5"
+    action: "Freeze operations - contradictory risk assessment requires manual review"
+    severity: "CRITICAL"
+
+provenance:
+  calculator: "src/nova/continuity/risk_reconciliation.py"
+  recording_function: "orchestrator/prometheus_metrics.py::record_urf"
+  semantic_mirror_key: "predictive.risk_alignment"
+  ledger: "Not persisted (real-time gauge only)"
+
+version_history:
+  - version: "1.0.0"
+    date: "2025-11-25"
+    changes: "Initial URF contract - Phase 9 implementation"

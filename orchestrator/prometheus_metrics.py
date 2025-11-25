@@ -258,6 +258,23 @@ continuity_correlation_gauge = _get_or_register_gauge(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Phase 9: Unified Risk Field (URF) metrics
+risk_alignment_gauge = _get_or_register_gauge(
+    "nova_risk_alignment",
+    "Unified Risk Field alignment score [0.0, 1.0] (1.0 = perfect RRI/collapse_risk alignment)",
+    registry=_INTERNAL_REGISTRY,
+)
+risk_gap_gauge = _get_or_register_gauge(
+    "nova_risk_gap",
+    "Absolute gap between RRI and predictive_collapse_risk [0.0, 1.0]",
+    registry=_INTERNAL_REGISTRY,
+)
+composite_risk_gauge = _get_or_register_gauge(
+    "nova_composite_risk",
+    "Unified composite risk signal for governance [0.0, 1.0]",
+    registry=_INTERNAL_REGISTRY,
+)
+
 predictive_penalty_gauge = _get_or_register_gauge(
     "nova_predictive_penalty",
     "Latest predictive routing penalty",
@@ -1296,6 +1313,21 @@ def record_csi(breakdown: dict) -> None:
     continuity_p6_stability_gauge.set(_clamp_unit(breakdown.get("p6_stability", 0.0)))
     continuity_p7_stability_gauge.set(_clamp_unit(breakdown.get("p7_stability", 0.0)))
     continuity_correlation_gauge.set(_clamp_unit(breakdown.get("correlation", 0.0)))
+
+
+def record_urf(urf: dict) -> None:
+    """
+    Record Unified Risk Field (URF) metrics.
+
+    Phase 9 integration - RRI/collapse_risk reconciliation
+
+    Args:
+        urf: Dictionary from compute_risk_alignment() with keys:
+             alignment_score, risk_gap, composite_risk
+    """
+    risk_alignment_gauge.set(_clamp_unit(urf.get("alignment_score", 1.0)))
+    risk_gap_gauge.set(_clamp_unit(urf.get("risk_gap", 0.0)))
+    composite_risk_gauge.set(_clamp_unit(urf.get("composite_risk", 0.0)))
 
 
 def _refresh_metrics() -> None:
