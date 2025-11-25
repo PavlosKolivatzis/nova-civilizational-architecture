@@ -1027,7 +1027,7 @@ coordination_frameworks:
         - {name: nova_continuity_p7_stability, type: gauge, desc: "Phase 7 stability component of CSI"}
         - {name: nova_continuity_correlation, type: gauge, desc: "Inter-phase correlation component of CSI"}
       recording_functions:
-        - {name: record_csi, ref: "orchestrator.prometheus_metrics (to be added)"}
+        - {name: record_csi, ref: "orchestrator.prometheus_metrics.record_csi"}
     integration:
       feeds_from: [RCValidation, Phase14Ledger]
       mode: analytical
@@ -1036,7 +1036,8 @@ coordination_frameworks:
     test_coverage:
       unit_tests:
         - {file: "tests/continuity/test_csi_calculator.py", count: 5}
-      total: 5
+        - {file: "tests/continuity/test_csi_metrics.py", count: 5}
+      total: 10
     future_extensions:
       - "Load Phase 6 stability from sealed archives (replace placeholder)"
       - "Add Continuity Ledger v2 for EHS (Epistemic Health Snapshot)"
@@ -1078,7 +1079,7 @@ validation:
       conclusion: "Necessary component"
 
   empirical_validation:
-    test_cases: 1577
+    test_cases: 1700
     accuracy: 0.997
     false_positive_rate: 0.042
     dataset:
@@ -1090,6 +1091,10 @@ validation:
       emergent_pattern_detector: 23
       multi_slot_consistency: 31
       total_phase_7: 69
+    phase_8_additions:
+      csi_calculator: 5
+      csi_metrics: 5
+      total_phase_8: 10
 
 testing:
   reproducibility:

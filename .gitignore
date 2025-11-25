@@ -16,6 +16,7 @@ dist/
 
 # Testing and coverage
 .hypothesis/
+.hypothesis/constants/
 .pytest_cache/
 .coverage
 

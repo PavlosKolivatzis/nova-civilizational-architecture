@@ -1282,6 +1282,22 @@ def record_rc_criteria(criteria: dict) -> None:
     rc_overall_pass_gauge.set(1.0 if criteria.get("overall_pass") else 0.0)
 
 
+def record_csi(breakdown: dict) -> None:
+    """
+    Record Continuity Stability Index (CSI) and component metrics.
+
+    Phase 8 integration - ontology lines 1024-1030
+
+    Args:
+        breakdown: Dictionary from get_csi_breakdown() with keys:
+                   csi, p6_stability, p7_stability, correlation
+    """
+    continuity_stability_index_gauge.set(_clamp_unit(breakdown.get("csi", 0.0)))
+    continuity_p6_stability_gauge.set(_clamp_unit(breakdown.get("p6_stability", 0.0)))
+    continuity_p7_stability_gauge.set(_clamp_unit(breakdown.get("p7_stability", 0.0)))
+    continuity_correlation_gauge.set(_clamp_unit(breakdown.get("correlation", 0.0)))
+
+
 def _refresh_metrics() -> None:
     update_slot6_metrics()
     update_flag_metrics()
