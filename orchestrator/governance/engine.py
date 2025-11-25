@@ -40,8 +40,22 @@ except Exception:  # pragma: no cover
     def get_unified_risk_field() -> dict:  # type: ignore[misc]
         return {"alignment_score": 1.0, "composite_risk": 0.0, "risk_gap": 0.0}
 
+try:
+    from src.nova.continuity.meta_stability import (
+        record_composite_risk_sample,
+        get_meta_stability_snapshot,
+        should_block_governance,
+    )
+except Exception:  # pragma: no cover
+    def record_composite_risk_sample(composite_risk: float) -> None:  # type: ignore[misc]
+        return
+    def get_meta_stability_snapshot() -> dict:  # type: ignore[misc]
+        return {"meta_instability": 0.0, "trend": "stable", "drift_velocity": 0.0, "sample_count": 0}
+    def should_block_governance(meta_instability: float, threshold: float = 0.15) -> bool:  # type: ignore[misc]
+        return False
+
 try:  # pragma: no cover - metrics optional
-    from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap, record_urf
+    from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap, record_urf, record_mse
 except Exception:  # pragma: no cover
     def record_predictive_warning(reason: str | None = None) -> None:  # type: ignore[misc]
         return
@@ -49,11 +63,18 @@ except Exception:  # pragma: no cover
         return
     def record_urf(urf: dict) -> None:  # type: ignore[misc]
         return
+    def record_mse(mse: dict) -> None:  # type: ignore[misc]
+        return
 
 
 def _urf_enabled() -> bool:
     """Check if URF integration is enabled via NOVA_ENABLE_URF flag."""
     return os.getenv("NOVA_ENABLE_URF", "0") == "1"
+
+
+def _mse_enabled() -> bool:
+    """Check if MSE integration is enabled via NOVA_ENABLE_MSE flag."""
+    return os.getenv("NOVA_ENABLE_MSE", "0") == "1"
 
 
 @dataclass
@@ -236,6 +257,28 @@ class GovernanceEngine:
                 allowed = False
                 reason = "urf_alignment_low"
                 metadata["urf_reason"] = f"alignment_score={urf.get('alignment_score', 1.0):.3f} < {alignment_score_threshold}"
+
+            # Record composite_risk sample for MSE (if MSE enabled)
+            if _mse_enabled():
+                record_composite_risk_sample(urf.get("composite_risk", 0.0))
+
+        # Phase 10: Meta-Stability Engine (MSE) governance gates (flag-gated)
+        if _mse_enabled():
+            mse = get_meta_stability_snapshot()
+            record_mse(mse)  # Record to Prometheus
+            metadata["mse"] = {
+                "meta_instability": mse.get("meta_instability", 0.0),
+                "trend": mse.get("trend", "stable"),
+                "drift_velocity": mse.get("drift_velocity", 0.0),
+            }
+
+            mse_threshold = thresholds.get("mse_governance_threshold", 0.15)
+            meta_instability = mse.get("meta_instability", 0.0)
+
+            if allowed and should_block_governance(meta_instability, mse_threshold):
+                allowed = False
+                reason = "mse_meta_instability_high"
+                metadata["mse_reason"] = f"meta_instability={meta_instability:.3f} >= {mse_threshold}, trend={mse.get('trend', 'unknown')}"
 
         predictive_collapse_threshold = thresholds.get("predictive_collapse_threshold", 0.8)
         predictive_accel_threshold = thresholds.get("predictive_acceleration_threshold", 0.4)

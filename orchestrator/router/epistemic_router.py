@@ -25,10 +25,29 @@ except Exception:  # pragma: no cover
     def get_unified_risk_field() -> dict:  # type: ignore[misc]
         return {"alignment_score": 1.0, "composite_risk": 0.0, "risk_gap": 0.0}
 
+try:
+    from src.nova.continuity.meta_stability import (
+        record_composite_risk_sample,
+        get_meta_stability_snapshot,
+        compute_router_penalty,
+    )
+except Exception:  # pragma: no cover
+    def record_composite_risk_sample(composite_risk: float) -> None:  # type: ignore[misc]
+        return
+    def get_meta_stability_snapshot() -> dict:  # type: ignore[misc]
+        return {"meta_instability": 0.0, "trend": "stable", "drift_velocity": 0.0, "sample_count": 0}
+    def compute_router_penalty(meta_instability: float) -> float:  # type: ignore[misc]
+        return 0.0
+
 def _urf_enabled() -> bool:
     """Check if URF integration is enabled via NOVA_ENABLE_URF flag."""
     import os
     return os.getenv("NOVA_ENABLE_URF", "0") == "1"
+
+def _mse_enabled() -> bool:
+    """Check if MSE integration is enabled via NOVA_ENABLE_MSE flag."""
+    import os
+    return os.getenv("NOVA_ENABLE_MSE", "0") == "1"
 
 try:
     from orchestrator.semantic_mirror import publish as mirror_publish
@@ -272,6 +291,39 @@ class EpistemicRouter:
             final_score = urf_meta["urf_score"]
             urf_allowed = urf_meta["urf_allowed"]
 
+            # Record composite_risk sample for MSE (if MSE enabled)
+            if _mse_enabled():
+                record_composite_risk_sample(urf_meta.get("composite_risk", 0.0))
+
+        # Phase 10: Apply MSE modifiers after URF (flag-gated)
+        mse_meta = {
+            "meta_instability": 0.0,
+            "trend": "stable",
+            "mse_penalty": 0.0,
+            "drift_velocity": 0.0,
+        }
+        if _mse_enabled():
+            mse = get_meta_stability_snapshot()
+            meta_inst = mse.get("meta_instability", 0.0)
+            trend = mse.get("trend", "stable")
+
+            mse_penalty = compute_router_penalty(meta_inst)
+            final_score = max(0.0, final_score - mse_penalty)
+
+            mse_meta = {
+                "meta_instability": meta_inst,
+                "trend": trend,
+                "mse_penalty": mse_penalty,
+                "drift_velocity": mse.get("drift_velocity", 0.0),
+            }
+
+            # Force safe_mode if runaway
+            if trend == "runaway":
+                final_route = "safe_mode"
+                final_score = 0.0
+                if "mse_runaway" not in constraints.reasons:
+                    constraints.reasons.append("mse_runaway")
+
         if not constraints.allowed:
             final_route = "safe_mode"
             final_score = 0.0
@@ -312,6 +364,12 @@ class EpistemicRouter:
                     "alignment_score": urf_meta["alignment_score"],
                     "risk_gap": urf_meta["risk_gap"],
                     "reason": urf_meta["reason"],
+                },
+                "mse": {
+                    "meta_instability": mse_meta["meta_instability"],
+                    "trend": mse_meta["trend"],
+                    "mse_penalty": mse_meta["mse_penalty"],
+                    "drift_velocity": mse_meta["drift_velocity"],
                 },
             },
         )

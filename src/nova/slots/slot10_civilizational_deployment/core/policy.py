@@ -50,6 +50,9 @@ class Slot10Policy:
     urf_alignment_threshold: float = 0.6  # Block deployment if alignment_score < 0.60
     urf_risk_gap_threshold: float = 0.5  # Block deployment if risk_gap > 0.5
 
+    # Phase 10: MSE deployment gate threshold
+    mse_deployment_threshold: float = 0.12  # Block deployment if meta_instability ≥ 0.12
+
     # Slot 10 golden signals SLOs (tightened for production)
     error_rate_multiplier: float = 1.15  # Allow 15% increase from baseline
     latency_p95_multiplier: float = 1.10  # Allow 10% latency increase

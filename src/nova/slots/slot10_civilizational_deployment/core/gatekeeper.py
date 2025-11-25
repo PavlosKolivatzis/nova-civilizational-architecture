@@ -13,10 +13,29 @@ except Exception:
     def get_unified_risk_field() -> dict:  # type: ignore[misc]
         return {"alignment_score": 1.0, "composite_risk": 0.0, "risk_gap": 0.0}
 
+try:
+    from src.nova.continuity.meta_stability import (
+        record_composite_risk_sample,
+        get_meta_stability_snapshot,
+        should_block_deployment,
+    )
+except Exception:
+    def record_composite_risk_sample(composite_risk: float) -> None:  # type: ignore[misc]
+        return
+    def get_meta_stability_snapshot() -> dict:  # type: ignore[misc]
+        return {"meta_instability": 0.0, "trend": "stable", "drift_velocity": 0.0, "sample_count": 0}
+    def should_block_deployment(meta_instability: float, threshold: float = 0.12) -> bool:  # type: ignore[misc]
+        return False
+
 def _urf_enabled() -> bool:
     """Check if URF integration is enabled via NOVA_ENABLE_URF flag."""
     import os
     return os.getenv("NOVA_ENABLE_URF", "0") == "1"
+
+def _mse_enabled() -> bool:
+    """Check if MSE integration is enabled via NOVA_ENABLE_MSE flag."""
+    import os
+    return os.getenv("NOVA_ENABLE_MSE", "0") == "1"
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +124,22 @@ class Gatekeeper:
             if risk_gap > self.policy.urf_risk_gap_threshold:
                 fails.append("urf_risk_gap_high")
 
+            # Record composite_risk sample for MSE (if MSE enabled)
+            if _mse_enabled():
+                record_composite_risk_sample(composite_risk)
+
+        # Phase 10: MSE deployment gates (flag-gated)
+        meta_instability = 0.0
+        mse_trend = "stable"
+        if _mse_enabled():
+            mse = get_meta_stability_snapshot()
+            meta_instability = mse.get("meta_instability", 0.0)
+            mse_trend = mse.get("trend", "stable")
+
+            # Block deployment if meta-instability too high
+            if should_block_deployment(meta_instability, self.policy.mse_deployment_threshold):
+                fails.append("mse_meta_instability_high")
+
         passed = not fails
         evaluation_time = time.time() - start_time
 
@@ -124,7 +159,11 @@ class Gatekeeper:
                     "composite_risk": composite_risk,
                     "alignment_score": alignment_score,
                     "risk_gap": risk_gap,
-                }
+                },
+                "mse": {
+                    "meta_instability": meta_instability,
+                    "trend": mse_trend,
+                },
             }
         )
 
