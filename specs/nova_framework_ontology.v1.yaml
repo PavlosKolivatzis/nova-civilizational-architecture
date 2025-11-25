@@ -1086,11 +1086,69 @@ coordination_frameworks:
     test_coverage:
       unit_tests:
         - {file: "tests/continuity/test_risk_reconciliation.py", count: 10}
-      total: 10
-    future_integration:
-      - "Router: Use composite_risk for route penalty calculation"
-      - "Governance: Gate on alignment_score < 0.5"
-      - "Slot10 Gatekeeper: Pre-deployment URF check (alignment_score >= 0.6, risk_gap <= 0.4)"
+        - {file: "tests/continuity/test_urf_integration.py", count: 12}
+      total: 22
+    implementation_status: integrated
+    integration_complete:
+      - "Router: composite_risk penalty calculation (NOVA_ENABLE_URF=1)"
+      - "Governance: alignment_score < 0.5 gate + composite_risk >= 0.7 gate"
+      - "Slot10 Gatekeeper: composite_risk >= 0.85, alignment_score < 0.6, risk_gap > 0.5"
+
+  - id: MetaStabilityEngine
+    slot_id: null
+    name: Meta-Stability Engine (MSE)
+    purpose: "Detect instability of stability itself by monitoring variance in URF composite_risk over time"
+    category: meta_stability
+    phase: 10
+    inputs: [composite_risk]
+    outputs: [meta_instability, trend, drift_velocity]
+    state_variables: [samples, timestamps]
+    parameters: {window_size: 10, stable_threshold: 0.05, oscillating_threshold: 0.15}
+    transformations:
+      - name: add_sample
+        in: [composite_risk]
+        out: []
+        rule: "Append composite_risk to sliding window (FIFO deque)"
+        impl_ref: "src.nova.continuity.meta_stability.MetaStabilityEngine.add_sample"
+      - name: compute_meta_instability
+        in: [samples]
+        out: [meta_instability, trend, drift_velocity]
+        rule: "meta_instability = variance(samples); classify trend based on thresholds"
+        impl_ref: "src.nova.continuity.meta_stability.MetaStabilityEngine.compute_meta_instability"
+      - name: get_meta_stability_snapshot
+        in: []
+        out: [mse_dict]
+        rule: "Return current MSE state from global engine"
+        impl_ref: "src.nova.continuity.meta_stability.get_meta_stability_snapshot"
+    observability:
+      prometheus_metrics:
+        - {name: nova_meta_instability, type: gauge, desc: "Meta-stability variance [0.0, 1.0]"}
+        - {name: nova_mse_trend, type: gauge, desc: "MSE trend (0=stable, 1=oscillating, 2=runaway)"}
+        - {name: nova_mse_drift_velocity, type: gauge, desc: "Rate of change in meta_instability"}
+        - {name: nova_mse_sample_count, type: gauge, desc: "Number of samples in window"}
+      recording_functions:
+        - {name: record_mse, ref: "orchestrator.prometheus_metrics.record_mse"}
+    thresholds:
+      stable_threshold: 0.05
+      oscillating_threshold: 0.15
+      governance_block: 0.15
+      router_penalty_start: 0.08
+      slot10_deployment_block: 0.12
+    integration:
+      feeds_from: [UnifiedRiskField]
+      feeds_to: [Router, Governance, Slot10_Gatekeeper]
+      mode: analytical
+      contract: "contracts/mse@1.yaml"
+    interfaces: {upstream: [UnifiedRiskField], downstream: [Router, Governance, Slot10]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/continuity/test_mse.py", count: 27}
+      total: 27
+    implementation_status: integrated
+    integration_complete:
+      - "Governance: meta_instability >= 0.15 gate (NOVA_ENABLE_MSE=1)"
+      - "Router: penalty (meta_inst - 0.08) * 2.0, safe_mode if runaway"
+      - "Slot10 Gatekeeper: meta_instability >= 0.12 deployment gate"
 
 # ---------- Validation & Testing ----------
 validation:
@@ -1127,7 +1185,7 @@ validation:
       conclusion: "Necessary component"
 
   empirical_validation:
-    test_cases: 1722  # Updated with Phase 9 URF integration tests
+    test_cases: 1749  # Updated with Phase 9 URF + Phase 10 MSE tests
     accuracy: 0.997
     false_positive_rate: 0.042
     dataset:
