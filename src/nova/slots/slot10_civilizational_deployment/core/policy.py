@@ -45,6 +45,11 @@ class Slot10Policy:
     slot08_recovery_rate_threshold: float = 0.8
     slot04_drift_z_threshold: float = 3.0
 
+    # Phase 9: URF deployment gate thresholds
+    urf_composite_risk_threshold: float = 0.85  # Block deployment if composite risk ≥ 0.85
+    urf_alignment_threshold: float = 0.6  # Block deployment if alignment_score < 0.60
+    urf_risk_gap_threshold: float = 0.5  # Block deployment if risk_gap > 0.5
+
     # Slot 10 golden signals SLOs (tightened for production)
     error_rate_multiplier: float = 1.15  # Allow 15% increase from baseline
     latency_p95_multiplier: float = 1.10  # Allow 10% latency increase

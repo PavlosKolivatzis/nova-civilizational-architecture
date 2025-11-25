@@ -62,6 +62,11 @@ class ThresholdConfig:
     predictive_acceleration_threshold: float = 0.4
     predictive_history_window: float = 5.0
 
+    # URF – Phase 9 (Unified Risk Field)
+    urf_composite_risk_threshold: float = 0.7  # Governance/Router gate
+    urf_alignment_threshold: float = 0.5  # Governance/Router gate
+    urf_risk_gap_threshold: float = 0.4  # Router penalty trigger
+
 
 # ------------------------------------------------------------
 # Manager

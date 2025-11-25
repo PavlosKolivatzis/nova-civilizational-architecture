@@ -20,6 +20,12 @@ except Exception:  # pragma: no cover
         return
 
 try:
+    from src.nova.continuity.risk_reconciliation import get_unified_risk_field
+except Exception:  # pragma: no cover
+    def get_unified_risk_field() -> dict:  # type: ignore[misc]
+        return {"alignment_score": 1.0, "composite_risk": 0.0, "risk_gap": 0.0}
+
+try:
     from orchestrator.semantic_mirror import publish as mirror_publish
 except Exception:  # pragma: no cover
     mirror_publish = None  # type: ignore[assignment]
@@ -115,6 +121,61 @@ class EpistemicRouter:
                 meta["reason"] = "penalty"
         return meta
 
+    def _apply_urf_modifiers(
+        self,
+        constraints: ConstraintResult,
+        initial_score: float,
+    ) -> Dict[str, Any]:
+        """Apply Unified Risk Field (URF) routing modifiers.
+
+        Penalizes routes when:
+        - composite_risk >= 0.7 (high unified risk) → force safe_mode
+        - alignment_score < 0.5 (divergent risk signals) → apply penalty
+        - risk_gap > 0.4 (large epistemic/temporal mismatch) → apply penalty
+        """
+        urf = get_unified_risk_field()
+        composite_threshold = get_threshold("urf_composite_risk_threshold")
+        alignment_threshold = get_threshold("urf_alignment_threshold")
+        gap_threshold = get_threshold("urf_risk_gap_threshold")
+
+        composite_risk = urf.get("composite_risk", 0.0)
+        alignment_score = urf.get("alignment_score", 1.0)
+        risk_gap = urf.get("risk_gap", 0.0)
+
+        meta = {
+            "urf_allowed": True,
+            "urf_penalty": 0.0,
+            "composite_risk": composite_risk,
+            "alignment_score": alignment_score,
+            "risk_gap": risk_gap,
+            "reason": None,
+            "urf_score": initial_score,
+        }
+
+        # Hard block: composite risk too high
+        if composite_risk >= composite_threshold:
+            meta["urf_allowed"] = False
+            meta["reason"] = "urf_composite_risk_high"
+            meta["urf_score"] = 0.0
+            if "urf_composite_risk_high" not in constraints.reasons:
+                constraints.reasons.append("urf_composite_risk_high")
+            return meta
+
+        # Soft penalties for alignment/gap issues
+        penalty = 0.0
+        if alignment_score < alignment_threshold:
+            penalty += (alignment_threshold - alignment_score) * 0.5
+            meta["reason"] = "urf_alignment_low"
+
+        if risk_gap > gap_threshold:
+            penalty += (risk_gap - gap_threshold) * 0.3
+            if not meta["reason"]:
+                meta["reason"] = "urf_risk_gap_high"
+
+        meta["urf_penalty"] = min(1.0, penalty)
+        meta["urf_score"] = max(0.0, initial_score - meta["urf_penalty"])
+        return meta
+
     def _publish_decision(self, decision: RouterDecision) -> None:
         if not mirror_publish:
             return
@@ -191,6 +252,11 @@ class EpistemicRouter:
         predictive_allowed = predictive_meta["predictive_allowed"]
         record_predictive_penalty(predictive_meta["predictive_penalty"])
 
+        # Phase 9: Apply URF modifiers after predictive
+        urf_meta = self._apply_urf_modifiers(constraints, final_score)
+        final_score = urf_meta["urf_score"]
+        urf_allowed = urf_meta["urf_allowed"]
+
         if not constraints.allowed:
             final_route = "safe_mode"
             final_score = 0.0
@@ -199,6 +265,9 @@ class EpistemicRouter:
             final_score = 0.0
             if "foresight_hold" not in constraints.reasons:
                 constraints.reasons.append("foresight_hold")
+        elif not urf_allowed:
+            final_route = "safe_mode"
+            final_score = 0.0
         else:
             final_route = policy.route
             if policy.route != "safe_mode" and final_score < 0.4:
@@ -220,6 +289,14 @@ class EpistemicRouter:
                     "predictive_penalty": predictive_meta["predictive_penalty"],
                     "collapse_risk": predictive_meta["collapse_risk"],
                     "reason": predictive_meta["reason"],
+                },
+                "urf": {
+                    "urf_allowed": urf_meta["urf_allowed"],
+                    "urf_penalty": urf_meta["urf_penalty"],
+                    "composite_risk": urf_meta["composite_risk"],
+                    "alignment_score": urf_meta["alignment_score"],
+                    "risk_gap": urf_meta["risk_gap"],
+                    "reason": urf_meta["reason"],
                 },
             },
         )

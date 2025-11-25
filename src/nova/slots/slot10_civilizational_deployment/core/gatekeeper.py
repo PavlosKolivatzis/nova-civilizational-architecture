@@ -7,6 +7,12 @@ import time
 from .policy import Slot10Policy
 from .health_feed import HealthFeedAdapter, MockHealthFeed
 
+try:
+    from src.nova.continuity.risk_reconciliation import get_unified_risk_field
+except Exception:
+    def get_unified_risk_field() -> dict:  # type: ignore[misc]
+        return {"alignment_score": 1.0, "composite_risk": 0.0, "risk_gap": 0.0}
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -72,6 +78,24 @@ class Gatekeeper:
         if slot8_health.get("tamper_evidence", False):
             fails.append("slot08_tamper_evidence")
 
+        # Phase 9: URF deployment gates
+        urf = get_unified_risk_field()
+        composite_risk = urf.get("composite_risk", 0.0)
+        alignment_score = urf.get("alignment_score", 1.0)
+        risk_gap = urf.get("risk_gap", 0.0)
+
+        # Block deployment if composite risk too high
+        if composite_risk >= self.policy.urf_composite_risk_threshold:
+            fails.append("urf_composite_risk_high")
+
+        # Block deployment if risk signals divergent
+        if alignment_score < self.policy.urf_alignment_threshold:
+            fails.append("urf_alignment_low")
+
+        # Block deployment if risk gap too wide
+        if risk_gap > self.policy.urf_risk_gap_threshold:
+            fails.append("urf_risk_gap_high")
+
         passed = not fails
         evaluation_time = time.time() - start_time
 
@@ -84,7 +108,15 @@ class Gatekeeper:
             passed=passed,
             failed_conditions=fails,
             evaluation_time_s=evaluation_time,
-            health_snapshot={"slot8": slot8_health, "slot4": slot4_health}
+            health_snapshot={
+                "slot8": slot8_health,
+                "slot4": slot4_health,
+                "urf": {
+                    "composite_risk": composite_risk,
+                    "alignment_score": alignment_score,
+                    "risk_gap": risk_gap,
+                }
+            }
         )
 
         # Store for metrics access

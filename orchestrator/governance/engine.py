@@ -33,12 +33,20 @@ from orchestrator.predictive.consistency import compute_consistency_gap, Consist
 from orchestrator.predictive.memory_resonance import get_memory_window
 from orchestrator.predictive.ris_calculator import compute_ris, ris_to_dict
 
+try:
+    from src.nova.continuity.risk_reconciliation import get_unified_risk_field
+except Exception:  # pragma: no cover
+    def get_unified_risk_field() -> dict:  # type: ignore[misc]
+        return {"alignment_score": 1.0, "composite_risk": 0.0, "risk_gap": 0.0}
+
 try:  # pragma: no cover - metrics optional
-    from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap
+    from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap, record_urf
 except Exception:  # pragma: no cover
     def record_predictive_warning(reason: str | None = None) -> None:  # type: ignore[misc]
         return
     def record_consistency_gap(gap_profile: dict) -> None:  # type: ignore[misc]
+        return
+    def record_urf(urf: dict) -> None:  # type: ignore[misc]
         return
 
 
@@ -199,6 +207,28 @@ class GovernanceEngine:
         if allowed and temporal_snapshot.prediction_error > prediction_threshold:
             allowed = False
             reason = "temporal_prediction_error"
+
+        # Phase 9: Unified Risk Field (URF) governance gates
+        urf = get_unified_risk_field()
+        record_urf(urf)  # Record to Prometheus
+        metadata["urf"] = {
+            "alignment_score": urf.get("alignment_score", 1.0),
+            "risk_gap": urf.get("risk_gap", 0.0),
+            "composite_risk": urf.get("composite_risk", 0.0),
+        }
+
+        composite_risk_threshold = thresholds.get("urf_composite_risk_threshold", 0.7)
+        alignment_score_threshold = thresholds.get("urf_alignment_threshold", 0.5)
+
+        if allowed and urf.get("composite_risk", 0.0) >= composite_risk_threshold:
+            allowed = False
+            reason = "urf_composite_risk_high"
+            metadata["urf_reason"] = f"composite_risk={urf.get('composite_risk', 0.0):.3f} >= {composite_risk_threshold}"
+
+        if allowed and urf.get("alignment_score", 1.0) < alignment_score_threshold:
+            allowed = False
+            reason = "urf_alignment_low"
+            metadata["urf_reason"] = f"alignment_score={urf.get('alignment_score', 1.0):.3f} < {alignment_score_threshold}"
 
         predictive_collapse_threshold = thresholds.get("predictive_collapse_threshold", 0.8)
         predictive_accel_threshold = thresholds.get("predictive_acceleration_threshold", 0.4)
