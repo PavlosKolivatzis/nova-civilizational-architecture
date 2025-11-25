@@ -25,6 +25,11 @@ except Exception:  # pragma: no cover
     def get_unified_risk_field() -> dict:  # type: ignore[misc]
         return {"alignment_score": 1.0, "composite_risk": 0.0, "risk_gap": 0.0}
 
+def _urf_enabled() -> bool:
+    """Check if URF integration is enabled via NOVA_ENABLE_URF flag."""
+    import os
+    return os.getenv("NOVA_ENABLE_URF", "0") == "1"
+
 try:
     from orchestrator.semantic_mirror import publish as mirror_publish
 except Exception:  # pragma: no cover
@@ -252,10 +257,20 @@ class EpistemicRouter:
         predictive_allowed = predictive_meta["predictive_allowed"]
         record_predictive_penalty(predictive_meta["predictive_penalty"])
 
-        # Phase 9: Apply URF modifiers after predictive
-        urf_meta = self._apply_urf_modifiers(constraints, final_score)
-        final_score = urf_meta["urf_score"]
-        urf_allowed = urf_meta["urf_allowed"]
+        # Phase 9: Apply URF modifiers after predictive (flag-gated)
+        urf_allowed = True
+        urf_meta = {
+            "urf_allowed": True,
+            "urf_penalty": 0.0,
+            "composite_risk": 0.0,
+            "alignment_score": 1.0,
+            "risk_gap": 0.0,
+            "reason": None,
+        }
+        if _urf_enabled():
+            urf_meta = self._apply_urf_modifiers(constraints, final_score)
+            final_score = urf_meta["urf_score"]
+            urf_allowed = urf_meta["urf_allowed"]
 
         if not constraints.allowed:
             final_route = "safe_mode"

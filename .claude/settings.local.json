@@ -25,7 +25,10 @@
       "Bash(git push)",
       "Bash(powershell -Command \"(Get-Content ''C:\\code\\nova-civilizational-architecture\\orchestrator\\prometheus_metrics.py'' | Measure-Object -Line).Lines\")",
       "Bash(pytest:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash($env:NOVA_ENABLE_PROMETHEUS=\"1\")",
+      "Bash($env:PYTHONPATH=\"C:\\code\\nova-civilizational-architecture\")",
+      "Bash(powershell -Command \"& { $env:NOVA_ENABLE_PROMETHEUS=''1''; $env:PYTHONPATH=''C:\\code\\nova-civilizational-architecture''; python orchestrator/app.py }\")"
     ],
     "deny": [],
     "ask": []

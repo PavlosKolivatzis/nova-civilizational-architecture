@@ -7,8 +7,17 @@ Tests verify:
 - Slot10 Gatekeeper blocks deployment based on URF thresholds
 """
 
+import os
 import pytest
 from unittest.mock import Mock, patch
+
+
+@pytest.fixture(autouse=True)
+def enable_urf():
+    """Enable URF for all tests in this module."""
+    os.environ["NOVA_ENABLE_URF"] = "1"
+    yield
+    os.environ.pop("NOVA_ENABLE_URF", None)
 
 
 @pytest.fixture

@@ -1127,7 +1127,7 @@ validation:
       conclusion: "Necessary component"
 
   empirical_validation:
-    test_cases: 1710
+    test_cases: 1722  # Updated with Phase 9 URF integration tests
     accuracy: 0.997
     false_positive_rate: 0.042
     dataset:
