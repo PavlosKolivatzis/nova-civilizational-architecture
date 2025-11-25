@@ -1,0 +1,204 @@
+---
+name: Meta-Stability Engine (MSE)
+version: 1.0.0
+phase: 10
+status: active
+description: |
+  Meta-Stability Engine detects instability of stability itself.
+  Monitors variance in URF composite_risk over time to identify oscillatory
+  or runaway feedback patterns that indicate system-wide instability.
+
+scientific_foundation:
+  theory: "Recursive Stability Analysis"
+  principle: |
+    Meta-stability measures the rate of change of stability metrics.
+    High variance in risk signals indicates feedback loops or oscillation,
+    requiring system-wide cooldown to prevent collapse.
+  references:
+    - "Control Theory: Stability of Dynamical Systems"
+    - "Lyapunov Stability Analysis"
+    - "Recursive Risk Assessment in Adaptive Systems"
+
+schema:
+  meta_instability:
+    type: float
+    range: [0.0, 1.0]
+    description: "Variance of URF composite_risk over sliding window"
+    computation: "variance(composite_risk_samples)"
+
+  trend:
+    type: string
+    enum: ["stable", "oscillating", "runaway"]
+    description: "Stability trend classification"
+    mapping:
+      stable: "meta_instability < 0.05"
+      oscillating: "0.05 ≤ meta_instability < 0.15"
+      runaway: "meta_instability ≥ 0.15"
+
+  window_size:
+    type: int
+    default: 10
+    description: "Number of recent samples for variance calculation"
+
+  samples:
+    type: array
+    item_type: float
+    description: "Recent composite_risk values (FIFO buffer)"
+    max_length: 50
+
+  sample_timestamps:
+    type: array
+    item_type: string
+    description: "ISO 8601 timestamps for each sample"
+
+  drift_velocity:
+    type: float
+    description: "Rate of change in meta_instability (d/dt)"
+    computation: "(current_instability - previous_instability) / time_delta"
+
+  timestamp:
+    type: string
+    format: iso8601
+    description: "Snapshot timestamp"
+
+thresholds:
+  stable_threshold: 0.05
+  oscillating_threshold: 0.15
+  cooldown_multiplier: 2.0  # Apply 2x penalty during oscillation
+  emergency_threshold: 0.20  # Hard block above this
+
+  # Governance gates
+  governance_block_threshold: 0.15  # Block requests if meta_instability ≥ 0.15
+  governance_caution_threshold: 0.10  # Add warnings if ≥ 0.10
+
+  # Router penalties
+  router_penalty_start: 0.08  # Begin applying penalty
+  router_penalty_max: 0.5  # Max score reduction
+
+  # Slot10 deployment gates
+  slot10_block_threshold: 0.12  # Block deployment if meta_instability ≥ 0.12
+  slot10_progressive_threshold: 0.08  # Allow progressive deployment if < 0.08
+
+integration:
+  governance:
+    gates:
+      - condition: "meta_instability >= governance_block_threshold"
+        action: "block"
+        reason: "mse_meta_instability_high"
+        description: "System oscillating, request blocked for stability"
+      - condition: "meta_instability >= governance_caution_threshold"
+        action: "warn"
+        metadata: "mse_caution"
+        description: "Stability variance elevated"
+
+  router:
+    penalties:
+      - condition: "meta_instability >= router_penalty_start"
+        formula: "min(router_penalty_max, (meta_instability - router_penalty_start) * cooldown_multiplier)"
+        effect: "Reduce route score to slow request processing"
+      - condition: "trend == 'runaway'"
+        action: "force_safe_mode"
+        description: "Runaway instability detected, route to safe_mode"
+
+  slot10:
+    deployment_gates:
+      - condition: "meta_instability >= slot10_block_threshold"
+        action: "block"
+        reason: "mse_deployment_blocked"
+        description: "Meta-instability too high for civilizational deployment"
+      - condition: "meta_instability < slot10_progressive_threshold"
+        action: "allow_progressive"
+        description: "Stable enough for progressive rollout"
+
+prometheus_metrics:
+  - name: nova_meta_instability
+    type: gauge
+    range: [0.0, 1.0]
+    description: "Meta-stability variance metric"
+
+  - name: nova_mse_trend
+    type: gauge
+    values:
+      stable: 0.0
+      oscillating: 1.0
+      runaway: 2.0
+    description: "MSE trend classification (0=stable, 1=oscillating, 2=runaway)"
+
+  - name: nova_mse_drift_velocity
+    type: gauge
+    description: "Rate of change in meta_instability"
+
+  - name: nova_mse_sample_count
+    type: gauge
+    description: "Number of samples in current window"
+
+examples:
+  stable:
+    meta_instability: 0.02
+    trend: "stable"
+    samples: [0.3, 0.31, 0.29, 0.30, 0.32, 0.30, 0.31, 0.29, 0.30, 0.31]
+    window_size: 10
+    drift_velocity: 0.001
+    governance_action: "allow"
+    router_action: "no_penalty"
+    slot10_action: "allow"
+
+  oscillating:
+    meta_instability: 0.11
+    trend: "oscillating"
+    samples: [0.3, 0.5, 0.2, 0.6, 0.25, 0.55, 0.3, 0.5, 0.28, 0.52]
+    window_size: 10
+    drift_velocity: 0.015
+    governance_action: "warn"
+    router_action: "apply_penalty"
+    slot10_action: "allow_progressive"
+
+  runaway:
+    meta_instability: 0.18
+    trend: "runaway"
+    samples: [0.1, 0.3, 0.6, 0.2, 0.7, 0.15, 0.65, 0.25, 0.75, 0.1]
+    window_size: 10
+    drift_velocity: 0.045
+    governance_action: "block"
+    router_action: "force_safe_mode"
+    slot10_action: "block"
+
+validation:
+  inputs:
+    - composite_risk: float [0.0, 1.0]
+    - timestamp: string (ISO 8601)
+
+  outputs:
+    - meta_instability: float [0.0, 1.0]
+    - trend: string ("stable" | "oscillating" | "runaway")
+
+  invariants:
+    - "len(samples) <= window_size"
+    - "meta_instability >= 0.0"
+    - "meta_instability <= 1.0"
+    - "trend matches threshold classification"
+
+dependencies:
+  required:
+    - URF (Phase 9) for composite_risk input
+    - Prometheus metrics for sample collection
+
+  optional:
+    - Temporal ledger for sample persistence
+    - Slot08 memory for historical analysis
+
+rollback:
+  flag: NOVA_ENABLE_MSE=0
+  description: "Disable MSE integration, revert to Phase 9 behavior"
+  steps:
+    - "Set NOVA_ENABLE_MSE=0"
+    - "Restart orchestrator"
+    - "Verify governance/router/slot10 ignore MSE signals"
+
+changelog:
+  - version: 1.0.0
+    date: 2025-11-25
+    changes:
+      - "Initial contract definition"
+      - "Thresholds calibrated from Phase 8 CSI + Phase 9 URF variance analysis"
+      - "Integration specs for governance, router, slot10"

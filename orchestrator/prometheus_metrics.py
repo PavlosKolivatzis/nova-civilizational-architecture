@@ -275,6 +275,28 @@ composite_risk_gauge = _get_or_register_gauge(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Phase 10: Meta-Stability Engine (MSE) metrics
+meta_instability_gauge = _get_or_register_gauge(
+    "nova_meta_instability",
+    "Meta-stability variance metric [0.0, 1.0] (variance of composite_risk)",
+    registry=_INTERNAL_REGISTRY,
+)
+mse_trend_gauge = _get_or_register_gauge(
+    "nova_mse_trend",
+    "MSE trend classification (0=stable, 1=oscillating, 2=runaway)",
+    registry=_INTERNAL_REGISTRY,
+)
+mse_drift_velocity_gauge = _get_or_register_gauge(
+    "nova_mse_drift_velocity",
+    "Rate of change in meta_instability (d/dt)",
+    registry=_INTERNAL_REGISTRY,
+)
+mse_sample_count_gauge = _get_or_register_gauge(
+    "nova_mse_sample_count",
+    "Number of samples in current MSE window",
+    registry=_INTERNAL_REGISTRY,
+)
+
 predictive_penalty_gauge = _get_or_register_gauge(
     "nova_predictive_penalty",
     "Latest predictive routing penalty",
@@ -1328,6 +1350,27 @@ def record_urf(urf: dict) -> None:
     risk_alignment_gauge.set(_clamp_unit(urf.get("alignment_score", 1.0)))
     risk_gap_gauge.set(_clamp_unit(urf.get("risk_gap", 0.0)))
     composite_risk_gauge.set(_clamp_unit(urf.get("composite_risk", 0.0)))
+
+
+def record_mse(mse_snapshot: dict) -> None:
+    """
+    Record Meta-Stability Engine (MSE) metrics.
+
+    Phase 10 integration - contracts/mse@1.yaml
+
+    Args:
+        mse_snapshot: Dictionary from get_meta_stability_snapshot() with keys:
+                      meta_instability, trend, drift_velocity, sample_count
+    """
+    meta_instability_gauge.set(_clamp_unit(mse_snapshot.get("meta_instability", 0.0)))
+
+    # Map trend to numeric value: stable=0.0, oscillating=1.0, runaway=2.0
+    trend_map = {"stable": 0.0, "oscillating": 1.0, "runaway": 2.0}
+    trend = mse_snapshot.get("trend", "stable")
+    mse_trend_gauge.set(trend_map.get(trend, 0.0))
+
+    mse_drift_velocity_gauge.set(mse_snapshot.get("drift_velocity", 0.0))
+    mse_sample_count_gauge.set(float(mse_snapshot.get("sample_count", 0)))
 
 
 def _refresh_metrics() -> None:
