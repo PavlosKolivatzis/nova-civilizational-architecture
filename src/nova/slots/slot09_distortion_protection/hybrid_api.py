@@ -69,6 +69,16 @@ except Exception:  # ImportError or any init error -> mark unavailable
     SHARED_HASH_AVAILABLE = False
     # Fallback to current SHA256 implementation
 
+# Phase 11.3 Step 4: ORP sensitivity scaling integration (optional, flag-gated)
+try:
+    from src.nova.continuity.slot09_sensitivity import apply_sensitivity_scaling as _apply_sensitivity_scaling
+    from src.nova.continuity.regime_transition_ledger import get_current_regime_duration as _get_regime_duration
+except Exception:  # pragma: no cover
+    def _apply_sensitivity_scaling(base_threshold, regime, duration_s):  # type: ignore[misc]
+        return base_threshold  # No scaling if imports fail
+    def _get_regime_duration():  # type: ignore[misc]
+        return {"regime": "normal", "duration_s": 0.0}
+
 def _env_truthy(name: str) -> bool:
     v = os.getenv(name, "").strip()
     return v == "1"
@@ -165,6 +175,70 @@ class HybridApiConfig:
     default_confidence_fallback: float = 0.5
     confidence_stability_weight: float = 0.6
     confidence_drift_weight: float = 0.4
+
+
+def apply_orp_sensitivity_to_config(base_config: HybridApiConfig) -> HybridApiConfig:
+    """Apply ORP-based sensitivity scaling to config thresholds.
+
+    Phase 11.3 Step 4: Adjust detection thresholds based on operational regime.
+    Higher multipliers → higher thresholds → less sensitive → fewer false positives.
+
+    Returns new config with scaled thresholds if NOVA_ENABLE_SLOT09_SENSITIVITY=1,
+    otherwise returns base_config unchanged.
+    """
+    if os.getenv("NOVA_ENABLE_SLOT09_SENSITIVITY", "0") != "1":
+        return base_config
+
+    try:
+        regime_info = _get_regime_duration()
+        regime = regime_info["regime"]
+        duration_s = regime_info["duration_s"]
+
+        # Create new config with scaled thresholds
+        return HybridApiConfig(
+            # Resilience settings (unchanged)
+            max_content_length_bytes=base_config.max_content_length_bytes,
+            circuit_breaker_threshold=base_config.circuit_breaker_threshold,
+            circuit_breaker_reset_timeout=base_config.circuit_breaker_reset_timeout,
+            cache_ttl_seconds=base_config.cache_ttl_seconds,
+            max_processing_time_ms=base_config.max_processing_time_ms,
+            ema_alpha=base_config.ema_alpha,
+
+            # Threat thresholds (unchanged - these are response thresholds, not detection)
+            threat_threshold_warning=base_config.threat_threshold_warning,
+            threat_threshold_block=base_config.threat_threshold_block,
+
+            # IDS stability thresholds (scaled by ORP multiplier)
+            ids_stability_threshold_low=_apply_sensitivity_scaling(
+                base_config.ids_stability_threshold_low, regime, duration_s
+            ),
+            ids_stability_threshold_medium=_apply_sensitivity_scaling(
+                base_config.ids_stability_threshold_medium, regime, duration_s
+            ),
+            ids_stability_threshold_high=_apply_sensitivity_scaling(
+                base_config.ids_stability_threshold_high, regime, duration_s
+            ),
+
+            # IDS drift thresholds (scaled by ORP multiplier)
+            ids_drift_threshold_low=_apply_sensitivity_scaling(
+                base_config.ids_drift_threshold_low, regime, duration_s
+            ),
+            ids_drift_threshold_medium=_apply_sensitivity_scaling(
+                base_config.ids_drift_threshold_medium, regime, duration_s
+            ),
+            ids_drift_threshold_high=_apply_sensitivity_scaling(
+                base_config.ids_drift_threshold_high, regime, duration_s
+            ),
+
+            # Confidence settings (unchanged)
+            default_confidence_fallback=base_config.default_confidence_fallback,
+            confidence_stability_weight=base_config.confidence_stability_weight,
+            confidence_drift_weight=base_config.confidence_drift_weight,
+        )
+    except Exception:
+        # Fallback to base config if ORP scaling fails (graceful degradation)
+        return base_config
+
 
 # ============================================================================
 # 2. HYBRID DATA MODELS WITH NOVA INTEGRATION
@@ -401,7 +475,9 @@ class HybridDistortionDetectionAPI:
 
     def __init__(self, core_detector: Any = None, config: Optional[HybridApiConfig] = None):
         self.core_detector = core_detector
-        self.config = config or HybridApiConfig()
+        base_config = config or HybridApiConfig()
+        # Phase 11.3 Step 4: Apply ORP sensitivity scaling if enabled
+        self.config = apply_orp_sensitivity_to_config(base_config)
         self.logger = logging.getLogger('slot9_hybrid_api')
 
         # Performance tracking (enhanced version)
