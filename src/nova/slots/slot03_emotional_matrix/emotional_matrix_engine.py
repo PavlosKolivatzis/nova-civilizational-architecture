@@ -8,6 +8,16 @@ from typing import Callable, Dict, Iterable, List, Optional
 from .safety_policy import basic_safety_policy
 from .publish import publish_phase_lock_to_mirror
 
+# Phase 11.3 Step 3: ORP emotional posture integration (optional, flag-gated)
+try:
+    from src.nova.continuity.emotional_posture import apply_emotional_constriction as _apply_emotional_constriction
+    from src.nova.continuity.regime_transition_ledger import get_current_regime_duration as _get_regime_duration
+except Exception:  # pragma: no cover
+    def _apply_emotional_constriction(intensity, regime, duration_s):  # type: ignore[misc]
+        return intensity  # No constriction if imports fail
+    def _get_regime_duration():  # type: ignore[misc]
+        return {"regime": "normal", "duration_s": 0.0}
+
 
 @dataclass(frozen=True)
 class EmotionConfig:
@@ -323,6 +333,34 @@ class EmotionalMatrixEngine:
             metrics["score"] = scaled_score
             metrics.setdefault("annotations", {})["phase_lock"] = phase_lock
             metrics["annotations"]["lightclock_adjustment"] = "dampened_20pct"
+
+        # Phase 11.3 Step 3: Apply ORP emotional posture constriction if enabled
+        if os.getenv("NOVA_ENABLE_EMOTIONAL_CONSTRICTION", "0") == "1":
+            try:
+                regime_info = _get_regime_duration()
+                # Convert score from [-1, 1] to intensity [0, 1] for constriction
+                # Constriction applies to magnitude, preserving valence direction
+                intensity = abs(metrics["score"])
+                intensity_constricted = _apply_emotional_constriction(
+                    intensity=intensity,
+                    regime=regime_info["regime"],
+                    duration_s=regime_info["duration_s"]
+                )
+                # Restore valence direction
+                score_constricted = intensity_constricted if metrics["score"] >= 0 else -intensity_constricted
+
+                # Only annotate if constriction was applied (multiplier < 1.0)
+                if abs(score_constricted) < abs(metrics["score"]):
+                    metrics["score"] = score_constricted
+                    metrics.setdefault("annotations", {})["orp_emotional_constriction"] = {
+                        "regime": regime_info["regime"],
+                        "duration_s": regime_info["duration_s"],
+                        "intensity_before": round(intensity, 4),
+                        "intensity_after": round(intensity_constricted, 4),
+                    }
+            except Exception:
+                # Fallback to unconstricted score if ORP fails (graceful degradation)
+                pass
 
         self._apply_policy_hooks(metrics, policy_hook)
 
