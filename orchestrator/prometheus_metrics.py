@@ -297,6 +297,44 @@ mse_sample_count_gauge = _get_or_register_gauge(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Phase 11: Operational Regime Policy (ORP) metrics
+orp_regime_gauge = _get_or_register_gauge(
+    "nova_orp_regime",
+    "Current operational regime (0=normal, 1=heightened, 2=controlled, 3=emergency, 4=recovery)",
+    registry=_INTERNAL_REGISTRY,
+)
+orp_regime_score_gauge = _get_or_register_gauge(
+    "nova_orp_regime_score",
+    "Composite regime severity score [0.0, 1.0]",
+    registry=_INTERNAL_REGISTRY,
+)
+orp_threshold_multiplier_gauge = _get_or_register_gauge(
+    "nova_orp_threshold_multiplier",
+    "Active threshold multiplier (1.0=normal, <1.0=tighter)",
+    registry=_INTERNAL_REGISTRY,
+)
+orp_traffic_limit_gauge = _get_or_register_gauge(
+    "nova_orp_traffic_limit",
+    "Active traffic capacity limit [0.0, 1.0]",
+    registry=_INTERNAL_REGISTRY,
+)
+orp_deployment_freeze_gauge = _get_or_register_gauge(
+    "nova_orp_deployment_freeze",
+    "Deployment freeze active (0=no, 1=yes)",
+    registry=_INTERNAL_REGISTRY,
+)
+orp_safe_mode_forced_gauge = _get_or_register_gauge(
+    "nova_orp_safe_mode_forced",
+    "Safe mode forced (0=no, 1=yes)",
+    registry=_INTERNAL_REGISTRY,
+)
+orp_regime_transitions_counter = _get_or_register_counter(
+    "nova_orp_regime_transitions_total",
+    "Regime transition events",
+    labelnames=("from_regime", "to_regime"),
+    registry=_INTERNAL_REGISTRY,
+)
+
 predictive_penalty_gauge = _get_or_register_gauge(
     "nova_predictive_penalty",
     "Latest predictive routing penalty",
@@ -1371,6 +1409,43 @@ def record_mse(mse_snapshot: dict) -> None:
 
     mse_drift_velocity_gauge.set(mse_snapshot.get("drift_velocity", 0.0))
     mse_sample_count_gauge.set(float(mse_snapshot.get("sample_count", 0)))
+
+
+def record_orp(orp_snapshot: dict, transition_from: str | None = None) -> None:
+    """
+    Record Operational Regime Policy (ORP) metrics.
+
+    Phase 11 integration - contracts/orp@1.yaml
+
+    Args:
+        orp_snapshot: Dictionary from get_operational_regime() with keys:
+                      regime, regime_score, posture_adjustments, transition_from
+        transition_from: Optional previous regime for transition counter
+    """
+    # Map regime to numeric value
+    regime_map = {
+        "normal": 0.0,
+        "heightened": 1.0,
+        "controlled_degradation": 2.0,
+        "emergency_stabilization": 3.0,
+        "recovery": 4.0,
+    }
+    regime = orp_snapshot.get("regime", "normal")
+    orp_regime_gauge.set(regime_map.get(regime, 0.0))
+
+    orp_regime_score_gauge.set(_clamp_unit(orp_snapshot.get("regime_score", 0.0)))
+
+    # Extract posture adjustments
+    posture = orp_snapshot.get("posture_adjustments", {})
+    orp_threshold_multiplier_gauge.set(_clamp_unit(posture.get("threshold_multiplier", 1.0)))
+    orp_traffic_limit_gauge.set(_clamp_unit(posture.get("traffic_limit", 1.0)))
+    orp_deployment_freeze_gauge.set(1.0 if posture.get("deployment_freeze", False) else 0.0)
+    orp_safe_mode_forced_gauge.set(1.0 if posture.get("safe_mode_forced", False) else 0.0)
+
+    # Record regime transition if occurred
+    trans_from = transition_from or orp_snapshot.get("transition_from")
+    if trans_from is not None:
+        orp_regime_transitions_counter.labels(from_regime=trans_from, to_regime=regime).inc()
 
 
 def _refresh_metrics() -> None:

@@ -1,0 +1,364 @@
+# Operational Regime Policy (ORP) Contract v1
+# Phase 11: Map continuity signals → operational regimes → slot posture adjustments
+
+schema_version: "1.0"
+contract_id: "orp@1"
+name: "Operational Regime Policy"
+phase: 11
+purpose: "Translate continuity risk/stability signals into actionable operational regimes with slot behavior adjustments"
+
+# ---------- Schema Definition ----------
+schema:
+  regime:
+    type: string
+    enum: [normal, heightened, controlled_degradation, emergency_stabilization, recovery]
+    description: "Current operational regime classification"
+
+  regime_score:
+    type: float
+    range: [0.0, 1.0]
+    description: "Composite severity score driving regime selection (0=nominal, 1=crisis)"
+
+  contributing_factors:
+    type: object
+    description: "Breakdown of signals contributing to regime_score"
+    properties:
+      urf_composite_risk:
+        type: float
+        range: [0.0, 1.0]
+        weight: 0.30
+      mse_meta_instability:
+        type: float
+        range: [0.0, 1.0]
+        weight: 0.25
+      predictive_collapse_risk:
+        type: float
+        range: [0.0, 1.0]
+        weight: 0.20
+      consistency_gap:
+        type: float
+        range: [0.0, 1.0]
+        weight: 0.15
+      csi_continuity_index:
+        type: float
+        range: [0.0, 1.0]
+        weight: 0.10
+        inversion: true  # Lower CSI = higher risk
+
+  posture_adjustments:
+    type: object
+    description: "Recommended slot behavior modifications for current regime"
+    properties:
+      threshold_multiplier:
+        type: float
+        description: "Factor to tighten/loosen detection thresholds (1.0=normal)"
+        range: [0.5, 2.0]
+      traffic_limit:
+        type: float
+        description: "Max allowed traffic fraction (1.0=100%, 0.5=50% capacity)"
+        range: [0.0, 1.0]
+      deployment_freeze:
+        type: boolean
+        description: "Block all Slot10 deployments"
+      safe_mode_forced:
+        type: boolean
+        description: "Force Router to safe_mode regardless of score"
+      monitoring_interval_s:
+        type: integer
+        description: "Metric collection interval (seconds)"
+        range: [10, 300]
+
+  timestamp:
+    type: string
+    format: iso8601
+    description: "Regime evaluation timestamp"
+
+  transition_from:
+    type: string
+    enum: [normal, heightened, controlled_degradation, emergency_stabilization, recovery, null]
+    description: "Previous regime (null on first evaluation)"
+    nullable: true
+
+# ---------- Regime Definitions ----------
+regimes:
+  normal:
+    regime_score_range: [0.0, 0.30]
+    description: "Nominal operations - all systems within expected parameters"
+    posture:
+      threshold_multiplier: 1.0
+      traffic_limit: 1.0
+      deployment_freeze: false
+      safe_mode_forced: false
+      monitoring_interval_s: 60
+    gates:
+      governance: "standard thresholds"
+      router: "normal scoring"
+      slot10: "canary progression enabled"
+
+  heightened:
+    regime_score_range: [0.30, 0.50]
+    description: "Elevated risk - tighten monitoring, slower deployments"
+    posture:
+      threshold_multiplier: 0.85  # 15% tighter thresholds
+      traffic_limit: 0.90  # 90% capacity
+      deployment_freeze: false
+      safe_mode_forced: false
+      monitoring_interval_s: 30
+    gates:
+      governance: "composite_risk >= 0.6 blocks"
+      router: "apply heightened penalties"
+      slot10: "double canary stage duration"
+
+  controlled_degradation:
+    regime_score_range: [0.50, 0.70]
+    description: "Significant instability - controlled capacity reduction, freeze deployments"
+    posture:
+      threshold_multiplier: 0.70  # 30% tighter
+      traffic_limit: 0.60  # 60% capacity
+      deployment_freeze: true
+      safe_mode_forced: false
+      monitoring_interval_s: 20
+    gates:
+      governance: "composite_risk >= 0.5 blocks"
+      router: "penalize non-safe routes heavily"
+      slot10: "all deployments blocked"
+
+  emergency_stabilization:
+    regime_score_range: [0.70, 0.85]
+    description: "Critical instability - force safe_mode, minimal traffic, freeze all changes"
+    posture:
+      threshold_multiplier: 0.60  # 40% tighter
+      traffic_limit: 0.30  # 30% capacity
+      deployment_freeze: true
+      safe_mode_forced: true
+      monitoring_interval_s: 10
+    gates:
+      governance: "block all non-essential requests"
+      router: "force safe_mode"
+      slot10: "all deployments blocked, consider rollback"
+
+  recovery:
+    regime_score_range: [0.85, 1.0]
+    description: "System recovery mode - absolute minimum operations, manual approval required"
+    posture:
+      threshold_multiplier: 0.50  # 50% tighter
+      traffic_limit: 0.10  # 10% capacity (essential only)
+      deployment_freeze: true
+      safe_mode_forced: true
+      monitoring_interval_s: 10
+    gates:
+      governance: "manual approval required for all requests"
+      router: "safe_mode only, log all decisions"
+      slot10: "all deployments blocked, rollback recommended"
+
+# ---------- Thresholds & Weights ----------
+thresholds:
+  # Regime transition thresholds (regime_score boundaries)
+  normal_to_heightened: 0.30
+  heightened_to_controlled: 0.50
+  controlled_to_emergency: 0.70
+  emergency_to_recovery: 0.85
+
+  # Hysteresis (require score to drop below threshold - hysteresis to transition down)
+  downgrade_hysteresis: 0.05  # Must drop 0.05 below threshold to downgrade regime
+
+  # Minimum time in regime before downgrade (prevent oscillation)
+  min_regime_duration_s: 300  # 5 minutes
+
+  # Signal weighting for regime_score calculation
+  weights:
+    urf_composite_risk: 0.30
+    mse_meta_instability: 0.25
+    predictive_collapse_risk: 0.20
+    consistency_gap: 0.15
+    csi_continuity_index: 0.10  # Inverted: (1.0 - CSI)
+
+# ---------- Integration Specifications ----------
+integration:
+  governance:
+    description: "Governance engine queries ORP before allow/deny decisions"
+    call_point: "orchestrator/governance/engine.py::decide()"
+    behavior:
+      - "Retrieve current regime via get_operational_regime()"
+      - "Apply posture.threshold_multiplier to all gate thresholds"
+      - "If regime >= controlled_degradation, apply stricter composite_risk gate"
+      - "If regime == recovery, require manual approval flag in request metadata"
+
+  router:
+    description: "Router applies regime penalties and forced safe_mode"
+    call_point: "orchestrator/router/epistemic_router.py::route()"
+    behavior:
+      - "Retrieve regime and posture via get_operational_regime()"
+      - "If posture.safe_mode_forced, set final_route='safe_mode' immediately"
+      - "Apply traffic_limit: if random() > traffic_limit, reject with 'capacity_limited'"
+      - "Multiply all route scores by threshold_multiplier (tighter = lower scores)"
+
+  slot10:
+    description: "Deployment gatekeeper respects deployment_freeze"
+    call_point: "src/nova/slots/slot10_civilizational_deployment/core/gatekeeper.py::evaluate_deploy_gate()"
+    behavior:
+      - "Retrieve regime posture via get_operational_regime()"
+      - "If posture.deployment_freeze, add 'orp_deployment_freeze' to failed_conditions"
+      - "If regime >= emergency_stabilization, log warning recommending rollback"
+
+  prometheus:
+    description: "Export regime state and posture metrics"
+    metrics:
+      - {name: nova_orp_regime, type: gauge, desc: "Current regime (0=normal, 1=heightened, 2=controlled, 3=emergency, 4=recovery)"}
+      - {name: nova_orp_regime_score, type: gauge, desc: "Composite regime severity score [0..1]"}
+      - {name: nova_orp_threshold_multiplier, type: gauge, desc: "Active threshold multiplier"}
+      - {name: nova_orp_traffic_limit, type: gauge, desc: "Active traffic capacity limit [0..1]"}
+      - {name: nova_orp_deployment_freeze, type: gauge, desc: "Deployment freeze active (0=no, 1=yes)"}
+      - {name: nova_orp_safe_mode_forced, type: gauge, desc: "Safe mode forced (0=no, 1=yes)"}
+      - {name: nova_orp_regime_transitions_total, type: counter, labels: [from_regime, to_regime], desc: "Regime transition events"}
+
+# ---------- Examples ----------
+examples:
+  normal_operations:
+    contributing_factors:
+      urf_composite_risk: 0.15
+      mse_meta_instability: 0.03
+      predictive_collapse_risk: 0.10
+      consistency_gap: 0.05
+      csi_continuity_index: 0.95
+    computed_regime_score: 0.12  # weighted sum with CSI inverted
+    regime: normal
+    posture_adjustments:
+      threshold_multiplier: 1.0
+      traffic_limit: 1.0
+      deployment_freeze: false
+      safe_mode_forced: false
+
+  heightened_monitoring:
+    contributing_factors:
+      urf_composite_risk: 0.45
+      mse_meta_instability: 0.08
+      predictive_collapse_risk: 0.25
+      consistency_gap: 0.12
+      csi_continuity_index: 0.85
+    computed_regime_score: 0.38
+    regime: heightened
+    posture_adjustments:
+      threshold_multiplier: 0.85
+      traffic_limit: 0.90
+      deployment_freeze: false
+      safe_mode_forced: false
+
+  controlled_degradation:
+    contributing_factors:
+      urf_composite_risk: 0.70
+      mse_meta_instability: 0.12
+      predictive_collapse_risk: 0.50
+      consistency_gap: 0.35
+      csi_continuity_index: 0.65
+    computed_regime_score: 0.58
+    regime: controlled_degradation
+    posture_adjustments:
+      threshold_multiplier: 0.70
+      traffic_limit: 0.60
+      deployment_freeze: true
+      safe_mode_forced: false
+
+  emergency_stabilization:
+    contributing_factors:
+      urf_composite_risk: 0.85
+      mse_meta_instability: 0.18
+      predictive_collapse_risk: 0.75
+      consistency_gap: 0.60
+      csi_continuity_index: 0.45
+    computed_regime_score: 0.76
+    regime: emergency_stabilization
+    posture_adjustments:
+      threshold_multiplier: 0.60
+      traffic_limit: 0.30
+      deployment_freeze: true
+      safe_mode_forced: true
+
+  recovery_mode:
+    contributing_factors:
+      urf_composite_risk: 0.95
+      mse_meta_instability: 0.22
+      predictive_collapse_risk: 0.90
+      consistency_gap: 0.80
+      csi_continuity_index: 0.30
+    computed_regime_score: 0.91
+    regime: recovery
+    posture_adjustments:
+      threshold_multiplier: 0.50
+      traffic_limit: 0.10
+      deployment_freeze: true
+      safe_mode_forced: true
+
+# ---------- Validation & Testing ----------
+validation:
+  rules:
+    - "regime_score must equal weighted sum of contributing_factors (with CSI inverted)"
+    - "regime must match regime_score against regime_score_range"
+    - "posture_adjustments must match regime definition"
+    - "transition_from must be valid previous regime or null"
+    - "downgrade transitions must respect hysteresis and min_regime_duration_s"
+
+  edge_cases:
+    - "regime_score exactly at threshold boundary → choose higher regime"
+    - "missing contributing_factor → use 0.0 (safe default)"
+    - "CSI > 1.0 or < 0.0 → clamp before inversion"
+    - "rapid oscillation → min_regime_duration_s prevents thrashing"
+
+test_plan:
+  unit_tests:
+    - "test_regime_score_calculation_weights"
+    - "test_regime_classification_boundaries"
+    - "test_normal_regime_posture"
+    - "test_heightened_regime_posture"
+    - "test_controlled_degradation_posture"
+    - "test_emergency_stabilization_posture"
+    - "test_recovery_mode_posture"
+    - "test_regime_transition_upgrade"
+    - "test_regime_transition_downgrade_hysteresis"
+    - "test_min_regime_duration_enforcement"
+    - "test_csi_inversion"
+    - "test_missing_factors_default_zero"
+    - "test_clamping_out_of_range_inputs"
+
+  integration_tests:
+    - "test_governance_threshold_multiplier_applied"
+    - "test_router_traffic_limit_enforced"
+    - "test_router_safe_mode_forced_in_emergency"
+    - "test_slot10_deployment_freeze_honored"
+    - "test_prometheus_metrics_recorded"
+    - "test_regime_transition_counter_incremented"
+
+  scenario_tests:
+    - "test_normal_to_recovery_full_escalation"
+    - "test_recovery_to_normal_gradual_downgrade"
+    - "test_oscillation_prevention_via_hysteresis"
+
+# ---------- Dependencies ----------
+dependencies:
+  signals:
+    - "src.nova.continuity.risk_reconciliation::get_unified_risk_field()"
+    - "src.nova.continuity.meta_stability::get_meta_stability_snapshot()"
+    - "src.nova.continuity.predictive_foresight::get_predictive_snapshot()"
+    - "src.nova.continuity.predictive_consistency::get_consistency_gap()"
+    - "src.nova.continuity.csi_calculator::get_csi_snapshot()"
+
+  ledger_outputs:
+    - "regime transitions logged to attest_ledger with timestamp, from_regime, to_regime, regime_score"
+    - "posture changes logged when threshold_multiplier or traffic_limit adjusted"
+
+# ---------- Migration & Environment ----------
+environment_variables:
+  NOVA_ENABLE_ORP:
+    default: "0"
+    description: "Enable Operational Regime Policy integration (0=disabled, 1=enabled)"
+    required_for: ["Governance threshold adaptation", "Router traffic limiting", "Slot10 deployment freeze"]
+
+migration:
+  backward_compatibility:
+    - "ORP disabled by default (NOVA_ENABLE_ORP=0)"
+    - "When disabled, all posture adjustments return identity (threshold_multiplier=1.0, traffic_limit=1.0, etc.)"
+    - "Lazy imports with fallback stubs if ORP module unavailable"
+
+  rollback:
+    - "Set NOVA_ENABLE_ORP=0 to disable regime-based adjustments"
+    - "System reverts to static thresholds defined in ThresholdManager"
