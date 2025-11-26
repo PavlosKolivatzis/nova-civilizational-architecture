@@ -27,6 +27,18 @@ except Exception:
     def should_block_deployment(meta_instability: float, threshold: float = 0.12) -> bool:  # type: ignore[misc]
         return False
 
+try:
+    from src.nova.continuity.operational_regime import get_operational_regime
+except Exception:
+    def get_operational_regime() -> dict:  # type: ignore[misc]
+        return {}
+
+try:  # pragma: no cover - metrics optional
+    from orchestrator.prometheus_metrics import record_orp
+except Exception:  # pragma: no cover
+    def record_orp(snapshot: dict, transition_from: str | None = None) -> None:  # type: ignore[misc]
+        return
+
 def _urf_enabled() -> bool:
     """Check if URF integration is enabled via NOVA_ENABLE_URF flag."""
     import os
@@ -36,6 +48,13 @@ def _mse_enabled() -> bool:
     """Check if MSE integration is enabled via NOVA_ENABLE_MSE flag."""
     import os
     return os.getenv("NOVA_ENABLE_MSE", "0") == "1"
+
+
+def _orp_enabled() -> bool:
+    """Check if ORP integration is enabled via NOVA_ENABLE_ORP flag."""
+    import os
+    return os.getenv("NOVA_ENABLE_ORP", "0") == "1"
+
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +159,21 @@ class Gatekeeper:
             if should_block_deployment(meta_instability, self.policy.mse_deployment_threshold):
                 fails.append("mse_meta_instability_high")
 
+        # Phase 11: ORP deployment posture (flag-gated)
+        orp_snapshot: Dict[str, Any] = {}
+        if _orp_enabled():
+            try:
+                orp_snapshot = get_operational_regime()
+                record_orp(orp_snapshot)
+                posture = orp_snapshot.get("posture_adjustments", {}) or {}
+                regime = str(orp_snapshot.get("regime", "normal")).lower()
+                if posture.get("deployment_freeze"):
+                    fails.append("orp_deployment_freeze")
+                if regime in {"emergency_stabilization", "recovery"}:
+                    logger.warning("ORP recommends rollback: regime=%s", regime)
+            except Exception:
+                logger.debug("ORP evaluation failed; continuing without ORP deployment gates", exc_info=True)
+
         passed = not fails
         evaluation_time = time.time() - start_time
 
@@ -164,6 +198,7 @@ class Gatekeeper:
                     "meta_instability": meta_instability,
                     "trend": mse_trend,
                 },
+                "orp": orp_snapshot or {"regime": "normal"},
             }
         )
 

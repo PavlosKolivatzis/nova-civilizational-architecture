@@ -54,8 +54,20 @@ except Exception:  # pragma: no cover
     def should_block_governance(meta_instability: float, threshold: float = 0.15) -> bool:  # type: ignore[misc]
         return False
 
+try:
+    from src.nova.continuity.operational_regime import get_operational_regime
+except Exception:  # pragma: no cover
+    def get_operational_regime() -> dict:  # type: ignore[misc]
+        return {}
+
 try:  # pragma: no cover - metrics optional
-    from orchestrator.prometheus_metrics import record_predictive_warning, record_consistency_gap, record_urf, record_mse
+    from orchestrator.prometheus_metrics import (
+        record_predictive_warning,
+        record_consistency_gap,
+        record_urf,
+        record_mse,
+        record_orp,
+    )
 except Exception:  # pragma: no cover
     def record_predictive_warning(reason: str | None = None) -> None:  # type: ignore[misc]
         return
@@ -64,6 +76,8 @@ except Exception:  # pragma: no cover
     def record_urf(urf: dict) -> None:  # type: ignore[misc]
         return
     def record_mse(mse: dict) -> None:  # type: ignore[misc]
+        return
+    def record_orp(snapshot: dict, transition_from: str | None = None) -> None:  # type: ignore[misc]
         return
 
 
@@ -75,6 +89,11 @@ def _urf_enabled() -> bool:
 def _mse_enabled() -> bool:
     """Check if MSE integration is enabled via NOVA_ENABLE_MSE flag."""
     return os.getenv("NOVA_ENABLE_MSE", "0") == "1"
+
+
+def _orp_enabled() -> bool:
+    """Check if ORP integration is enabled via NOVA_ENABLE_ORP flag."""
+    return os.getenv("NOVA_ENABLE_ORP", "0") == "1"
 
 
 @dataclass
@@ -123,6 +142,33 @@ class GovernanceEngine:
     ) -> GovernanceResult:
         state = dict(state or {})
         thresholds = _current_thresholds()
+        orp_snapshot: Optional[Dict[str, Any]] = None
+        threshold_multiplier = 1.0
+        if _orp_enabled():
+            try:
+                orp_snapshot = get_operational_regime()
+                record_orp(orp_snapshot)
+                posture = orp_snapshot.get("posture_adjustments", {})
+                threshold_multiplier = float(posture.get("threshold_multiplier", 1.0) or 1.0)
+                # Tighten/relax all governance gates based on ORP posture
+                for key in [
+                    "tri_min_coherence",
+                    "slot07_tri_drift_threshold",
+                    "tri_max_jitter",
+                    "temporal_drift_threshold",
+                    "temporal_prediction_error_threshold",
+                    "urf_composite_risk_threshold",
+                    "urf_alignment_threshold",
+                    "mse_governance_threshold",
+                    "predictive_collapse_threshold",
+                    "predictive_acceleration_threshold",
+                    "consistency_gap_threshold",
+                    "consistency_severity_threshold",
+                ]:
+                    if key in thresholds:
+                        thresholds[key] = float(thresholds[key]) * threshold_multiplier
+            except Exception:  # pragma: no cover - ORP is optional/flag-gated
+                logger.exception("Failed to evaluate ORP regime; continuing without ORP adjustments")
         tri_signal = state.get("tri_signal") or _tri_signal(state)
         slot07 = state.get("slot07") or _slot07_state(state)
         slot10 = state.get("slot10") or _slot10_state(state)
@@ -224,6 +270,8 @@ class GovernanceEngine:
             "predictive_collapse_risk": predictive_snapshot.collapse_risk,
             "predictive_safe_corridor": predictive_snapshot.safe_corridor,
         }
+        if orp_snapshot:
+            metadata["orp"] = orp_snapshot
         if router_modifiers:
             metadata["temporal_router_modifiers"] = router_modifiers
 
@@ -279,6 +327,15 @@ class GovernanceEngine:
                 allowed = False
                 reason = "mse_meta_instability_high"
                 metadata["mse_reason"] = f"meta_instability={meta_instability:.3f} >= {mse_threshold}, trend={mse.get('trend', 'unknown')}"
+
+        if orp_snapshot:
+            posture = orp_snapshot.get("posture_adjustments", {})
+            regime = str(orp_snapshot.get("regime", "normal")).lower()
+            metadata["orp_posture"] = posture
+            if allowed and regime == "recovery" and not state.get("manual_approval", False):
+                allowed = False
+                reason = "orp_manual_approval_required"
+                metadata["orp_reason"] = "recovery_regime_requires_manual_approval"
 
         predictive_collapse_threshold = thresholds.get("predictive_collapse_threshold", 0.8)
         predictive_accel_threshold = thresholds.get("predictive_acceleration_threshold", 0.4)

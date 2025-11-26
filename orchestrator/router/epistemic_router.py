@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 from typing import Any, Dict, Callable
 
 from orchestrator.router.decision import AdvisorScore, ConstraintResult, PolicyResult, RouterDecision
@@ -14,9 +15,11 @@ from orchestrator.predictive.adapters import read_predictive_snapshot
 from orchestrator.thresholds import get_threshold
 
 try:  # pragma: no cover - metrics optional
-    from orchestrator.prometheus_metrics import record_predictive_penalty
+    from orchestrator.prometheus_metrics import record_predictive_penalty, record_orp
 except Exception:  # pragma: no cover
     def record_predictive_penalty(value: float) -> None:  # type: ignore[misc]
+        return
+    def record_orp(snapshot: dict, transition_from: str | None = None) -> None:  # type: ignore[misc]
         return
 
 try:
@@ -39,6 +42,12 @@ except Exception:  # pragma: no cover
     def compute_router_penalty(meta_instability: float) -> float:  # type: ignore[misc]
         return 0.0
 
+try:
+    from src.nova.continuity.operational_regime import get_operational_regime
+except Exception:  # pragma: no cover
+    def get_operational_regime() -> dict:  # type: ignore[misc]
+        return {}
+
 def _urf_enabled() -> bool:
     """Check if URF integration is enabled via NOVA_ENABLE_URF flag."""
     import os
@@ -48,6 +57,12 @@ def _mse_enabled() -> bool:
     """Check if MSE integration is enabled via NOVA_ENABLE_MSE flag."""
     import os
     return os.getenv("NOVA_ENABLE_MSE", "0") == "1"
+
+
+def _orp_enabled() -> bool:
+    """Check if ORP integration is enabled via NOVA_ENABLE_ORP flag."""
+    import os
+    return os.getenv("NOVA_ENABLE_ORP", "0") == "1"
 
 try:
     from orchestrator.semantic_mirror import publish as mirror_publish
@@ -276,6 +291,7 @@ class EpistemicRouter:
         predictive_allowed = predictive_meta["predictive_allowed"]
         record_predictive_penalty(predictive_meta["predictive_penalty"])
 
+        final_route: str | None = None
         # Phase 9: Apply URF modifiers after predictive (flag-gated)
         urf_allowed = True
         urf_meta = {
@@ -324,21 +340,66 @@ class EpistemicRouter:
                 if "mse_runaway" not in constraints.reasons:
                     constraints.reasons.append("mse_runaway")
 
-        if not constraints.allowed:
-            final_route = "safe_mode"
-            final_score = 0.0
-        elif not predictive_allowed:
-            final_route = "safe_mode"
-            final_score = 0.0
-            if "foresight_hold" not in constraints.reasons:
-                constraints.reasons.append("foresight_hold")
-        elif not urf_allowed:
-            final_route = "safe_mode"
-            final_score = 0.0
-        else:
-            final_route = policy.route
-            if policy.route != "safe_mode" and final_score < 0.4:
-                final_route = "low_trust"
+        # Phase 11: Apply ORP posture adjustments (flag-gated)
+        orp_meta = {
+            "regime": "normal",
+            "regime_score": 0.0,
+            "posture": {
+                "threshold_multiplier": 1.0,
+                "traffic_limit": 1.0,
+                "deployment_freeze": False,
+                "safe_mode_forced": False,
+            },
+        }
+        threshold_multiplier = 1.0
+        if _orp_enabled():
+            try:
+                orp_snapshot = get_operational_regime()
+                record_orp(orp_snapshot)
+                posture = orp_snapshot.get("posture_adjustments", {}) or {}
+                threshold_multiplier = float(posture.get("threshold_multiplier", 1.0) or 1.0)
+                traffic_limit = float(posture.get("traffic_limit", 1.0) or 1.0)
+                safe_mode_forced = bool(posture.get("safe_mode_forced", False))
+
+                orp_meta = {
+                    "regime": orp_snapshot.get("regime", "normal"),
+                    "regime_score": orp_snapshot.get("regime_score", 0.0),
+                    "posture": posture,
+                }
+
+                if safe_mode_forced:
+                    final_route = "safe_mode"
+                    final_score = 0.0
+                    if "orp_safe_mode_forced" not in constraints.reasons:
+                        constraints.reasons.append("orp_safe_mode_forced")
+                elif traffic_limit < 1.0:
+                    if random.random() > traffic_limit:
+                        final_route = "capacity_limited"
+                        final_score = 0.0
+                        if "orp_capacity_limit" not in constraints.reasons:
+                            constraints.reasons.append("orp_capacity_limit")
+
+                if final_route is None:
+                    final_score = max(0.0, final_score * threshold_multiplier)
+            except Exception:
+                logger.debug("ORP evaluation failed; continuing without ORP adjustments", exc_info=True)
+
+        if final_route is None:
+            if not constraints.allowed:
+                final_route = "safe_mode"
+                final_score = 0.0
+            elif not predictive_allowed:
+                final_route = "safe_mode"
+                final_score = 0.0
+                if "foresight_hold" not in constraints.reasons:
+                    constraints.reasons.append("foresight_hold")
+            elif not urf_allowed:
+                final_route = "safe_mode"
+                final_score = 0.0
+            else:
+                final_route = policy.route
+                if policy.route != "safe_mode" and final_score < 0.4:
+                    final_route = "low_trust"
 
         decision = RouterDecision(
             route=final_route,
@@ -371,6 +432,7 @@ class EpistemicRouter:
                     "mse_penalty": mse_meta["mse_penalty"],
                     "drift_velocity": mse_meta["drift_velocity"],
                 },
+                "orp": orp_meta,
             },
         )
 
