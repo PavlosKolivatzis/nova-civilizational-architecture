@@ -94,7 +94,8 @@ class AdaptiveWisdomGovernor:
                     duration_s=regime_info["duration_s"],
                     freeze=False  # Freeze handled elsewhere if needed
                 )
-                self.eta = eta_scaled
+                # Clamp to Governor's eta_min/eta_max bounds
+                self.eta = max(self.eta_min, min(self.eta_max, eta_scaled))
             except Exception:
                 # Fallback to base eta if ORP scaling fails
                 self.eta = eta_base
