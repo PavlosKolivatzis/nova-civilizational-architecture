@@ -1,0 +1,289 @@
+schema_version: "1.0"
+name: "Regime Transition Ledger"
+version: "1.0.0"
+phase: "11.3"
+status: "active"
+description: |
+  Immutable append-only ledger tracking ORP regime transitions.
+  Records transition history for duration calculation, oscillation detection, and audit trail.
+  Pure observation layer - does not modify regime classification behavior.
+
+dependencies:
+  - "orp@1"
+
+schema:
+  transition_record:
+    type: object
+    required: [timestamp, from_regime, to_regime, regime_score, contributing_factors, duration_in_previous_s]
+    properties:
+      timestamp:
+        type: string
+        format: iso8601
+        description: "UTC timestamp of transition (ISO 8601)"
+
+      from_regime:
+        type: string
+        enum: ["normal", "heightened", "controlled_degradation", "emergency_stabilization", "recovery", "initial"]
+        description: "Previous regime (use 'initial' for first record)"
+
+      to_regime:
+        type: string
+        enum: ["normal", "heightened", "controlled_degradation", "emergency_stabilization", "recovery"]
+        description: "New regime after transition"
+
+      regime_score:
+        type: float
+        range: [0.0, 1.0]
+        description: "Regime score that triggered transition"
+
+      contributing_factors:
+        type: object
+        description: "Snapshot of contributing factors at transition time"
+        properties:
+          urf_composite_risk: {type: float, range: [0.0, 1.0]}
+          mse_meta_instability: {type: float, range: [0.0, 1.0]}
+          predictive_collapse_risk: {type: float, range: [0.0, 1.0]}
+          consistency_gap: {type: float, range: [0.0, 1.0]}
+          csi_continuity_index: {type: float, range: [0.0, 1.0]}
+
+      duration_in_previous_s:
+        type: float
+        min: 0.0
+        description: "Seconds spent in previous regime before transition"
+
+      transition_type:
+        type: string
+        enum: ["upgrade", "downgrade", "initial"]
+        description: "Direction of transition (upgrade=more restrictive, downgrade=less restrictive)"
+
+      metadata:
+        type: object
+        optional: true
+        description: "Additional context (operator notes, manual override flags, etc.)"
+
+  ledger_query_result:
+    type: object
+    description: "Result of ledger query operations"
+    properties:
+      transitions:
+        type: array
+        items: {type: transition_record}
+        description: "List of matching transition records"
+
+      total_count:
+        type: integer
+        min: 0
+        description: "Total transitions in queried time window"
+
+      current_regime:
+        type: string
+        enum: ["normal", "heightened", "controlled_degradation", "emergency_stabilization", "recovery"]
+        description: "Current regime at query time"
+
+      time_in_current_regime_s:
+        type: float
+        min: 0.0
+        description: "Seconds in current regime"
+
+  oscillation_detection:
+    type: object
+    description: "Metrics for detecting regime oscillation (rapid back-and-forth)"
+    properties:
+      window_s:
+        type: float
+        default: 3600
+        description: "Time window for oscillation detection (seconds)"
+
+      transition_count:
+        type: integer
+        min: 0
+        description: "Number of transitions in window"
+
+      oscillation_detected:
+        type: boolean
+        description: "True if transition_count exceeds threshold in window"
+
+      oscillation_threshold:
+        type: integer
+        default: 5
+        description: "Max transitions allowed in window before flagging oscillation"
+
+operations:
+  record_transition:
+    description: "Append transition record to ledger (immutable)"
+    inputs:
+      from_regime: {type: string}
+      to_regime: {type: string}
+      regime_score: {type: float}
+      contributing_factors: {type: object}
+      duration_in_previous_s: {type: float}
+      metadata: {type: object, optional: true}
+    outputs:
+      success: {type: boolean}
+      record_id: {type: string, description: "Unique ID of recorded transition"}
+    guarantees:
+      - "Record is append-only (never modified after write)"
+      - "timestamp is UTC at write time"
+      - "transition_type computed from regime ordering"
+
+  get_current_regime_duration:
+    description: "Calculate time in current regime"
+    inputs: {}
+    outputs:
+      regime: {type: string}
+      duration_s: {type: float}
+      since_timestamp: {type: string, format: iso8601}
+    guarantees:
+      - "Returns 0.0 if no transitions recorded (initial state)"
+      - "duration_s = now - last_transition_timestamp"
+
+  query_transitions:
+    description: "Query transition history with filters"
+    inputs:
+      start_time: {type: string, format: iso8601, optional: true}
+      end_time: {type: string, format: iso8601, optional: true}
+      from_regime: {type: string, optional: true}
+      to_regime: {type: string, optional: true}
+      limit: {type: integer, default: 100, max: 1000}
+    outputs:
+      result: {type: ledger_query_result}
+    guarantees:
+      - "Returns transitions in descending timestamp order (newest first)"
+      - "Respects limit parameter"
+
+  detect_oscillation:
+    description: "Check for regime oscillation in recent history"
+    inputs:
+      window_s: {type: float, default: 3600}
+      threshold: {type: integer, default: 5}
+    outputs:
+      result: {type: oscillation_detection}
+    guarantees:
+      - "Only counts actual regime changes (not same→same)"
+      - "Window is sliding from current time"
+
+storage:
+  backend: "json_append"
+  file_path: "data/regime_transition_ledger.jsonl"
+  format: "JSON Lines (one transition per line)"
+  rotation:
+    enabled: true
+    max_size_mb: 10
+    max_age_days: 90
+    archive_path: "data/archive/regime_transitions/"
+
+  guarantees:
+    - "Atomic appends (no partial writes)"
+    - "Crash-safe (fsync after write)"
+    - "No in-place modifications"
+    - "Rotation preserves all records in archive"
+
+prometheus_metrics:
+  - name: "nova_regime_transition_total"
+    type: "counter"
+    labels: ["from_regime", "to_regime", "transition_type"]
+    description: "Total regime transitions"
+
+  - name: "nova_regime_duration_seconds"
+    type: "gauge"
+    description: "Time in current regime (seconds)"
+
+  - name: "nova_regime_oscillation_detected"
+    type: "gauge"
+    description: "1 if oscillation detected, 0 otherwise"
+
+  - name: "nova_regime_ledger_size_records"
+    type: "gauge"
+    description: "Total records in active ledger file"
+
+integration:
+  operational_regime:
+    hook: "after_regime_classification"
+    description: "Record transition when regime changes"
+    pseudocode: |
+      new_regime = classify_regime(regime_score, current_regime, time_in_regime_s)
+      if new_regime != current_regime:
+          record_transition(
+              from_regime=current_regime,
+              to_regime=new_regime,
+              regime_score=regime_score,
+              contributing_factors=factors,
+              duration_in_previous_s=time_in_regime_s
+          )
+
+  adaptive_scaling:
+    hook: "read_current_regime_duration"
+    description: "Provide duration for η scaling in Phase 11.3 steps 2-5"
+    pseudocode: |
+      duration = get_current_regime_duration()
+      eta_scale = compute_eta_scale(regime, duration.duration_s)
+
+flag_gating:
+  NOVA_ENABLE_REGIME_LEDGER:
+    type: "boolean"
+    default: "0"
+    description: "Enable regime transition ledger recording (0=disabled, 1=enabled)"
+    behavior:
+      - "When disabled: no transitions recorded, queries return empty"
+      - "When enabled: all regime transitions appended to ledger"
+      - "Does NOT affect ORP regime classification (pure observation)"
+
+invariants:
+  - "Ledger is append-only (no deletes, no updates)"
+  - "Timestamps are monotonically increasing (within clock skew tolerance)"
+  - "from_regime of record N+1 == to_regime of record N (continuity)"
+  - "duration_in_previous_s matches timestamp delta (within tolerance)"
+  - "Oscillation detection uses fixed threshold (not adaptive)"
+
+testing:
+  unit_tests:
+    - "test_record_transition_appends_to_ledger"
+    - "test_get_current_regime_duration_calculates_correctly"
+    - "test_query_transitions_filters_by_time_window"
+    - "test_query_transitions_filters_by_regime"
+    - "test_detect_oscillation_flags_rapid_transitions"
+    - "test_detect_oscillation_ignores_same_regime"
+    - "test_transition_type_computed_correctly"
+    - "test_ledger_disabled_returns_empty"
+    - "test_initial_state_zero_duration"
+    - "test_continuity_invariant"
+
+  integration_tests:
+    - "test_orp_records_transition_on_regime_change"
+    - "test_orp_does_not_record_same_regime"
+    - "test_ledger_metrics_updated_on_transition"
+    - "test_ledger_file_rotation"
+
+examples:
+  transition_record_example:
+    timestamp: "2025-01-26T14:32:15.123Z"
+    from_regime: "normal"
+    to_regime: "heightened"
+    regime_score: 0.35
+    contributing_factors:
+      urf_composite_risk: 0.42
+      mse_meta_instability: 0.08
+      predictive_collapse_risk: 0.28
+      consistency_gap: 0.12
+      csi_continuity_index: 0.88
+    duration_in_previous_s: 1847.5
+    transition_type: "upgrade"
+    metadata:
+      trigger: "URF composite risk spike"
+
+  oscillation_example:
+    window_s: 3600
+    transition_count: 7
+    oscillation_detected: true
+    oscillation_threshold: 5
+    recent_transitions:
+      - {from: "normal", to: "heightened", timestamp: "2025-01-26T14:00:00Z"}
+      - {from: "heightened", to: "normal", timestamp: "2025-01-26T14:15:00Z"}
+      - {from: "normal", to: "heightened", timestamp: "2025-01-26T14:30:00Z"}
+      - {from: "heightened", to: "normal", timestamp: "2025-01-26T14:45:00Z"}
+      - {from: "normal", to: "heightened", timestamp: "2025-01-26T15:00:00Z"}
+
+migration:
+  backward_compatibility: "Full - ledger is optional observation layer"
+  rollback_strategy: "Delete ledger file, disable flag - ORP unaffected"
+  data_migration: "None - starts empty, builds history forward"

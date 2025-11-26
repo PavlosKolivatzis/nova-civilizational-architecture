@@ -13,6 +13,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Phase 11.3: Regime Transition Ledger (optional)
+try:
+    from src.nova.continuity.regime_transition_ledger import record_regime_transition
+except Exception:  # pragma: no cover
+    def record_regime_transition(*args, **kwargs) -> Dict[str, Any]:  # type: ignore[misc]
+        return {"success": False, "reason": "ledger_not_available"}
+
 # Lazy imports with fallback stubs for continuity signals
 try:
     from src.nova.continuity.risk_reconciliation import get_unified_risk_field
@@ -314,6 +321,15 @@ class OperationalRegimePolicy:
             logger.info(
                 f"Regime transition: {transition_from.value} → {new_regime.value} "
                 f"(score={regime_score:.3f})"
+            )
+
+            # Phase 11.3: Record transition in ledger
+            record_regime_transition(
+                from_regime=transition_from.value,
+                to_regime=new_regime.value,
+                regime_score=regime_score,
+                contributing_factors=factors.__dict__,
+                duration_in_previous_s=time_in_regime_s
             )
 
         # Get posture for new regime
