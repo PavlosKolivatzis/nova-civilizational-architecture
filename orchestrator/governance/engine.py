@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from collections import deque
 from dataclasses import dataclass, field
@@ -79,6 +80,9 @@ except Exception:  # pragma: no cover
         return
     def record_orp(snapshot: dict, transition_from: str | None = None) -> None:  # type: ignore[misc]
         return
+
+
+logger = logging.getLogger(__name__)
 
 
 def _urf_enabled() -> bool:
