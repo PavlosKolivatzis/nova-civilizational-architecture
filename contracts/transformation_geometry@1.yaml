@@ -1,0 +1,100 @@
+meta:
+  contract_id: transformation_geometry@1
+  version: 1.0.0
+  parent_ontology: nova.operating@1.0
+  status: draft
+  description: >
+    Minimal transformation geometry contract for Nova Operating Physics.
+    Encodes regime state space, allowed transitions, temporal inertia, amplitude
+    bounds, and hard constraints on oscillation and recovery.
+
+states:
+  # Regime state set must match nova.operating@1.0.regimes keys
+  - normal
+  - heightened
+  - controlled_degradation
+  - emergency_stabilization
+  - recovery
+
+transitions:
+  allowed:
+    - [normal, heightened]
+    - [heightened, normal]
+    - [heightened, controlled_degradation]
+    - [controlled_degradation, heightened]
+    - [controlled_degradation, emergency_stabilization]
+    - [emergency_stabilization, recovery]
+    - [recovery, heightened]
+
+  forbidden_direct:
+    - [normal, emergency_stabilization]
+    - [normal, recovery]
+    - [heightened, emergency_stabilization]
+
+  min_duration_s:
+    normal: 60
+    heightened: 300
+    controlled_degradation: 600
+    emergency_stabilization: 900
+    recovery: 1800
+
+hysteresis:
+  downgrade_score_margin: 0.05
+  max_transitions_per_window:
+    count: 3
+    window_s: 300
+
+amplitude_bounds:
+  # Global safe envelope bounds
+  global:
+    eta_scaled: [0.25, 1.0]
+    emotion: [0.5, 1.0]
+    sensitivity: [1.0, 1.5]
+
+  # Regime-specific amplitude ranges (must be subsets of global bounds)
+  per_regime:
+    normal:
+      governor_eta_scale: [0.8, 1.0]
+      emotion_constriction: 1.0
+      slot09_sensitivity_multiplier: 1.0
+    heightened:
+      governor_eta_scale: [0.75, 0.95]
+      emotion_constriction: [0.85, 0.95]
+      slot09_sensitivity_multiplier: [1.05, 1.15]
+    controlled_degradation:
+      governor_eta_scale: [0.50, 0.75]
+      emotion_constriction: 0.70
+      slot09_sensitivity_multiplier: 1.30
+    emergency_stabilization:
+      governor_eta_scale: [0.25, 0.50]
+      emotion_constriction: 0.50
+      slot09_sensitivity_multiplier: 1.50
+    recovery:
+      governor_eta_scale: [0.25, 0.40]
+      emotion_constriction: 0.60
+      slot09_sensitivity_multiplier: 1.20
+
+constraints:
+  - id: c1_no_destructive_oscillation
+    description: "Limit regime oscillation frequency."
+    rule: "count(transitions, window=300s) <= 3"
+
+  - id: c2_no_direct_extreme_jumps
+    description: "Disallow direct jumps between normal and extreme regimes."
+    rule: "forbidden_direct includes [normal, emergency_stabilization], [normal, recovery]"
+
+  - id: c3_escalation_path
+    description: "Escalation from controlled_degradation must go to emergency_stabilization."
+    rule: "if from=controlled_degradation and ordinal(to) > 2 then to=emergency_stabilization"
+
+  - id: c4_temporal_inertia
+    description: "No child ontology may set regime min_duration_s lower than values declared here."
+    rule: "forall child: min_duration_child[regime] >= min_duration_s[regime]"
+
+  - id: c5_amplitude_within_bounds
+    description: "All amplitude multipliers must remain within global safe bounds."
+    rule: "forall regimes: per_regime bounds subset of global eta_scaled/emotion/sensitivity ranges"
+
+  - id: c6_recovery_path
+    description: "Every regime has at least one valid path back to normal."
+    rule: "graph.has_path(r, normal) for all r in states"
