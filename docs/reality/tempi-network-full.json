@@ -1,0 +1,1050 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "Kyriakos Mitsotakis",
+      "type": "person",
+      "layer": "all",
+      "role": "Prime Minister / Comprador",
+      "size": 100,
+      "power": 10,
+      "id": "mitsotakis_kyriakos"
+    },
+    {
+      "label": "Konstantinos Mitsotakis",
+      "type": "person",
+      "layer": "1,",
+      "role": "Father / Ex-PM",
+      "size": 40,
+      "id": "mitsotakis_konstantinos"
+    },
+    {
+      "label": "Dora Bakoyannis",
+      "type": "person",
+      "layer": "1,",
+      "role": "Sister / Ex-Minister",
+      "size": 35,
+      "id": "bakoyannis_dora"
+    },
+    {
+      "label": "Kostas Bakoyannis",
+      "type": "person",
+      "layer": "1,",
+      "role": "Nephew / Athens Mayor",
+      "size": 30,
+      "id": "bakoyannis_kostas"
+    },
+    {
+      "label": "Mareva Grabowski-Mitsotaki",
+      "type": "person",
+      "layer": [
+        1,
+        3
+      ],
+      "role": "Wife / Shipping Heiress",
+      "size": 35,
+      "id": "grabowski_mareva"
+    },
+    {
+      "label": "Nikolaos Grabowski",
+      "type": "person",
+      "layer": [
+        1,
+        3
+      ],
+      "role": "Father-in-law / Shipping Magnate",
+      "size": 30,
+      "id": "grabowski_nikolaos"
+    },
+    {
+      "label": "Harvard University",
+      "type": "institution",
+      "layer": [
+        1,
+        4
+      ],
+      "role": "Elite Formation",
+      "size": 45,
+      "id": "harvard_university"
+    },
+    {
+      "label": "Stanford University",
+      "type": "institution",
+      "layer": [
+        1,
+        4
+      ],
+      "role": "Comprador Training",
+      "size": 40,
+      "id": "stanford_university"
+    },
+    {
+      "label": "Kyriakos Pierrakakis",
+      "type": "person",
+      "layer": [
+        1,
+        2
+      ],
+      "role": "Stanford Friend / Minister",
+      "size": 30,
+      "id": "pierrakakis_kyriakos"
+    },
+    {
+      "label": "McKinsey & Company",
+      "type": "institution",
+      "layer": [
+        1,
+        4
+      ],
+      "role": "Business-Gov Bridge",
+      "size": 40,
+      "id": "mckinsey_company"
+    },
+    {
+      "label": "Adonis Georgiadis",
+      "type": "person",
+      "layer": "2,",
+      "role": "Minister Development",
+      "size": 30,
+      "id": "georgiadis_adonis"
+    },
+    {
+      "label": "Nikos Dendias",
+      "type": "person",
+      "layer": "2,",
+      "role": "Minister Defense",
+      "size": 30,
+      "id": "dendias_nikos"
+    },
+    {
+      "label": "Kostis Hatzidakis",
+      "type": "person",
+      "layer": "2,",
+      "role": "Minister Labor",
+      "size": 28,
+      "id": "hatzidakis_kostis"
+    },
+    {
+      "label": "Niki Kerameus",
+      "type": "person",
+      "layer": "2,",
+      "role": "Ex-Minister Education",
+      "size": 28,
+      "id": "kerameus_niki"
+    },
+    {
+      "label": "Giorgos Gerapetritis",
+      "type": "person",
+      "layer": "2,",
+      "role": "Minister Foreign Affairs",
+      "size": 32,
+      "id": "gerapetritis_giorgos"
+    },
+    {
+      "label": "Grigoris Dimitriadis",
+      "type": "person",
+      "layer": "2,",
+      "role": "NEPHEW / Ex-Secretary General",
+      "size": 35,
+      "id": "dimitriadis_grigoris"
+    },
+    {
+      "label": "New Democracy Party",
+      "type": "institution",
+      "layer": "2,",
+      "role": "Oligarch Political Vehicle",
+      "size": 50,
+      "id": "new_democracy"
+    },
+    {
+      "label": "Evangelos Marinakis",
+      "type": "person",
+      "layer": "3,",
+      "role": "Shipping + Media Oligarch",
+      "size": 70,
+      "power": 9,
+      "id": "marinakis_evangelos"
+    },
+    {
+      "label": "Capital Maritime & Trading",
+      "type": "company",
+      "layer": "3,",
+      "size": 35,
+      "id": "capital_maritime"
+    },
+    {
+      "label": "Ta Nea (Newspaper)",
+      "type": "media",
+      "layer": "3,",
+      "size": 30,
+      "id": "ta_nea"
+    },
+    {
+      "label": "MEGA TV",
+      "type": "media",
+      "layer": "3,",
+      "size": 32,
+      "id": "mega_tv"
+    },
+    {
+      "label": "Angelopoulos Family",
+      "type": "person",
+      "layer": "3,",
+      "role": "Shipping Dynasty",
+      "size": 40,
+      "id": "angelopoulos_family"
+    },
+    {
+      "label": "George Prokopiou",
+      "type": "person",
+      "layer": "3,",
+      "role": "Shipping Magnate",
+      "size": 38,
+      "id": "prokopiou_george"
+    },
+    {
+      "label": "Evangelos Mytilineos",
+      "type": "person",
+      "layer": "3,",
+      "role": "Construction + Energy Oligarch",
+      "size": 60,
+      "id": "mytilineos_evangelos"
+    },
+    {
+      "label": "Mytilineos Group",
+      "type": "company",
+      "layer": "3,",
+      "size": 40,
+      "id": "mytilineos_group"
+    },
+    {
+      "label": "GEK TERNA",
+      "type": "company",
+      "layer": "3,",
+      "size": 38,
+      "id": "gek_terna"
+    },
+    {
+      "label": "Ellaktor",
+      "type": "company",
+      "layer": "3,",
+      "size": 35,
+      "id": "ellaktor"
+    },
+    {
+      "label": "National Bank of Greece",
+      "type": "company",
+      "layer": "3,",
+      "size": 45,
+      "id": "nbg"
+    },
+    {
+      "label": "Alpha Bank",
+      "type": "company",
+      "layer": "3,",
+      "size": 40,
+      "id": "alpha_bank"
+    },
+    {
+      "label": "Eurobank",
+      "type": "company",
+      "layer": "3,",
+      "size": 38,
+      "id": "eurobank"
+    },
+    {
+      "label": "Alafouzos Family",
+      "type": "person",
+      "layer": "3,",
+      "role": "Shipping + Media Oligarch",
+      "size": 50,
+      "id": "alafouzos_family"
+    },
+    {
+      "label": "Kathimerini",
+      "type": "media",
+      "layer": "3,",
+      "size": 30,
+      "id": "kathimerini"
+    },
+    {
+      "label": "SKAI TV",
+      "type": "media",
+      "layer": "3,",
+      "size": 32,
+      "id": "skai_tv"
+    },
+    {
+      "label": "Psycharis Family",
+      "type": "person",
+      "layer": "3,",
+      "role": "Media Oligarch",
+      "size": 40,
+      "id": "psycharis_family"
+    },
+    {
+      "label": "Vardinoyannis Family",
+      "type": "person",
+      "layer": "3,",
+      "role": "Energy + Media Oligarch",
+      "size": 50,
+      "id": "vardinoyannis_family"
+    },
+    {
+      "label": "Motor Oil Hellas",
+      "type": "company",
+      "layer": "3,",
+      "size": 40,
+      "id": "motor_oil"
+    },
+    {
+      "label": "Dimitris Melissanidis",
+      "type": "person",
+      "layer": "3,",
+      "role": "Fuel Industry",
+      "size": 35,
+      "id": "melissanidis_dimitris"
+    },
+    {
+      "label": "Angela Merkel",
+      "type": "person",
+      "layer": "4,",
+      "role": "Ex-Chancellor Germany",
+      "size": 55,
+      "id": "merkel_angela"
+    },
+    {
+      "label": "Wolfgang Sch\u00e4uble",
+      "type": "person",
+      "layer": "4,",
+      "role": "Ex-Finance Minister Germany",
+      "size": 50,
+      "id": "schaeuble_wolfgang"
+    },
+    {
+      "label": "Olaf Scholz",
+      "type": "person",
+      "layer": "4,",
+      "role": "Chancellor Germany",
+      "size": 45,
+      "id": "scholz_olaf"
+    },
+    {
+      "label": "Deutsche Bank",
+      "type": "company",
+      "layer": "4,",
+      "size": 50,
+      "id": "deutsche_bank"
+    },
+    {
+      "label": "Emmanuel Macron",
+      "type": "person",
+      "layer": "4,",
+      "role": "President France",
+      "size": 50,
+      "id": "macron_emmanuel"
+    },
+    {
+      "label": "Christine Lagarde",
+      "type": "person",
+      "layer": "4,",
+      "role": "ECB President / Ex-IMF",
+      "size": 60,
+      "power": 9,
+      "id": "lagarde_christine"
+    },
+    {
+      "label": "BNP Paribas",
+      "type": "company",
+      "layer": "4,",
+      "size": 55,
+      "id": "bnp_paribas"
+    },
+    {
+      "label": "Dassault Aviation",
+      "type": "company",
+      "layer": "4,",
+      "size": 40,
+      "id": "dassault"
+    },
+    {
+      "label": "Joe Biden",
+      "type": "person",
+      "layer": "4,",
+      "role": "US President",
+      "size": 50,
+      "id": "biden_joe"
+    },
+    {
+      "label": "Antony Blinken",
+      "type": "person",
+      "layer": "4,",
+      "role": "US Secretary of State",
+      "size": 40,
+      "id": "blinken_antony"
+    },
+    {
+      "label": "Goldman Sachs",
+      "type": "company",
+      "layer": "4,",
+      "size": 45,
+      "id": "goldman_sachs"
+    },
+    {
+      "label": "Blackstone Group",
+      "type": "company",
+      "layer": "4,",
+      "role": "Vulture fund - bought Greek NPLs",
+      "size": 40,
+      "id": "blackstone"
+    },
+    {
+      "label": "Ursula von der Leyen",
+      "type": "person",
+      "layer": "4,",
+      "role": "EU Commission President",
+      "size": 55,
+      "id": "von_der_leyen"
+    },
+    {
+      "label": "European People\\",
+      "type": "institution",
+      "layer": "4,",
+      "role": "EU Political Coordination",
+      "size": 50,
+      "id": "epp"
+    },
+    {
+      "label": "European Central Bank",
+      "type": "institution",
+      "layer": "4,",
+      "role": "Monetary Control",
+      "size": 60,
+      "id": "ecb"
+    },
+    {
+      "label": "International Monetary Fund",
+      "type": "institution",
+      "layer": "4,",
+      "role": "Austerity Enforcer",
+      "size": 55,
+      "id": "imf"
+    },
+    {
+      "label": "European Commission",
+      "type": "institution",
+      "layer": "4,",
+      "role": "EU Executive",
+      "size": 55,
+      "id": "european_commission"
+    },
+    {
+      "label": "NATO",
+      "type": "institution",
+      "layer": "4,",
+      "role": "Military Control",
+      "size": 50,
+      "id": "nato"
+    },
+    {
+      "label": "57 Tempi Victims",
+      "type": "victims",
+      "layer": "outside",
+      "role": "MURDERED BY THIS SYSTEM",
+      "size": 80,
+      "id": "tempi_victims"
+    }
+  ],
+  "edges": [
+    {
+      "type": "family",
+      "strength": 10,
+      "label": "Political inheritance",
+      "source": "mitsotakis_kyriakos",
+      "target": "mitsotakis_konstantinos"
+    },
+    {
+      "type": "family",
+      "strength": 9,
+      "label": "Sister / Political ally",
+      "source": "mitsotakis_kyriakos",
+      "target": "bakoyannis_dora"
+    },
+    {
+      "type": "family",
+      "strength": 8,
+      "label": "3rd generation dynasty",
+      "source": "mitsotakis_kyriakos",
+      "target": "bakoyannis_kostas"
+    },
+    {
+      "type": "family",
+      "strength": 10,
+      "label": "STRATEGIC ALLIANCE TO OLIGARCHY",
+      "source": "mitsotakis_kyriakos",
+      "target": "grabowski_mareva"
+    },
+    {
+      "type": "family",
+      "strength": 8,
+      "label": "Connection to shipping oligarchy",
+      "source": "mitsotakis_kyriakos",
+      "target": "grabowski_nikolaos"
+    },
+    {
+      "type": "family",
+      "strength": 10,
+      "label": "NEPOTISM / Spyware scandal",
+      "source": "mitsotakis_kyriakos",
+      "target": "dimitriadis_grigoris"
+    },
+    {
+      "type": "education",
+      "strength": 9,
+      "label": "Elite formation 1986-90",
+      "source": "mitsotakis_kyriakos",
+      "target": "harvard_university"
+    },
+    {
+      "type": "education",
+      "strength": 8,
+      "label": "Comprador training 1991-93",
+      "source": "mitsotakis_kyriakos",
+      "target": "stanford_university"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "label": "Loyalty through education",
+      "source": "mitsotakis_kyriakos",
+      "target": "pierrakakis_kyriakos"
+    },
+    {
+      "type": "professional",
+      "strength": 8,
+      "label": "13 years 1990-2003",
+      "source": "mitsotakis_kyriakos",
+      "target": "mckinsey_company"
+    },
+    {
+      "type": "political",
+      "strength": 7,
+      "source": "mitsotakis_kyriakos",
+      "target": "georgiadis_adonis"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "label": "Father\\",
+      "source": "mitsotakis_kyriakos",
+      "target": "dendias_nikos"
+    },
+    {
+      "type": "political",
+      "strength": 7,
+      "source": "mitsotakis_kyriakos",
+      "target": "hatzidakis_kostis"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "kerameus_niki"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "label": "Chief strategist",
+      "source": "mitsotakis_kyriakos",
+      "target": "gerapetritis_giorgos"
+    },
+    {
+      "type": "political",
+      "strength": 10,
+      "label": "Absolute control",
+      "source": "mitsotakis_kyriakos",
+      "target": "new_democracy"
+    },
+    {
+      "type": "financial",
+      "strength": 10,
+      "label": "MAJOR ND DONOR + Media support",
+      "source": "mitsotakis_kyriakos",
+      "target": "marinakis_evangelos"
+    },
+    {
+      "type": "financial",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "angelopoulos_family"
+    },
+    {
+      "type": "financial",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "prokopiou_george"
+    },
+    {
+      "type": "financial",
+      "strength": 10,
+      "label": "MAJOR DONOR + Contracts",
+      "source": "mitsotakis_kyriakos",
+      "target": "mytilineos_evangelos"
+    },
+    {
+      "type": "financial",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "gek_terna"
+    },
+    {
+      "type": "financial",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "ellaktor"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "nbg"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "alpha_bank"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "eurobank"
+    },
+    {
+      "type": "financial",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "alafouzos_family"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "psycharis_family"
+    },
+    {
+      "type": "financial",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "vardinoyannis_family"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "label": "Takes orders from",
+      "source": "mitsotakis_kyriakos",
+      "target": "merkel_angela"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "schaeuble_wolfgang"
+    },
+    {
+      "type": "political",
+      "strength": 7,
+      "source": "mitsotakis_kyriakos",
+      "target": "scholz_olaf"
+    },
+    {
+      "type": "financial",
+      "strength": 10,
+      "source": "mitsotakis_kyriakos",
+      "target": "deutsche_bank"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "macron_emmanuel"
+    },
+    {
+      "type": "financial",
+      "strength": 9,
+      "label": "Rafale \u20ac2.5B",
+      "source": "mitsotakis_kyriakos",
+      "target": "dassault"
+    },
+    {
+      "type": "institutional",
+      "strength": 10,
+      "label": "ECB can destroy Greece",
+      "source": "mitsotakis_kyriakos",
+      "target": "lagarde_christine"
+    },
+    {
+      "type": "financial",
+      "strength": 10,
+      "source": "mitsotakis_kyriakos",
+      "target": "bnp_paribas"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "biden_joe"
+    },
+    {
+      "type": "political",
+      "strength": 7,
+      "source": "mitsotakis_kyriakos",
+      "target": "blinken_antony"
+    },
+    {
+      "type": "political",
+      "strength": 8,
+      "source": "mitsotakis_kyriakos",
+      "target": "blackstone"
+    },
+    {
+      "type": "institutional",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "von_der_leyen"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "label": "ND funding + coordination",
+      "source": "mitsotakis_kyriakos",
+      "target": "epp"
+    },
+    {
+      "type": "institutional",
+      "strength": 10,
+      "source": "mitsotakis_kyriakos",
+      "target": "ecb"
+    },
+    {
+      "type": "institutional",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "imf"
+    },
+    {
+      "type": "institutional",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "european_commission"
+    },
+    {
+      "type": "military",
+      "strength": 9,
+      "source": "mitsotakis_kyriakos",
+      "target": "nato"
+    },
+    {
+      "type": "family",
+      "strength": 10,
+      "source": "bakoyannis_dora",
+      "target": "bakoyannis_kostas"
+    },
+    {
+      "type": "family",
+      "strength": 10,
+      "source": "grabowski_mareva",
+      "target": "grabowski_nikolaos"
+    },
+    {
+      "type": "social",
+      "strength": 7,
+      "label": "Same oligarch circles",
+      "source": "grabowski_nikolaos",
+      "target": "marinakis_evangelos"
+    },
+    {
+      "type": "social",
+      "strength": 7,
+      "source": "grabowski_nikolaos",
+      "target": "angelopoulos_family"
+    },
+    {
+      "type": "social",
+      "strength": 7,
+      "source": "harvard_university",
+      "target": "goldman_sachs"
+    },
+    {
+      "type": "education",
+      "strength": 8,
+      "source": "pierrakakis_kyriakos",
+      "target": "stanford_university"
+    },
+    {
+      "type": "professional",
+      "strength": 7,
+      "source": "mckinsey_company",
+      "target": "goldman_sachs"
+    },
+    {
+      "type": "professional",
+      "strength": 7,
+      "source": "mckinsey_company",
+      "target": "new_democracy"
+    },
+    {
+      "type": "education",
+      "strength": 8,
+      "source": "kerameus_niki",
+      "target": "harvard_university"
+    },
+    {
+      "type": "education",
+      "strength": 8,
+      "source": "gerapetritis_giorgos",
+      "target": "harvard_university"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "source": "marinakis_evangelos",
+      "target": "capital_maritime"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "label": "Narrative control",
+      "source": "marinakis_evangelos",
+      "target": "ta_nea"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "source": "marinakis_evangelos",
+      "target": "mega_tv"
+    },
+    {
+      "type": "social",
+      "strength": 7,
+      "source": "marinakis_evangelos",
+      "target": "mytilineos_evangelos"
+    },
+    {
+      "type": "social",
+      "strength": 7,
+      "source": "marinakis_evangelos",
+      "target": "alafouzos_family"
+    },
+    {
+      "type": "harm",
+      "strength": 9,
+      "label": "Suppressed scandal",
+      "source": "ta_nea",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 9,
+      "source": "mega_tv",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "source": "mytilineos_evangelos",
+      "target": "mytilineos_group"
+    },
+    {
+      "type": "social",
+      "strength": 6,
+      "source": "mytilineos_evangelos",
+      "target": "vardinoyannis_family"
+    },
+    {
+      "type": "financial",
+      "strength": 10,
+      "label": "\u20acBILLIONS in government contracts",
+      "source": "mytilineos_group",
+      "target": "new_democracy"
+    },
+    {
+      "type": "harm",
+      "strength": 8,
+      "label": "Contracts instead of rail safety",
+      "source": "mytilineos_group",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "financial",
+      "strength": 9,
+      "source": "gek_terna",
+      "target": "new_democracy"
+    },
+    {
+      "type": "financial",
+      "strength": 8,
+      "source": "nbg",
+      "target": "new_democracy"
+    },
+    {
+      "type": "harm",
+      "strength": 9,
+      "label": "\u20ac10B+ bailout vs \u20ac0 rail safety",
+      "source": "nbg",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "source": "alafouzos_family",
+      "target": "kathimerini"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "source": "alafouzos_family",
+      "target": "skai_tv"
+    },
+    {
+      "type": "social",
+      "strength": 7,
+      "source": "alafouzos_family",
+      "target": "angelopoulos_family"
+    },
+    {
+      "type": "harm",
+      "strength": 8,
+      "source": "kathimerini",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 8,
+      "source": "skai_tv",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "source": "vardinoyannis_family",
+      "target": "motor_oil"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "INVESTIGATION CRITICAL",
+      "source": "melissanidis_dimitris",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "AUSTERITY KILLED THEM",
+      "source": "merkel_angela",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "Demanded rail cuts",
+      "source": "schaeuble_wolfgang",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "Repaid with rail safety money",
+      "source": "deutsche_bank",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "financial",
+      "strength": 8,
+      "source": "deutsche_bank",
+      "target": "nbg"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "IMF then ECB pressure",
+      "source": "lagarde_christine",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "LARGEST BENEFICIARY",
+      "source": "bnp_paribas",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "financial",
+      "strength": 8,
+      "source": "bnp_paribas",
+      "target": "alpha_bank"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "\u20ac2.5B for jets, \u20ac0 for rail",
+      "source": "dassault",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 8,
+      "label": "Bought Greek assets cheap",
+      "source": "blackstone",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "source": "von_der_leyen",
+      "target": "merkel_angela"
+    },
+    {
+      "type": "financial",
+      "strength": 9,
+      "source": "epp",
+      "target": "new_democracy"
+    },
+    {
+      "type": "institutional",
+      "strength": 10,
+      "source": "ecb",
+      "target": "lagarde_christine"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "Enforced austerity",
+      "source": "ecb",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "label": "DEMANDED RAIL CUTS",
+      "source": "imf",
+      "target": "tempi_victims"
+    },
+    {
+      "type": "institutional",
+      "strength": 10,
+      "source": "european_commission",
+      "target": "von_der_leyen"
+    },
+    {
+      "type": "harm",
+      "strength": 9,
+      "label": "Weapons > safety",
+      "source": "nato",
+      "target": "tempi_victims"
+    }
+  ]
+}

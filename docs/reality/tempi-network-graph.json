@@ -1,0 +1,258 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "layer": 4,
+      "role": "Austerity enforcer",
+      "power": 10,
+      "id": "IMF"
+    },
+    {
+      "layer": 4,
+      "role": "Monetary control",
+      "power": 10,
+      "id": "ECB"
+    },
+    {
+      "layer": 4,
+      "role": "Creditor",
+      "power": 9,
+      "id": "Deutsche_Bank"
+    },
+    {
+      "layer": 4,
+      "role": "Largest creditor",
+      "power": 9,
+      "id": "BNP_Paribas"
+    },
+    {
+      "layer": 4,
+      "role": "Austerity architect",
+      "power": 9,
+      "id": "Merkel"
+    },
+    {
+      "layer": 4,
+      "role": "Budget cuts enforcer",
+      "power": 9,
+      "id": "Schaeuble"
+    },
+    {
+      "layer": 3,
+      "role": "Shipping + media oligarch",
+      "power": 9,
+      "id": "Marinakis"
+    },
+    {
+      "layer": 3,
+      "role": "Construction + energy oligarch",
+      "power": 8,
+      "id": "Mytilineos"
+    },
+    {
+      "layer": 3,
+      "role": "Media (Marinakis)",
+      "power": 7,
+      "id": "MEGA_TV"
+    },
+    {
+      "layer": 3,
+      "role": "Media (Marinakis)",
+      "power": 6,
+      "id": "Ta_Nea"
+    },
+    {
+      "layer": 2,
+      "role": "PM / Comprador hub",
+      "power": 10,
+      "id": "Mitsotakis"
+    },
+    {
+      "layer": 2,
+      "role": "Political apparatus",
+      "power": 8,
+      "id": "ND_Government"
+    },
+    {
+      "layer": 2,
+      "role": "Rail oversight",
+      "power": 5,
+      "id": "Transport_Ministry"
+    },
+    {
+      "layer": 1,
+      "role": "Elite formation",
+      "power": 7,
+      "id": "Harvard"
+    },
+    {
+      "layer": 1,
+      "role": "Comprador training",
+      "power": 7,
+      "id": "McKinsey"
+    },
+    {
+      "layer": 0,
+      "role": "57 dead",
+      "power": 0,
+      "id": "Tempi_Victims"
+    },
+    {
+      "layer": 0,
+      "role": "Extraction target",
+      "power": 0,
+      "id": "Greek_Population"
+    }
+  ],
+  "links": [
+    {
+      "type": "conditionality",
+      "strength": 10,
+      "flow": "austerity_demands",
+      "source": "IMF",
+      "target": "Mitsotakis"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "flow": "infrastructure_cuts",
+      "source": "IMF",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "monetary_control",
+      "strength": 10,
+      "flow": "fiscal_pressure",
+      "source": "ECB",
+      "target": "Mitsotakis"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "flow": "austerity_enforcement",
+      "source": "ECB",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "flow": "debt_extraction",
+      "source": "Deutsche_Bank",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "flow": "debt_extraction",
+      "source": "BNP_Paribas",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "imperial_comprador",
+      "strength": 9,
+      "flow": "policy_orders",
+      "source": "Merkel",
+      "target": "Mitsotakis"
+    },
+    {
+      "type": "ideological_alignment",
+      "strength": 8,
+      "flow": "budget_enforcement",
+      "source": "Schaeuble",
+      "target": "Mitsotakis"
+    },
+    {
+      "type": "financial",
+      "strength": 10,
+      "flow": "campaign_donations",
+      "source": "Marinakis",
+      "target": "Mitsotakis"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "flow": "narrative_control",
+      "source": "Marinakis",
+      "target": "MEGA_TV"
+    },
+    {
+      "type": "ownership",
+      "strength": 10,
+      "flow": "narrative_control",
+      "source": "Marinakis",
+      "target": "Ta_Nea"
+    },
+    {
+      "type": "financial",
+      "strength": 10,
+      "flow": "campaign_donations",
+      "source": "Mytilineos",
+      "target": "Mitsotakis"
+    },
+    {
+      "type": "harm",
+      "strength": 9,
+      "flow": "accountability_suppression",
+      "source": "MEGA_TV",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "harm",
+      "strength": 9,
+      "flow": "accountability_suppression",
+      "source": "Ta_Nea",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "flow": "ATP_unfunded",
+      "source": "Mitsotakis",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "flow": "protection",
+      "source": "Mitsotakis",
+      "target": "Marinakis"
+    },
+    {
+      "type": "political",
+      "strength": 9,
+      "flow": "government_contracts",
+      "source": "Mitsotakis",
+      "target": "Mytilineos"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "flow": "budget_allocation",
+      "source": "ND_Government",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "harm",
+      "strength": 10,
+      "flow": "safety_negligence",
+      "source": "Transport_Ministry",
+      "target": "Tempi_Victims"
+    },
+    {
+      "type": "education",
+      "strength": 9,
+      "flow": "elite_socialization",
+      "source": "Harvard",
+      "target": "Mitsotakis"
+    },
+    {
+      "type": "professional",
+      "strength": 8,
+      "flow": "comprador_training",
+      "source": "McKinsey",
+      "target": "Mitsotakis"
+    }
+  ]
+}
