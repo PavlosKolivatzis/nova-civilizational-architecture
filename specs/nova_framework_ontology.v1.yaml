@@ -5,9 +5,12 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.4.0
-  date: 2025-11-23
+  version: 1.5.0
+  date: 2025-11-27
   changelog:
+    - version: 1.5.0
+      date: 2025-11-27
+      changes: "Phase 11 - Operational Regime Policy (ORP): Bidirectional stability system with regime classification, amplitude scaling (Governor η, Emotion, Slot09 sensitivity), hysteresis enforcement; regime transition ledger; 170 new tests; contracts: orp_stabilization@1.yaml"
     - version: 1.4.0
       date: 2025-11-23
       changes: "Phase 8 Minimal Integration - Continuity Stability Index (CSI) calculator with cross-phase fusion; leverages Phase 14 ledger query API; 4 Prometheus metrics; 5 new tests"
@@ -25,7 +28,7 @@ meta:
     theory: Universal Structure Mathematics (USM)
     paper: "Universal Structure Mathematics and Autonomous Reflection in Nova"
     authors: ["Pavlos Kolivatzis", "GPT Research System", "Claude Research System", "DeepSeek", "Kilo AI", "Gemini", "GitHub Copilot"]
-    status: "empirically validated, 99.7% accuracy, 1082 test cases"
+    status: "empirically validated, 99.7% accuracy, 2013 test cases"
   description: >
     Translation-neutral contracts for Nova's 10-slot cognitive architecture.
     Core frameworks: ΔTHRESH, Constellation, Wisdom Governor, ARC, Truth Anchor,
@@ -1093,6 +1096,174 @@ coordination_frameworks:
       - "Router: composite_risk penalty calculation (NOVA_ENABLE_URF=1)"
       - "Governance: alignment_score < 0.5 gate + composite_risk >= 0.7 gate"
       - "Slot10 Gatekeeper: composite_risk >= 0.85, alignment_score < 0.6, risk_gap > 0.5"
+
+  - id: OperationalRegimePolicy
+    slot_id: null
+    name: Operational Regime Policy (ORP)
+    purpose: "Bidirectional stability system: classify continuity state into regimes, adapt system behavior (learning, emotion, perception) based on regime, enforce hysteresis to prevent oscillation"
+    category: stability_governance
+    phase: 11
+    inputs: [mse, urf, csi, continuity_score]
+    outputs: [regime, regime_duration_s, effective_regime, eta_scaled, emotion_multiplier, sensitivity_multiplier, hysteresis_decision]
+    state_variables: [regime_transition_ledger]
+    parameters:
+      regimes: [normal, heightened, controlled_degradation, emergency_stabilization, recovery]
+      minimum_durations_s: {normal: 60, heightened: 300, controlled_degradation: 600, emergency_stabilization: 900, recovery: 1800}
+      oscillation_window_s: 300
+      oscillation_threshold: 3
+      recovery_threshold: 0.85
+    schemas:
+      - name: regime@1
+        fields:
+          - {name: regime, type: string, enum: [normal, heightened, controlled_degradation, emergency_stabilization, recovery], desc: "Current operational regime"}
+          - {name: duration_s, type: float, desc: "Time in current regime (seconds)"}
+          - {name: timestamp, type: iso8601, desc: "Regime entry timestamp"}
+      - name: hysteresis_decision@1
+        fields:
+          - {name: allowed, type: bool, desc: "True if transition allowed by hysteresis"}
+          - {name: effective_regime, type: string, desc: "Regime to use (current if blocked, proposed if allowed)"}
+          - {name: reason, type: string, desc: "Human-readable reason for decision"}
+          - {name: time_remaining_s, type: float, desc: "Time until minimum duration met"}
+          - {name: oscillation_detected, type: bool, desc: "True if rapid oscillation detected"}
+    transformations:
+      - name: classify_regime
+        in: [mse, urf, csi]
+        out: [regime]
+        rule: "Classify continuity signals into operational regime: MSE → mse_instability, URF → risk_signal, CSI → stability_signal → regime"
+        impl_ref: "src.nova.continuity.orp_policy.classify_regime"
+        algorithm:
+          - "Extract mse_instability = MSE composite signal"
+          - "Extract risk_signal = URF composite_risk"
+          - "Extract stability_signal = CSI value"
+          - "Apply classification rules (see contracts/orp_policy@1.yaml)"
+          - "Return regime ∈ {normal, heightened, controlled_degradation, emergency_stabilization, recovery}"
+      - name: apply_eta_scaling
+        in: [regime, duration_s]
+        out: [eta_scaled]
+        rule: "Scale learning rate η based on regime: normal=1.0, heightened=0.90-0.95, emergency=0.50, recovery=0.25"
+        impl_ref: "src.nova.continuity.eta_scaling.apply_eta_scaling"
+        algorithm:
+          - "Lookup regime in ETA_SCALING_TABLE"
+          - "Find threshold match based on duration_s"
+          - "Apply multiplicative scaling: eta_scaled = eta_base * multiplier"
+          - "Clamp to [0.0, 1.0]"
+      - name: apply_emotional_constriction
+        in: [intensity, regime, duration_s]
+        out: [intensity_constricted]
+        rule: "Scale emotional intensity based on regime: normal=1.0, heightened=0.85-0.95, emergency=0.50, recovery=0.60"
+        impl_ref: "src.nova.continuity.emotional_posture.apply_emotional_constriction"
+        algorithm:
+          - "Lookup regime in EMOTIONAL_MULTIPLIER_TABLE"
+          - "Find threshold match based on duration_s"
+          - "Apply multiplicative constriction: intensity * multiplier"
+          - "Clamp to [0.0, 1.0]"
+      - name: apply_sensitivity_scaling
+        in: [base_threshold, regime, duration_s]
+        out: [threshold_scaled]
+        rule: "Scale Slot09 detection thresholds based on regime: normal=1.0, heightened=1.05-1.15, emergency=1.50, recovery=1.20"
+        impl_ref: "src.nova.continuity.slot09_sensitivity.apply_sensitivity_scaling"
+        algorithm:
+          - "Lookup regime in SENSITIVITY_MULTIPLIER_TABLE"
+          - "Find threshold match based on duration_s"
+          - "Apply multiplicative scaling: threshold * multiplier (higher = less sensitive)"
+          - "Clamp to [base_threshold, base_threshold * 2.0]"
+      - name: check_regime_hysteresis
+        in: [proposed_regime, ledger_history]
+        out: [hysteresis_decision]
+        rule: "Enforce minimum regime durations and block rapid oscillation"
+        impl_ref: "src.nova.continuity.orp_hysteresis.check_regime_hysteresis"
+        algorithm:
+          - "Get current regime from latest ledger entry"
+          - "If proposed == current: allow (no transition)"
+          - "Check duration_s in current regime"
+          - "If duration_s < MIN_DURATION[regime]: block transition"
+          - "Check oscillation count in window (advisory, not blocking)"
+          - "Return HysteresisDecision with allowed flag and effective_regime"
+    observability:
+      prometheus_metrics:
+        - {name: nova_orp_current_regime, type: gauge, desc: "Current ORP regime (0=normal, 1=heightened, 2=controlled_degradation, 3=emergency, 4=recovery)"}
+        - {name: nova_orp_regime_duration_s, type: gauge, desc: "Time in current regime (seconds)"}
+        - {name: nova_orp_hysteresis_active, type: gauge, desc: "1 if hysteresis blocking transitions, 0 otherwise"}
+        - {name: nova_orp_hysteresis_time_remaining_s, type: gauge, desc: "Seconds until minimum duration met"}
+        - {name: nova_orp_oscillation_count, type: gauge, desc: "Number of transitions in oscillation window"}
+        - {name: nova_orp_oscillation_detected, type: gauge, desc: "1 if oscillation detected, 0 otherwise"}
+        - {name: nova_orp_transitions_blocked_total, type: counter, desc: "Total regime transitions blocked by hysteresis"}
+        - {name: nova_orp_transitions_allowed_total, type: counter, desc: "Total regime transitions allowed by hysteresis"}
+      ledger: "src/nova/continuity/regime_transitions.jsonl (append-only)"
+    integration:
+      feeds_from: [MSE, URF, CSI]
+      feeds_to: [Governor, Slot03_Emotional, Slot09_Distortion]
+      mode: bidirectional
+      contracts:
+        - "contracts/orp_policy@1.yaml (regime classification rules)"
+        - "contracts/orp_stabilization@1.yaml (hysteresis enforcement)"
+    interfaces:
+      upstream: [MSE, URF, CSI, ContinuityEngine]
+      downstream: [AdaptiveWisdomGovernor, EmotionalMatrixEngine, HybridDistortionDetectionAPI]
+    stability_loop:
+      description: "ORP completes continuity stability loop"
+      flow:
+        1: "Signals → ORP (MSE/URF/CSI → regime classification)"
+        2: "ORP → amplitude layers (Governor η, Emotion intensity, Slot09 sensitivity)"
+        3: "ORP → stability enforcement (hysteresis blocks rapid switches)"
+        4: "Ledger → ORP stabilization (duration tracking prevents thrash)"
+        5: "ORP stabilized → signals stabilize (inertia dampens oscillation)"
+      inertia_layer: "Provides stability inertia continuity systems depend on"
+    amplitude_scaling:
+      governor_eta:
+        purpose: "Controls learning amplitude"
+        scaling: {normal: 1.0, heightened_short: 0.95, heightened_long: 0.90, controlled_degradation: 0.75, emergency: 0.50, recovery: 0.25}
+        flag: NOVA_ENABLE_ETA_SCALING
+        impl: "src.nova.governor.adaptive_wisdom.AdaptiveWisdomGovernor"
+      emotion_intensity:
+        purpose: "Controls output amplitude"
+        scaling: {normal: 1.0, heightened_short: 0.95, heightened_long: 0.85, controlled_degradation: 0.70, emergency: 0.50, recovery: 0.60}
+        flag: NOVA_ENABLE_EMOTIONAL_CONSTRICTION
+        impl: "src.nova.slots.slot03_emotional_matrix.emotional_matrix_engine.EmotionalMatrixEngine"
+      slot09_sensitivity:
+        purpose: "Controls perception amplitude (detection thresholds)"
+        scaling: {normal: 1.0, heightened_short: 1.05, heightened_long: 1.15, controlled_degradation: 1.30, emergency: 1.50, recovery: 1.20}
+        flag: NOVA_ENABLE_SLOT09_SENSITIVITY
+        impl: "src.nova.slots.slot09_distortion_protection.hybrid_api.HybridApiConfig"
+    hysteresis_enforcement:
+      minimum_durations:
+        normal: {duration_s: 60, rationale: "Stable baseline requires brief hold"}
+        heightened: {duration_s: 300, rationale: "Prevent premature de-escalation"}
+        controlled_degradation: {duration_s: 600, rationale: "Serious state needs stability"}
+        emergency_stabilization: {duration_s: 900, rationale: "Critical state must persist"}
+        recovery: {duration_s: 1800, rationale: "Gradual recovery requires patience"}
+      oscillation_detection:
+        window_s: 300
+        threshold: 3
+        action: "warn (advisory, not blocking)"
+      recovery_stabilization:
+        continuity_threshold: 0.85
+        rationale: "Require C ≥ 0.85 before exiting recovery to normal"
+    test_coverage:
+      unit_tests:
+        - {file: "tests/continuity/test_eta_scaling.py", count: 28, desc: "Governor η scaling adapter"}
+        - {file: "tests/continuity/test_emotional_posture.py", count: 29, desc: "Emotion intensity adapter"}
+        - {file: "tests/continuity/test_slot09_sensitivity.py", count: 31, desc: "Slot09 sensitivity adapter"}
+        - {file: "tests/continuity/test_orp_hysteresis.py", count: 33, desc: "Hysteresis enforcement"}
+      integration_tests:
+        - {file: "tests/governor/test_governor_eta_scaling_integration.py", count: 13, desc: "Governor + ORP integration"}
+        - {file: "tests/slot03/test_slot03_emotional_constriction_integration.py", count: 18, desc: "Slot03 + ORP integration"}
+        - {file: "tests/slot09_distortion_protection/test_slot09_sensitivity_integration.py", count: 18, desc: "Slot09 + ORP integration"}
+      total: 170
+    implementation_status: integrated
+    feature_flags:
+      - {name: NOVA_ENABLE_REGIME_LEDGER, default: 0, desc: "Enable regime transition ledger recording"}
+      - {name: NOVA_ENABLE_ETA_SCALING, default: 0, desc: "Enable ORP-based Governor η scaling"}
+      - {name: NOVA_ENABLE_EMOTIONAL_CONSTRICTION, default: 0, desc: "Enable ORP-based emotion intensity scaling"}
+      - {name: NOVA_ENABLE_SLOT09_SENSITIVITY, default: 0, desc: "Enable ORP-based Slot09 sensitivity scaling"}
+      - {name: NOVA_ENABLE_ORP_HYSTERESIS, default: 0, desc: "Enable hysteresis enforcement (observability only, not in code yet)"}
+    constraints:
+      - "Pure functions (no state mutation except append-only ledger)"
+      - "Multiplicative scaling (not additive)"
+      - "Graceful fallbacks on import/runtime failures"
+      - "No ORP symbols leaked into public APIs (buried in annotations)"
+      - "Preserves detection/output topology (what is detected/emitted, not amplitude)"
+      - "Hysteresis advises, does NOT override MSE/URF/CSI signals"
 
   - id: MetaStabilityEngine
     slot_id: null
