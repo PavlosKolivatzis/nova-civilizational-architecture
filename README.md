@@ -83,6 +83,7 @@ Production-grade multicultural truth synthesis engine with 10-slot cognitive arc
 | Phase 14 | ✅ Delivered | AVL PostgreSQL backend + runbooks | [`docs/adr/ADR-14-Ledger-Persistence.md`](docs/adr/ADR-14-Ledger-Persistence.md), [`docs/reports/phase14-final-reflection.md`](docs/reports/phase14-final-reflection.md) |
 
 | Phase 15 | ✅ Delivered | Federation sync, readiness endpoints, Adaptive Wisdom Governor | [`docs/notes/OBSERVABILITY_PHASE15_COMPLETION.md`](docs/notes/OBSERVABILITY_PHASE15_COMPLETION.md), [`docs/adr/ADR-15-Federation-*`](docs/adr), [`docs/wisdom_governor_mvs.md`](docs/wisdom_governor_mvs.md) |
+| **Phase 11 (ORP)** | ✅ **Delivered** | **Operational Regime Policy: Bidirectional stability system with regime classification, amplitude modulation, hysteresis enforcement** | [`docs/phase11_stability_loop.md`](docs/phase11_stability_loop.md), [`docs/phase11_system_invariants.md`](docs/phase11_system_invariants.md), [`specs/nova_framework_ontology.v1.yaml`](specs/nova_framework_ontology.v1.yaml) |
 
 
 
