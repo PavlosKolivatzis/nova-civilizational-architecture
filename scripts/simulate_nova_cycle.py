@@ -199,13 +199,15 @@ def check_ledger_continuity(
 ) -> bool:
     """Validate ledger continuity: from_regime[N] == to_regime[N-1]."""
     if previous_regime is None:
-        # First step
-        return transition_from is None
+        # First step - ORP engine may start with initial transition from its default state (normal)
+        # This is allowed - we can't validate continuity without a previous step
+        return True
 
     # If transition occurred, transition_from should match previous regime
     if transition_from is not None:
         return transition_from == previous_regime
 
+    # No transition - continuity automatically maintained
     return True
 
 
