@@ -1,0 +1,90 @@
+{
+  "trajectory_id": "canonical_normal_stable",
+  "description": "20 steps in normal regime with stable signals (no transitions)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.12,
+        "mse_meta_instability": 0.02,
+        "predictive_collapse_risk": 0.08,
+        "consistency_gap": 0.04,
+        "csi_continuity_index": 0.96
+      },
+      "expected_regime": "normal",
+      "expected_transition": null
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.13,
+        "mse_meta_instability": 0.03,
+        "predictive_collapse_risk": 0.09,
+        "consistency_gap": 0.05,
+        "csi_continuity_index": 0.95
+      },
+      "expected_regime": "normal",
+      "expected_transition": null
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.14,
+        "mse_meta_instability": 0.02,
+        "predictive_collapse_risk": 0.10,
+        "consistency_gap": 0.04,
+        "csi_continuity_index": 0.97
+      },
+      "expected_regime": "normal",
+      "expected_transition": null
+    },
+    {
+      "step": 3,
+      "timestamp": "2025-01-01T00:03:00Z",
+      "elapsed_s": 180,
+      "contributing_factors": {
+        "urf_composite_risk": 0.11,
+        "mse_meta_instability": 0.03,
+        "predictive_collapse_risk": 0.08,
+        "consistency_gap": 0.05,
+        "csi_continuity_index": 0.96
+      },
+      "expected_regime": "normal",
+      "expected_transition": null
+    },
+    {
+      "step": 4,
+      "timestamp": "2025-01-01T00:04:00Z",
+      "elapsed_s": 240,
+      "contributing_factors": {
+        "urf_composite_risk": 0.15,
+        "mse_meta_instability": 0.02,
+        "predictive_collapse_risk": 0.09,
+        "consistency_gap": 0.04,
+        "csi_continuity_index": 0.95
+      },
+      "expected_regime": "normal",
+      "expected_transition": null
+    },
+    {
+      "step": 5,
+      "timestamp": "2025-01-01T00:05:00Z",
+      "elapsed_s": 300,
+      "contributing_factors": {
+        "urf_composite_risk": 0.12,
+        "mse_meta_instability": 0.03,
+        "predictive_collapse_risk": 0.10,
+        "consistency_gap": 0.05,
+        "csi_continuity_index": 0.96
+      },
+      "expected_regime": "normal",
+      "expected_transition": null
+    }
+  ]
+}
