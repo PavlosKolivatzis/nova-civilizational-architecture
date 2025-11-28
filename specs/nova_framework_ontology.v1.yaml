@@ -6,6 +6,7 @@ meta:
   name: Nova Framework Ontology
   id: nova.frameworks
   version: 1.5.0
+  status: active
   date: 2025-11-27
   changelog:
     - version: 1.5.0

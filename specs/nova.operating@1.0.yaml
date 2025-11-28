@@ -22,8 +22,8 @@ regimes:
     description: "Nominal operation; all continuity signals within expected ranges."
     entry_conditions:
       mse_state: [stable]
-      urf_composite_risk: [0.0, 0.3)
-      csi_value: [0.7, 1.0]
+      urf_composite_risk: "[0.0, 0.3)"
+      csi_value: "[0.7, 1.0]"
       logic: AND
     posture_ref: posture.normal
     amplitude_triad_ref: amplitude_triad.normal
@@ -34,8 +34,8 @@ regimes:
     description: "Elevated risk; tighter thresholds and mild capacity reduction."
     entry_conditions:
       mse_state: [oscillating]
-      urf_composite_risk: [0.3, 0.6)
-      csi_value: [0.5, 0.9]
+      urf_composite_risk: "[0.3, 0.6)"
+      csi_value: "[0.5, 0.9]"
       logic: AND
     posture_ref: posture.heightened
     amplitude_triad_ref: amplitude_triad.heightened
@@ -46,8 +46,8 @@ regimes:
     description: "Significant instability; controlled capacity reduction and deployment freeze."
     entry_conditions:
       mse_state: [unstable]
-      urf_composite_risk: [0.6, 0.85)
-      csi_value: [0.3, 0.7]
+      urf_composite_risk: "[0.6, 0.85)"
+      csi_value: "[0.3, 0.7]"
       logic: AND
     posture_ref: posture.controlled_degradation
     amplitude_triad_ref: amplitude_triad.controlled_degradation
@@ -58,8 +58,8 @@ regimes:
     description: "Critical instability; safe_mode bias, strong damping, and hard freezes."
     entry_conditions:
       mse_state: [critically_unstable]
-      urf_composite_risk: [0.85, 1.0]
-      csi_value: [0.0, 0.5]
+      urf_composite_risk: "[0.85, 1.0]"
+      csi_value: "[0.0, 0.5]"
       logic: AND
     posture_ref: posture.emergency_stabilization
     amplitude_triad_ref: amplitude_triad.emergency_stabilization
@@ -71,7 +71,7 @@ regimes:
     entry_conditions:
       prior_regime_ordinal: [2, 3]    # Must come from degradation/emergency
       continuity_improving: true      # dC/dt > 0
-      csi_value: [0.5, 0.85)
+      csi_value: "[0.5, 0.85)"
       logic: AND
     exit_conditions:
       csi_value: 0.85                 # Recovery threshold from Phase 11
