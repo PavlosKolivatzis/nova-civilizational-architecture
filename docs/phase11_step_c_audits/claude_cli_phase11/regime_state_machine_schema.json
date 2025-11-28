@@ -1,0 +1,365 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nova.operating/regime_state_machine@1.0.0",
+  "title": "Regime State Machine Schema",
+  "description": "JSON schema for Nova ORP regime transitions with hysteresis and safety envelope",
+  "version": "1.0.0",
+  "definitions": {
+    "regime": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "heightened",
+        "controlled_degradation",
+        "emergency_stabilization",
+        "recovery"
+      ],
+      "description": "Operational regime ordinal states"
+    },
+    "regime_state": {
+      "type": "object",
+      "required": ["regime", "duration_s", "continuity_score"],
+      "properties": {
+        "regime": {
+          "$ref": "#/definitions/regime"
+        },
+        "duration_s": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Time spent in current regime (seconds)"
+        },
+        "continuity_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Continuity Stability Index (CSI)"
+        }
+      }
+    },
+    "transition_request": {
+      "type": "object",
+      "required": ["current_state", "proposed_regime", "oscillation_count"],
+      "properties": {
+        "current_state": {
+          "$ref": "#/definitions/regime_state"
+        },
+        "proposed_regime": {
+          "$ref": "#/definitions/regime"
+        },
+        "oscillation_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of regime transitions in last 300s window"
+        }
+      }
+    },
+    "transition_result": {
+      "type": "object",
+      "required": ["allowed", "effective_regime", "reason"],
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "description": "True if transition passed all checks"
+        },
+        "effective_regime": {
+          "$ref": "#/definitions/regime",
+          "description": "Regime to use (proposed if allowed, current if blocked)"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation",
+          "examples": [
+            "allowed",
+            "same_regime",
+            "illegal:NORMAL->EMERGENCY_STABILIZATION",
+            "min_duration_not_met:100.0<300.0",
+            "recovery_exit_blocked:C=0.70<0.85",
+            "allowed_with_oscillation:4"
+          ]
+        }
+      }
+    },
+    "safety_violation": {
+      "type": "object",
+      "required": ["rule_id", "description", "severity"],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "enum": [
+            "no_uncontrolled_acceleration",
+            "no_noise_amplification",
+            "no_destructive_oscillation",
+            "continuity_preservation"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["warn", "block"]
+        }
+      }
+    },
+    "safety_check_request": {
+      "type": "object",
+      "required": ["current_state", "eta_multiplier", "sensitivity_multiplier", "transition_history"],
+      "properties": {
+        "current_state": {
+          "$ref": "#/definitions/regime_state"
+        },
+        "eta_multiplier": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "description": "Governor learning rate scaling factor"
+        },
+        "sensitivity_multiplier": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "description": "Slot09 detection sensitivity multiplier"
+        },
+        "transition_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["timestamp_s", "regime"],
+            "properties": {
+              "timestamp_s": {
+                "type": "number",
+                "minimum": 0.0
+              },
+              "regime": {
+                "$ref": "#/definitions/regime"
+              }
+            }
+          }
+        }
+      }
+    },
+    "safety_check_result": {
+      "type": "object",
+      "required": ["violations"],
+      "properties": {
+        "violations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/safety_violation"
+          }
+        }
+      }
+    },
+    "convergence_matrix": {
+      "type": "object",
+      "required": ["matrix", "regimes"],
+      "properties": {
+        "matrix": {
+          "type": "array",
+          "description": "5x5 matrix where M[i][j] = min hops from regime i to j (-1 if unreachable)",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -1
+            },
+            "minItems": 5,
+            "maxItems": 5
+          },
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "regimes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/regime"
+          },
+          "minItems": 5,
+          "maxItems": 5
+        }
+      }
+    }
+  },
+  "type": "object",
+  "required": ["transition_graph", "hysteresis_config", "safety_envelope"],
+  "properties": {
+    "transition_graph": {
+      "type": "object",
+      "required": ["allowed_edges"],
+      "properties": {
+        "allowed_edges": {
+          "type": "array",
+          "description": "Legal regime transitions (directed edges)",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/regime"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "default": [
+            ["normal", "heightened"],
+            ["heightened", "normal"],
+            ["heightened", "controlled_degradation"],
+            ["controlled_degradation", "heightened"],
+            ["controlled_degradation", "emergency_stabilization"],
+            ["emergency_stabilization", "recovery"],
+            ["recovery", "heightened"]
+          ]
+        }
+      }
+    },
+    "hysteresis_config": {
+      "type": "object",
+      "required": ["min_duration_s", "oscillation_window_s", "oscillation_threshold", "recovery_exit_threshold"],
+      "properties": {
+        "min_duration_s": {
+          "type": "object",
+          "description": "Minimum time in each regime before transition allowed",
+          "properties": {
+            "normal": {
+              "type": "number",
+              "default": 60.0
+            },
+            "heightened": {
+              "type": "number",
+              "default": 300.0
+            },
+            "controlled_degradation": {
+              "type": "number",
+              "default": 600.0
+            },
+            "emergency_stabilization": {
+              "type": "number",
+              "default": 900.0
+            },
+            "recovery": {
+              "type": "number",
+              "default": 1800.0
+            }
+          },
+          "required": ["normal", "heightened", "controlled_degradation", "emergency_stabilization", "recovery"]
+        },
+        "oscillation_window_s": {
+          "type": "number",
+          "default": 300.0,
+          "description": "Time window for oscillation detection (seconds)"
+        },
+        "oscillation_threshold": {
+          "type": "integer",
+          "default": 3,
+          "description": "Max transitions in window before oscillation warning"
+        },
+        "recovery_exit_threshold": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.85,
+          "description": "Minimum CSI required to exit recovery regime"
+        }
+      }
+    },
+    "safety_envelope": {
+      "type": "object",
+      "required": ["eta_bounds", "sensitivity_bounds", "continuity_bounds"],
+      "properties": {
+        "eta_bounds": {
+          "type": "object",
+          "required": ["min", "max", "no_increase_during_instability"],
+          "properties": {
+            "min": {
+              "type": "number",
+              "default": 0.0
+            },
+            "max": {
+              "type": "number",
+              "default": 2.0
+            },
+            "no_increase_during_instability": {
+              "type": "boolean",
+              "default": true,
+              "description": "Block eta > 1.0 when regime ordinal >= 1"
+            }
+          }
+        },
+        "sensitivity_bounds": {
+          "type": "object",
+          "required": ["min", "max", "no_decrease_during_instability"],
+          "properties": {
+            "min": {
+              "type": "number",
+              "default": 0.0
+            },
+            "max": {
+              "type": "number",
+              "default": 2.0
+            },
+            "no_decrease_during_instability": {
+              "type": "boolean",
+              "default": true,
+              "description": "Block sensitivity < 1.0 when regime ordinal >= 1"
+            }
+          }
+        },
+        "continuity_bounds": {
+          "type": "object",
+          "required": ["min", "max"],
+          "properties": {
+            "min": {
+              "type": "number",
+              "default": 0.0
+            },
+            "max": {
+              "type": "number",
+              "default": 1.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "transition_graph": {
+        "allowed_edges": [
+          ["normal", "heightened"],
+          ["heightened", "normal"],
+          ["heightened", "controlled_degradation"],
+          ["controlled_degradation", "heightened"],
+          ["controlled_degradation", "emergency_stabilization"],
+          ["emergency_stabilization", "recovery"],
+          ["recovery", "heightened"]
+        ]
+      },
+      "hysteresis_config": {
+        "min_duration_s": {
+          "normal": 60.0,
+          "heightened": 300.0,
+          "controlled_degradation": 600.0,
+          "emergency_stabilization": 900.0,
+          "recovery": 1800.0
+        },
+        "oscillation_window_s": 300.0,
+        "oscillation_threshold": 3,
+        "recovery_exit_threshold": 0.85
+      },
+      "safety_envelope": {
+        "eta_bounds": {
+          "min": 0.0,
+          "max": 2.0,
+          "no_increase_during_instability": true
+        },
+        "sensitivity_bounds": {
+          "min": 0.0,
+          "max": 2.0,
+          "no_decrease_during_instability": true
+        },
+        "continuity_bounds": {
+          "min": 0.0,
+          "max": 1.0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,227 @@
+# ============================================================================
+# Hysteresis Decision Contract - Phase 11.4
+# ============================================================================
+# Version: 1.0.0
+# Purpose: Define hysteresis decision structure for ORP stabilization
+# ============================================================================
+
+version: "1.0.0"
+contract_id: "hysteresis_decision@1"
+domain: "continuity"
+stability_level: "production"
+
+# ============================================================================
+# SCHEMA
+# ============================================================================
+
+schema:
+  type: object
+  required: [allowed, effective_regime, reason, current_regime, current_duration_s, min_duration_s, time_remaining_s, oscillation_detected, oscillation_count]
+  properties:
+    allowed:
+      type: boolean
+      description: "True if regime transition is allowed by hysteresis rules"
+
+    effective_regime:
+      type: string
+      enum:
+        - normal
+        - heightened
+        - controlled_degradation
+        - emergency_stabilization
+        - recovery
+      description: "Regime to use after hysteresis check (current if blocked, proposed if allowed)"
+
+    reason:
+      type: string
+      description: "Human-readable reason for hysteresis decision"
+      examples:
+        - "min_duration_not_met:heightened:100.0s<300.0s"
+        - "min_duration_met:400.0s>=300.0s"
+        - "same_regime_no_transition"
+        - "no_ledger_history"
+
+    current_regime:
+      type: string
+      enum:
+        - normal
+        - heightened
+        - controlled_degradation
+        - emergency_stabilization
+        - recovery
+        - unknown
+      description: "Current regime from ledger (unknown if no history)"
+
+    current_duration_s:
+      type: number
+      minimum: 0.0
+      description: "Time spent in current regime (seconds)"
+
+    min_duration_s:
+      type: number
+      minimum: 0.0
+      description: "Minimum duration required for current regime (seconds)"
+
+    time_remaining_s:
+      type: number
+      minimum: 0.0
+      description: "Time until minimum duration is met (0 if allowed)"
+
+    oscillation_detected:
+      type: boolean
+      description: "True if rapid regime oscillation detected (advisory only)"
+
+    oscillation_count:
+      type: integer
+      minimum: 0
+      description: "Number of regime transitions in oscillation window"
+
+# ============================================================================
+# SEMANTICS
+# ============================================================================
+
+semantics:
+  allowed:
+    true: "Transition allowed - minimum duration met or no transition needed"
+    false: "Transition blocked - minimum duration not yet met"
+
+  effective_regime:
+    description: "Regime that should be used after hysteresis check"
+    when_allowed: "effective_regime = proposed_regime"
+    when_blocked: "effective_regime = current_regime"
+
+  reason:
+    format: "decision_type[:details]"
+    decision_types:
+      min_duration_not_met: "Blocked due to minimum duration constraint"
+      min_duration_met: "Allowed - minimum duration satisfied"
+      same_regime_no_transition: "No transition needed (proposed == current)"
+      no_ledger_history: "No history - allow any regime (bootstrap)"
+
+  oscillation_detected:
+    advisory: "Warning only - does NOT block transitions"
+    threshold: "≥3 transitions in 5-minute window"
+    action: "Log warning, expose metric, allow transition"
+
+# ============================================================================
+# INVARIANTS
+# ============================================================================
+
+invariants:
+  - "allowed ∈ {true, false}"
+  - "effective_regime ∈ {normal, heightened, controlled_degradation, emergency_stabilization, recovery}"
+  - "current_regime ∈ {normal, heightened, controlled_degradation, emergency_stabilization, recovery, unknown}"
+  - "current_duration_s ≥ 0.0"
+  - "min_duration_s ≥ 0.0"
+  - "time_remaining_s ≥ 0.0"
+  - "oscillation_count ≥ 0"
+  - "allowed = true ⟹ time_remaining_s = 0.0"
+  - "allowed = false ⟹ time_remaining_s > 0.0"
+  - "same regime ⟹ allowed = true"
+
+# ============================================================================
+# DECISION LOGIC
+# ============================================================================
+
+decision_logic:
+  steps:
+    1: "Check if proposed_regime == current_regime → allow (no transition)"
+    2: "Check if current_duration_s < min_duration_s → block (hysteresis active)"
+    3: "Check oscillation count → warn if ≥ threshold (advisory, not blocking)"
+    4: "Allow transition if minimum duration met"
+
+  minimum_durations:
+    normal: 60.0  # 1 minute
+    heightened: 300.0  # 5 minutes
+    controlled_degradation: 600.0  # 10 minutes
+    emergency_stabilization: 900.0  # 15 minutes
+    recovery: 1800.0  # 30 minutes
+
+  oscillation_window: 300.0  # 5 minutes
+  oscillation_threshold: 3  # transitions
+
+# ============================================================================
+# EXAMPLES
+# ============================================================================
+
+examples:
+  - description: "Transition blocked - minimum duration not met"
+    value:
+      allowed: false
+      effective_regime: "heightened"
+      reason: "min_duration_not_met:heightened:100.0s<300.0s"
+      current_regime: "heightened"
+      current_duration_s: 100.0
+      min_duration_s: 300.0
+      time_remaining_s: 200.0
+      oscillation_detected: false
+      oscillation_count: 0
+
+  - description: "Transition allowed - minimum duration met"
+    value:
+      allowed: true
+      effective_regime: "normal"
+      reason: "min_duration_met:400.0s>=300.0s"
+      current_regime: "heightened"
+      current_duration_s: 400.0
+      min_duration_s: 300.0
+      time_remaining_s: 0.0
+      oscillation_detected: false
+      oscillation_count: 1
+
+  - description: "Transition allowed but oscillation detected (advisory)"
+    value:
+      allowed: true
+      effective_regime: "heightened"
+      reason: "min_duration_met:350.0s>=300.0s|oscillation_detected:4"
+      current_regime: "normal"
+      current_duration_s: 350.0
+      min_duration_s: 60.0
+      time_remaining_s: 0.0
+      oscillation_detected: true
+      oscillation_count: 4
+
+  - description: "No transition needed - same regime"
+    value:
+      allowed: true
+      effective_regime: "normal"
+      reason: "same_regime_no_transition"
+      current_regime: "normal"
+      current_duration_s: 120.0
+      min_duration_s: 60.0
+      time_remaining_s: 0.0
+      oscillation_detected: false
+      oscillation_count: 0
+
+  - description: "Bootstrap case - no ledger history"
+    value:
+      allowed: true
+      effective_regime: "normal"
+      reason: "no_ledger_history"
+      current_regime: "unknown"
+      current_duration_s: 0.0
+      min_duration_s: 0.0
+      time_remaining_s: 0.0
+      oscillation_detected: false
+      oscillation_count: 0
+
+# ============================================================================
+# OBSERVABILITY
+# ============================================================================
+
+observability:
+  metrics:
+    - "ORP_HYSTERESIS_ACTIVE (gauge): 1 if time_remaining_s > 0, else 0"
+    - "ORP_HYSTERESIS_TIME_REMAINING_S (gauge): time_remaining_s"
+    - "ORP_HYSTERESIS_OSCILLATION_DETECTED (gauge): 1 if oscillation_detected, else 0"
+    - "ORP_HYSTERESIS_OSCILLATION_COUNT (gauge): oscillation_count"
+    - "ORP_HYSTERESIS_TRANSITIONS_BLOCKED_TOTAL (counter): incremented when allowed=false"
+    - "ORP_HYSTERESIS_TRANSITIONS_ALLOWED_TOTAL (counter): incremented when allowed=true"
+
+  logging:
+    when_blocked: "Log warning with reason, current_regime, time_remaining_s"
+    when_oscillating: "Log warning with oscillation_count, recent transitions"
+
+# ============================================================================
+# END OF CONTRACT
+# ============================================================================

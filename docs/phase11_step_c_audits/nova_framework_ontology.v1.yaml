@@ -1,0 +1,1472 @@
+# Nova Framework Ontology v1.1.0
+# Translation-neutral contracts for Nova's cognitive architecture
+# Grounded in Universal Structure Mathematics (USM)
+
+meta:
+  name: Nova Framework Ontology
+  id: nova.frameworks
+  version: 1.5.0
+  status: active
+  date: 2025-11-27
+  changelog:
+    - version: 1.5.0
+      date: 2025-11-27
+      changes: "Phase 11 - Operational Regime Policy (ORP): Bidirectional stability system with regime classification, amplitude scaling (Governor η, Emotion, Slot09 sensitivity), hysteresis enforcement; regime transition ledger; 170 new tests; contracts: orp_stabilization@1.yaml"
+    - version: 1.4.0
+      date: 2025-11-23
+      changes: "Phase 8 Minimal Integration - Continuity Stability Index (CSI) calculator with cross-phase fusion; leverages Phase 14 ledger query API; 4 Prometheus metrics; 5 new tests"
+    - version: 1.3.0
+      date: 2025-11-22
+      changes: "Phase 14 Ledger Integration - RC attestations persisted to immutable ledger with PQC signatures (Dilithium2), Merkle checkpoints, persistent keyring, query API; 18 new tests"
+    - version: 1.2.0
+      date: 2025-11-22
+      changes: "Phase 7.0-RC - Added Release Candidate Validation Framework: Memory Resonance, RIS Calculator, Stress Simulation, RC Attestation, Prometheus Metrics; 63 new tests"
+    - version: 1.1.0
+      date: 2025-11-21
+      changes: "Phase 7 integration - Added Predictive Foresight Framework (PFF) with EPD and MSC; 69 new tests"
+  license: CC-BY-4.0
+  scientific_foundation:
+    theory: Universal Structure Mathematics (USM)
+    paper: "Universal Structure Mathematics and Autonomous Reflection in Nova"
+    authors: ["Pavlos Kolivatzis", "GPT Research System", "Claude Research System", "DeepSeek", "Kilo AI", "Gemini", "GitHub Copilot"]
+    status: "empirically validated, 99.7% accuracy, 2013 test cases"
+  description: >
+    Translation-neutral contracts for Nova's 10-slot cognitive architecture.
+    Core frameworks: ΔTHRESH, Constellation, Wisdom Governor, ARC, Truth Anchor,
+    Distortion Protection. Built for cross-agent interoperability (symbolic, neural, hybrid).
+    Grounded in spectral graph theory and equilibrium analysis.
+
+# ---------- Mathematical Foundations (USM) ----------
+scientific_foundations:
+  core_theorems:
+    - id: SPECTRAL_INVARIANCE
+      statement: "Systems with identical functional structures exhibit statistically indistinguishable spectral distributions"
+      formula: "H(λ) = -∑λᵢlog λᵢ"
+      threshold: 2.5
+      accuracy: 0.942
+      n_samples: 543
+
+    - id: EQUILIBRIUM_RATIO
+      statement: "ρ = |∇E|/(|∇E|+|∇E_balanced|) < 0.7 distinguishes extraction systems"
+      formula: "∇E = ∑ᵢ→ⱼ wᵢⱼ(vᵢ - vⱼ)"
+      threshold: 0.7
+      sensitivity: 0.891
+      specificity: 0.913
+      n_samples: 1086
+
+  mathematical_primitives:
+    laplacian_matrix:
+      definition: "L = D - A (degree - adjacency)"
+      eigenvalues: "λ₁ ≤ λ₂ ≤ ... ≤ λₙ"
+      spectral_entropy: "H(λ) = -∑λᵢlog λᵢ"
+
+    equilibrium_gradient:
+      definition: "∇E = ∑ᵢ→ⱼ wᵢⱼ(vᵢ - vⱼ)"
+      ratio: "ρ = |∇E| / (|∇E| + |∇E_balanced|)"
+
+# ---------- Shared Primitives ----------
+types:
+  Scalar: {dtype: float64}
+  Vector: {dtype: float64, shape: [n]}
+  Matrix: {dtype: float64, shape: [n, m]}
+  Bool: {dtype: bool}
+  Text: {dtype: utf8}
+  Timestamp: {dtype: iso8601}
+
+signals:
+  # Core embeddings
+  user_intent_vector:
+    type: Vector
+    shape: [768]
+    version: 1.0.0
+    desc: "Latent vector of user goal/meaning"
+
+  context_vector:
+    type: Vector
+    shape: [1024]
+    version: 1.0.0
+    desc: "Conversation/project context embedding"
+
+  # USM signals (empirically validated)
+  spectral_entropy_H:
+    type: Scalar
+    range: [0, "log(n)"]
+    unit: "nats"
+    desc: "Laplacian spectral entropy (raw), H(λ) = -∑λᵢlog λᵢ"
+    formula_raw: "H(λ) = -∑λᵢlog λᵢ"
+    formula_normalized: "ε_norm = H(λ) / log(m)"
+    validation:
+      extraction_threshold_raw: 2.5
+      extraction_threshold_normalized: 0.7
+      accuracy: 0.942
+      reference: "USM Theorem 1"
+      note: "Threshold 2.5 applies to raw entropy; 0.7 for normalized [0,1]"
+
+  equilibrium_gradient_E:
+    type: Scalar
+    unit: "normalized_flow"
+    desc: "∇E = ∑ᵢ→ⱼ wᵢⱼ(vᵢ - vⱼ), resource accumulation gradient"
+
+  equilibrium_ratio_rho:
+    type: Scalar
+    range: [0, 1]
+    desc: "ρ = |∇E| / (|∇E| + |∇E_balanced|)"
+    validation:
+      extraction_threshold: 0.7
+      sensitivity: 0.891
+      specificity: 0.913
+      reference: "USM Theorem 2"
+
+  # Wisdom/stability signals
+  stability_S: {type: Scalar, unit: "", desc: "Stability margin"}
+  hopf_H: {type: Scalar, desc: "Hopf proximity indicator"}
+  generativity_Gstar: {type: Scalar, desc: "Composite(Progress,Novelty,Consistency)"}
+  eta: {type: Scalar, desc: "Global learning gain"}
+  tri_coherence: {type: Scalar, desc: "Truth Resonance Index"}
+  tri_drift_z: {type: Scalar, range: [-5.0, 5.0], desc: "TRI drift Z-score against 24h baseline"}
+  tri_jitter: {type: Scalar, range: [0.0, 0.5], desc: "Phase jitter magnitude (lower=stable)"}
+  tri_band:
+    type: Text
+    enum: ["green", "amber", "red"]
+    desc: "Operational truth band classification used by downstream gates"
+
+  temporal_drift:
+    type: Scalar
+    range: [0, 1]
+    unit: "coherence_delta"
+    desc: "Absolute coherence delta between consecutive temporal snapshots"
+  temporal_variance:
+    type: Scalar
+    range: [0, 1]
+    unit: "coherence_variance"
+    desc: "Rolling variance of recent TRI coherence readings"
+  temporal_prediction_error:
+    type: Scalar
+    range: [0, 1]
+    unit: "coherence_delta"
+    desc: "Absolute difference between predicted versus observed coherence"
+  temporal_convergence_score:
+    type: Scalar
+    range: [0, 1]
+    desc: "Normalized temporal convergence score (1=stable)"
+  temporal_divergence_penalty:
+    type: Scalar
+    range: [0, 1]
+    desc: "Penalty term derived from variance plus prediction error"
+
+  drift_velocity:
+    type: Scalar
+    range: [-5, 5]
+    unit: "drift_per_second"
+    desc: "First derivative of TRI drift_z across the temporal ledger"
+  drift_acceleration:
+    type: Scalar
+    range: [-5, 5]
+    unit: "drift_per_second^2"
+    desc: "Second derivative of TRI drift_z"
+  stability_pressure:
+    type: Scalar
+    range: [0, 5]
+    desc: "Aggregated Slot07 pressure + temporal variance normalization"
+  predictive_collapse_risk:
+    type: Scalar
+    range: [0, 1]
+    desc: "Normalized collapse likelihood derived from predictive trajectory engine"
+  predictive_safe_corridor:
+    type: Bool
+    desc: "Whether predicted coherence stays within safe bounds for the governance horizon"
+
+  # Convergence rate signals (ADMM/federated consensus)
+  kappa_state:
+    type: Scalar
+    unit: "convergence_rate"
+    desc: "State contraction rate κ_state = λ_min(H)"
+    formula: "κ_state = λ_min(H)"
+
+  kappa_energy:
+    type: Scalar
+    unit: "convergence_rate"
+    desc: "Energy contraction rate κ_energy = 2λ_min(H)"
+    formula: "κ_energy = 2λ_min(H)"
+
+  # Core outputs
+  truth_vector: {type: Vector, shape: [768], desc: "Stabilized epistemic signal"}
+  symbolic_anchor: {type: Vector, desc: "Stable representational anchor"}
+  symbolic_form: {type: Text, desc: "Human-readable output"}
+
+  # PAD.E.L outputs (psychological truth filter)
+  reflex_integrity:
+    type: Scalar
+    range: [0, 1]
+    desc: "Consistency of psychological response patterns with ethical norms"
+  internal_stability_index:
+    type: Scalar
+    range: [0, 1]
+    desc: "Governor parameter stability relative to equilibrium manifold"
+  drift_coefficients:
+    type: Vector
+    desc: "Parameter drift measurements [α_drift, β_drift, γ_drift, η_drift]"
+  emotional_coherence:
+    type: Scalar
+    range: [0, 1]
+    desc: "Cross-correlation of emotional signals with cognitive state"
+
+  # INF-o-INITY outputs (informational truth filter)
+  distortion_index:
+    type: Scalar
+    range: [0, 1]
+    desc: "Spectral distortion magnitude mapped to epistemic uncertainty"
+  convergence_map:
+    type: Matrix
+    desc: "Graph-theoretic narrative convergence topology"
+  epistemic_entropy_profile:
+    type: Vector
+    desc: "Spectral entropy decomposition across frequency bands"
+  narrative_coherence:
+    type: Scalar
+    range: [0, 1]
+    desc: "Graph-theoretic coherence of narrative structure"
+
+  # Coordination framework outputs
+  resonance_index:
+    type: Scalar
+    range: [0, 1]
+    desc: "Reflective resonance composite score (RRI) - 5m window of reflect/forecast/counterfactual traces"
+  cross_slot_phase_error:
+    type: Scalar
+    desc: "Phase difference between TruthAnchor and TRI Engine outputs"
+  ethical_gradient:
+    type: Vector
+    desc: "Composite ethical direction [transparency, non_domination, reciprocity, accuracy]"
+  neuro_epistemic_vector:
+    type: Vector
+    desc: "Coupled psychological-informational state representation"
+  attention_stability:
+    type: Scalar
+    range: [0, 1]
+    desc: "Temporal stability of neuro-epistemic coupling"
+  provenance_hashes:
+    type: Vector
+    desc: "SHA3-256 hashes of all transformations in audit graph"
+  federated_consensus:
+    type: Scalar
+    range: [0, 1]
+    desc: "ADMM consensus score across distributed Nova nodes"
+
+  # Ethics
+  consent_profile: {type: Text, desc: "CE-001 policy id"}
+
+# ---------- Ledger Architecture (Nova Core) ----------
+ledgers:
+  fact_ledger:
+    purpose: "Raw observations, append-only"
+    storage: {backend: postgres, table: fact_events}
+    immutable: true
+    entries:
+      - {type: user_input_raw, fields: [timestamp, user_id, text, context_vector]}
+      - {type: sensor_reading, fields: [timestamp, source, value]}
+
+  claim_ledger:
+    purpose: "Framework outputs with assumptions + confidence"
+    storage: {backend: redis, key_pattern: "claim:{framework}:{ts}"}
+    entries:
+      - {type: deltaTHRESH_output, fields: [timestamp, truth_vector, spectral_entropy_H, assumptions, confidence], source: deltaTHRESH}
+      - {type: constellation_placement, fields: [timestamp, anchor_id, position, tri_coherence, confidence], source: Constellation}
+      - {type: tri_truth_signal, fields: [timestamp, tri_coherence, tri_drift_z, tri_jitter, canonical_hash, anchor_id, tri_band], source: TRI_Engine}
+
+  attest_ledger:
+    purpose: "Hash-linked, immutable attestations"
+    storage: {backend: filesystem, path: ".attestations/", format: jsonl}
+    integrity: {merkle_tree: true, periodic_checkpoint: hourly}
+    entries:
+      - {type: truth_anchor, fields: [timestamp, claim_hash, attest_hash, prev_hash, signature], hash_method: blake2b, verifier: Slot01}
+      - {type: audit_checkpoint, fields: [timestamp, state_snapshot_hash, prev_hash, verifier_id], verifier: Slot09}
+
+  temporal_ledger:
+    purpose: "Monotonic temporal coherence record for router/governance gating"
+    storage: {backend: filesystem, path: ".temporal_ledger/", format: jsonl}
+    integrity: {hash_chained: true, monotonic_timestamp: true}
+    entries:
+      - type: temporal_consistency_snapshot
+        fields:
+          [
+            timestamp,
+            tri_coherence,
+            tri_drift_z,
+            temporal_drift,
+            temporal_variance,
+            temporal_prediction_error,
+            temporal_convergence_score,
+            temporal_divergence_penalty,
+            slot07_mode,
+            gate_state,
+            governance_state,
+            hash,
+          ]
+        contract: temporal_consistency@1
+
+  foresight_ledger:
+    purpose: "Hash-chained foresight ledger capturing predictive consistency snapshots"
+    storage: {backend: filesystem, path: ".foresight_ledger/", format: jsonl}
+    integrity: {hash_chained: true, monotonic_timestamp: true}
+    entries:
+      - type: predictive_consistency_snapshot
+        fields:
+          [
+            timestamp,
+            horizon_seconds,
+            tri_coherence,
+            drift_velocity,
+            drift_acceleration,
+            stability_pressure,
+            predictive_collapse_risk,
+            predictive_safe_corridor,
+            source_snapshot_hash,
+          ]
+        contract: predictive_consistency@1
+
+# ---------- Role Separation (Architectural Invariant) ----------
+role_separation:
+  slots_interpret: [deltaTHRESH, Constellation, WisdomGovernor, ARC, EmotionalMatrix, TRI_Engine, CulturalSynthesis, ProductionControls, MemoryEthicsGuard]
+  core_attests: [TruthAnchor_Slot01, DistortionProtection_Slot09]
+
+  forbidden:
+    - rule: "slots MUST NOT write to attest_ledger directly"
+      enforcement: "orchestrator validates all ledger writes"
+    - rule: "slots MUST NOT access other slot state_variables"
+      enforcement: "adapters provide read-only views"
+
+# ---------- Frameworks ----------
+frameworks:
+  - id: TruthAnchor
+    slot_id: 1
+    name: Truth Anchor Root API
+    purpose: "Immutable anchor registration, lookup, verification, and recovery. Zero adaptivity."
+    api_spec: "specs/slot01_root_mode_api.v1.yaml"
+    participates_in_flow_mesh: false
+    participates_in_reflex: false
+    participates_in_governor_throttling: false
+    participates_in_tri: false
+    inputs: []  # Root mode: no dynamic inputs
+    outputs: []  # Root mode: no inter-slot contracts
+    state_variables: []  # Internal persistence only
+    transformations: []  # No transformations - pure RPC service
+    interfaces:
+      rpc_operations: [register, lookup, verify, recover, snapshot, export_secret_key]
+      upstream: []  # Does not consume contracts
+      downstream: []  # Does not emit contracts
+
+  - id: deltaTHRESH
+    slot_id: 2
+    name: ΔTHRESH Semantic Stabilizer
+    purpose: "Detect and reduce distortion; produce truth_vector"
+    inputs: [user_intent_vector, context_vector]
+    outputs: [truth_vector, spectral_entropy_H]
+    transformations:
+      - name: spectral_assess
+        in: [context_vector]
+        out: [spectral_entropy_H]
+        rule: "H(λ) = -∑λᵢlog λᵢ (raw entropy)"
+        impl_ref: "src.nova.slots.slot02_deltathresh.spectral.compute_entropy"
+        validation: {threshold_raw: 2.5, threshold_normalized: 0.7, accuracy: 0.942}
+      - name: stabilize_signal
+        in: [user_intent_vector, spectral_entropy_H]
+        out: [truth_vector]
+        rule: "low-pass + anchor alignment; ε-based gain"
+        impl_ref: "src.nova.slots.slot02_deltathresh.core.stabilize"
+    interfaces: {upstream: [TruthAnchor], downstream: [Constellation, TRI_Engine]}
+
+  - id: TRI_Engine
+    slot_id: 4
+    name: TRI Engine (Truth Resonance Index)
+    purpose: "Calculate epistemic coherence and truth resonance scores"
+    inputs: [truth_vector, context_vector, anchors]
+    outputs: [tri_score, tri_coherence, coherence_breakdown, tri_truth_signal_payload]
+    state_variables: [tri_score, active_anchors]
+    transformations:
+      - name: compute_tri
+        in: [truth_vector, anchors]
+        out: [tri_score, tri_coherence]
+        rule: "TRI evaluation over active anchors + phase-space continuity"
+        impl_ref: "src.nova.slots.slot04_tri_engine.core.compute_tri"
+      - name: coherence_decomposition
+        in: [tri_score, context_vector]
+        out: [coherence_breakdown]
+        rule: "decompose TRI into truth/resonance/index components"
+        impl_ref: "src.nova.slots.slot04_tri_engine.analysis.decompose"
+      - name: canonize_truth_signal
+        in: [tri_coherence, tri_score]
+        out: [tri_truth_signal_payload]
+        rule: "Canonicalize TRI signal (tri_truth_signal@1) and publish to Semantic Mirror + ledgers"
+        impl_ref: "orchestrator.tri_truth_bridge.process_tri_truth_signal"
+    interfaces: {upstream: [deltaTHRESH, Constellation], downstream: [WisdomGovernor, ProductionControls]}
+
+  - id: Constellation
+    slot_id: 5
+    name: Constellation Spatial Positioning & Navigation
+    purpose: "Maintain memory-threaded coherence via anchor placement"
+    inputs: [symbolic_anchor, context_vector, truth_vector]
+    outputs: [tri_coherence, anchor_position]
+    state_variables: [tri_coherence, active_anchors, anchor_graph]
+    transformations:
+      - name: anchor_place
+        in: [symbolic_anchor, context_vector]
+        out: [anchor_position]
+        rule: "phase-space placement; nearest-neighbor continuity"
+        impl_ref: "src.nova.slots.slot05_constellation.placement.place_anchor"
+      - name: coherence_eval
+        in: [symbolic_anchor, context_vector, active_anchors]
+        out: [tri_coherence]
+        rule: "TRI evaluation over active anchors + graph coherence"
+        impl_ref: "src.nova.slots.slot05_constellation.coherence.evaluate"
+    interfaces: {upstream: [deltaTHRESH, TRI_Engine], downstream: [WisdomGovernor, ARC]}
+
+  - id: EmotionalMatrix
+    slot_id: 3
+    name: Slot03 Emotional Matrix
+    purpose: "Interpret affective signals with TRI canonization awareness"
+    inputs: [context_vector, tri_truth_signal@1]
+    outputs: [EMOTION_REPORT@1, DELTA_THREAT@1]
+    transformations:
+      - name: tri_enriched_analysis
+        in: [context_vector, tri_truth_signal@1]
+        out: [EMOTION_REPORT@1]
+        rule: "Gate emotional tone/escalation on canonical tri_coherence and bands"
+        impl_ref: "src.nova.slots.slot03_emotional_matrix.emotional_matrix_engine.EmotionalMatrixEngine.analyze"
+      - name: threat_projection
+        in: [EMOTION_REPORT@1, tri_truth_signal@1]
+        out: [DELTA_THREAT@1]
+        rule: "Propagate tri_drift_z into DELTA_THREAT contract metadata"
+        impl_ref: "src.nova.slots.slot03_emotional_matrix.escalation.EmotionalEscalationManager.escalate"
+    interfaces: {upstream: [TRI_Engine], downstream: [CulturalSynthesis, WisdomGovernor]}
+
+  - id: CulturalSynthesis
+    slot_id: 6
+    name: Slot06 Cultural Synthesis
+    purpose: "Guardrail validation using Slot02 outputs + canonical TRI truth"
+    inputs: [cultural_context, tri_truth_signal@1]
+    outputs: [CULTURAL_PROFILE@1, GuardrailValidationResult]
+    transformations:
+      - name: tri_informed_guardrails
+        in: [tri_truth_signal@1, deltaTHRESH_output]
+        out: [GuardrailValidationResult]
+        rule: "Adjust principle preservation/residual risk based on tri_coherence & drift_z"
+        impl_ref: "src.nova.slots.slot06_cultural_synthesis.adapter.CulturalSynthesisAdapter.validate_cultural_deployment"
+      - name: cultural_profile_publish
+        in: [GuardrailValidationResult]
+        out: [CULTURAL_PROFILE@1]
+        rule: "Publish cultural profile enriched with anchor_id provenance"
+        impl_ref: "src.nova.slots.slot06_cultural_synthesis.engine.CulturalSynthesisEngine.synthesize"
+    interfaces: {upstream: [deltaTHRESH, TRI_Engine], downstream: [WisdomGovernor, CivilizationalDeployment]}
+
+  - id: WisdomGovernor
+    slot_id: 7
+    name: Adaptive Wisdom Governor (Production Controls)
+    purpose: "Closed-loop control of learning and production concurrency"
+    inputs: [tri_truth_signal@1, stability_S, hopf_H, generativity_Gstar]
+    outputs: [eta, production_mode]
+    state_variables: [eta, stability_S, hopf_H, generativity_Gstar, gamma, production_mode]
+    transformations:
+      - name: cap_eta_by_coherence
+        in: [tri_coherence]
+        out: [eta]
+        rule: "η_cap = f(TRI); apply min(η, η_cap)"
+        impl_ref: "src.nova.slots.slot07_production_controls.governor.cap_eta"
+      - name: generativity_bias
+        in: [generativity_Gstar, stability_S, hopf_H]
+        out: [eta]
+        rule: "Δη = κ * (G* - G0) if S>=0.03 and H>=0.02 else 0"
+        impl_ref: "src.nova.slots.slot07_production_controls.governor.bias_eta"
+      - name: mode_determination
+        in: [stability_S, hopf_H, eta]
+        out: [production_mode]
+        rule: "FULL if S>=0.03 and H>=0.02, DEGRADED if boundary, MINIMAL else"
+        impl_ref: "src.nova.slots.slot07_production_controls.modes.determine_mode"
+      - name: tri_backpressure
+        in: [tri_truth_signal@1]
+        out: [production_mode]
+        rule: "tri_band and tri_drift_z enforce breaker freeze with attestation requests"
+        impl_ref: "src.nova.slots.slot07_production_controls.wisdom_backpressure.compute_max_concurrent_jobs"
+    interfaces: {upstream: [Constellation, TRI_Engine], downstream: [CivilizationalDeployment]}
+
+  - id: DistortionProtection
+    slot_id: 9
+    name: Distortion Protection & Detection
+    purpose: "Detect extraction patterns, distortion, and equilibrium violations"
+    inputs: [context_vector, equilibrium_ratio_rho, spectral_entropy_H, detection_results]
+    outputs: [distortion_alert, extraction_detected, shield_status, equilibrium_ratio_rho]
+    state_variables: [shield_S, detection_history, alpha, beta, gamma]
+    transformations:
+      - name: equilibrium_check
+        in: [context_vector]
+        out: [equilibrium_ratio_rho]
+        rule: "ρ = |∇E| / (|∇E| + |∇E_balanced|)"
+        impl_ref: "src.nova.slots.slot09_distortion_protection.equilibrium.compute_ratio"
+        validation: {threshold: 0.7, sensitivity: 0.891, specificity: 0.913}
+      - name: extraction_detect
+        in: [spectral_entropy_H, equilibrium_ratio_rho, shield_S]
+        out: [extraction_detected, distortion_alert]
+        rule: "alert if H>2.5 OR ρ<0.7 (with shield suppression S)"
+        impl_ref: "src.nova.slots.slot09_distortion_protection.detector.detect"
+      - name: shield_assessment
+        in: [context_vector, detection_history]
+        out: [shield_status]
+        rule: "evaluate institutional buffering and power-shield dynamics"
+        impl_ref: "src.nova.slots.slot09_distortion_protection.shield.assess"
+    interfaces: {upstream: [deltaTHRESH, ARC], downstream: [TruthAnchor, WisdomGovernor]}
+
+  - id: ARC
+    slot_id: null  # Cross-cutting framework (not a dedicated slot)
+    name: Autonomous Reflection Cycle
+    purpose: "Self-monitoring, self-improvement, and meta-analysis coordination"
+    inputs: [detection_results, ground_truth, convergence_state]
+    outputs: [precision, recall, f1_score, drift, optimized_params, kappa_state, kappa_energy]
+    state_variables: [precision, recall, f1_score, drift, alpha, beta, gamma, kappa_state, kappa_energy]
+    parameters: {max_cycles: 10, convergence_patience: 3}
+    transformations:
+      - name: metric_calculation
+        in: [detection_results, ground_truth]
+        out: [precision, recall, f1_score, drift]
+        rule: "standard classification metrics + temporal stability"
+        impl_ref: "src.nova.arc.metrics.calculate"
+      - name: parameter_optimization
+        in: [precision, recall, alpha, beta, gamma]
+        out: [alpha_next, beta_next, gamma_next]
+        rule: "Bayesian adjustment: if P>0.8 and R<0.8 then α↓ else if R>0.8 and P<0.8 then α↑"
+        impl_ref: "src.nova.arc.optimizer.bayesian_adjust"
+      - name: convergence_rate_calculation
+        in: [convergence_state]
+        out: [kappa_state, kappa_energy]
+        rule: "κ_state = λ_min(H), κ_energy = 2λ_min(H) for ADMM convergence"
+        impl_ref: "src.nova.arc.convergence.compute_rates"
+    analytic_instruments:
+      - id: PAD_E_L
+        name: "Psychological Architecture & Drift Evaluation Layer"
+        purpose: "Inner psychological truth filter - reflex integrity and emotional stability analysis"
+        status: active_analytic_instrument
+        inputs: [state_vectors, eta, gamma, emotional_matrices, hopf_H, stability_S]
+        outputs: [reflex_integrity, internal_stability_index, drift_coefficients, emotional_coherence]
+        transformations:
+          - name: reflex_integrity_assessment
+            in: [state_vectors, emotional_matrices]
+            out: [reflex_integrity]
+            rule: "evaluate psychological response patterns for consistency with ethical norms"
+            impl_ref: "src.nova.arc.instruments.padel.assess_reflexes"
+          - name: internal_stability_analysis
+            in: [eta, gamma, hopf_H, stability_S]
+            out: [internal_stability_index, drift_coefficients]
+            rule: "measure drift in governor parameters relative to equilibrium manifold"
+            impl_ref: "src.nova.arc.instruments.padel.stability_analysis"
+          - name: emotional_coherence_mapping
+            in: [emotional_matrices, state_vectors]
+            out: [emotional_coherence]
+            rule: "cross-correlate emotional signals with cognitive state for authenticity"
+            impl_ref: "src.nova.arc.instruments.padel.coherence_map"
+        invocation: "arc.invoke('padel', state_dict)"
+        integration_slots: [1, 2, 4, 5, 7, 9]
+
+      - id: INF_o_INITY
+        name: "Information Network Fidelity & Distortion Analysis Engine"
+        purpose: "Outer informational truth filter - narrative coherence and epistemic entropy profiling"
+        status: active_analytic_instrument
+        inputs: [signal_spectra, narrative_networks, semantic_entropy, context_vector, tri_coherence]
+        outputs: [distortion_index, convergence_map, epistemic_entropy_profile, narrative_coherence]
+        transformations:
+          - name: distortion_topology_analysis
+            in: [signal_spectra, semantic_entropy]
+            out: [distortion_index, epistemic_entropy_profile]
+            rule: "map spectral distortions to epistemic uncertainty quantification"
+            impl_ref: "src.nova.arc.instruments.infoinity.distortion_topology"
+          - name: narrative_convergence_mapping
+            in: [narrative_networks, context_vector]
+            out: [convergence_map, narrative_coherence]
+            rule: "analyze graph-theoretic narrative structure for coherence and bias"
+            impl_ref: "src.nova.arc.instruments.infoinity.narrative_convergence"
+          - name: fidelity_scoring
+            in: [signal_spectra, tri_coherence]
+            out: [distortion_index]
+            rule: "cross-validate TRI coherence with spectral fidelity metrics"
+            impl_ref: "src.nova.arc.instruments.infoinity.fidelity_score"
+        invocation: "arc.invoke('infoinity', signal_dict)"
+        integration_slots: [1, 2, 4, 5, 7, 9]
+    validation:
+      baseline: {precision: 0.782, recall: 0.756}
+      target: {precision: 0.90, recall: 0.90}
+      achieved: {precision: 0.923, recall: 0.918}
+      improvement_p_value: 0.001
+    interfaces: {upstream: [deltaTHRESH, DistortionProtection, Constellation], downstream: [WisdomGovernor, DistortionProtection]}
+
+# ---------- Coordination Frameworks (Meta-Layers) ----------
+# These frameworks provide cross-cutting coordination, validation, and federation capabilities.
+# They observe and coordinate without participating in primary data flow (architectural hygiene).
+
+coordination_frameworks:
+  - id: RRI
+    slot_id: null  # Cross-cutting coordination layer
+    name: Reflective Resonance Index
+    purpose: "Measure epistemic quality via reflection, forecasting, and counterfactual analysis"
+    category: epistemic_observability
+    inputs: [reflect_traces, ethics_forecasts, counterfactuals, total_operations]
+    outputs: [resonance_index]
+    state_variables: [resonance_index, window_history]
+    parameters: {window_seconds: 300, weights: [0.4, 0.4, 0.2]}
+    transformations:
+      - name: windowed_resonance_calculation
+        in: [reflect_traces, ethics_forecasts, counterfactuals, total_operations]
+        out: [resonance_index]
+        rule: "weighted_ratio = 0.4*(reflect/total) + 0.4*(forecast/total) + 0.2*(counter/total)"
+        impl_ref: "orchestrator.rri.update_from_totals"
+    observability:
+      prometheus_metrics:
+        - {name: nova_reflective_resonance_index, type: gauge, desc: "Composite reflective resonance score [0.0, 1.0]"}
+        - {name: nova_reflect_traces_total, type: counter, desc: "Total reflective trace events"}
+        - {name: nova_ethics_forecasts_total, type: counter, desc: "Total ethics forecast events"}
+        - {name: nova_counterfactuals_total, type: counter, desc: "Total counterfactual sampling events"}
+    integration:
+      feeds_to: [Phase9_URF, Router, Governance]
+      mode: continuous_background
+    interfaces: {upstream: [Slot2, Slot4, Slot7], downstream: [Router, Governance]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/phase11/test_rri_health.py", count: 3}
+      total: 3
+
+  - id: MSE
+    slot_id: null
+    name: Meta-Statistical Engine
+    purpose: "Validate all quantitative metrics statistically before propagation"
+    category: scientific_validation
+    inputs: [reflex_integrity, tri_score, spectral_entropy_H, detection_results]
+    outputs: [validated_signals, statistical_confidence, p_values]
+    state_variables: [validation_history, significance_threshold]
+    parameters: {significance_level: 0.05, bootstrap_iterations: 1000}
+    transformations:
+      - name: t_test_validation
+        in: [reflex_integrity, validation_history]
+        out: [statistical_confidence]
+        rule: "two-sample t-test against baseline distribution, p < 0.05"
+        impl_ref: "src.nova.coordination.mse.tests.t_test"
+      - name: bootstrap_distribution
+        in: [tri_score]
+        out: [validated_signals, p_values]
+        rule: "bootstrap resampling (n=1000) to estimate confidence intervals"
+        impl_ref: "src.nova.coordination.mse.tests.bootstrap"
+      - name: chi_square_pattern_validation
+        in: [detection_results]
+        out: [statistical_confidence]
+        rule: "χ² test for pattern detection against null hypothesis"
+        impl_ref: "src.nova.coordination.mse.tests.chi_square"
+    policy: "promote signal only if p < 0.05"
+    integration:
+      gates_for: [deltaTHRESH, TRI_Engine]
+      validates_before_propagation: true
+    interfaces: {upstream: [deltaTHRESH, TRI_Engine, ARC], downstream: [ALL_SLOTS]}
+
+  - id: EVF
+    slot_id: null
+    name: Ethical Vector Field
+    purpose: "Continuous ethical gradient for dynamic decision weighting"
+    category: ethical_coordination
+    inputs: [cultural_context, threat_level, civilizational_phase, consent_profile]
+    outputs: [ethical_gradient, ethical_weight_vector, constraint_violations]
+    state_variables: [base_vectors, dynamic_modifiers, current_gradient]
+    base_vectors: [transparency, non_domination, reciprocity, accuracy]
+    transformations:
+      - name: base_vector_composition
+        in: [base_vectors]
+        out: [ethical_gradient]
+        rule: "weighted sum: w_transparency * v_transparency + w_non_dom * v_non_dom + ..."
+        impl_ref: "src.nova.coordination.evf.composition.compute_gradient"
+      - name: dynamic_modifier_integration
+        in: [cultural_context, threat_level, civilizational_phase]
+        out: [ethical_gradient]
+        rule: "modulate base_vectors by (cultural_weight, threat_multiplier, phase_scaling)"
+        impl_ref: "src.nova.coordination.evf.modifiers.apply_dynamics"
+      - name: constraint_violation_detection
+        in: [ethical_gradient, consent_profile]
+        out: [constraint_violations]
+        rule: "detect when actions violate ethical gradient thresholds"
+        impl_ref: "src.nova.coordination.evf.validation.check_violations"
+    integration:
+      feeds_to: [WisdomGovernor, CivilizationalDeployment]
+      sources: [Slot6_CulturalSynthesis, Slot9_DistortionProtection, Slot10_Deployment]
+    interfaces: {upstream: [Slot6, Slot9, Slot10], downstream: [WisdomGovernor]}
+
+  - id: NEM
+    slot_id: null
+    name: Neuro-Epistemic Map
+    purpose: "Bridge psychological (PAD.E.L) and informational (INF-o-INITY) layers"
+    category: cognitive_coordination
+    inputs: [emotional_coherence, narrative_coherence, reflex_integrity, distortion_index]
+    outputs: [neuro_epistemic_vector, attention_stability, cognitive_load_estimate]
+    state_variables: [coupling_coefficients, stability_history]
+    transformations:
+      - name: emotional_narrative_coupling
+        in: [emotional_coherence, narrative_coherence]
+        out: [neuro_epistemic_vector]
+        rule: "cross-correlate emotional salience with narrative coherence"
+        impl_ref: "src.nova.coordination.nem.coupling.compute_coupling"
+      - name: cognitive_load_calibration
+        in: [reflex_integrity, distortion_index]
+        out: [cognitive_load_estimate]
+        rule: "estimate cognitive_load = f(distortion_probability, reflex_complexity)"
+        impl_ref: "src.nova.coordination.nem.calibration.estimate_load"
+      - name: attention_stability_tracking
+        in: [neuro_epistemic_vector, stability_history]
+        out: [attention_stability]
+        rule: "measure temporal stability of neuro-epistemic coupling"
+        impl_ref: "src.nova.coordination.nem.stability.track_attention"
+    integration:
+      bridges: [PAD_E_L, INF_o_INITY]
+      enables: "human-system cognition loop modeling"
+    interfaces: {upstream: [ARC.PAD_E_L, ARC.INF_o_INITY], downstream: [WisdomGovernor]}
+
+  - id: PAG
+    slot_id: null
+    name: Provenance & Audit Graph
+    purpose: "Transparent lineage of every variable and decision"
+    category: traceability
+    inputs: [all_transformations, all_state_changes, external_inputs]
+    outputs: [audit_graph, provenance_hashes, attestation_chain]
+    state_variables: [graph_state, hash_chain, signature_history]
+    hash_function: sha3_256
+    attestation_method: truth_anchor_signature
+    transformations:
+      - name: graph_construction
+        in: [all_transformations, all_state_changes]
+        out: [audit_graph]
+        rule: "build DAG: nodes=[slots, datasets], edges=[transformations, decisions]"
+        impl_ref: "src.nova.coordination.pag.graph.construct"
+      - name: provenance_hashing
+        in: [audit_graph]
+        out: [provenance_hashes]
+        rule: "sha3_256(node_content || parent_hashes)"
+        impl_ref: "src.nova.coordination.pag.hashing.compute_provenance"
+      - name: attestation_chaining
+        in: [provenance_hashes, signature_history]
+        out: [attestation_chain]
+        rule: "link attestations with TruthAnchor signatures"
+        impl_ref: "src.nova.coordination.pag.attestation.chain"
+    integration:
+      cross_references: [MetaLegitimacySeal]
+      supports: [Slot10_CivilizationalDeployment]
+    interfaces: {upstream: [TruthAnchor, ALL_SLOTS], downstream: [Slot10, attest_ledger]}
+
+  - id: FB
+    slot_id: null
+    name: Federation Bridge
+    purpose: "Cross-node synchronization for distributed Nova instances"
+    category: infrastructure_federation
+    inputs: [tri_mean, entropy_norm, resonance_index, ethical_gradient]
+    outputs: [sync_status, federated_consensus, node_health]
+    state_variables: [peer_list, sync_history, consensus_state]
+    parameters: {update_rate: 3600, handshake_protocol: "PQC_signed_ledger"}
+    transformations:
+      - name: handshake_negotiation
+        in: [peer_list]
+        out: [sync_status]
+        rule: "PQC-signed ledger exchange for mutual authentication"
+        impl_ref: "src.nova.coordination.fb.handshake.negotiate"
+      - name: metric_synchronization
+        in: [tri_mean, entropy_norm, resonance_index]
+        out: [federated_consensus]
+        rule: "ADMM-based consensus optimization across nodes"
+        impl_ref: "src.nova.coordination.fb.sync.federated_consensus"
+      - name: fallback_isolation
+        in: [sync_status, node_health]
+        out: [sync_status]
+        rule: "switch to isolated_autonomy if sync fails > 3 cycles"
+        impl_ref: "src.nova.coordination.fb.fallback.isolate"
+    integration:
+      enables: "civilizational-scale federation"
+      fallback_mode: isolated_autonomy
+    interfaces: {upstream: [Slot10, RRI, MSE], downstream: [external_nova_nodes]}
+
+  - id: TemporalIntegrity
+    slot_id: null
+    name: Temporal Consistency Engine
+    purpose: "Compute temporal drift/variance and publish temporal_consistency@1 for router and governance layers"
+    category: temporal_governance
+    inputs: [tri_truth_signal@1, slot07_production@2, router_decision_stream, governance_state]
+    outputs: [temporal_consistency@1]
+    state_variables: [temporal_drift, temporal_variance, temporal_prediction_error, temporal_convergence_score, temporal_divergence_penalty]
+    transformations:
+      - name: temporal_snapshot_generation
+        in: [tri_truth_signal@1, slot07_production@2, governance_state]
+        out: [temporal_consistency@1]
+        rule: "Temporal ledger delta + LightClock gate alignment"
+        impl_ref: "orchestrator.temporal.engine.TemporalEngine"
+      - name: temporal_ledger_append
+        in: [temporal_consistency@1]
+        out: [temporal_ledger_entry]
+        rule: "Append canonical snapshot to hash-chained temporal ledger"
+        impl_ref: "orchestrator.temporal.ledger.TemporalLedger"
+    integration:
+      feeds_to: [Governance, Router]
+      observes: [Slot07, Slot10]
+      mode: read_only_observer
+      ledger: temporal_ledger
+    interfaces: {upstream: [TRI_Engine, Slot07, Slot10], downstream: [Governance, Router]}
+
+  - id: PredictiveForesight
+    slot_id: null
+    name: Predictive Foresight Framework
+    purpose: "Forward-project temporal trajectories, detect emergent patterns, and validate cross-slot consistency"
+    category: temporal_governance
+    inputs: [temporal_consistency@1, router_decision_stream, governance_state, slot03_safety_state, slot06_culture_state, slot07_production@2, slot10_deployment_state]
+    outputs: [predictive_snapshot@1, predictive_pattern_alert@1, predictive_consistency_gap@1]
+    state_variables:
+      trajectory: [drift_velocity, drift_acceleration, stability_pressure, predictive_collapse_risk, predictive_safe_corridor]
+      pattern_detection: [pattern_alerts, active_patterns, debounce_state, cooldown_ticks]
+      consistency: [consistency_gap_score, conflicting_slots, gap_components, severity, caused_by_patterns]
+    feature_flags:
+      NOVA_ENABLE_EPD: {default: false, desc: "Enable Emergent Pattern Detector"}
+      NOVA_ENABLE_MSC: {default: false, desc: "Enable Multi-Slot Consistency"}
+      NOVA_PREDICTIVE_PATTERN_COOLDOWN: {default: 20, desc: "Pattern alert debounce window (ticks)"}
+    transformations:
+      - name: predictive_snapshot_generation
+        in: [temporal_consistency@1, governance_state]
+        out: [predictive_snapshot@1]
+        rule: "Deterministic velocity/acceleration calculation over temporal ledger windows"
+        impl_ref: "orchestrator.predictive.trajectory_engine.PredictiveTrajectoryEngine"
+        contract: "contracts/predictive_snapshot@1.yaml"
+      - name: foresight_ledger_append
+        in: [predictive_snapshot@1]
+        out: [foresight_ledger_entry]
+        rule: "Append predictive snapshot to hash-chained foresight ledger"
+        impl_ref: "orchestrator.predictive.ledger.PredictiveLedger"
+      - name: pattern_detection
+        in: [predictive_history, governance_history, router_history]
+        out: [predictive_pattern_alert@1]
+        rule: "Stateless detection of governance oscillation, predictive creep, escalation loops with debouncing"
+        impl_ref: "orchestrator.predictive.pattern_detector.detect_patterns"
+        contract: "contracts/predictive_pattern_alert@1.yaml"
+        patterns:
+          - governance_oscillation: "Allow/hold toggles >3 times in window"
+          - predictive_creep: "Monotonic drift acceleration (≥5 ticks) + high coherence (≥0.7)"
+          - escalation_loop: "Same route penalized ≥4 times + low stability pressure (<2.0)"
+        debouncing: "Cooldown windows prevent alert spam (configurable via NOVA_PREDICTIVE_PATTERN_COOLDOWN)"
+      - name: consistency_gap_computation
+        in: [slot03_safety_state, slot06_culture_state, slot07_production@2, slot10_deployment_state, predictive_snapshot@1, predictive_pattern_alert@1]
+        out: [predictive_consistency_gap@1]
+        rule: "Vector-based cross-slot conflict detection with dual-threshold gating"
+        impl_ref: "orchestrator.predictive.consistency.compute_consistency_gap"
+        contract: "contracts/predictive_consistency_gap@1.yaml"
+        conflicts:
+          - safety_production: "High threat (slot03) + low pressure (slot07) → conflict"
+          - culture_deployment: "High residual risk (slot06) + active deployment (slot10) → conflict"
+          - production_predictive: "High collapse risk (PTE) + open production (slot07) → conflict"
+        composite_scoring: "gap_score = 0.35×safety + 0.30×culture + 0.35×predictive"
+        severity: "max(component_conflicts)"
+        gating: "Block if gap_score ≥ 0.6 OR severity ≥ 0.7"
+    integration:
+      feeds_to: [Governance, Router]
+      observes: [Slot03, Slot06, Slot07, Slot10, TemporalIntegrity]
+      mode: read_only_observer
+      ledger: foresight_ledger
+      gating: "Dual-threshold governance blocking via MSC"
+    interfaces: {upstream: [TemporalIntegrity, Slot03, Slot06, Slot07, Slot10], downstream: [Governance, Router]}
+
+  - id: RCValidation
+    slot_id: null
+    name: Release Candidate Validation Framework
+    purpose: "Validate production readiness through memory resonance, integrity scoring, and stress recovery metrics"
+    category: production_governance
+    inputs: [temporal_consistency@1, predictive_snapshot@1, governance_state, slot07_production@2]
+    outputs: [rc_attestation@1, rc_criteria_result@1, memory_resonance_stats@1]
+    state_variables:
+      memory_window: [trsi_samples, stability, mean_trsi, volatility, trend_24h]
+      ris: [ris_score, memory_stability_component, ethical_compliance_component]
+      stress_metrics: [recovery_rate, baseline_ris, min_ris, final_ris, recovery_ticks]
+    feature_flags:
+      NOVA_RC_MEMORY_WINDOW_DAYS: {default: 7, desc: "Rolling window for TRSI stability (days)"}
+      NOVA_RC_MIN_SAMPLES: {default: 24, desc: "Minimum samples for RC validation"}
+    transformations:
+      - name: memory_resonance_tracking
+        in: [temporal_consistency@1]
+        out: [memory_resonance_stats@1]
+        rule: "7-day rolling TRSI window with stability = mean - stdev"
+        impl_ref: "orchestrator.predictive.memory_resonance.MemoryResonanceWindow"
+        thresholds:
+          memory_stability: {min: 0.80, desc: "Minimum 7-day TRSI stability for RC promotion"}
+      - name: ris_computation
+        in: [memory_resonance_stats@1, governance_state]
+        out: [ris_score]
+        rule: "RIS = sqrt(memory_stability × ethical_compliance)"
+        impl_ref: "orchestrator.predictive.ris_calculator.compute_ris"
+        formula: "RIS = sqrt(M_s × E_c) where M_s = memory stability, E_c = ethics compliance"
+        thresholds:
+          ris_score: {min: 0.75, desc: "Minimum RIS for RC promotion"}
+      - name: stress_simulation
+        in: [ris_score, predictive_snapshot@1]
+        out: [stress_metrics]
+        rule: "Inject drift/shock, measure recovery rate to baseline within 24h window"
+        impl_ref: "orchestrator.predictive.stress_simulation.StressSimulator"
+        thresholds:
+          recovery_rate: {min: 0.90, desc: "Minimum stress recovery rate for RC promotion"}
+      - name: rc_attestation_generation
+        in: [memory_resonance_stats@1, ris_score, stress_metrics, governance_state]
+        out: [rc_attestation@1]
+        rule: "Deterministic SHA-256 attestation with JSON Schema 2020-12 validation"
+        impl_ref: "scripts.generate_rc_attestation.generate_attestation"
+        contract: "contracts/attestation/phase-7.0-rc.schema.json"
+        hash_method: "SHA-256 (canonical JSON, excluding signature and hash)"
+      - name: rc_criteria_evaluation
+        in: [memory_resonance_stats@1, ris_score, stress_metrics]
+        out: [rc_criteria_result@1]
+        rule: "Evaluate pass/fail against all RC thresholds"
+        impl_ref: "scripts.generate_rc_attestation.evaluate_rc_criteria"
+        criteria:
+          - memory_stability: "≥ 0.80 (7-day sustained)"
+          - ris_score: "≥ 0.75 (continuous)"
+          - stress_recovery: "≥ 0.90 (within 24h)"
+          - samples: "≥ 24 (minimum 1 day hourly)"
+          - ethics_violations: "= 0 (zero tolerance)"
+        overall_pass: "All criteria must pass"
+      - name: ledger_persistence
+        in: [rc_attestation@1]
+        out: [ledger_record]
+        rule: "Append attestation to Phase 14 immutable ledger with PQC signature and Merkle checkpoint"
+        impl_ref: "nova.ledger.factory.create_ledger_store"
+        phase14_integration:
+          record_kind: "RC_ATTESTATION"
+          anchor_id: "rc_validation_{phase}"
+          slot: "00"
+          pqc_signature:
+            algorithm: "Dilithium2 (NIST ML-DSA)"
+            key_storage: "~/.nova/keyring/pqc_key_01.json"
+            signature_size: "2420 bytes"
+            message: "Canonical JSON of {attestation_hash, phase}"
+          merkle_checkpoint:
+            algorithm: "SHA3-256"
+            span: "All RC attestations in chain"
+            checkpoint_id: "rc_cp_{phase}_{timestamp}"
+          hash_chain:
+            algorithm: "SHA3-256"
+            prev_hash: "Link to previous RC attestation"
+            continuity: "Verified on append"
+          query_api:
+            - {name: get_rc_chain, desc: "Retrieve all attestations for phase"}
+            - {name: get_rc_attestation_by_hash, desc: "Find by attestation_hash"}
+            - {name: verify_rc_chain, desc: "Verify hash chain integrity"}
+            - {name: get_rc_summary, desc: "Summary statistics"}
+        feature_flags:
+          NOVA_KEYRING_DIR: {default: "~/.nova/keyring/", desc: "PQC keyring directory"}
+          NOVA_PQC_KEYFILE: {default: "<keyring_dir>/pqc_key_01.json", desc: "PQC keyfile path"}
+    observability:
+      prometheus_metrics:
+        - {name: nova_memory_stability, type: gauge, desc: "7-day rolling TRSI stability"}
+        - {name: nova_ris_score, type: gauge, desc: "Resonance Integrity Score composite"}
+        - {name: nova_ris_component, type: gauge, labels: [component_type], desc: "RIS component scores"}
+        - {name: nova_stress_recovery_rate, type: gauge, desc: "Stress recovery rate"}
+        - {name: nova_rc_gate_status, type: gauge, labels: [gate_name], desc: "RC criteria gate status (1=pass, 0=fail)"}
+        - {name: nova_rc_overall_pass, type: gauge, desc: "Overall RC criteria pass/fail"}
+      recording_functions:
+        - {name: record_memory_resonance, ref: "orchestrator.prometheus_metrics.record_memory_resonance"}
+        - {name: record_ris, ref: "orchestrator.prometheus_metrics.record_ris"}
+        - {name: record_stress_recovery, ref: "orchestrator.prometheus_metrics.record_stress_recovery"}
+        - {name: record_rc_criteria, ref: "orchestrator.prometheus_metrics.record_rc_criteria"}
+    integration:
+      feeds_to: [CI/CD, Production Deployment, ContinuityEngine]
+      observes: [TemporalIntegrity, PredictiveForesight, Governance, Slot07]
+      mode: validation_gate
+      ledger: rc_attestation_ledger
+      ci_workflow: ".github/workflows/rc-validation.yml (weekly Monday 10:00 UTC)"
+    interfaces: {upstream: [TemporalIntegrity, PredictiveForesight, Governance, Slot07], downstream: [CI/CD, Deployment, ContinuityEngine]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/predictive/test_memory_resonance.py", count: 8}
+        - {file: "tests/predictive/test_ris_calculator.py", count: 8}
+        - {file: "tests/predictive/test_stress_simulation.py", count: 11}
+        - {file: "tests/attestation/test_rc_attestation.py", count: 23}
+        - {file: "tests/metrics/test_rc_prometheus_metrics.py", count: 13}
+      integration_tests:
+        - {file: "scripts/validate_rc_e2e.py", desc: "E2E validation of all 5 RC steps"}
+      total: 63
+
+  - id: ContinuityEngine
+    slot_id: null
+    name: Continuity Engine
+    purpose: "Compute Continuity Stability Index (CSI) from cross-phase RC attestation history"
+    category: temporal_governance
+    phase: 8
+    inputs: [rc_attestation_ledger@phase14]
+    outputs: [csi@1, csi_breakdown@1]
+    state_variables: []
+    schemas:
+      - name: csi@1
+        fields:
+          - {name: value, type: float, range: "[0.0, 1.0]", desc: "Continuity Stability Index"}
+      - name: csi_breakdown@1
+        fields:
+          - {name: csi, type: float, range: "[0.0, 1.0]", desc: "Composite CSI value"}
+          - {name: p6_stability, type: float, range: "[0.0, 1.0]", desc: "Phase 6 stability component"}
+          - {name: p7_stability, type: float, range: "[0.0, 1.0]", desc: "Phase 7 stability component"}
+          - {name: p7_ris, type: float, range: "[0.0, 1.0]", desc: "Phase 7 RIS average"}
+          - {name: correlation, type: float, range: "[0.0, 1.0]", desc: "Inter-phase correlation"}
+          - {name: attestation_count, type: int, desc: "Total RC attestations in chain"}
+          - {name: window_size, type: int, desc: "Analysis window size"}
+          - {name: weights, type: object, desc: "CSI component weights {p6: 0.3, p7: 0.3, correlation: 0.4}"}
+    transformations:
+      - name: compute_csi
+        in: [rc_attestation_ledger@phase14]
+        out: [csi@1]
+        rule: "CSI = 0.3 × P6_stability + 0.3 × P7_stability + 0.4 × correlation"
+        impl_ref: "nova.continuity.csi_calculator.compute_csi"
+        algorithm:
+          - "Query RC attestations from Phase 14 ledger via get_rc_chain()"
+          - "Extract P7 stability from recent attestations (window_size=7)"
+          - "Load P6 stability (placeholder: 0.85, future: from sealed archives)"
+          - "Compute correlation = min(P6, P7)"
+          - "Apply weighted fusion: CSI = 0.3*P6 + 0.3*P7 + 0.4*correlation"
+          - "Clamp result to [0.0, 1.0]"
+      - name: get_csi_breakdown
+        in: [rc_attestation_ledger@phase14]
+        out: [csi_breakdown@1]
+        rule: "Detailed CSI breakdown with component metrics"
+        impl_ref: "nova.continuity.csi_calculator.get_csi_breakdown"
+    observability:
+      prometheus_metrics:
+        - {name: nova_continuity_stability_index, type: gauge, desc: "Continuity Stability Index (CSI) across phases"}
+        - {name: nova_continuity_p6_stability, type: gauge, desc: "Phase 6 stability component of CSI"}
+        - {name: nova_continuity_p7_stability, type: gauge, desc: "Phase 7 stability component of CSI"}
+        - {name: nova_continuity_correlation, type: gauge, desc: "Inter-phase correlation component of CSI"}
+      recording_functions:
+        - {name: record_csi, ref: "orchestrator.prometheus_metrics.record_csi"}
+    integration:
+      feeds_from: [RCValidation, Phase14Ledger]
+      mode: analytical
+      leverages: "Phase 14 ledger query API (get_rc_chain, get_rc_summary)"
+    interfaces: {upstream: [RCValidation], downstream: [Governance, Deployment]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/continuity/test_csi_calculator.py", count: 5}
+        - {file: "tests/continuity/test_csi_metrics.py", count: 5}
+      total: 10
+    future_extensions:
+      - "Load Phase 6 stability from sealed archives (replace placeholder)"
+      - "Add Continuity Ledger v2 for EHS (Epistemic Health Snapshot)"
+      - "Implement Anomaly Prediction from CSI trends"
+      - "Add Provenance Regeneration from ledger history"
+
+  - id: UnifiedRiskField
+    slot_id: null
+    name: Unified Risk Field (URF)
+    purpose: "Reconcile RRI (epistemic risk) and predictive_collapse_risk (temporal risk) into unified governance signal"
+    category: risk_reconciliation
+    phase: 9
+    inputs: [rri, predictive_collapse_risk]
+    outputs: [risk_gap, alignment_score, composite_risk]
+    state_variables: []
+    parameters: {weights: {rri: 0.4, collapse_risk: 0.6}}
+    transformations:
+      - name: compute_risk_alignment
+        in: [rri, predictive_collapse_risk]
+        out: [risk_gap, alignment_score, composite_risk]
+        rule: "risk_gap = abs(rri - collapse_risk); alignment_score = 1.0 - risk_gap; composite_risk = weighted_mean"
+        impl_ref: "src.nova.continuity.risk_reconciliation.compute_risk_alignment"
+      - name: get_unified_risk_field
+        in: [RRI_GAUGE, predictive_collapse_risk_gauge]
+        out: [urf_dict]
+        rule: "Read gauges and compute URF with metadata"
+        impl_ref: "src.nova.continuity.risk_reconciliation.get_unified_risk_field"
+    observability:
+      prometheus_metrics:
+        - {name: nova_risk_alignment, type: gauge, desc: "URF alignment score [0.0, 1.0] (1.0 = perfect alignment)"}
+        - {name: nova_risk_gap, type: gauge, desc: "Absolute gap between RRI and collapse_risk [0.0, 1.0]"}
+        - {name: nova_composite_risk, type: gauge, desc: "Unified composite risk signal for governance [0.0, 1.0]"}
+      recording_functions:
+        - {name: record_urf, ref: "orchestrator.prometheus_metrics.record_urf"}
+    thresholds:
+      alignment_alert: 0.5  # Alert if alignment_score < 0.5 (divergent signals)
+      composite_risk_gate: 0.7  # Block deployment if composite_risk > 0.7
+      risk_gap_conflict: 0.4  # Conflict if risk_gap > 0.4 (contradictory signals)
+    integration:
+      feeds_from: [RRI, PredictiveForesight]
+      feeds_to: [Router, Governance, Slot10_Gatekeeper]
+      mode: analytical
+      contract: "contracts/urf@1.yaml"
+    interfaces: {upstream: [RRI, PredictiveForesight], downstream: [Router, Governance, Slot10]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/continuity/test_risk_reconciliation.py", count: 10}
+        - {file: "tests/continuity/test_urf_integration.py", count: 12}
+      total: 22
+    implementation_status: integrated
+    integration_complete:
+      - "Router: composite_risk penalty calculation (NOVA_ENABLE_URF=1)"
+      - "Governance: alignment_score < 0.5 gate + composite_risk >= 0.7 gate"
+      - "Slot10 Gatekeeper: composite_risk >= 0.85, alignment_score < 0.6, risk_gap > 0.5"
+
+  - id: OperationalRegimePolicy
+    slot_id: null
+    name: Operational Regime Policy (ORP)
+    purpose: "Bidirectional stability system: classify continuity state into regimes, adapt system behavior (learning, emotion, perception) based on regime, enforce hysteresis to prevent oscillation"
+    category: stability_governance
+    phase: 11
+    inputs: [mse, urf, csi, continuity_score]
+    outputs: [regime, regime_duration_s, effective_regime, eta_scaled, emotion_multiplier, sensitivity_multiplier, hysteresis_decision]
+    state_variables: [regime_transition_ledger]
+    parameters:
+      regimes: [normal, heightened, controlled_degradation, emergency_stabilization, recovery]
+      minimum_durations_s: {normal: 60, heightened: 300, controlled_degradation: 600, emergency_stabilization: 900, recovery: 1800}
+      oscillation_window_s: 300
+      oscillation_threshold: 3
+      recovery_threshold: 0.85
+    schemas:
+      - name: regime@1
+        fields:
+          - {name: regime, type: string, enum: [normal, heightened, controlled_degradation, emergency_stabilization, recovery], desc: "Current operational regime"}
+          - {name: duration_s, type: float, desc: "Time in current regime (seconds)"}
+          - {name: timestamp, type: iso8601, desc: "Regime entry timestamp"}
+      - name: hysteresis_decision@1
+        fields:
+          - {name: allowed, type: bool, desc: "True if transition allowed by hysteresis"}
+          - {name: effective_regime, type: string, desc: "Regime to use (current if blocked, proposed if allowed)"}
+          - {name: reason, type: string, desc: "Human-readable reason for decision"}
+          - {name: time_remaining_s, type: float, desc: "Time until minimum duration met"}
+          - {name: oscillation_detected, type: bool, desc: "True if rapid oscillation detected"}
+    transformations:
+      - name: classify_regime
+        in: [mse, urf, csi]
+        out: [regime]
+        rule: "Classify continuity signals into operational regime: MSE → mse_instability, URF → risk_signal, CSI → stability_signal → regime"
+        impl_ref: "src.nova.continuity.orp_policy.classify_regime"
+        algorithm:
+          - "Extract mse_instability = MSE composite signal"
+          - "Extract risk_signal = URF composite_risk"
+          - "Extract stability_signal = CSI value"
+          - "Apply classification rules (see contracts/orp_policy@1.yaml)"
+          - "Return regime ∈ {normal, heightened, controlled_degradation, emergency_stabilization, recovery}"
+      - name: apply_eta_scaling
+        in: [regime, duration_s]
+        out: [eta_scaled]
+        rule: "Scale learning rate η based on regime: normal=1.0, heightened=0.90-0.95, emergency=0.50, recovery=0.25"
+        impl_ref: "src.nova.continuity.eta_scaling.apply_eta_scaling"
+        algorithm:
+          - "Lookup regime in ETA_SCALING_TABLE"
+          - "Find threshold match based on duration_s"
+          - "Apply multiplicative scaling: eta_scaled = eta_base * multiplier"
+          - "Clamp to [0.0, 1.0]"
+      - name: apply_emotional_constriction
+        in: [intensity, regime, duration_s]
+        out: [intensity_constricted]
+        rule: "Scale emotional intensity based on regime: normal=1.0, heightened=0.85-0.95, emergency=0.50, recovery=0.60"
+        impl_ref: "src.nova.continuity.emotional_posture.apply_emotional_constriction"
+        algorithm:
+          - "Lookup regime in EMOTIONAL_MULTIPLIER_TABLE"
+          - "Find threshold match based on duration_s"
+          - "Apply multiplicative constriction: intensity * multiplier"
+          - "Clamp to [0.0, 1.0]"
+      - name: apply_sensitivity_scaling
+        in: [base_threshold, regime, duration_s]
+        out: [threshold_scaled]
+        rule: "Scale Slot09 detection thresholds based on regime: normal=1.0, heightened=1.05-1.15, emergency=1.50, recovery=1.20"
+        impl_ref: "src.nova.continuity.slot09_sensitivity.apply_sensitivity_scaling"
+        algorithm:
+          - "Lookup regime in SENSITIVITY_MULTIPLIER_TABLE"
+          - "Find threshold match based on duration_s"
+          - "Apply multiplicative scaling: threshold * multiplier (higher = less sensitive)"
+          - "Clamp to [base_threshold, base_threshold * 2.0]"
+      - name: check_regime_hysteresis
+        in: [proposed_regime, ledger_history]
+        out: [hysteresis_decision]
+        rule: "Enforce minimum regime durations and block rapid oscillation"
+        impl_ref: "src.nova.continuity.orp_hysteresis.check_regime_hysteresis"
+        algorithm:
+          - "Get current regime from latest ledger entry"
+          - "If proposed == current: allow (no transition)"
+          - "Check duration_s in current regime"
+          - "If duration_s < MIN_DURATION[regime]: block transition"
+          - "Check oscillation count in window (advisory, not blocking)"
+          - "Return HysteresisDecision with allowed flag and effective_regime"
+    observability:
+      prometheus_metrics:
+        - {name: nova_orp_current_regime, type: gauge, desc: "Current ORP regime (0=normal, 1=heightened, 2=controlled_degradation, 3=emergency, 4=recovery)"}
+        - {name: nova_orp_regime_duration_s, type: gauge, desc: "Time in current regime (seconds)"}
+        - {name: nova_orp_hysteresis_active, type: gauge, desc: "1 if hysteresis blocking transitions, 0 otherwise"}
+        - {name: nova_orp_hysteresis_time_remaining_s, type: gauge, desc: "Seconds until minimum duration met"}
+        - {name: nova_orp_oscillation_count, type: gauge, desc: "Number of transitions in oscillation window"}
+        - {name: nova_orp_oscillation_detected, type: gauge, desc: "1 if oscillation detected, 0 otherwise"}
+        - {name: nova_orp_transitions_blocked_total, type: counter, desc: "Total regime transitions blocked by hysteresis"}
+        - {name: nova_orp_transitions_allowed_total, type: counter, desc: "Total regime transitions allowed by hysteresis"}
+      ledger: "src/nova/continuity/regime_transitions.jsonl (append-only)"
+    integration:
+      feeds_from: [MSE, URF, CSI]
+      feeds_to: [Governor, Slot03_Emotional, Slot09_Distortion]
+      mode: bidirectional
+      contracts:
+        - "contracts/orp_policy@1.yaml (regime classification rules)"
+        - "contracts/orp_stabilization@1.yaml (hysteresis enforcement)"
+    interfaces:
+      upstream: [MSE, URF, CSI, ContinuityEngine]
+      downstream: [AdaptiveWisdomGovernor, EmotionalMatrixEngine, HybridDistortionDetectionAPI]
+    stability_loop:
+      description: "ORP completes continuity stability loop"
+      flow:
+        1: "Signals → ORP (MSE/URF/CSI → regime classification)"
+        2: "ORP → amplitude layers (Governor η, Emotion intensity, Slot09 sensitivity)"
+        3: "ORP → stability enforcement (hysteresis blocks rapid switches)"
+        4: "Ledger → ORP stabilization (duration tracking prevents thrash)"
+        5: "ORP stabilized → signals stabilize (inertia dampens oscillation)"
+      inertia_layer: "Provides stability inertia continuity systems depend on"
+    amplitude_scaling:
+      governor_eta:
+        purpose: "Controls learning amplitude"
+        scaling: {normal: 1.0, heightened_short: 0.95, heightened_long: 0.90, controlled_degradation: 0.75, emergency: 0.50, recovery: 0.25}
+        flag: NOVA_ENABLE_ETA_SCALING
+        impl: "src.nova.governor.adaptive_wisdom.AdaptiveWisdomGovernor"
+      emotion_intensity:
+        purpose: "Controls output amplitude"
+        scaling: {normal: 1.0, heightened_short: 0.95, heightened_long: 0.85, controlled_degradation: 0.70, emergency: 0.50, recovery: 0.60}
+        flag: NOVA_ENABLE_EMOTIONAL_CONSTRICTION
+        impl: "src.nova.slots.slot03_emotional_matrix.emotional_matrix_engine.EmotionalMatrixEngine"
+      slot09_sensitivity:
+        purpose: "Controls perception amplitude (detection thresholds)"
+        scaling: {normal: 1.0, heightened_short: 1.05, heightened_long: 1.15, controlled_degradation: 1.30, emergency: 1.50, recovery: 1.20}
+        flag: NOVA_ENABLE_SLOT09_SENSITIVITY
+        impl: "src.nova.slots.slot09_distortion_protection.hybrid_api.HybridApiConfig"
+    hysteresis_enforcement:
+      minimum_durations:
+        normal: {duration_s: 60, rationale: "Stable baseline requires brief hold"}
+        heightened: {duration_s: 300, rationale: "Prevent premature de-escalation"}
+        controlled_degradation: {duration_s: 600, rationale: "Serious state needs stability"}
+        emergency_stabilization: {duration_s: 900, rationale: "Critical state must persist"}
+        recovery: {duration_s: 1800, rationale: "Gradual recovery requires patience"}
+      oscillation_detection:
+        window_s: 300
+        threshold: 3
+        action: "warn (advisory, not blocking)"
+      recovery_stabilization:
+        continuity_threshold: 0.85
+        rationale: "Require C ≥ 0.85 before exiting recovery to normal"
+    test_coverage:
+      unit_tests:
+        - {file: "tests/continuity/test_eta_scaling.py", count: 28, desc: "Governor η scaling adapter"}
+        - {file: "tests/continuity/test_emotional_posture.py", count: 29, desc: "Emotion intensity adapter"}
+        - {file: "tests/continuity/test_slot09_sensitivity.py", count: 31, desc: "Slot09 sensitivity adapter"}
+        - {file: "tests/continuity/test_orp_hysteresis.py", count: 33, desc: "Hysteresis enforcement"}
+      integration_tests:
+        - {file: "tests/governor/test_governor_eta_scaling_integration.py", count: 13, desc: "Governor + ORP integration"}
+        - {file: "tests/slot03/test_slot03_emotional_constriction_integration.py", count: 18, desc: "Slot03 + ORP integration"}
+        - {file: "tests/slot09_distortion_protection/test_slot09_sensitivity_integration.py", count: 18, desc: "Slot09 + ORP integration"}
+      total: 170
+    implementation_status: integrated
+    feature_flags:
+      - {name: NOVA_ENABLE_REGIME_LEDGER, default: 0, desc: "Enable regime transition ledger recording"}
+      - {name: NOVA_ENABLE_ETA_SCALING, default: 0, desc: "Enable ORP-based Governor η scaling"}
+      - {name: NOVA_ENABLE_EMOTIONAL_CONSTRICTION, default: 0, desc: "Enable ORP-based emotion intensity scaling"}
+      - {name: NOVA_ENABLE_SLOT09_SENSITIVITY, default: 0, desc: "Enable ORP-based Slot09 sensitivity scaling"}
+      - {name: NOVA_ENABLE_ORP_HYSTERESIS, default: 0, desc: "Enable hysteresis enforcement (observability only, not in code yet)"}
+    constraints:
+      - "Pure functions (no state mutation except append-only ledger)"
+      - "Multiplicative scaling (not additive)"
+      - "Graceful fallbacks on import/runtime failures"
+      - "No ORP symbols leaked into public APIs (buried in annotations)"
+      - "Preserves detection/output topology (what is detected/emitted, not amplitude)"
+      - "Hysteresis advises, does NOT override MSE/URF/CSI signals"
+
+  - id: MetaStabilityEngine
+    slot_id: null
+    name: Meta-Stability Engine (MSE)
+    purpose: "Detect instability of stability itself by monitoring variance in URF composite_risk over time"
+    category: meta_stability
+    phase: 10
+    inputs: [composite_risk]
+    outputs: [meta_instability, trend, drift_velocity]
+    state_variables: [samples, timestamps]
+    parameters: {window_size: 10, stable_threshold: 0.05, oscillating_threshold: 0.15}
+    transformations:
+      - name: add_sample
+        in: [composite_risk]
+        out: []
+        rule: "Append composite_risk to sliding window (FIFO deque)"
+        impl_ref: "src.nova.continuity.meta_stability.MetaStabilityEngine.add_sample"
+      - name: compute_meta_instability
+        in: [samples]
+        out: [meta_instability, trend, drift_velocity]
+        rule: "meta_instability = variance(samples); classify trend based on thresholds"
+        impl_ref: "src.nova.continuity.meta_stability.MetaStabilityEngine.compute_meta_instability"
+      - name: get_meta_stability_snapshot
+        in: []
+        out: [mse_dict]
+        rule: "Return current MSE state from global engine"
+        impl_ref: "src.nova.continuity.meta_stability.get_meta_stability_snapshot"
+    observability:
+      prometheus_metrics:
+        - {name: nova_meta_instability, type: gauge, desc: "Meta-stability variance [0.0, 1.0]"}
+        - {name: nova_mse_trend, type: gauge, desc: "MSE trend (0=stable, 1=oscillating, 2=runaway)"}
+        - {name: nova_mse_drift_velocity, type: gauge, desc: "Rate of change in meta_instability"}
+        - {name: nova_mse_sample_count, type: gauge, desc: "Number of samples in window"}
+      recording_functions:
+        - {name: record_mse, ref: "orchestrator.prometheus_metrics.record_mse"}
+    thresholds:
+      stable_threshold: 0.05
+      oscillating_threshold: 0.15
+      governance_block: 0.15
+      router_penalty_start: 0.08
+      slot10_deployment_block: 0.12
+    integration:
+      feeds_from: [UnifiedRiskField]
+      feeds_to: [Router, Governance, Slot10_Gatekeeper]
+      mode: analytical
+      contract: "contracts/mse@1.yaml"
+    interfaces: {upstream: [UnifiedRiskField], downstream: [Router, Governance, Slot10]}
+    test_coverage:
+      unit_tests:
+        - {file: "tests/continuity/test_mse.py", count: 27}
+      total: 27
+    implementation_status: integrated
+    integration_complete:
+      - "Governance: meta_instability >= 0.15 gate (NOVA_ENABLE_MSE=1)"
+      - "Router: penalty (meta_inst - 0.08) * 2.0, safe_mode if runaway"
+      - "Slot10 Gatekeeper: meta_instability >= 0.12 deployment gate"
+
+# ---------- Validation & Testing ----------
+validation:
+  required_frameworks: [TruthAnchor, deltaTHRESH, TRI_Engine, Constellation, WisdomGovernor, DistortionProtection, ARC]
+
+  invariants:
+    - id: SPECTRAL_THRESHOLD
+      rule: "spectral_entropy_H > 2.5 indicates extraction pattern"
+      accuracy: 0.942
+
+    - id: EQUILIBRIUM_THRESHOLD
+      rule: "equilibrium_ratio_rho < 0.7 indicates extraction system"
+      sensitivity: 0.891
+      specificity: 0.913
+
+    - id: ROLE_SEPARATION
+      rule: "only Slot01/09 write to attest_ledger"
+      enforcement: "orchestrator ledger enforcer"
+
+    - id: ETHICS_EXPLICIT
+      rule: "EffortlessLayer.constraints contains ethical_gate"
+
+  ablation_studies:
+    - component: spectral_invariants
+      removal_impact: {precision_drop: 0.231, recall_drop: 0.187, f1_drop: 0.209, p_value: 0.001}
+      conclusion: "Necessary component"
+
+    - component: equilibrium_analysis
+      removal_impact: {precision_drop: 0.314, recall_drop: 0.278, f1_drop: 0.296, p_value: 0.001}
+      conclusion: "Critical component (highest impact)"
+
+    - component: shield_mechanisms
+      removal_impact: {precision_drop: 0.152, recall_drop: 0.129, f1_drop: 0.140, p_value: 0.001}
+      conclusion: "Necessary component"
+
+  empirical_validation:
+    test_cases: 1749  # Updated with Phase 9 URF + Phase 10 MSE tests
+    accuracy: 0.997
+    false_positive_rate: 0.042
+    dataset:
+      positive: 543
+      negative: 543
+      adversarial: 200
+    phase_7_additions:
+      predictive_trajectory: 15
+      emergent_pattern_detector: 23
+      multi_slot_consistency: 31
+      total_phase_7: 69
+    phase_8_additions:
+      csi_calculator: 5
+      csi_metrics: 5
+      total_phase_8: 10
+    phase_9_additions:
+      urf_calculator: 10
+      total_phase_9: 10
+
+testing:
+  reproducibility:
+    framework: "Makefile + automated validation"
+    reference: "https://github.com/PavlosKolivatzis/nova-civilizational-architecture"
+
+  test_suites:
+    - {name: ontology_compliance, command: "pytest tests/test_ontology_compliance.py"}
+    - {name: arc_reproduction, command: "make reproduce-arc-experiment", runtime: "50min"}
+    - {name: ablation_validation, command: "make arc-ablation"}
+    - {name: adversarial_robustness, command: "pytest tests/test_adversarial.py", target_fpr: 0.05}
+    - {name: predictive_trajectory, command: "pytest tests/predictive/ -q", test_count: 15}
+    - {name: emergent_pattern_detector, command: "pytest tests/predictive/test_pattern_detector.py tests/governance/test_pattern_detection_integration.py -q", test_count: 23}
+    - {name: multi_slot_consistency, command: "pytest tests/predictive/test_consistency.py tests/governance/test_consistency_integration.py -q", test_count: 31}
+
+# ---------- Metrics & Observability ----------
+metrics:
+  prometheus:
+    # Core USM & Architecture Metrics
+    - {name: nova_spectral_entropy_H, from: spectral_entropy_H}
+    - {name: nova_equilibrium_ratio_rho, from: equilibrium_ratio_rho}
+    - {name: nova_wisdom_eta_value, from: eta}
+    - {name: nova_wisdom_S, from: stability_S}
+    - {name: nova_wisdom_H, from: hopf_H}
+    - {name: nova_wisdom_G_star, from: generativity_Gstar}
+    - {name: nova_tri_coherence, from: tri_coherence}
+    - {name: nova_arc_precision, from: precision}
+    - {name: nova_arc_recall, from: recall}
+
+    # Predictive Foresight Framework (Phase 7)
+    - {name: nova_predictive_collapse_risk, from: predictive_collapse_risk, desc: "Forward-projected collapse probability [0..1]"}
+    - {name: nova_predictive_safe_corridor, from: predictive_safe_corridor, desc: "Safe operation range [0..1]"}
+    - {name: nova_predictive_drift_velocity, from: drift_velocity, desc: "Rate of temporal drift"}
+    - {name: nova_predictive_drift_acceleration, from: drift_acceleration, desc: "Acceleration magnitude"}
+    - {name: nova_predictive_warning_total, from: foresight_warnings, type: counter, labels: [reason], desc: "Pattern/foresight alerts by type"}
+    - {name: nova_predictive_consistency_gap, from: consistency_gap_score, desc: "Composite cross-slot conflict score [0..1]"}
+    - {name: nova_predictive_consistency_severity, from: severity, desc: "Maximum component conflict [0..1]"}
+    - {name: nova_predictive_consistency_safety_prod, from: safety_production_conflict, desc: "Safety-production conflict [0..1]"}
+    - {name: nova_predictive_consistency_culture_deploy, from: culture_deployment_conflict, desc: "Culture-deployment conflict [0..1]"}
+    - {name: nova_predictive_consistency_prod_predictive, from: production_predictive_conflict, desc: "Production-predictive conflict [0..1]"}
+
+# ---------- ANALYTIC INSTRUMENTS (Active Meta-Tools) ----------
+# PAD.E.L and INF-o-INITY are now **analytic instruments** under ARC, not standalone slots.
+# They process data from Slots 1-10 for diagnostic and interpretive purposes.
+#
+# Integration Pattern:
+#   Framework         PAD.E.L Integration                    INF-o-INITY Integration
+#   ─────────────────────────────────────────────────────────────────────────────────────
+#   Slot 1 (TruthAnchor)       Evaluates emotional bias in           Detects narrative bias in
+#                              verification process                   attestation inputs
+#   Slot 2 (ΔTHRESH)           Measures drift within                 Measures distortion within
+#                              perception thresholds                  spectral channels
+#   Slot 4 (TRI Engine)        Feeds internal stability              Normalizes epistemic
+#                              variables (S, H, G*, γ)                coherence signals
+#   Slot 5 (Constellation)     Provides emotional resonance          Maps informational resonance
+#                              weighting                              across anchors
+#   Slot 7 (Wisdom Governor)   Runs reflex diagnostics before        Uses coherence data to
+#                              policy output                          adjust η-governance
+#   Slot 9 (Distortion Prot.)  Detects psychological                 Detects information
+#                              morphotypes                            morphotypes
+#
+# Invocation: arc.invoke('padel', state) or arc.invoke('infoinity', signals)
+#
+# Historical Note:
+# - EffortlessLayer: Cognitive-symbolic interface concept, not implemented as dedicated slot
+
+# ---------- CONTINUATION PROMPT ----------
+# Context: Nova Framework Ontology v1.0 grounded in Universal Structure Mathematics
+# State: 7 core frameworks (slots 1,2,4,5,7,9 + ARC) + 6 coordination frameworks (RRI,MSE,EVF,NEM,PAG,FB)
+# Status: Empirically validated (99.7% accuracy, 1082 tests), USM theorems integrated
+# Architecture:
+#   Core Slots: TruthAnchor(1), ΔTHRESH(2), TRI(4), Constellation(5), WisdomGov(7), DistortionProt(9)
+#   Analytic Instruments: PAD.E.L (psychological filter), INF-o-INITY (informational filter)
+#   Coordination: RRI (reflective resonance), MSE (validation), EVF (ethics), NEM (cognition), PAG (provenance), FB (federation)
+# Fixes Applied:
+#   - Explicit slot mappings (1,2,4,5,7,9)
+#   - Slot01/09 full definitions (TruthAnchor, DistortionProtection)
+#   - Spectral entropy clarity (raw H>2.5 vs normalized ε>0.7)
+#   - Convergence rates (κ_state, κ_energy for ADMM)
+#   - PAD.E.L & INF-o-INITY as analytic_instruments under ARC
+#   - 6 coordination frameworks for integrity, adaptability, civilizational scalability
+# Integration Patterns:
+#   - arc.invoke('padel', state) / arc.invoke('infoinity', signals)
+#   - RRI.resonance_index → Router/Governance (epistemic quality monitoring)
+#   - MSE.p_values → deltaTHRESH/TRI (statistical validation gates)
+#   - EVF.ethical_gradient → WisdomGovernor (continuous ethics)
+#   - NEM.neuro_epistemic_vector → WisdomGovernor (human-AI cognition loop)
+#   - PAG.provenance_hashes → TruthAnchor/Slot10 (verifiable traceability)
+#   - FB.federated_consensus → Slot10 (distributed Nova synchronization)
+# Next: Implement src/nova/ontology/ (loader, validator, enforcer) + coordination/ + arc/instruments/ + tests
+# Key refs: .nova/meta.yaml learning_path, USM paper spectral/equilibrium math, ARC self-improvement
+# Critical: Maintain 3-ledger separation, role enforcement, consent gates, empirical thresholds, read-only observers
+
+

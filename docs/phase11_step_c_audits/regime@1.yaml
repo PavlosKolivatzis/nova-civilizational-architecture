@@ -1,0 +1,122 @@
+# ============================================================================
+# Regime Contract - Phase 11
+# ============================================================================
+# Version: 1.0.0
+# Purpose: Define operational regime data structure for ORP system
+# ============================================================================
+
+version: "1.0.0"
+contract_id: "regime@1"
+domain: "continuity"
+stability_level: "production"
+
+# ============================================================================
+# SCHEMA
+# ============================================================================
+
+schema:
+  type: object
+  required: [regime, duration_s, timestamp]
+  properties:
+    regime:
+      type: string
+      enum:
+        - normal
+        - heightened
+        - controlled_degradation
+        - emergency_stabilization
+        - recovery
+      description: "Current operational regime based on continuity signals"
+
+    duration_s:
+      type: number
+      minimum: 0.0
+      description: "Time spent in current regime (seconds)"
+
+    timestamp:
+      type: string
+      format: iso8601
+      description: "ISO8601 timestamp when regime was entered (UTC)"
+
+# ============================================================================
+# SEMANTICS
+# ============================================================================
+
+semantics:
+  regime:
+    normal:
+      description: "Stable baseline operation"
+      condition: "MSE stable, URF low, CSI high"
+      implications: "No amplitude adjustments, baseline sensitivity"
+
+    heightened:
+      description: "Elevated caution without degradation"
+      condition: "MSE oscillating OR URF moderate"
+      implications: "Modest amplitude reduction, increased detection sensitivity"
+
+    controlled_degradation:
+      description: "Active degradation but not critical"
+      condition: "MSE unstable OR URF high"
+      implications: "Significant amplitude reduction, high detection sensitivity"
+
+    emergency_stabilization:
+      description: "Critical instability requiring intervention"
+      condition: "MSE critically unstable OR URF very high"
+      implications: "Severe amplitude reduction, maximum detection sensitivity"
+
+    recovery:
+      description: "Gradual recovery from degradation"
+      condition: "Continuity score improving, prior degradation"
+      implications: "Minimal learning amplitude, gradual sensitivity normalization"
+
+  duration_s:
+    description: "Monotonically increasing while in regime, reset to 0 on transition"
+    update_frequency: "Per ledger append (typically per regime check)"
+
+  timestamp:
+    description: "UTC timestamp in ISO8601 format (e.g., 2025-01-01T00:00:00Z)"
+    timezone: "Always UTC (Z suffix)"
+
+# ============================================================================
+# INVARIANTS
+# ============================================================================
+
+invariants:
+  - "regime ∈ {normal, heightened, controlled_degradation, emergency_stabilization, recovery}"
+  - "duration_s ≥ 0.0"
+  - "timestamp in ISO8601 format with Z suffix"
+  - "duration_s increases monotonically within regime"
+  - "duration_s resets to 0.0 on regime transition"
+
+# ============================================================================
+# EXAMPLES
+# ============================================================================
+
+examples:
+  - description: "Normal regime at startup"
+    value:
+      regime: "normal"
+      duration_s: 120.0
+      timestamp: "2025-01-01T00:00:00Z"
+
+  - description: "Heightened regime during signal oscillation"
+    value:
+      regime: "heightened"
+      duration_s: 450.0
+      timestamp: "2025-01-01T00:05:00Z"
+
+  - description: "Emergency stabilization during critical instability"
+    value:
+      regime: "emergency_stabilization"
+      duration_s: 1200.0
+      timestamp: "2025-01-01T00:15:00Z"
+
+  - description: "Recovery regime after stabilization"
+    value:
+      regime: "recovery"
+      duration_s: 2400.0
+      timestamp: "2025-01-01T01:00:00Z"
+
+# ============================================================================
+# END OF CONTRACT
+# ============================================================================

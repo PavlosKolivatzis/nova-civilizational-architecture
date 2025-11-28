@@ -1,0 +1,220 @@
+{
+  "regimes": [
+    "normal",
+    "heightened",
+    "controlled_degradation",
+    "emergency_stabilization",
+    "recovery"
+  ],
+  "matrix": {
+    "normal_to_normal": {
+      "kappa_state": 0.95,
+      "kappa_energy": 1.9,
+      "stability_margin": 0.8,
+      "convergence_time": 30.0,
+      "oscillation_risk": 0.05,
+      "recovery_rate": 0.9
+    },
+    "normal_to_heightened": {
+      "kappa_state": 0.765,
+      "kappa_energy": 1.53,
+      "stability_margin": 0.6,
+      "convergence_time": 58.5,
+      "oscillation_risk": 0.06,
+      "recovery_rate": 0.7
+    },
+    "normal_to_controlled_degradation": {
+      "kappa_state": 0.76,
+      "kappa_energy": 1.52,
+      "stability_margin": 0.4,
+      "convergence_time": 58.5,
+      "oscillation_risk": 0.06,
+      "recovery_rate": 0.5
+    },
+    "normal_to_emergency_stabilization": {
+      "kappa_state": 0.76,
+      "kappa_energy": 1.52,
+      "stability_margin": 0.2,
+      "convergence_time": 58.5,
+      "oscillation_risk": 0.06,
+      "recovery_rate": 0.3
+    },
+    "normal_to_recovery": {
+      "kappa_state": 0.76,
+      "kappa_energy": 1.52,
+      "stability_margin": 0.5,
+      "convergence_time": 58.5,
+      "oscillation_risk": 0.06,
+      "recovery_rate": 0.6
+    },
+    "heightened_to_normal": {
+      "kappa_state": 1.02,
+      "kappa_energy": 2.04,
+      "stability_margin": 0.7,
+      "convergence_time": 109.2,
+      "oscillation_risk": 0.12,
+      "recovery_rate": 0.8
+    },
+    "heightened_to_heightened": {
+      "kappa_state": 0.85,
+      "kappa_energy": 1.7,
+      "stability_margin": 0.6,
+      "convergence_time": 120.0,
+      "oscillation_risk": 0.15,
+      "recovery_rate": 0.7
+    },
+    "heightened_to_controlled_degradation": {
+      "kappa_state": 0.68,
+      "kappa_energy": 1.36,
+      "stability_margin": 0.4,
+      "convergence_time": 234.0,
+      "oscillation_risk": 0.18,
+      "recovery_rate": 0.5
+    },
+    "heightened_to_emergency_stabilization": {
+      "kappa_state": 0.68,
+      "kappa_energy": 1.36,
+      "stability_margin": 0.2,
+      "convergence_time": 234.0,
+      "oscillation_risk": 0.18,
+      "recovery_rate": 0.3
+    },
+    "heightened_to_recovery": {
+      "kappa_state": 0.68,
+      "kappa_energy": 1.36,
+      "stability_margin": 0.5,
+      "convergence_time": 234.0,
+      "oscillation_risk": 0.18,
+      "recovery_rate": 0.6
+    },
+    "controlled_degradation_to_normal": {
+      "kappa_state": 0.84,
+      "kappa_energy": 1.68,
+      "stability_margin": 0.6000000000000001,
+      "convergence_time": 273.0,
+      "oscillation_risk": 0.24,
+      "recovery_rate": 0.7
+    },
+    "controlled_degradation_to_heightened": {
+      "kappa_state": 0.84,
+      "kappa_energy": 1.68,
+      "stability_margin": 0.5,
+      "convergence_time": 273.0,
+      "oscillation_risk": 0.24,
+      "recovery_rate": 0.6
+    },
+    "controlled_degradation_to_controlled_degradation": {
+      "kappa_state": 0.7,
+      "kappa_energy": 1.4,
+      "stability_margin": 0.4,
+      "convergence_time": 300.0,
+      "oscillation_risk": 0.3,
+      "recovery_rate": 0.5
+    },
+    "controlled_degradation_to_emergency_stabilization": {
+      "kappa_state": 0.5599999999999999,
+      "kappa_energy": 1.1199999999999999,
+      "stability_margin": 0.2,
+      "convergence_time": 585.0,
+      "oscillation_risk": 0.36,
+      "recovery_rate": 0.3
+    },
+    "controlled_degradation_to_recovery": {
+      "kappa_state": 0.675,
+      "kappa_energy": 1.35,
+      "stability_margin": 0.4,
+      "convergence_time": 585.0,
+      "oscillation_risk": 0.36,
+      "recovery_rate": 0.5
+    },
+    "emergency_stabilization_to_normal": {
+      "kappa_state": 0.6,
+      "kappa_energy": 1.2,
+      "stability_margin": 0.5,
+      "convergence_time": 546.0,
+      "oscillation_risk": 0.4,
+      "recovery_rate": 0.6
+    },
+    "emergency_stabilization_to_heightened": {
+      "kappa_state": 0.6,
+      "kappa_energy": 1.2,
+      "stability_margin": 0.4,
+      "convergence_time": 546.0,
+      "oscillation_risk": 0.4,
+      "recovery_rate": 0.5
+    },
+    "emergency_stabilization_to_controlled_degradation": {
+      "kappa_state": 0.6,
+      "kappa_energy": 1.2,
+      "stability_margin": 0.30000000000000004,
+      "convergence_time": 546.0,
+      "oscillation_risk": 0.4,
+      "recovery_rate": 0.4
+    },
+    "emergency_stabilization_to_emergency_stabilization": {
+      "kappa_state": 0.5,
+      "kappa_energy": 1.0,
+      "stability_margin": 0.2,
+      "convergence_time": 600.0,
+      "oscillation_risk": 0.5,
+      "recovery_rate": 0.3
+    },
+    "emergency_stabilization_to_recovery": {
+      "kappa_state": 0.675,
+      "kappa_energy": 1.35,
+      "stability_margin": 0.2,
+      "convergence_time": 1170.0,
+      "oscillation_risk": 0.6,
+      "recovery_rate": 0.3
+    },
+    "recovery_to_normal": {
+      "kappa_state": 0.8999999999999999,
+      "kappa_energy": 1.7999999999999998,
+      "stability_margin": 0.65,
+      "convergence_time": 819.0,
+      "oscillation_risk": 0.2,
+      "recovery_rate": 0.75
+    },
+    "recovery_to_heightened": {
+      "kappa_state": 0.8999999999999999,
+      "kappa_energy": 1.7999999999999998,
+      "stability_margin": 0.55,
+      "convergence_time": 819.0,
+      "oscillation_risk": 0.2,
+      "recovery_rate": 0.6499999999999999
+    },
+    "recovery_to_controlled_degradation": {
+      "kappa_state": 0.77,
+      "kappa_energy": 1.54,
+      "stability_margin": 0.45,
+      "convergence_time": 819.0,
+      "oscillation_risk": 0.2,
+      "recovery_rate": 0.55
+    },
+    "recovery_to_emergency_stabilization": {
+      "kappa_state": 0.55,
+      "kappa_energy": 1.1,
+      "stability_margin": 0.35,
+      "convergence_time": 819.0,
+      "oscillation_risk": 0.2,
+      "recovery_rate": 0.44999999999999996
+    },
+    "recovery_to_recovery": {
+      "kappa_state": 0.75,
+      "kappa_energy": 1.5,
+      "stability_margin": 0.5,
+      "convergence_time": 900.0,
+      "oscillation_risk": 0.25,
+      "recovery_rate": 0.6
+    }
+  },
+  "stability_analysis": {
+    "spectral_radius": 3.709704424711356,
+    "condition_number": 140.86429810177572,
+    "determinant": 0.0001425959999999999,
+    "trace": 3.75,
+    "average_convergence_rate": 0.7346,
+    "min_convergence_rate": 0.5,
+    "max_convergence_rate": 1.02
+  }
+}

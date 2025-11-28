@@ -1,0 +1,6 @@
+,normal,heightened,controlled_degradation,emergency_stabilization,recovery
+normal,1,1,0,0,0
+heightened,1,1,1,0,0
+controlled_degradation,0,1,1,1,0
+emergency_stabilization,0,0,0,1,1
+recovery,0,1,0,0,1

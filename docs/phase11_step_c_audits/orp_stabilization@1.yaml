@@ -1,0 +1,261 @@
+# ============================================================================
+# ORP Stabilization Contract - Phase 11.4
+# ============================================================================
+# Version: 1.0.0
+# Purpose: Define hysteresis enforcement and stability guarantees for ORP regimes
+# Scope: Cross-module synchronization of regime transitions
+# Enforcement: Advisory (provides stability recommendations, not hard blocks)
+# ============================================================================
+
+version: "1.0.0"
+contract_id: "orp_stabilization@1"
+domain: "continuity"
+slot_scope: ["governor", "slot03_emotional_matrix", "slot09_distortion_protection"]
+stability_level: "production"
+
+# ============================================================================
+# 1. MINIMUM REGIME DURATIONS
+# ============================================================================
+# Enforces minimum time in each regime before allowing transitions
+# Prevents rapid oscillation (e.g., NORMAL ↔ HEIGHTENED thrash)
+
+minimum_regime_durations:
+  normal:
+    duration_s: 60.0
+    rationale: "Stable baseline requires brief hold to prevent jitter"
+
+  heightened:
+    duration_s: 300.0
+    rationale: "Prevent premature de-escalation during temporary stability"
+
+  controlled_degradation:
+    duration_s: 600.0
+    rationale: "Serious degradation needs stability window for adaptation"
+
+  emergency_stabilization:
+    duration_s: 900.0
+    rationale: "Critical state must persist to avoid thrash during recovery attempts"
+
+  recovery:
+    duration_s: 1800.0
+    rationale: "Gradual recovery requires patience to prevent premature exit"
+
+# ============================================================================
+# 2. OSCILLATION DETECTION
+# ============================================================================
+# Detects rapid regime switching indicating instability
+
+oscillation_detection:
+  window_s: 300.0  # 5 minutes
+  threshold: 3     # More than 3 transitions in window = oscillating
+  action: "warn"   # Log warning but allow (observability, not hard block)
+
+  advisory:
+    - "Oscillation indicates signal instability or threshold misconfiguration"
+    - "Review MSE/URF/CSI thresholds if persistent oscillation detected"
+    - "Consider increasing minimum durations if oscillation continues"
+
+# ============================================================================
+# 3. RECOVERY STABILIZATION
+# ============================================================================
+# Prevents premature exit from recovery regime
+
+recovery_stabilization:
+  continuity_threshold: 0.85
+  rationale: "Require C ≥ 0.85 before exiting recovery to normal"
+  enforcement: "advisory"
+
+  stabilization_rules:
+    - condition: "current_regime == recovery AND proposed_regime == normal"
+      check: "continuity_score >= 0.85"
+      action: "block_if_false"
+      reason: "recovery_ramp_stabilization"
+
+    - condition: "current_regime == recovery AND proposed_regime != normal"
+      check: "always_true"
+      action: "allow"
+      reason: "recovery_to_degradation_allowed"
+
+# ============================================================================
+# 4. HYSTERESIS ALGORITHM
+# ============================================================================
+
+hysteresis_algorithm:
+  steps:
+    1: "Check current regime from ledger"
+    2: "Check duration_s in current regime"
+    3: "If duration_s < MIN_DURATION[regime]: block transition"
+    4: "Check oscillation count in window"
+    5: "If oscillating: warn but allow (advisory)"
+    6: "Allow transition if all checks pass"
+
+  constraints:
+    - "Pure function (reads ledger, no mutation)"
+    - "Blocks transitions ONLY if minimum duration not met"
+    - "Does NOT override MSE/URF/CSI signals (advises, not enforces)"
+    - "Exposes oscillation metrics for observability"
+    - "Synchronizes hysteresis across Governor/Emotion/Slot09"
+
+# ============================================================================
+# 5. CROSS-MODULE SYNCHRONIZATION
+# ============================================================================
+# Ensures all ORP-connected modules use same hysteresis logic
+
+synchronized_modules:
+  governor:
+    scaling: "eta"
+    impact: "learning amplitude"
+    hysteresis_source: "orp_hysteresis.check_regime_hysteresis"
+
+  slot03_emotional_matrix:
+    scaling: "emotional_intensity"
+    impact: "output amplitude"
+    hysteresis_source: "orp_hysteresis.check_regime_hysteresis"
+
+  slot09_distortion_protection:
+    scaling: "detection_sensitivity"
+    impact: "perception amplitude"
+    hysteresis_source: "orp_hysteresis.check_regime_hysteresis"
+
+synchronization_guarantee:
+  invariant: "All modules see same effective_regime after hysteresis check"
+  mechanism: "Shared orp_hysteresis module + regime_transition_ledger"
+  observability: "ORP_HYSTERESIS metrics expose sync state"
+
+# ============================================================================
+# 6. OBSERVABILITY METRICS
+# ============================================================================
+
+metrics:
+  orp_hysteresis_active:
+    type: "gauge"
+    description: "1 if hysteresis blocking transitions, 0 otherwise"
+    labels: ["current_regime"]
+
+  orp_hysteresis_time_remaining_s:
+    type: "gauge"
+    description: "Seconds until minimum duration met"
+    labels: ["current_regime"]
+
+  orp_hysteresis_oscillation_count:
+    type: "gauge"
+    description: "Number of transitions in oscillation window"
+    labels: []
+
+  orp_hysteresis_oscillation_detected:
+    type: "gauge"
+    description: "1 if oscillation detected, 0 otherwise"
+    labels: []
+
+  orp_hysteresis_transitions_blocked_total:
+    type: "counter"
+    description: "Total regime transitions blocked by hysteresis"
+    labels: ["from_regime", "to_regime", "reason"]
+
+  orp_hysteresis_transitions_allowed_total:
+    type: "counter"
+    description: "Total regime transitions allowed by hysteresis"
+    labels: ["from_regime", "to_regime"]
+
+# ============================================================================
+# 7. STABILITY LOOP
+# ============================================================================
+
+stability_loop:
+  description: "ORP hysteresis completes the continuity stability loop"
+
+  flow:
+    1: "Signals → ORP classification (MSE/URF/CSI → regime)"
+    2: "ORP → amplitude layers (Governor η, Emotion, Slot09 sensitivity)"
+    3: "ORP → stability enforcement (hysteresis blocks rapid switches)"
+    4: "Ledger → ORP stabilization (duration tracking prevents thrash)"
+    5: "ORP stabilized → signals stabilize (inertia dampens oscillation)"
+
+  inertia_layer:
+    purpose: "Provide stability inertia continuity systems depend on"
+    mechanism: "Minimum durations + oscillation detection + recovery ramp"
+    guarantee: "Regime transitions are deliberate, not reactive"
+
+# ============================================================================
+# 8. FAILURE MODES AND MITIGATIONS
+# ============================================================================
+
+failure_modes:
+  stuck_in_regime:
+    description: "Hysteresis prevents legitimate regime transition"
+    detection: "duration >> min_duration but still blocked"
+    mitigation: "Review minimum durations; consider dynamic adjustment"
+
+  persistent_oscillation:
+    description: "Oscillation count stays high despite hysteresis"
+    detection: "oscillation_count >= threshold for extended period"
+    mitigation: "Increase minimum durations; review signal thresholds"
+
+  recovery_loop:
+    description: "Recovery → normal → heightened → recovery cycle"
+    detection: "Repeated recovery entries in ledger"
+    mitigation: "Increase recovery_threshold; review continuity restoration"
+
+# ============================================================================
+# 9. BACKWARDS COMPATIBILITY
+# ============================================================================
+
+backwards_compatibility:
+  pre_hysteresis_behavior:
+    - "Systems without hysteresis: immediate regime switches"
+    - "Systems with hysteresis: delayed switches, stability enforced"
+
+  migration_path:
+    - "Deploy with NOVA_ENABLE_ORP_HYSTERESIS=0 (observe only)"
+    - "Enable with NOVA_ENABLE_ORP_HYSTERESIS=1 after observation period"
+    - "Monitor oscillation metrics to validate effectiveness"
+
+  rollback_safety:
+    - "Disabling hysteresis returns to immediate switching"
+    - "No ledger data loss (append-only)"
+    - "All metrics continue to export (observability preserved)"
+
+# ============================================================================
+# 10. TESTING REQUIREMENTS
+# ============================================================================
+
+testing_requirements:
+  unit_tests:
+    - "Minimum duration enforcement for all regimes"
+    - "Oscillation detection across various patterns"
+    - "Recovery stabilization threshold checks"
+    - "Edge cases (empty ledger, rapid switches, long durations)"
+
+  integration_tests:
+    - "Cross-module synchronization (Governor/Emotion/Slot09)"
+    - "Ledger interaction (reads, no mutations)"
+    - "Metrics exposure (ORP_HYSTERESIS_*)"
+
+  scenario_tests:
+    - "NORMAL ↔ HEIGHTENED thrash prevention"
+    - "Recovery premature exit blocking"
+    - "Emergency persistence enforcement"
+    - "Oscillation detection and warning"
+
+# ============================================================================
+# 11. CONTRACT VERIFICATION
+# ============================================================================
+
+verification:
+  invariants:
+    - "effective_regime ∈ {normal, heightened, controlled_degradation, emergency_stabilization, recovery}"
+    - "allowed ∈ {True, False}"
+    - "time_remaining_s ≥ 0.0"
+    - "oscillation_count ≥ 0"
+    - "hysteresis_active ↔ (time_remaining_s > 0.0)"
+
+  properties:
+    - "Minimum duration met ⟹ transition allowed (unless recovery ramp blocks)"
+    - "Minimum duration not met ⟹ transition blocked"
+    - "Same regime ⟹ always allowed (no transition)"
+    - "Recovery → normal with C < 0.85 ⟹ blocked"
+    - "Oscillation detected ⟹ warn but allow (advisory only)"
+
+# ============================================================================
+# END OF CONTRACT
+# ============================================================================
