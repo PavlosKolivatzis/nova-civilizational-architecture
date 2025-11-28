@@ -1,0 +1,92 @@
+meta:
+  id: nova.slot03
+  version: 1.0.0
+  parents: [nova.frameworks@1.6, nova.operating@1.0]
+  status: draft
+  description: >
+    Slot03 Emotional Matrix child ontology. Imports Mother (frameworks) and Operating ontologies,
+    refines emotional constriction rules for regime-specific amplitude modulation.
+
+imports:
+  - nova.frameworks@1.6
+  - nova.operating@1.0
+
+# Slot-specific refinements
+emotional_constriction:
+  description: "Refines Operating Ontology amplitude_triad.emotion_constriction for Slot03 implementation"
+
+  implementation:
+    module: src.nova.slots.slot03_emotional_matrix.emotional_matrix_engine
+    function: analyze
+    integration_point: "After phase_lock scaling, before output"
+
+  regime_behavior:
+    normal:
+      multiplier: 1.0
+      description: "Full emotional amplitude - no constriction"
+
+    heightened:
+      multiplier: [0.85, 0.95]
+      description: "Duration-dependent: <5min=0.95, ≥5min=0.85"
+      rationale: "Modest reduction during elevated risk"
+
+    controlled_degradation:
+      multiplier: 0.70
+      description: "Significant constriction - reduce influence during degradation"
+      rationale: "Prevent emotional amplification of instability"
+
+    emergency_stabilization:
+      multiplier: 0.50
+      description: "Severe constriction - minimal emotional influence"
+      rationale: "Emergency state requires dampened expression"
+
+    recovery:
+      multiplier: 0.60
+      description: "Gradual restoration - more permissive than emergency"
+      rationale: "Allow controlled emotional recovery"
+
+  topology_preservation:
+    invariant: "Constriction scales intensity only, preserves valence and category"
+    rule: "sign(score_constricted) = sign(score_original)"
+    examples:
+      - original: {score: 0.8, valence: positive, category: joy}
+        constricted: {score: 0.56, valence: positive, category: joy}  # 0.8 * 0.70 in controlled_degradation
+      - original: {score: -0.6, valence: negative, category: fear}
+        constricted: {score: -0.30, valence: negative, category: fear}  # -0.6 * 0.50 in emergency
+
+  constraints:
+    - "Must not override parent Operating Ontology amplitude bounds"
+    - "Must preserve emotional topology (valence + category unchanged)"
+    - "Must apply multiplicatively: score_out = score_in * multiplier"
+    - "Must integrate gracefully (fallback to base on ORP failure)"
+
+  observability:
+    annotations:
+      field: "metrics.annotations.orp_emotional_constriction"
+      content:
+        regime: "Current regime name"
+        duration_s: "Time in regime"
+        intensity_before: "Original intensity"
+        intensity_after: "Constricted intensity"
+
+# Feature flag
+feature_flag:
+  name: NOVA_ENABLE_EMOTIONAL_CONSTRICTION
+  default: 0
+  description: "Enable ORP-based emotional intensity scaling"
+
+# Test coverage
+test_coverage:
+  unit_tests:
+    - file: tests/continuity/test_emotional_posture.py
+      count: 29
+  integration_tests:
+    - file: tests/slot03/test_slot03_emotional_constriction_integration.py
+      count: 18
+  total: 47
+
+# Implementation references
+implementation_refs:
+  adapter: src.nova.continuity.emotional_posture.apply_emotional_constriction
+  integration: src.nova.slots.slot03_emotional_matrix.emotional_matrix_engine.analyze
+  contract: contracts/orp_policy@1.yaml (emotional_multiplier_table)

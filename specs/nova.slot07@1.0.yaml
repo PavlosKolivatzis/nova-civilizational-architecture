@@ -1,0 +1,120 @@
+meta:
+  id: nova.slot07
+  version: 1.0.0
+  parents: [nova.frameworks@1.6, nova.operating@1.0]
+  status: draft
+  description: >
+    Slot07 Production Controls child ontology. Imports Mother and Operating ontologies,
+    refines threshold multipliers and deployment gates for regime-specific governance.
+
+imports:
+  - nova.frameworks@1.6
+  - nova.operating@1.0
+
+# Slot-specific refinements
+threshold_scaling:
+  description: "Refines Operating Ontology posture.threshold_multiplier for Slot07 governance"
+
+  implementation:
+    module: src.nova.slots.slot07_production_controls.governor
+    integration_point: "Threshold evaluation in tri_low, tri_drift_high, tri_stability checks"
+
+  regime_behavior:
+    normal:
+      threshold_multiplier: 1.0
+      description: "Baseline thresholds - standard governance"
+
+    heightened:
+      threshold_multiplier: 0.85
+      description: "Tighter thresholds - increased caution"
+      rationale: "Catch borderline cases during elevated risk"
+
+    controlled_degradation:
+      threshold_multiplier: 0.70
+      description: "Stricter thresholds - conservative governance"
+      rationale: "Block more aggressively during degradation"
+
+    emergency_stabilization:
+      threshold_multiplier: 0.60
+      description: "Severe threshold reduction - maximum conservatism"
+      rationale: "Emergency state requires strictest governance"
+
+    recovery:
+      threshold_multiplier: 0.70
+      description: "Cautious thresholds during recovery"
+      rationale: "Maintain conservatism until fully restored"
+
+deployment_gates:
+  description: "Deployment freeze logic based on Operating Ontology posture.deployment_freeze"
+
+  regime_behavior:
+    normal:
+      deployments_allowed: true
+
+    heightened:
+      deployments_allowed: true
+      description: "Allow deployments with heightened scrutiny"
+
+    controlled_degradation:
+      deployments_allowed: false
+      rationale: "Freeze deployments during active degradation"
+
+    emergency_stabilization:
+      deployments_allowed: false
+      rollback_recommended: true
+      rationale: "Emergency requires deployment freeze + rollback consideration"
+
+    recovery:
+      deployments_allowed: false
+      description: "Maintain freeze until recovery complete"
+      rationale: "Prevent premature deployment during recovery"
+
+  constraints:
+    - "Must respect Operating Ontology posture.deployment_freeze"
+    - "Must not relax deployment gates below Operating Ontology levels"
+    - "Must provide rollback recommendation in emergency regime"
+
+# Safe mode enforcement
+safe_mode:
+  description: "Safe mode bias based on Operating Ontology posture.safe_mode_forced"
+
+  regime_behavior:
+    emergency_stabilization:
+      safe_mode_forced: true
+      description: "Force safe mode routing during emergency"
+
+    recovery:
+      safe_mode_forced: true
+      description: "Maintain safe mode during recovery"
+
+# Feature flag
+feature_flag:
+  name: NOVA_ENABLE_SLOT07_ORP_INTEGRATION
+  default: 0
+  description: "Enable ORP-based threshold and deployment gate scaling"
+
+# Subsystem obligations
+subsystem_obligations:
+  per_regime:
+    controlled_degradation:
+      threshold_multiplier_ref: posture.controlled_degradation.threshold_multiplier
+      enforcement: slot07_governance_logic
+
+    emergency_stabilization:
+      threshold_multiplier_ref: posture.emergency_stabilization.threshold_multiplier
+      safe_mode_forced_ref: posture.emergency_stabilization.safe_mode_forced
+      enforcement: slot07_governance_logic
+
+# Test coverage
+test_coverage:
+  integration_tests:
+    - description: "Threshold scaling during regime transitions"
+      status: pending
+    - description: "Deployment gate enforcement"
+      status: pending
+  total: 0  # To be implemented
+
+# Implementation references
+implementation_refs:
+  governor: src.nova.slots.slot07_production_controls.governor
+  posture: specs.nova.operating@1.0.yaml (posture section)

@@ -1,0 +1,113 @@
+meta:
+  id: nova.slot09
+  version: 1.0.0
+  parents: [nova.frameworks@1.6, nova.operating@1.0]
+  status: draft
+  description: >
+    Slot09 Distortion Protection child ontology. Imports Mother and Operating ontologies,
+    refines detection sensitivity scaling for regime-specific perceptual amplitude modulation.
+
+imports:
+  - nova.frameworks@1.6
+  - nova.operating@1.0
+
+# Slot-specific refinements
+sensitivity_scaling:
+  description: "Refines Operating Ontology amplitude_triad.slot09_sensitivity_multiplier for detection thresholds"
+
+  implementation:
+    module: src.nova.slots.slot09_distortion_protection.hybrid_api
+    function: apply_orp_sensitivity_to_config
+    integration_point: "HybridApiConfig initialization (__init__)"
+
+  regime_behavior:
+    normal:
+      multiplier: 1.0
+      description: "Baseline sensitivity - standard detection"
+
+    heightened:
+      multiplier: [1.05, 1.15]
+      description: "Duration-dependent: <5min=1.05, ≥5min=1.15"
+      rationale: "Reduce sensitivity (increase thresholds) to avoid false positives"
+      semantic: "Higher multiplier = higher threshold = less sensitive = fewer detections"
+
+    controlled_degradation:
+      multiplier: 1.30
+      description: "Significantly reduced sensitivity"
+      rationale: "During degradation, focus only on strong signals"
+
+    emergency_stabilization:
+      multiplier: 1.50
+      description: "Minimal sensitivity - detect only severe distortions"
+      rationale: "Emergency state requires reduced perceptual noise"
+
+    recovery:
+      multiplier: 1.20
+      description: "Cautiously reduced sensitivity during recovery"
+      rationale: "Gradual restoration of detection sensitivity"
+
+  thresholds_scaled:
+    description: "IDS stability and drift thresholds scaled; threat response thresholds NOT scaled"
+    scaled:
+      - ids_stability_threshold_low
+      - ids_stability_threshold_medium
+      - ids_stability_threshold_high
+      - ids_drift_threshold_low
+      - ids_drift_threshold_medium
+      - ids_drift_threshold_high
+    not_scaled:
+      - threat_threshold_warning
+      - threat_threshold_block
+      - resilience settings (max_content_length, circuit_breaker, cache_ttl)
+
+  interpretation:
+    rule: "threshold_scaled = threshold_base × multiplier"
+    example:
+      - regime: normal
+        base_threshold: 0.25
+        multiplier: 1.0
+        scaled_threshold: 0.25
+        semantic: "Detect when stability < 0.25"
+
+      - regime: emergency_stabilization
+        base_threshold: 0.25
+        multiplier: 1.50
+        scaled_threshold: 0.375
+        semantic: "Detect only when stability < 0.375 (less sensitive)"
+
+  constraints:
+    - "Must not exceed global amplitude bounds [1.0, 1.5]"
+    - "Must scale detection thresholds only (not response thresholds)"
+    - "Must preserve detection topology (what is detected, not amplitude)"
+    - "Must apply multiplicatively: threshold_out = threshold_in * multiplier"
+
+  topology_preservation:
+    invariant: "Sensitivity scaling changes threshold magnitude only, not feature detection logic"
+    rule: "Features detected are unchanged; only threshold levels adjusted"
+
+  observability:
+    annotations:
+      note: "No explicit ORP annotations in Slot09 output (buried in config)"
+      implicit: "Scaled thresholds affect detection rate (observable via metrics)"
+
+# Feature flag
+feature_flag:
+  name: NOVA_ENABLE_SLOT09_SENSITIVITY
+  default: 0
+  description: "Enable ORP-based Slot09 sensitivity scaling"
+
+# Test coverage
+test_coverage:
+  unit_tests:
+    - file: tests/continuity/test_slot09_sensitivity.py
+      count: 31
+  integration_tests:
+    - file: tests/slot09_distortion_protection/test_slot09_sensitivity_integration.py
+      count: 18
+  total: 49
+
+# Implementation references
+implementation_refs:
+  adapter: src.nova.continuity.slot09_sensitivity.apply_sensitivity_scaling
+  integration: src.nova.slots.slot09_distortion_protection.hybrid_api.apply_orp_sensitivity_to_config
+  contract: contracts/orp_policy@1.yaml (sensitivity_multiplier_table)

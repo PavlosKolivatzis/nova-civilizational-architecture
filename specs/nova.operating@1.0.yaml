@@ -1,14 +1,16 @@
 meta:
   id: nova.operating
   version: 1.0.0
-  parents: [nova.frameworks@1.5]
-  status: draft
+  parents: [nova.frameworks@1.6]
+  status: active
+  validated_by: [claude_cli, codex_cli, gemini_cli, kilo_code_vs, copilot_app, deepseek_app, grok_app, qwen_app]
   description: >
     Nova Operating Physics: regimes, posture, hysteresis, amplitude triad, global
     safety envelope, and subsystem obligations built on top of nova.frameworks.
+    Validated across 8 AI systems (4 CLI + 4 App) demonstrating cross-modal semantic convergence.
 
 imports:
-  - nova.frameworks@1.5
+  - nova.frameworks@1.6
 
 parameters:
   eta_accel_max: 0.1              # Max Δη per 60s (tunable safety param)

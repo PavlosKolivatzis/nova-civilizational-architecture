@@ -5,10 +5,14 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.5.0
+  version: 1.6.0
   status: active
-  date: 2025-11-27
+  date: 2025-11-28
+  children: [nova.operating@1.0]
   changelog:
+    - version: 1.6.0
+      date: 2025-11-28
+      changes: "Phase 11 Finalization - Ontology hierarchy formalized: Mother (nova.frameworks) → Operating (nova.operating@1.0) → Children (slots); Step B structural validation passed; Step C cross-AI semantic audit (8 systems) confirmed interpretability; transformation geometry contract established"
     - version: 1.5.0
       date: 2025-11-27
       changes: "Phase 11 - Operational Regime Policy (ORP): Bidirectional stability system with regime classification, amplitude scaling (Governor η, Emotion, Slot09 sensitivity), hysteresis enforcement; regime transition ledger; 170 new tests; contracts: orp_stabilization@1.yaml"
