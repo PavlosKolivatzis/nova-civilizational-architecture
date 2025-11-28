@@ -1,0 +1,46 @@
+{
+  "trajectory_id": "canonical_downgrade_after_duration",
+  "description": "Successful downgrade after min-duration met and hysteresis cleared",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.60,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.40,
+        "consistency_gap": 0.20,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:06:00Z",
+      "elapsed_s": 360,
+      "contributing_factors": {
+        "urf_composite_risk": 0.30,
+        "mse_meta_instability": 0.04,
+        "predictive_collapse_risk": 0.12,
+        "consistency_gap": 0.06,
+        "csi_continuity_index": 0.94
+      },
+      "expected_regime": "normal",
+      "expected_transition": "heightened"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:12:00Z",
+      "elapsed_s": 720,
+      "contributing_factors": {
+        "urf_composite_risk": 0.20,
+        "mse_meta_instability": 0.05,
+        "predictive_collapse_risk": 0.10,
+        "consistency_gap": 0.05,
+        "csi_continuity_index": 0.95
+      },
+      "expected_regime": "normal"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "trajectory_id": "canonical_normal_to_heightened",
+  "description": "Gradual escalation from normal to heightened regime",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.20,
+        "mse_meta_instability": 0.05,
+        "predictive_collapse_risk": 0.10,
+        "consistency_gap": 0.05,
+        "csi_continuity_index": 0.95
+      },
+      "expected_regime": "normal"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.30,
+        "mse_meta_instability": 0.06,
+        "predictive_collapse_risk": 0.15,
+        "consistency_gap": 0.08,
+        "csi_continuity_index": 0.92
+      },
+      "expected_regime": "normal"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.40,
+        "mse_meta_instability": 0.07,
+        "predictive_collapse_risk": 0.20,
+        "consistency_gap": 0.10,
+        "csi_continuity_index": 0.90
+      },
+      "expected_regime": "normal"
+    },
+    {
+      "step": 3,
+      "timestamp": "2025-01-01T00:03:00Z",
+      "elapsed_s": 180,
+      "contributing_factors": {
+        "urf_composite_risk": 0.50,
+        "mse_meta_instability": 0.08,
+        "predictive_collapse_risk": 0.30,
+        "consistency_gap": 0.15,
+        "csi_continuity_index": 0.85
+      },
+      "expected_regime": "normal"
+    },
+    {
+      "step": 4,
+      "timestamp": "2025-01-01T00:04:00Z",
+      "elapsed_s": 240,
+      "contributing_factors": {
+        "urf_composite_risk": 0.60,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.40,
+        "consistency_gap": 0.20,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened",
+      "expected_transition": "normal"
+    },
+    {
+      "step": 5,
+      "timestamp": "2025-01-01T00:05:00Z",
+      "elapsed_s": 300,
+      "contributing_factors": {
+        "urf_composite_risk": 0.60,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.40,
+        "consistency_gap": 0.20,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened"
+    }
+  ]
+}

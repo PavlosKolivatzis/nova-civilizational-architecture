@@ -1,0 +1,45 @@
+{
+  "trajectory_id": "adversarial_recovery_immediate_spike",
+  "description": "Recovery -> emergency -> recovery in 3 steps (extreme volatility)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.95,
+        "mse_meta_instability": 0.40,
+        "predictive_collapse_risk": 0.95,
+        "consistency_gap": 0.80,
+        "csi_continuity_index": 0.20
+      },
+      "expected_regime": "recovery"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.85,
+        "mse_meta_instability": 0.28,
+        "predictive_collapse_risk": 0.75,
+        "consistency_gap": 0.55,
+        "csi_continuity_index": 0.45
+      },
+      "expected_regime": "emergency_stabilization"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.95,
+        "mse_meta_instability": 0.40,
+        "predictive_collapse_risk": 0.95,
+        "consistency_gap": 0.80,
+        "csi_continuity_index": 0.20
+      },
+      "expected_regime": "recovery"
+    }
+  ]
+}

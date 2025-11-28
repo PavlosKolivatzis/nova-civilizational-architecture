@@ -1,0 +1,59 @@
+{
+  "trajectory_id": "canonical_controlled_to_emergency",
+  "description": "Crisis escalation from controlled_degradation to emergency_stabilization",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.80,
+        "mse_meta_instability": 0.20,
+        "predictive_collapse_risk": 0.60,
+        "consistency_gap": 0.40,
+        "csi_continuity_index": 0.60
+      },
+      "expected_regime": "controlled_degradation"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.85,
+        "mse_meta_instability": 0.25,
+        "predictive_collapse_risk": 0.70,
+        "consistency_gap": 0.50,
+        "csi_continuity_index": 0.50
+      },
+      "expected_regime": "controlled_degradation"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.90,
+        "mse_meta_instability": 0.30,
+        "predictive_collapse_risk": 0.80,
+        "consistency_gap": 0.60,
+        "csi_continuity_index": 0.40
+      },
+      "expected_regime": "emergency_stabilization",
+      "expected_transition": "controlled_degradation"
+    },
+    {
+      "step": 3,
+      "timestamp": "2025-01-01T00:03:00Z",
+      "elapsed_s": 180,
+      "contributing_factors": {
+        "urf_composite_risk": 0.90,
+        "mse_meta_instability": 0.30,
+        "predictive_collapse_risk": 0.80,
+        "consistency_gap": 0.60,
+        "csi_continuity_index": 0.40
+      },
+      "expected_regime": "emergency_stabilization"
+    }
+  ]
+}

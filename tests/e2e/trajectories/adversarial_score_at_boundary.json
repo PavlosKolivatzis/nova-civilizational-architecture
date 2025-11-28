@@ -1,0 +1,45 @@
+{
+  "trajectory_id": "adversarial_score_at_boundary",
+  "description": "Score exactly at regime thresholds (0.30, 0.50, 0.70, 0.85)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.5333,
+        "mse_meta_instability": 0.08,
+        "predictive_collapse_risk": 0.35,
+        "consistency_gap": 0.18,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.8333,
+        "mse_meta_instability": 0.20,
+        "predictive_collapse_risk": 0.65,
+        "consistency_gap": 0.42,
+        "csi_continuity_index": 0.60
+      },
+      "expected_regime": "controlled_degradation"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 1.0,
+        "mse_meta_instability": 0.32,
+        "predictive_collapse_risk": 0.90,
+        "consistency_gap": 0.70,
+        "csi_continuity_index": 0.40
+      },
+      "expected_regime": "emergency_stabilization"
+    }
+  ]
+}

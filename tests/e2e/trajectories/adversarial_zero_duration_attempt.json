@@ -1,0 +1,32 @@
+{
+  "trajectory_id": "adversarial_zero_duration_attempt",
+  "description": "Attempt downgrade at t=0 (min-duration must block)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.60,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.40,
+        "consistency_gap": 0.20,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:00:01Z",
+      "elapsed_s": 1,
+      "contributing_factors": {
+        "urf_composite_risk": 0.15,
+        "mse_meta_instability": 0.02,
+        "predictive_collapse_risk": 0.08,
+        "consistency_gap": 0.03,
+        "csi_continuity_index": 0.97
+      },
+      "expected_regime": "heightened"
+    }
+  ]
+}

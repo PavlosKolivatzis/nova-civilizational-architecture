@@ -1,0 +1,59 @@
+{
+  "trajectory_id": "canonical_heightened_to_controlled",
+  "description": "Escalation from heightened to controlled_degradation",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.60,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.40,
+        "consistency_gap": 0.20,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.70,
+        "mse_meta_instability": 0.15,
+        "predictive_collapse_risk": 0.50,
+        "consistency_gap": 0.30,
+        "csi_continuity_index": 0.70
+      },
+      "expected_regime": "heightened"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.80,
+        "mse_meta_instability": 0.20,
+        "predictive_collapse_risk": 0.60,
+        "consistency_gap": 0.40,
+        "csi_continuity_index": 0.60
+      },
+      "expected_regime": "controlled_degradation",
+      "expected_transition": "heightened"
+    },
+    {
+      "step": 3,
+      "timestamp": "2025-01-01T00:03:00Z",
+      "elapsed_s": 180,
+      "contributing_factors": {
+        "urf_composite_risk": 0.80,
+        "mse_meta_instability": 0.20,
+        "predictive_collapse_risk": 0.60,
+        "consistency_gap": 0.40,
+        "csi_continuity_index": 0.60
+      },
+      "expected_regime": "controlled_degradation"
+    }
+  ]
+}

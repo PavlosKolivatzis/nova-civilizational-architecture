@@ -1,0 +1,46 @@
+{
+  "trajectory_id": "canonical_hysteresis_prevents_downgrade",
+  "description": "Score drops but stays above hysteresis threshold (downgrade blocked)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.60,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.40,
+        "consistency_gap": 0.20,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:06:00Z",
+      "elapsed_s": 360,
+      "contributing_factors": {
+        "urf_composite_risk": 0.48,
+        "mse_meta_instability": 0.08,
+        "predictive_collapse_risk": 0.30,
+        "consistency_gap": 0.15,
+        "csi_continuity_index": 0.85
+      },
+      "expected_regime": "heightened",
+      "expected_transition": null
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:12:00Z",
+      "elapsed_s": 720,
+      "contributing_factors": {
+        "urf_composite_risk": 0.60,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.40,
+        "consistency_gap": 0.20,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "heightened"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "trajectory_id": "canonical_recovery_to_normal",
+  "description": "Full recovery path from recovery to normal (gradual downgrade)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.95,
+        "mse_meta_instability": 0.40,
+        "predictive_collapse_risk": 0.95,
+        "consistency_gap": 0.80,
+        "csi_continuity_index": 0.20
+      },
+      "expected_regime": "recovery"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:06:00Z",
+      "elapsed_s": 360,
+      "contributing_factors": {
+        "urf_composite_risk": 0.85,
+        "mse_meta_instability": 0.25,
+        "predictive_collapse_risk": 0.70,
+        "consistency_gap": 0.50,
+        "csi_continuity_index": 0.50
+      },
+      "expected_regime": "controlled_degradation"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:12:00Z",
+      "elapsed_s": 720,
+      "contributing_factors": {
+        "urf_composite_risk": 0.70,
+        "mse_meta_instability": 0.15,
+        "predictive_collapse_risk": 0.50,
+        "consistency_gap": 0.30,
+        "csi_continuity_index": 0.70
+      },
+      "expected_regime": "heightened"
+    },
+    {
+      "step": 3,
+      "timestamp": "2025-01-01T00:18:00Z",
+      "elapsed_s": 1080,
+      "contributing_factors": {
+        "urf_composite_risk": 0.40,
+        "mse_meta_instability": 0.07,
+        "predictive_collapse_risk": 0.20,
+        "consistency_gap": 0.10,
+        "csi_continuity_index": 0.90
+      },
+      "expected_regime": "normal"
+    },
+    {
+      "step": 4,
+      "timestamp": "2025-01-01T00:24:00Z",
+      "elapsed_s": 1440,
+      "contributing_factors": {
+        "urf_composite_risk": 0.20,
+        "mse_meta_instability": 0.05,
+        "predictive_collapse_risk": 0.10,
+        "consistency_gap": 0.05,
+        "csi_continuity_index": 0.95
+      },
+      "expected_regime": "normal"
+    }
+  ]
+}

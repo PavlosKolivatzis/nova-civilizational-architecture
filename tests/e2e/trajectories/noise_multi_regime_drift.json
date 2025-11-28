@@ -1,0 +1,246 @@
+{
+  "trajectory_id": "noise_multi_regime_drift",
+  "description": "Gradual drift normal->recovery with \u00b15% noise (seed=44)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.19085358792544938,
+        "mse_meta_instability": 0.054197200910459625,
+        "predictive_collapse_risk": 0.13620366164792733,
+        "consistency_gap": 0.01766656441954438,
+        "csi_continuity_index": 0.9225159520578147
+      }
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.19238340953733746,
+        "mse_meta_instability": 0.030086105975865328,
+        "predictive_collapse_risk": 0.09561740469396984,
+        "consistency_gap": 0.0551427177188627,
+        "csi_continuity_index": 0.9118976366397412
+      }
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:04:00Z",
+      "elapsed_s": 240,
+      "contributing_factors": {
+        "urf_composite_risk": 0.32789665945880775,
+        "mse_meta_instability": 0.1061931314063017,
+        "predictive_collapse_risk": 0.1773163413228544,
+        "consistency_gap": 0.11945214195297825,
+        "csi_continuity_index": 0.8901835944201852
+      }
+    },
+    {
+      "step": 3,
+      "timestamp": "2025-01-01T00:06:00Z",
+      "elapsed_s": 360,
+      "contributing_factors": {
+        "urf_composite_risk": 0.3010330398932649,
+        "mse_meta_instability": 0.06261850095256366,
+        "predictive_collapse_risk": 0.2683628160064104,
+        "consistency_gap": 0.18014304822298727,
+        "csi_continuity_index": 0.7927799300813857
+      }
+    },
+    {
+      "step": 4,
+      "timestamp": "2025-01-01T00:08:00Z",
+      "elapsed_s": 480,
+      "contributing_factors": {
+        "urf_composite_risk": 0.314901405580097,
+        "mse_meta_instability": 0.08314696515586928,
+        "predictive_collapse_risk": 0.32483969295468534,
+        "consistency_gap": 0.16866642338348217,
+        "csi_continuity_index": 0.8046369600301787
+      }
+    },
+    {
+      "step": 5,
+      "timestamp": "2025-01-01T00:10:00Z",
+      "elapsed_s": 600,
+      "contributing_factors": {
+        "urf_composite_risk": 0.44432516903878966,
+        "mse_meta_instability": 0.0956055960979301,
+        "predictive_collapse_risk": 0.3122720952026329,
+        "consistency_gap": 0.24509651810111271,
+        "csi_continuity_index": 0.794320524978835
+      }
+    },
+    {
+      "step": 6,
+      "timestamp": "2025-01-01T00:12:00Z",
+      "elapsed_s": 720,
+      "contributing_factors": {
+        "urf_composite_risk": 0.4057014217686814,
+        "mse_meta_instability": 0.13636100265521786,
+        "predictive_collapse_risk": 0.3432175167592988,
+        "consistency_gap": 0.24176257899032813,
+        "csi_continuity_index": 0.7305295767851119
+      }
+    },
+    {
+      "step": 7,
+      "timestamp": "2025-01-01T00:14:00Z",
+      "elapsed_s": 840,
+      "contributing_factors": {
+        "urf_composite_risk": 0.5079863335316652,
+        "mse_meta_instability": 0.17258387351064985,
+        "predictive_collapse_risk": 0.3669412472151412,
+        "consistency_gap": 0.3476737874981457,
+        "csi_continuity_index": 0.6973888122347098
+      }
+    },
+    {
+      "step": 8,
+      "timestamp": "2025-01-01T00:16:00Z",
+      "elapsed_s": 960,
+      "contributing_factors": {
+        "urf_composite_risk": 0.5311340783935811,
+        "mse_meta_instability": 0.18023370496617994,
+        "predictive_collapse_risk": 0.49094290576274,
+        "consistency_gap": 0.378845294040244,
+        "csi_continuity_index": 0.6432078875302203
+      }
+    },
+    {
+      "step": 9,
+      "timestamp": "2025-01-01T00:18:00Z",
+      "elapsed_s": 1080,
+      "contributing_factors": {
+        "urf_composite_risk": 0.5593160965278412,
+        "mse_meta_instability": 0.1891156228822142,
+        "predictive_collapse_risk": 0.4981888290250261,
+        "consistency_gap": 0.4346691248446638,
+        "csi_continuity_index": 0.6131123751756934
+      }
+    },
+    {
+      "step": 10,
+      "timestamp": "2025-01-01T00:20:00Z",
+      "elapsed_s": 1200,
+      "contributing_factors": {
+        "urf_composite_risk": 0.5793275785959393,
+        "mse_meta_instability": 0.266171921887429,
+        "predictive_collapse_risk": 0.5813100407003834,
+        "consistency_gap": 0.3990991609771558,
+        "csi_continuity_index": 0.5209900833343404
+      }
+    },
+    {
+      "step": 11,
+      "timestamp": "2025-01-01T00:22:00Z",
+      "elapsed_s": 1320,
+      "contributing_factors": {
+        "urf_composite_risk": 0.606525176794117,
+        "mse_meta_instability": 0.20409042243191772,
+        "predictive_collapse_risk": 0.6174507865181394,
+        "consistency_gap": 0.498889565254668,
+        "csi_continuity_index": 0.5201096423892998
+      }
+    },
+    {
+      "step": 12,
+      "timestamp": "2025-01-01T00:24:00Z",
+      "elapsed_s": 1440,
+      "contributing_factors": {
+        "urf_composite_risk": 0.7231507585999041,
+        "mse_meta_instability": 0.2567204276866853,
+        "predictive_collapse_risk": 0.6067468002707587,
+        "consistency_gap": 0.484836128819064,
+        "csi_continuity_index": 0.4603288381168118
+      }
+    },
+    {
+      "step": 13,
+      "timestamp": "2025-01-01T00:26:00Z",
+      "elapsed_s": 1560,
+      "contributing_factors": {
+        "urf_composite_risk": 0.7469635461212816,
+        "mse_meta_instability": 0.30014638589469095,
+        "predictive_collapse_risk": 0.6375062001370855,
+        "consistency_gap": 0.5564813205071801,
+        "csi_continuity_index": 0.3916402707304403
+      }
+    },
+    {
+      "step": 14,
+      "timestamp": "2025-01-01T00:28:00Z",
+      "elapsed_s": 1680,
+      "contributing_factors": {
+        "urf_composite_risk": 0.7649403616395811,
+        "mse_meta_instability": 0.27014369410554695,
+        "predictive_collapse_risk": 0.6942598109463995,
+        "consistency_gap": 0.6168764324552127,
+        "csi_continuity_index": 0.43092391009011316
+      }
+    },
+    {
+      "step": 15,
+      "timestamp": "2025-01-01T00:30:00Z",
+      "elapsed_s": 1800,
+      "contributing_factors": {
+        "urf_composite_risk": 0.804068970850391,
+        "mse_meta_instability": 0.30568564434192347,
+        "predictive_collapse_risk": 0.7855842350814743,
+        "consistency_gap": 0.6193101723889866,
+        "csi_continuity_index": 0.30856866155289286
+      }
+    },
+    {
+      "step": 16,
+      "timestamp": "2025-01-01T00:32:00Z",
+      "elapsed_s": 1920,
+      "contributing_factors": {
+        "urf_composite_risk": 0.8089701860119449,
+        "mse_meta_instability": 0.36356042442942565,
+        "predictive_collapse_risk": 0.8284370046260484,
+        "consistency_gap": 0.650841825114386,
+        "csi_continuity_index": 0.3524834925642864
+      }
+    },
+    {
+      "step": 17,
+      "timestamp": "2025-01-01T00:34:00Z",
+      "elapsed_s": 2040,
+      "contributing_factors": {
+        "urf_composite_risk": 0.9041200852768546,
+        "mse_meta_instability": 0.34109528277186,
+        "predictive_collapse_risk": 0.906619405651705,
+        "consistency_gap": 0.6973090497874133,
+        "csi_continuity_index": 0.23543500021629415
+      }
+    },
+    {
+      "step": 18,
+      "timestamp": "2025-01-01T00:36:00Z",
+      "elapsed_s": 2160,
+      "contributing_factors": {
+        "urf_composite_risk": 0.911749769483364,
+        "mse_meta_instability": 0.4180729869548897,
+        "predictive_collapse_risk": 0.9152327092567621,
+        "consistency_gap": 0.7651605864557534,
+        "csi_continuity_index": 0.23823879373869108
+      }
+    },
+    {
+      "step": 19,
+      "timestamp": "2025-01-01T00:38:00Z",
+      "elapsed_s": 2280,
+      "contributing_factors": {
+        "urf_composite_risk": 0.9284138638460171,
+        "mse_meta_instability": 0.3799879315504147,
+        "predictive_collapse_risk": 0.9403086418674482,
+        "consistency_gap": 0.8047105035801522,
+        "csi_continuity_index": 0.24428553614749277
+      }
+    }
+  ]
+}

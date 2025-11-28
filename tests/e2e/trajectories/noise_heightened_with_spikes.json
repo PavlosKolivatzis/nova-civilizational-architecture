@@ -1,0 +1,150 @@
+{
+  "trajectory_id": "noise_heightened_with_spikes",
+  "description": "Heightened regime with +0.25 spikes every 5 steps",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 3,
+      "timestamp": "2025-01-01T00:03:00Z",
+      "elapsed_s": 180,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 4,
+      "timestamp": "2025-01-01T00:04:00Z",
+      "elapsed_s": 240,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 5,
+      "timestamp": "2025-01-01T00:05:00Z",
+      "elapsed_s": 300,
+      "contributing_factors": {
+        "urf_composite_risk": 0.85,
+        "mse_meta_instability": 0.35,
+        "predictive_collapse_risk": 0.65,
+        "consistency_gap": 0.45,
+        "csi_continuity_index": 0.55
+      }
+    },
+    {
+      "step": 6,
+      "timestamp": "2025-01-01T00:06:00Z",
+      "elapsed_s": 360,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 7,
+      "timestamp": "2025-01-01T00:07:00Z",
+      "elapsed_s": 420,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 8,
+      "timestamp": "2025-01-01T00:08:00Z",
+      "elapsed_s": 480,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 9,
+      "timestamp": "2025-01-01T00:09:00Z",
+      "elapsed_s": 540,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    },
+    {
+      "step": 10,
+      "timestamp": "2025-01-01T00:10:00Z",
+      "elapsed_s": 600,
+      "contributing_factors": {
+        "urf_composite_risk": 0.85,
+        "mse_meta_instability": 0.35,
+        "predictive_collapse_risk": 0.65,
+        "consistency_gap": 0.45,
+        "csi_continuity_index": 0.55
+      }
+    },
+    {
+      "step": 11,
+      "timestamp": "2025-01-01T00:11:00Z",
+      "elapsed_s": 660,
+      "contributing_factors": {
+        "urf_composite_risk": 0.6,
+        "mse_meta_instability": 0.1,
+        "predictive_collapse_risk": 0.4,
+        "consistency_gap": 0.2,
+        "csi_continuity_index": 0.8
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "trajectory_id": "adversarial_all_signals_high",
+  "description": "All factors at 0.95+ simultaneously (extreme crisis)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.95,
+        "mse_meta_instability": 0.95,
+        "predictive_collapse_risk": 0.95,
+        "consistency_gap": 0.95,
+        "csi_continuity_index": 0.05
+      },
+      "expected_regime": "recovery"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.98,
+        "mse_meta_instability": 0.98,
+        "predictive_collapse_risk": 0.98,
+        "consistency_gap": 0.98,
+        "csi_continuity_index": 0.02
+      },
+      "expected_regime": "recovery"
+    }
+  ]
+}

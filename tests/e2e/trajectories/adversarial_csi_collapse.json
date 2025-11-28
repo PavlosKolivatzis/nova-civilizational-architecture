@@ -1,0 +1,45 @@
+{
+  "trajectory_id": "adversarial_csi_collapse",
+  "description": "CSI drops to 0.0 (maximum risk contribution from inverted CSI)",
+  "steps": [
+    {
+      "step": 0,
+      "timestamp": "2025-01-01T00:00:00Z",
+      "elapsed_s": 0,
+      "contributing_factors": {
+        "urf_composite_risk": 0.30,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.20,
+        "consistency_gap": 0.10,
+        "csi_continuity_index": 0.80
+      },
+      "expected_regime": "normal"
+    },
+    {
+      "step": 1,
+      "timestamp": "2025-01-01T00:01:00Z",
+      "elapsed_s": 60,
+      "contributing_factors": {
+        "urf_composite_risk": 0.30,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.20,
+        "consistency_gap": 0.10,
+        "csi_continuity_index": 0.0
+      },
+      "expected_regime": "normal"
+    },
+    {
+      "step": 2,
+      "timestamp": "2025-01-01T00:02:00Z",
+      "elapsed_s": 120,
+      "contributing_factors": {
+        "urf_composite_risk": 0.30,
+        "mse_meta_instability": 0.10,
+        "predictive_collapse_risk": 0.20,
+        "consistency_gap": 0.10,
+        "csi_continuity_index": 0.0
+      },
+      "expected_regime": "normal"
+    }
+  ]
+}
