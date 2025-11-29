@@ -1,252 +1,269 @@
-# Phase 13: Simulation → AVL Migration Mapping
+# Phase 13: Migration Map
 
-**Purpose:** Define exact transformation from simulation engine output to AVL ledger entries.
-
-**Source:** `scripts/simulate_nova_cycle.py` → `StepResult` dataclass
-**Target:** `src/nova/continuity/avl_ledger.py` → `AVLEntry` dataclass
-
----
-
-## Field Mapping Table
-
-| Simulation Output Field | AVL Entry Field | Transformation | Notes |
-|-------------------------|-----------------|----------------|-------|
-| `step_result.step` | _Not mapped_ | Omit | AVL uses entry_id instead |
-| `step_result.timestamp` | `timestamp` | Direct copy | Already ISO8601 with timezone |
-| `step_result.elapsed_s` | `elapsed_s` | Direct copy | Seconds since start |
-| `step_result.contributing_factors` | `contributing_factors` | Direct copy | Dict unchanged |
-| `step_result.orp_regime_score` | `orp_regime_score` | Direct copy | Float [0.0, 1.0] |
-| `step_result.orp_regime` | `orp_regime` | Direct copy | String (enum value) |
-| `step_result.orp_transition_from` | `transition_from` | Direct copy | Optional[str] |
-| `step_result.time_in_regime_s` | `time_in_previous_regime_s` | Direct copy | Duration in previous regime |
-| `step_result.oracle_regime_score` | `oracle_regime_score` | Direct copy | Float [0.0, 1.0] |
-| `step_result.oracle_regime` | `oracle_regime` | Direct copy | String (enum value) |
-| `step_result.dual_modality_agreement` | `dual_modality_agreement` | Direct copy | Boolean |
-| `step_result.hysteresis_enforced` | `hysteresis_enforced` | Direct copy | Boolean |
-| `step_result.min_duration_enforced` | `min_duration_enforced` | Direct copy | Boolean |
-| `step_result.ledger_continuity` | `ledger_continuity` | Direct copy | Boolean |
-| `step_result.amplitude_valid` | `amplitude_valid` | Direct copy | Boolean |
-| `step_result.threshold_multiplier` | `posture_adjustments["threshold_multiplier"]` | Nest in dict | Part of posture |
-| `step_result.traffic_limit` | `posture_adjustments["traffic_limit"]` | Nest in dict | Part of posture |
-| `step_result.deployment_freeze` | `posture_adjustments["deployment_freeze"]` | Nest in dict | Part of posture |
-| `step_result.safe_mode_forced` | `posture_adjustments["safe_mode_forced"]` | Nest in dict | Part of posture |
-| `step_result.violations` | `drift_reasons` | Map list | Empty if no drift |
-| `len(step_result.violations) > 0` | `drift_detected` | Compute boolean | True if violations non-empty |
-| _Previous entry hash_ | `prev_entry_hash` | Compute | SHA256(previous entry) |
-| _(timestamp, regime, factors)_ | `entry_id` | Compute | SHA256(canonical JSON) |
-| _System hostname_ | `node_id` | Compute | From environment |
-| _"phase13.1"_ | `orp_version` | Hardcode | Version string |
+**Phase:** 13 - Autonomous Verification Ledger (AVL)
+**Status:** Complete
+**Reference:** `docs/Phase13_Initiation_Plan.md`, `docs/adr/ADR-13-Init.md`
 
 ---
 
-## Transformation Code
+## Simulation → Ledger Entry Mapping
 
-```python
-def step_result_to_avl_entry(
-    step_result: StepResult,
-    prev_entry_hash: str = "0" * 64,
-    node_id: str = socket.gethostname(),
-    orp_version: str = "phase13.1",
-) -> AVLEntry:
-    """Convert simulation StepResult to AVL entry."""
+This document maps simulation outputs to AVL entry fields for migration from
+simulation-based testing to production AVL logging.
 
-    # Build posture_adjustments dict
-    posture_adjustments = {
-        "threshold_multiplier": step_result.threshold_multiplier,
-        "traffic_limit": step_result.traffic_limit,
-        "deployment_freeze": step_result.deployment_freeze,
-        "safe_mode_forced": step_result.safe_mode_forced,
-    }
+### Field Mapping Table
 
-    # Compute drift detection
-    drift_detected = len(step_result.violations) > 0
-    drift_reasons = step_result.violations if drift_detected else []
+| Simulation Output | AVL Entry Field | Transformation |
+|-------------------|-----------------|----------------|
+| `step_result.timestamp` | `timestamp` | Direct copy (ISO8601) |
+| `step_result.elapsed_s` | `elapsed_s` | Direct copy |
+| `step_result.orp_regime` | `orp_regime` | Direct copy |
+| `step_result.orp_regime_score` | `orp_regime_score` | Direct copy |
+| `step_result.contributing_factors` | `contributing_factors` | Direct copy (dict) |
+| `step_result.posture_adjustments` | `posture_adjustments` | Direct copy (dict) |
+| `step_result.oracle_regime` | `oracle_regime` | From `compute_and_classify()` |
+| `step_result.oracle_regime_score` | `oracle_regime_score` | From `compute_and_classify()` |
+| `orp_regime == oracle_regime` | `dual_modality_agreement` | Boolean comparison |
+| `step_result.transition_from` | `transition_from` | Direct copy (nullable) |
+| `step_result.time_in_regime_s` | `time_in_previous_regime_s` | Direct copy |
+| Previous entry hash | `prev_entry_hash` | `compute_entry_hash(prev_entry)` |
+| `(timestamp, regime, factors)` | `entry_id` | `compute_entry_id(entry)` |
 
-    # Create entry (entry_id computed by AVLLedger.append())
-    entry = AVLEntry(
-        entry_id="",  # Will be computed
-        prev_entry_hash=prev_entry_hash,
-        timestamp=step_result.timestamp,
-        elapsed_s=step_result.elapsed_s,
-        orp_regime=step_result.orp_regime,
-        orp_regime_score=step_result.orp_regime_score,
-        contributing_factors=step_result.contributing_factors,
-        posture_adjustments=posture_adjustments,
-        oracle_regime=step_result.oracle_regime,
-        oracle_regime_score=step_result.oracle_regime_score,
-        dual_modality_agreement=step_result.dual_modality_agreement,
-        transition_from=step_result.orp_transition_from,
-        time_in_previous_regime_s=step_result.time_in_regime_s,
-        hysteresis_enforced=step_result.hysteresis_enforced,
-        min_duration_enforced=step_result.min_duration_enforced,
-        ledger_continuity=step_result.ledger_continuity,
-        amplitude_valid=step_result.amplitude_valid,
-        drift_detected=drift_detected,
-        drift_reasons=drift_reasons,
-        node_id=node_id,
-        orp_version=orp_version,
-    )
+### Invariant Fields
 
-    return entry
-```
+These fields are set based on ORP invariant enforcement:
+
+| Field | Default Value | Notes |
+|-------|---------------|-------|
+| `hysteresis_enforced` | `True` | ORP always enforces hysteresis |
+| `min_duration_enforced` | `True` | ORP always enforces min-duration |
+| `ledger_continuity` | `True` | Validated by AVL on append |
+| `amplitude_valid` | Computed | `0.5 <= threshold_multiplier <= 2.0` AND `0.0 <= traffic_limit <= 1.0` |
+
+### Drift Detection Fields
+
+These fields are populated by the DriftGuard:
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| `drift_detected` | `DriftGuard.check()` | True if any drift rule triggered |
+| `drift_reasons` | `DriftGuard.check()` | List of violation messages |
+
+### Metadata Fields
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| `node_id` | `NOVA_AVL_NODE_ID` env var | Default: "default" |
+| `orp_version` | Hardcoded | "phase13.1" |
 
 ---
 
-## Example Transformation
+## Ledger Storage
 
-**Simulation Output (StepResult):**
+### Format
+
+- **Type:** JSON Lines (`.jsonl`)
+- **Encoding:** UTF-8
+- **Line terminator:** `\n`
+- **One entry per line**
+
+### Location
+
+- **Default:** `data/avl/avl_ledger.jsonl`
+- **Configurable:** `NOVA_AVL_PATH` environment variable
+
+### Example Entry
+
 ```json
-{
-  "step": 0,
-  "timestamp": "2025-01-01T00:00:00+00:00",
-  "elapsed_s": 0.0,
-  "contributing_factors": {
-    "urf_composite_risk": 0.12,
-    "mse_meta_instability": 0.02,
-    "predictive_collapse_risk": 0.08,
-    "consistency_gap": 0.04,
-    "csi_continuity_index": 0.96
-  },
-  "orp_regime_score": 0.067,
-  "orp_regime": "normal",
-  "orp_transition_from": null,
-  "time_in_regime_s": 0.0,
-  "oracle_regime_score": 0.067,
-  "oracle_regime": "normal",
-  "dual_modality_agreement": true,
-  "hysteresis_enforced": true,
-  "min_duration_enforced": true,
-  "ledger_continuity": true,
-  "amplitude_valid": true,
-  "threshold_multiplier": 1.0,
-  "traffic_limit": 1.0,
-  "deployment_freeze": false,
-  "safe_mode_forced": false,
-  "violations": []
-}
-```
-
-**AVL Entry (after transformation):**
-```json
-{
-  "entry_id": "a3c5e8f2b1d4e9a7...",
-  "prev_entry_hash": "0000000000000000...",
-  "timestamp": "2025-01-01T00:00:00+00:00",
-  "elapsed_s": 0.0,
-  "orp_regime": "normal",
-  "orp_regime_score": 0.067,
-  "contributing_factors": {
-    "urf_composite_risk": 0.12,
-    "mse_meta_instability": 0.02,
-    "predictive_collapse_risk": 0.08,
-    "consistency_gap": 0.04,
-    "csi_continuity_index": 0.96
-  },
-  "posture_adjustments": {
-    "threshold_multiplier": 1.0,
-    "traffic_limit": 1.0,
-    "deployment_freeze": false,
-    "safe_mode_forced": false
-  },
-  "oracle_regime": "normal",
-  "oracle_regime_score": 0.067,
-  "dual_modality_agreement": true,
-  "transition_from": null,
-  "time_in_previous_regime_s": 0.0,
-  "hysteresis_enforced": true,
-  "min_duration_enforced": true,
-  "ledger_continuity": true,
-  "amplitude_valid": true,
-  "drift_detected": false,
-  "drift_reasons": [],
-  "node_id": "nova-prod-01",
-  "orp_version": "phase13.1"
-}
+{"entry_id":"a1b2c3d4...","prev_entry_hash":"0000000000000000000000000000000000000000000000000000000000000000","timestamp":"2025-01-01T12:00:00+00:00","elapsed_s":0.0,"orp_regime":"normal","orp_regime_score":0.15,"contributing_factors":{"urf_composite_risk":0.15,"mse_meta_instability":0.03,"predictive_collapse_risk":0.10,"consistency_gap":0.05,"csi_continuity_index":0.95},"posture_adjustments":{"threshold_multiplier":1.0,"traffic_limit":1.0,"deployment_freeze":false,"safe_mode_forced":false,"monitoring_interval_s":60},"oracle_regime":"normal","oracle_regime_score":0.15,"dual_modality_agreement":true,"transition_from":null,"time_in_previous_regime_s":0.0,"hysteresis_enforced":true,"min_duration_enforced":true,"ledger_continuity":true,"amplitude_valid":true,"drift_detected":false,"drift_reasons":[],"node_id":"default","orp_version":"phase13.1"}
 ```
 
 ---
 
-## Migration Script
+## Migration Steps
 
-**Script:** `scripts/migrate_simulation_to_avl.py`
+### Step 1: Enable AVL in Development
 
-**Purpose:** Convert existing simulation results to AVL ledger format.
-
-**Usage:**
 ```bash
-# Migrate single trajectory
-python scripts/migrate_simulation_to_avl.py \
-  --input test_output/canonical_normal_stable_results.jsonl \
-  --output data/avl/canonical_normal_stable.avl.jsonl
-
-# Migrate all trajectories
-python scripts/migrate_simulation_to_avl.py \
-  --input-dir test_output/ \
-  --output-dir data/avl/
+# .env.local
+NOVA_ENABLE_AVL=1
+NOVA_AVL_PATH=data/avl/dev_ledger.jsonl
+NOVA_AVL_HALT_ON_DRIFT=0
 ```
 
-**Script skeleton:**
+### Step 2: Run Simulation with AVL
+
+```bash
+# Run single trajectory
+python scripts/validate_avl_e2e.py --trajectory canonical_normal_to_heightened.json
+
+# Run all trajectories
+python scripts/validate_avl_e2e.py
+```
+
+### Step 3: Validate Ledger Integrity
+
 ```python
-#!/usr/bin/env python3
-"""Migrate simulation results to AVL ledger format."""
+from src.nova.continuity.avl_ledger import AVLLedger
+from src.nova.continuity.continuity_proof import ContinuityProof
 
-import argparse
-import json
-from pathlib import Path
-from src.nova.continuity.avl_ledger import AVLLedger, AVLEntry
+ledger = AVLLedger("data/avl/dev_ledger.jsonl")
 
-def load_simulation_results(path: Path) -> List[StepResult]:
-    """Load simulation JSONL file."""
-    results = []
-    with open(path) as f:
-        for line in f:
-            results.append(StepResult(**json.loads(line)))
-    return results
+# Verify hash chain
+is_valid, violations = ledger.verify_integrity()
+print(f"Integrity: {is_valid}")
 
-def migrate_to_avl(results: List[StepResult], output_path: Path):
-    """Convert simulation results to AVL ledger."""
-    ledger = AVLLedger(str(output_path))
+# Run continuity proofs
+proof = ContinuityProof()
+results = proof.prove_all(ledger.get_entries())
+for name, result in results.items():
+    print(f"{name}: {'PASS' if result.passed else 'FAIL'}")
+```
 
-    for step_result in results:
-        entry = step_result_to_avl_entry(step_result)
-        ledger.append(entry)
+### Step 4: Enable in Production
 
-    print(f"Migrated {len(results)} entries to {output_path}")
-    print(f"Ledger integrity: {ledger.verify_integrity()}")
+```bash
+# .env.production
+NOVA_ENABLE_AVL=1
+NOVA_AVL_PATH=/var/nova/avl/production_ledger.jsonl
+NOVA_AVL_HALT_ON_DRIFT=0  # Start with logging only
+NOVA_AVL_NODE_ID=prod-node-01
+```
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    args = parser.parse_args()
+### Step 5: Enable Halt-on-Drift (Optional)
 
-    results = load_simulation_results(args.input)
-    migrate_to_avl(results, args.output)
+After validating no false positives in production:
 
-if __name__ == "__main__":
-    main()
+```bash
+NOVA_AVL_HALT_ON_DRIFT=1
 ```
 
 ---
 
-## Validation Checklist
+## Query API Examples
 
-After migration, validate:
+### Query by Time Window
 
-- [ ] **Entry count matches:** AVL entries == simulation steps
-- [ ] **Hash chain intact:** `verify_integrity()` passes
-- [ ] **Timestamps preserved:** All timestamps match simulation
-- [ ] **Regime sequence preserved:** Regime transitions identical
-- [ ] **Dual-modality agreement:** Same as simulation (100% on canonical)
-- [ ] **Drift events match:** drift_detected matches violations
-- [ ] **Continuity proofs hold:** All proofs pass on migrated ledger
+```python
+ledger = AVLLedger("data/avl/ledger.jsonl")
+
+# Get entries from specific time range
+entries = ledger.query_by_time_window(
+    "2025-01-01T12:00:00+00:00",
+    "2025-01-01T13:00:00+00:00"
+)
+```
+
+### Query by Regime
+
+```python
+# Get all heightened regime entries
+heightened = ledger.query_by_regime("heightened")
+```
+
+### Query Drift Events
+
+```python
+# Get all drift events
+drift_events = ledger.query_drift_events()
+for event in drift_events:
+    print(f"{event.timestamp}: {event.drift_reasons}")
+```
+
+### Get Latest Entries
+
+```python
+# Get last 10 entries
+latest = ledger.get_latest(10)
+```
 
 ---
 
-## Notes
+## Environment Variables
 
-- Migration is **one-way** (simulation → AVL, not reversible)
-- AVL is **append-only** (no updates/deletes)
-- `entry_id` and `prev_entry_hash` are **computed**, not copied
-- `node_id` and `orp_version` are **metadata**, not in simulation
-- Simulation `step` field is **discarded** (AVL uses entry_id)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NOVA_ENABLE_AVL` | `0` | Enable AVL logging (`1`=enabled) |
+| `NOVA_AVL_PATH` | `data/avl/avl_ledger.jsonl` | Ledger file path |
+| `NOVA_AVL_HALT_ON_DRIFT` | `0` | Halt on drift (`1`=halt) |
+| `NOVA_AVL_NODE_ID` | `default` | Node identifier |
+
+---
+
+## Rollback Plan
+
+If issues arise with AVL:
+
+### Disable AVL
+
+```bash
+export NOVA_ENABLE_AVL=0
+```
+
+### Revert Code (if needed)
+
+```bash
+git revert <avl-commit-range>
+```
+
+### Clear Ledger (development only)
+
+```python
+from src.nova.continuity.avl_ledger import reset_avl_ledger
+reset_avl_ledger()
+```
+
+---
+
+## Validation Results
+
+### E2E Validation Summary
+
+```
+Total trajectories: 20
+Passed: 20
+Failed: 0
+Total entries: 117
+Drift events: 0
+```
+
+### Test Coverage
+
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| `test_avl_ledger.py` | 28 | PASS |
+| `test_drift_guard.py` | 21 | PASS |
+| `test_continuity_proof.py` | 21 | PASS |
+| `test_orp_avl.py` | 9 | PASS |
+| `test_orp.py` | 31 | PASS |
+| **Total** | **110** | **PASS** |
+
+---
+
+## Files Created/Modified
+
+### New Files
+
+- `src/nova/continuity/avl_ledger.py` - AVL ledger core
+- `src/nova/continuity/drift_guard.py` - Drift detection engine
+- `src/nova/continuity/continuity_proof.py` - Continuity proof validators
+- `src/nova/continuity/__init__.py` - Module exports
+- `tests/continuity/test_avl_ledger.py` - AVL unit tests
+- `tests/continuity/test_drift_guard.py` - Drift guard unit tests
+- `tests/continuity/test_continuity_proof.py` - Proof unit tests
+- `tests/integration/test_orp_avl.py` - Integration tests
+- `scripts/validate_avl_e2e.py` - E2E validation script
+- `docs/Phase13_Migration_Map.md` - This document
+
+### Modified Files
+
+- `src/nova/continuity/operational_regime.py` - AVL integration
+
+---
+
+## Next Steps
+
+1. **Phase 14:** Ledger archival strategy (unbounded growth mitigation)
+2. **Prometheus metrics:** Add `nova_avl_entries_total`, `nova_avl_drift_events_total`
+3. **Grafana dashboard:** AVL health monitoring
+4. **Async writes:** Performance optimization for high-throughput scenarios
