@@ -115,132 +115,6 @@ def validate_trajectory_timestamps(steps: "List[TrajectoryStep]") -> None:
         previous_timestamp = current_timestamp
 
 
-# ---------- API Guard ----------
-
-
-def _require_public_api(snapshot_dict: dict, state: ORPState) -> None:
-    """Fail fast if required public fields are missing (Phase 16-2 hardening).
-    
-    Guards against ORP API drift by validating expected fields exist.
-    Raises AssertionError if ORP public API has changed incompatibly.
-    """
-    required_snapshot_fields = [
-        "regime", "regime_score", "transition_from", "timestamp", "time_in_regime_s"
-    ]
-    for field in required_snapshot_fields:
-        assert field in snapshot_dict, (
-            f"ORP API drift detected: missing '{field}' in RegimeSnapshot.to_dict(). "
-            f"Update simulator to match new ORP API."
-        )
-    
-    # Validate ORPState has expected attributes
-    assert hasattr(state, "current_regime"), "ORP API drift: ORPState missing current_regime"
-    assert hasattr(state, "time_in_regime_s"), "ORP API drift: ORPState missing time_in_regime_s"
-
-
-# ---------- Trajectory Schema ----------
-
-
-# ---------- Timestamp Utilities (moved after TrajectoryStep definition) ----------
-
-
-def parse_trajectory_timestamp(timestamp_str: str) -> datetime:
-    """Parse trajectory timestamp with robust format handling and validation.
-
-    Supports multiple ISO 8601 formats:
-    - 2023-01-01T12:00:00Z (Z suffix)
-    - 2023-01-01T12:00:00+00:00 (explicit UTC)
-    - 2023-01-01T12:00:00 (naive, assumed UTC)
-
-    Args:
-        timestamp_str: Timestamp string to parse
-
-    Returns:
-        datetime: Parsed timestamp with UTC timezone
-
-    Raises:
-        ValueError: If timestamp format is invalid or unparseable
-    """
-    if not timestamp_str or not isinstance(timestamp_str, str):
-        raise ValueError(f"Invalid timestamp: must be non-empty string, got {type(timestamp_str)}: {timestamp_str!r}")
-
-    # Normalize common formats
-    normalized = timestamp_str.strip()
-
-    # Handle Z suffix (UTC)
-    if normalized.endswith('Z'):
-        normalized = normalized[:-1] + '+00:00'
-    # Handle naive timestamps (assume UTC)
-    elif '+' not in normalized and '-' not in normalized[-6:]:  # No timezone info
-        normalized += '+00:00'
-
-    try:
-        parsed = datetime.fromisoformat(normalized)
-        # Ensure it's timezone-aware
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
-        else:
-            # Convert to UTC if it's not already
-            parsed = parsed.astimezone(timezone.utc)
-
-        return parsed
-    except ValueError as e:
-        raise ValueError(f"Invalid timestamp format '{timestamp_str}' (normalized: '{normalized}'): {e}") from e
-
-
-def validate_trajectory_timestamps(steps: "List[TrajectoryStep]") -> None:
-    """Validate trajectory timestamps are properly formatted and monotonic.
-
-    Args:
-        steps: List of trajectory steps to validate
-
-    Raises:
-        ValueError: If timestamps are invalid or non-monotonic
-    """
-    if not steps:
-        return
-
-    previous_timestamp = None
-
-    for i, step in enumerate(steps):
-        try:
-            current_timestamp = parse_trajectory_timestamp(step.timestamp)
-        except ValueError as e:
-            raise ValueError(f"Step {step.step} (index {i}): {e}") from e
-
-        # Check monotonicity (timestamps should not go backwards)
-        if previous_timestamp is not None and current_timestamp < previous_timestamp:
-            raise ValueError(
-                f"Step {step.step} (index {i}): timestamp {step.timestamp} "
-                f"is before previous step's timestamp {steps[i-1].timestamp}"
-            )
-
-        previous_timestamp = current_timestamp
-
-
-# ---------- API Guard ----------
-
-
-def _require_public_api(snapshot_dict: dict, state: ORPState) -> None:
-    """Fail fast if required public fields are missing (Phase 16-2 hardening).
-    
-    Guards against ORP API drift by validating expected fields exist.
-    Raises AssertionError if ORP public API has changed incompatibly.
-    """
-    required_snapshot_fields = [
-        "regime", "regime_score", "transition_from", "timestamp", "time_in_regime_s"
-    ]
-    for field in required_snapshot_fields:
-        assert field in snapshot_dict, (
-            f"ORP API drift detected: missing '{field}' in RegimeSnapshot.to_dict(). "
-            f"Update simulator to match new ORP API."
-        )
-    
-    # Validate ORPState has expected attributes
-    assert hasattr(state, "current_regime"), "ORP API drift: ORPState missing current_regime"
-    assert hasattr(state, "time_in_regime_s"), "ORP API drift: ORPState missing time_in_regime_s"
-
-
 # ---------- Trajectory Schema ----------
 
 
@@ -502,15 +376,12 @@ def simulate_trajectory(trajectory: Trajectory, verbose: bool = False) -> tuple[
         snapshot_obj = orp.evaluate(factors=factors, timestamp=step_data.timestamp)
         snapshot = snapshot_obj.to_dict()
 
-        # Get current state via public API (Phase 16-2 hardening)
+        # Get current state via public API
         # Parse trajectory timestamp for clock alignment
         step_timestamp = parse_trajectory_timestamp(step_data.timestamp)
-        
+
         # Use public get_state() with trajectory timestamp for clock alignment
         orp_state = orp.get_state(now=step_timestamp)
-        
-        # Validate public API hasn't drifted
-        _require_public_api(snapshot, orp_state)
 
         # Use time_in_regime_s from snapshot (computed during evaluate)
         # This ensures ORP and simulator use the same value
@@ -552,16 +423,6 @@ def simulate_trajectory(trajectory: Trajectory, verbose: bool = False) -> tuple[
             snapshot["posture_adjustments"]["traffic_limit"],
         )
 
-        # Log amplitude bounds for debugging
-        if not amplitude_ok:
-            tm = snapshot["posture_adjustments"]["threshold_multiplier"]
-            tl = snapshot["posture_adjustments"]["traffic_limit"]
-            step_violations.append(
-                f"Amplitude out of bounds: threshold_multiplier={tm:.3f} "
-                f"(expected: {AMPLITUDE_BOUNDS['threshold_multiplier']}), "
-                f"traffic_limit={tl:.3f} (expected: {AMPLITUDE_BOUNDS['traffic_limit']})"
-            )
-
         # Collect violations
         step_violations = []
         if not dual_modality_agreement:
@@ -570,8 +431,16 @@ def simulate_trajectory(trajectory: Trajectory, verbose: bool = False) -> tuple[
             step_violations.append("Hysteresis not enforced")
         if not min_duration_ok:
             step_violations.append("Min-duration not enforced")
-        # Ledger continuity already added above
-        # Amplitude validation with detailed error already added above
+        if not ledger_ok:
+            step_violations.append("Ledger continuity broken")
+        if not amplitude_ok:
+            tm = snapshot["posture_adjustments"]["threshold_multiplier"]
+            tl = snapshot["posture_adjustments"]["traffic_limit"]
+            step_violations.append(
+                f"Amplitude out of bounds: threshold_multiplier={tm:.3f} "
+                f"(expected: {AMPLITUDE_BOUNDS['threshold_multiplier']}), "
+                f"traffic_limit={tl:.3f} (expected: {AMPLITUDE_BOUNDS['traffic_limit']})"
+            )
 
         violations.extend(step_violations)
 
