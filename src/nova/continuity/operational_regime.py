@@ -1,7 +1,12 @@
-"""Operational Regime Policy (ORP) - Phase 11
+"""Operational Regime Policy (ORP) - Phase 11 + Phase 13 AVL Integration
 
 Maps continuity signals → operational regimes → slot posture adjustments.
 Translates multi-signal risk/stability state into actionable system behavior.
+
+Phase 13 additions:
+- AVL ledger integration (writes after each evaluation)
+- Drift guard checks (optional halt on drift)
+- Prometheus metrics for AVL operations
 """
 
 from __future__ import annotations
@@ -10,6 +15,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +25,17 @@ try:
 except Exception:  # pragma: no cover
     def record_regime_transition(*args, **kwargs) -> Dict[str, Any]:  # type: ignore[misc]
         return {"success": False, "reason": "ledger_not_available"}
+
+# Phase 13: AVL Integration (optional)
+try:
+    from src.nova.continuity.avl_ledger import AVLEntry, get_avl_ledger, avl_enabled
+    from src.nova.continuity.drift_guard import get_drift_guard, DriftDetectedError
+    from src.nova.continuity.contract_oracle import compute_and_classify
+    _AVL_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _AVL_AVAILABLE = False
+    def avl_enabled() -> bool:  # type: ignore[misc]
+        return False
 
 # Lazy imports with fallback stubs for continuity signals
 try:
@@ -375,7 +392,72 @@ class OperationalRegimePolicy:
         )
 
         self._last_snapshot = snapshot
+        
+        # Phase 13: Write to AVL if enabled
+        if _AVL_AVAILABLE and avl_enabled():
+            try:
+                self._write_to_avl(snapshot, factors, time_in_regime_s)
+            except DriftDetectedError:
+                raise  # Re-raise drift errors
+            except Exception as e:
+                logger.warning(f"AVL write failed: {e}")
+                # Don't fail ORP evaluation on AVL errors
+        
         return snapshot
+    
+    def _write_to_avl(
+        self,
+        snapshot: RegimeSnapshot,
+        factors: ContributingFactors,
+        time_in_previous_regime_s: float,
+    ) -> None:
+        """Write ORP evaluation to AVL ledger (Phase 13).
+        
+        Creates AVLEntry with dual-modality verification and drift detection.
+        """
+        # Get oracle verification
+        oracle_result = compute_and_classify(
+            factors.to_dict(),
+            current_regime=self._current_regime.value,
+            time_in_regime_s=time_in_previous_regime_s,
+        )
+        
+        # Create AVL entry
+        entry = AVLEntry(
+            timestamp=snapshot.timestamp,
+            elapsed_s=time_in_previous_regime_s,
+            orp_regime=snapshot.regime.value,
+            orp_regime_score=snapshot.regime_score,
+            contributing_factors=factors.to_dict(),
+            posture_adjustments=snapshot.posture_adjustments.to_dict(),
+            oracle_regime=oracle_result["regime"],
+            oracle_regime_score=oracle_result["regime_score"],
+            dual_modality_agreement=(snapshot.regime.value == oracle_result["regime"]),
+            transition_from=snapshot.transition_from.value if snapshot.transition_from else None,
+            time_in_previous_regime_s=time_in_previous_regime_s,
+            hysteresis_enforced=True,  # ORP always enforces
+            min_duration_enforced=True,  # ORP always enforces
+            ledger_continuity=True,  # Will be validated by AVL
+            amplitude_valid=self._check_amplitude_valid(snapshot.posture_adjustments),
+            node_id=os.environ.get("NOVA_AVL_NODE_ID", "default"),
+            orp_version="phase13.1",
+        )
+        
+        # Run drift guard check (may raise DriftDetectedError)
+        drift_guard = get_drift_guard()
+        entry = drift_guard.check_and_update(entry)
+        
+        # Append to ledger
+        avl_ledger = get_avl_ledger()
+        avl_ledger.append(entry)
+        
+        logger.debug(f"AVL entry written: {entry.entry_id[:16]}...")
+    
+    def _check_amplitude_valid(self, posture: PostureAdjustments) -> bool:
+        """Check if posture adjustments are within amplitude bounds."""
+        mult = posture.threshold_multiplier
+        limit = posture.traffic_limit
+        return (0.5 <= mult <= 2.0) and (0.0 <= limit <= 1.0)
 
     def get_current_regime(self) -> Regime:
         """Get current regime without re-evaluation."""
