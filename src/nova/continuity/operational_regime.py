@@ -174,6 +174,7 @@ class RegimeSnapshot:
     posture_adjustments: PostureAdjustments
     timestamp: str
     transition_from: Optional[Regime] = None
+    time_in_regime_s: float = 0.0  # Phase 16-2: Added for simulator/oracle alignment
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -183,6 +184,28 @@ class RegimeSnapshot:
             "posture_adjustments": self.posture_adjustments.to_dict(),
             "timestamp": self.timestamp,
             "transition_from": self.transition_from.value if self.transition_from else None,
+            "time_in_regime_s": self.time_in_regime_s,
+        }
+
+
+@dataclass
+class ORPState:
+    """Public state accessor for ORP internals (Phase 16-2 hardening).
+    
+    Provides a stable public API for simulator/oracle access instead of
+    reaching into private attributes like _current_regime_start.
+    """
+    current_regime: Regime
+    current_regime_start: Optional[datetime]
+    time_in_regime_s: float
+    last_snapshot: Optional[RegimeSnapshot]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "current_regime": self.current_regime.value,
+            "current_regime_start": self.current_regime_start.isoformat() if self.current_regime_start else None,
+            "time_in_regime_s": self.time_in_regime_s,
+            "last_snapshot": self.last_snapshot.to_dict() if self.last_snapshot else None,
         }
 
 
@@ -335,6 +358,10 @@ class OperationalRegimePolicy:
         # Get posture for new regime
         posture = REGIME_POSTURES[new_regime]
 
+        # Compute final time_in_regime_s for snapshot
+        # After transition, time resets to 0; otherwise use computed value
+        final_time_in_regime_s = 0.0 if transition_from else time_in_regime_s
+
         # Create snapshot
         ts = timestamp or now.isoformat()
         snapshot = RegimeSnapshot(
@@ -344,6 +371,7 @@ class OperationalRegimePolicy:
             posture_adjustments=posture,
             timestamp=ts,
             transition_from=transition_from,
+            time_in_regime_s=final_time_in_regime_s,
         )
 
         self._last_snapshot = snapshot
@@ -356,6 +384,33 @@ class OperationalRegimePolicy:
     def get_last_snapshot(self) -> Optional[RegimeSnapshot]:
         """Get last evaluated snapshot."""
         return self._last_snapshot
+
+    def get_state(self, now: Optional[datetime] = None) -> ORPState:
+        """Get current ORP state via public API (Phase 16-2 hardening).
+        
+        Provides stable accessor for simulator/oracle instead of private attrs.
+        
+        Args:
+            now: Optional timestamp for time_in_regime_s calculation.
+                 If None, uses current wall-clock time.
+        
+        Returns:
+            ORPState with current_regime, current_regime_start, time_in_regime_s,
+            and last_snapshot.
+        """
+        if now is None:
+            now = datetime.now(timezone.utc)
+        
+        time_in_regime_s = 0.0
+        if self._current_regime_start is not None:
+            time_in_regime_s = (now - self._current_regime_start).total_seconds()
+        
+        return ORPState(
+            current_regime=self._current_regime,
+            current_regime_start=self._current_regime_start,
+            time_in_regime_s=time_in_regime_s,
+            last_snapshot=self._last_snapshot,
+        )
 
     def reset(self) -> None:
         """Reset to NORMAL regime (for testing)."""
