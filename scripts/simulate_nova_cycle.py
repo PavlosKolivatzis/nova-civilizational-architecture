@@ -246,8 +246,12 @@ def simulate_trajectory(trajectory: Trajectory, verbose: bool = False) -> tuple[
         oracle_score = compute_regime_score_from_contract(step_data.contributing_factors)
 
         # Get current state
+        # Handle 'Z' suffix for UTC (Python version compatibility)
+        timestamp_str = step_data.timestamp.replace('Z', '+00:00')
+        step_timestamp = datetime.fromisoformat(timestamp_str)
+
         time_in_regime = (
-            datetime.fromisoformat(step_data.timestamp) - orp._current_regime_start
+            step_timestamp - orp._current_regime_start
         ).total_seconds() if orp._current_regime_start else 0.0
 
         oracle_regime = classify_regime_from_contract(
