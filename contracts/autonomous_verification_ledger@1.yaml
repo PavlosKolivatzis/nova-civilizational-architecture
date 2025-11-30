@@ -1,0 +1,431 @@
+# ============================================================================
+# Autonomous Verification Ledger (AVL) Contract - Phase 13
+# ============================================================================
+# Version: 1.0.0
+# Purpose: Define hash-chained ledger for regime transition verification
+# Supersedes: regime_transition_ledger@1 (Phase 11.3)
+# ============================================================================
+
+schema_version: "1.0"
+name: "Autonomous Verification Ledger"
+version: "1.0.0"
+phase: "13"
+status: "active"
+description: |
+  Cryptographically secure, hash-chained ledger providing autonomous verification
+  of regime transitions through dual-modality consensus and drift detection.
+  Supersedes simple transition logging with immutable, verifiable continuity proofs.
+
+dependencies:
+  - "orp@1"
+  - "regime@1"
+
+# ============================================================================
+# SCHEMA DEFINITIONS
+# ============================================================================
+
+schema:
+  avl_entry:
+    type: object
+    required: [entry_id, timestamp, orp_regime, orp_regime_score, contributing_factors, oracle_regime, prev_entry_hash, entry_hash, node_id]
+    properties:
+      entry_id:
+        type: string
+        format: uuid4
+        description: "Unique entry identifier (UUID4)"
+
+      timestamp:
+        type: string
+        format: iso8601
+        description: "UTC timestamp of regime evaluation (ISO 8601)"
+
+      orp_regime:
+        type: string
+        enum: ["normal", "heightened", "controlled_degradation", "emergency_stabilization", "recovery"]
+        description: "ORP-computed operational regime"
+
+      orp_regime_score:
+        type: float
+        range: [0.0, 1.0]
+        description: "ORP composite regime severity score"
+
+      contributing_factors:
+        type: object
+        description: "ORP contributing factors snapshot"
+        properties:
+          urf_composite_risk: {type: float, range: [0.0, 1.0]}
+          mse_meta_instability: {type: float, range: [0.0, 1.0]}
+          predictive_collapse_risk: {type: float, range: [0.0, 1.0]}
+          consistency_gap: {type: float, range: [0.0, 1.0]}
+          csi_continuity_index: {type: float, range: [0.0, 1.0]}
+
+      oracle_regime:
+        type: string
+        enum: ["normal", "heightened", "controlled_degradation", "emergency_stabilization", "recovery"]
+        description: "Contract oracle computed regime (dual-modality verification)"
+
+      prev_entry_hash:
+        type: string
+        pattern: "^[0-9a-f]{64}$"
+        description: "SHA256 hash of previous entry (genesis = '0'*64)"
+
+      entry_hash:
+        type: string
+        pattern: "^[0-9a-f]{64}$"
+        description: "SHA256 hash of canonical entry representation"
+
+      node_id:
+        type: string
+        description: "Node identifier for distributed deployments"
+
+      time_in_regime_s:
+        type: float
+        min: 0.0
+        description: "Seconds spent in current regime before transition"
+
+      drift_detected:
+        type: boolean
+        description: "True if drift detected in this entry"
+
+      drift_reasons:
+        type: array
+        items:
+          type: string
+          enum: ["dual_modality_disagreement", "score_drift", "invariant_violation", "amplitude_bounds"]
+        description: "Specific drift detection reasons"
+
+  continuity_proof:
+    type: object
+    description: "Result of continuity verification"
+    properties:
+      proof_type:
+        type: string
+        enum: ["ledger_continuity", "temporal_continuity", "amplitude_continuity", "regime_continuity"]
+        description: "Type of continuity proof performed"
+
+      verified:
+        type: boolean
+        description: "True if continuity proof passes"
+
+      details:
+        type: object
+        description: "Proof-specific verification details"
+
+      timestamp:
+        type: string
+        format: iso8601
+        description: "When proof was executed"
+
+  drift_detection_result:
+    type: object
+    description: "Result of drift detection analysis"
+    properties:
+      drift_detected:
+        type: boolean
+        description: "True if any drift condition met"
+
+      reasons:
+        type: array
+        items: {type: string}
+        description: "Specific drift reasons identified"
+
+      severity:
+        type: string
+        enum: ["none", "warning", "critical"]
+        description: "Drift severity level"
+
+      halt_recommended:
+        type: boolean
+        description: "True if system halt recommended"
+
+# ============================================================================
+# SEMANTICS & CRYPTOGRAPHY
+# ============================================================================
+
+semantics:
+  hash_chain:
+    description: "SHA256-based hash chain ensuring immutability"
+    genesis_hash: "0" * 64
+    canonical_ordering: ["timestamp", "orp_regime", "orp_regime_score", "contributing_factors", "oracle_regime"]
+    computation: "SHA256(json.dumps(canonical_dict, sort_keys=True).encode())"
+
+  dual_modality_verification:
+    description: "Consensus between ORP implementation and contract oracle"
+    agreement_required: true
+    drift_on_disagreement: true
+    oracle_source: "Contract-defined regime classification logic"
+
+  drift_detection_rules:
+    dual_modality_disagreement:
+      condition: "orp_regime != oracle_regime"
+      severity: "critical"
+      halt: true
+
+    score_drift:
+      condition: "abs(orp_regime_score - expected_score) > threshold"
+      threshold: 0.1
+      severity: "warning"
+      halt: false
+
+    invariant_violation:
+      condition: "regime_score ∉ [0.0, 1.0] OR contributing_factors out of bounds"
+      severity: "critical"
+      halt: true
+
+    amplitude_bounds:
+      condition: "time_in_regime_s < 0 OR timestamp invalid"
+      severity: "critical"
+      halt: true
+
+  continuity_proofs:
+    ledger_continuity:
+      description: "Verify hash chain integrity from genesis to current"
+      checks: ["hash_sequence_valid", "no_missing_entries", "chronological_order"]
+
+    temporal_continuity:
+      description: "Verify timestamps are monotonically increasing"
+      checks: ["timestamp_order", "no_future_timestamps", "reasonable_intervals"]
+
+    amplitude_continuity:
+      description: "Verify contributing factors within expected bounds"
+      checks: ["factor_ranges", "score_calculation", "no_extreme_outliers"]
+
+    regime_continuity:
+      description: "Verify regime transitions are valid and hysteresis-respecting"
+      checks: ["valid_transitions", "hysteresis_honored", "no_oscillation"]
+
+# ============================================================================
+# OPERATIONS
+# ============================================================================
+
+operations:
+  append_entry:
+    description: "Append new AVL entry with hash chain verification"
+    inputs:
+      orp_regime: {type: string}
+      orp_regime_score: {type: float}
+      contributing_factors: {type: object}
+      time_in_regime_s: {type: float}
+    outputs:
+      entry_id: {type: string, description: "UUID of created entry"}
+      entry_hash: {type: string, description: "Computed entry hash"}
+      drift_detected: {type: boolean}
+    guarantees:
+      - "Entry hash computed from canonical representation"
+      - "Prev hash links to current chain head"
+      - "Drift detection performed before append"
+      - "Append fails on drift if halt_on_drift enabled"
+
+  verify_chain:
+    description: "Verify entire hash chain from genesis"
+    inputs:
+      start_entry_id: {type: string, optional: true}
+      end_entry_id: {type: string, optional: true}
+    outputs:
+      verified: {type: boolean}
+      invalid_entries: {type: array, items: string}
+    guarantees:
+      - "Checks all hash linkages"
+      - "Validates chronological ordering"
+      - "Returns specific failure points"
+
+  prove_continuity:
+    description: "Execute all continuity proofs"
+    inputs: {}
+    outputs:
+      proofs: {type: object, description: "Dict of proof_type -> continuity_proof"}
+    guarantees:
+      - "All 4 proof types executed"
+      - "Results cached for performance"
+      - "Failures logged with details"
+
+  detect_drift:
+    description: "Check current state against drift rules"
+    inputs:
+      entry: {type: avl_entry}
+    outputs:
+      result: {type: drift_detection_result}
+    guarantees:
+      - "All drift rules evaluated"
+      - "Severity levels assigned"
+      - "Halt recommendations provided"
+
+# ============================================================================
+# INTEGRATION
+# ============================================================================
+
+integration:
+  operational_regime:
+    hook: "post_regime_evaluation"
+    description: "AVL append triggered after each ORP evaluation"
+    pseudocode: |
+      # After ORP computes new regime
+      oracle_regime = compute_oracle_regime(contributing_factors)
+      drift_result = detect_drift(orp_regime, oracle_regime, factors)
+
+      if drift_result.halt_recommended and halt_on_drift:
+          raise DriftDetectedError(drift_result.reasons)
+
+      append_entry(
+          orp_regime=orp_regime,
+          oracle_regime=oracle_regime,
+          factors=contributing_factors,
+          drift_reasons=drift_result.reasons
+      )
+
+  monitoring:
+    description: "AVL health monitoring and alerting"
+    metrics:
+      - {name: nova_avl_entries_total, type: counter, desc: "Total AVL entries"}
+      - {name: nova_avl_drift_events_total, type: counter, desc: "Drift detection events"}
+      - {name: nova_avl_chain_verifications_total, type: counter, desc: "Chain verification attempts"}
+      - {name: nova_avl_continuity_proofs_total, type: counter, labels: [proof_type, result], desc: "Continuity proof results"}
+
+  observability:
+    description: "AVL state exposed for debugging and auditing"
+    endpoints:
+      - "/api/v1/avl/latest"  # Get latest entry
+      - "/api/v1/avl/chain"   # Get hash chain info
+      - "/api/v1/avl/proofs"  # Get continuity proofs
+      - "/api/v1/avl/verify"  # Trigger chain verification
+
+# ============================================================================
+# ENVIRONMENT & CONFIGURATION
+# ============================================================================
+
+environment_variables:
+  NOVA_ENABLE_AVL:
+    type: "boolean"
+    default: "0"
+    description: "Enable Autonomous Verification Ledger (0=disabled, 1=enabled)"
+    behavior:
+      - "When disabled: ORP operates normally, no ledger writes"
+      - "When enabled: All regime evaluations written to AVL"
+
+  NOVA_AVL_PATH:
+    type: string
+    default: "data/avl_ledger.jsonl"
+    description: "Filesystem path for AVL storage"
+
+  NOVA_AVL_HALT_ON_DRIFT:
+    type: "boolean"
+    default: "0"
+    description: "Halt system on drift detection (0=log only, 1=halt)"
+    behavior:
+      - "When disabled: Drift logged, system continues"
+      - "When enabled: Drift raises DriftDetectedError"
+
+  NOVA_AVL_NODE_ID:
+    type: string
+    default: "nova-node-01"
+    description: "Unique node identifier for distributed deployments"
+
+# ============================================================================
+# INVARIANTS & GUARANTEES
+# ============================================================================
+
+invariants:
+  - "Hash chain immutable: entry[N].prev_entry_hash == hash(entry[N-1])"
+  - "Genesis hash is '0'*64 for first entry"
+  - "Timestamps monotonically increasing within tolerance"
+  - "Dual-modality consensus required (ORP vs oracle agreement)"
+  - "Drift detection rules strictly enforced when enabled"
+  - "Continuity proofs executable on demand"
+  - "Append-only: no deletes, updates, or reordering"
+
+guarantees:
+  - "Cryptographic integrity through SHA256 hash chaining"
+  - "Dual-modality verification prevents single-point failures"
+  - "Drift detection provides early warning of system divergence"
+  - "Continuity proofs enable automated health verification"
+  - "Thread-safe concurrent access with proper locking"
+  - "Graceful degradation when AVL unavailable (logs, doesn't crash)"
+
+# ============================================================================
+# TESTING & VALIDATION
+# ============================================================================
+
+testing:
+  unit_tests:
+    - "test_avl_entry_hash_computation"
+    - "test_hash_chain_integrity"
+    - "test_genesis_entry_creation"
+    - "test_drift_detection_rules"
+    - "test_continuity_proof_execution"
+    - "test_dual_modality_verification"
+    - "test_thread_safe_concurrent_access"
+    - "test_graceful_degradation_on_errors"
+
+  integration_tests:
+    - "test_orp_avl_integration_on_regime_change"
+    - "test_avl_halt_on_drift_enabled"
+    - "test_avl_log_only_on_drift_disabled"
+    - "test_continuity_proofs_all_pass"
+    - "test_avl_metrics_exported"
+    - "test_avl_observability_endpoints"
+
+  property_tests:
+    - "test_hash_chain_resists_modification"
+    - "test_drift_detection_catches_all_rule_violations"
+    - "test_continuity_proofs_detect_chain_breaks"
+
+# ============================================================================
+# MIGRATION & COMPATIBILITY
+# ============================================================================
+
+migration:
+  from_regime_transition_ledger:
+    description: "Migration path from Phase 11.3 regime_transition_ledger@1"
+    compatibility: "Supersedes - old ledger remains for audit, new AVL provides verification"
+    data_migration: "None - AVL starts empty, builds new history"
+    rollback: "Disable NOVA_ENABLE_AVL, system reverts to simple transition logging"
+
+  backward_compatibility:
+    - "AVL disabled by default (NOVA_ENABLE_AVL=0)"
+    - "ORP operates normally when AVL disabled"
+    - "No breaking changes to existing ORP API"
+    - "Lazy imports with fallback stubs"
+
+  rollout_strategy:
+    - "Phase 1: Enable AVL in shadow mode (write but don't halt)"
+    - "Phase 2: Enable drift detection with logging only"
+    - "Phase 3: Enable halt-on-drift for critical drifts"
+    - "Phase 4: Full production with continuity monitoring"
+
+# ============================================================================
+# EXAMPLES
+# ============================================================================
+
+examples:
+  normal_operation_entry:
+    entry_id: "550e8400-e29b-41d4-a716-446655440000"
+    timestamp: "2025-01-26T14:32:15.123Z"
+    orp_regime: "normal"
+    orp_regime_score: 0.15
+    contributing_factors:
+      urf_composite_risk: 0.12
+      mse_meta_instability: 0.03
+      predictive_collapse_risk: 0.08
+      consistency_gap: 0.05
+      csi_continuity_index: 0.95
+    oracle_regime: "normal"
+    prev_entry_hash: "a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890"
+    entry_hash: "f6e7g8h9i0j123456789012345678901234567890123456789012345678901234"
+    node_id: "nova-node-01"
+    time_in_regime_s: 1847.5
+    drift_detected: false
+    drift_reasons: []
+
+  drift_detection_example:
+    drift_detected: true
+    reasons: ["dual_modality_disagreement", "score_drift"]
+    severity: "critical"
+    halt_recommended: true
+    details:
+      orp_regime: "heightened"
+      oracle_regime: "controlled_degradation"
+      score_difference: 0.15
+
+# ============================================================================
+# END OF CONTRACT
+# ============================================================================

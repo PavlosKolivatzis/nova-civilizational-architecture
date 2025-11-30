@@ -345,6 +345,7 @@ dependencies:
   ledger_outputs:
     - "regime transitions logged to attest_ledger with timestamp, from_regime, to_regime, regime_score"
     - "posture changes logged when threshold_multiplier or traffic_limit adjusted"
+    - "Phase 13+: AVL entries with cryptographic verification (autonomous_verification_ledger@1)"
 
 # ---------- Migration & Environment ----------
 environment_variables:
@@ -353,12 +354,34 @@ environment_variables:
     description: "Enable Operational Regime Policy integration (0=disabled, 1=enabled)"
     required_for: ["Governance threshold adaptation", "Router traffic limiting", "Slot10 deployment freeze"]
 
+  # Phase 13 AVL Integration
+  NOVA_ENABLE_AVL:
+    default: "0"
+    description: "Enable Autonomous Verification Ledger for regime transition verification (0=disabled, 1=enabled)"
+    required_for: ["Cryptographic regime transition verification", "Dual-modality consensus", "Drift detection"]
+
+  NOVA_AVL_HALT_ON_DRIFT:
+    default: "0"
+    description: "Halt system on AVL drift detection (0=log only, 1=halt on drift)"
+    required_for: ["Critical drift protection", "System safety halts"]
+
 migration:
   backward_compatibility:
     - "ORP disabled by default (NOVA_ENABLE_ORP=0)"
     - "When disabled, all posture adjustments return identity (threshold_multiplier=1.0, traffic_limit=1.0, etc.)"
     - "Lazy imports with fallback stubs if ORP module unavailable"
 
+  phase13_avl_integration:
+    description: "Phase 13 introduces Autonomous Verification Ledger (AVL) for cryptographic regime verification"
+    changes:
+      - "AVL provides dual-modality consensus between ORP and contract oracle"
+      - "Drift detection with configurable halt-on-critical-drift"
+      - "Continuity proofs for automated health verification"
+      - "Hash-chained ledger with immutable transition history"
+    compatibility: "Full backward compatibility - AVL disabled by default"
+    migration_path: "Enable NOVA_ENABLE_AVL=1 after testing in shadow mode"
+
   rollback:
     - "Set NOVA_ENABLE_ORP=0 to disable regime-based adjustments"
+    - "Set NOVA_ENABLE_AVL=0 to disable verification ledger"
     - "System reverts to static thresholds defined in ThresholdManager"
