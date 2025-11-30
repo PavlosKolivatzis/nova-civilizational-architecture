@@ -7,6 +7,7 @@
 # ============================================================================
 
 schema_version: "1.0"
+contract_id: "autonomous_verification_ledger@1"
 name: "Autonomous Verification Ledger"
 version: "1.0.0"
 phase: "13"
@@ -145,7 +146,7 @@ schema:
 semantics:
   hash_chain:
     description: "SHA256-based hash chain ensuring immutability"
-    genesis_hash: "0" * 64
+    genesis_hash: "0000000000000000000000000000000000000000000000000000000000000000"
     canonical_ordering: ["timestamp", "orp_regime", "orp_regime_score", "contributing_factors", "oracle_regime"]
     computation: "SHA256(json.dumps(canonical_dict, sort_keys=True).encode())"
 
