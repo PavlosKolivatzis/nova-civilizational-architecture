@@ -52,7 +52,7 @@ class RepairPlanner:
 
         # Try semantic mirror
         try:
-            from orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
             mirror = get_semantic_mirror()
 
             # Prefer TRI phase coherence if available

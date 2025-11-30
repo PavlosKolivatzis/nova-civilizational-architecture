@@ -2,14 +2,14 @@
 
 import pytest
 
-from orchestrator.adapters.slot4_tri import Slot4TRIAdapter
+from nova.orchestrator.adapters.slot4_tri import Slot4TRIAdapter
 
 
 @pytest.fixture(autouse=True)
 def stub_truth_bridge(monkeypatch):
     """Isolate tests from semantic mirror + attestation side effects."""
     try:
-        import orchestrator.tri_truth_bridge as bridge
+        import nova.orchestrator.tri_truth_bridge as bridge
     except Exception:
         return
 

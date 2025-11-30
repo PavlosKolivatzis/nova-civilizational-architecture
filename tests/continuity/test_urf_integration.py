@@ -55,7 +55,7 @@ def mock_urf_divergent():
 
 def test_governance_passes_stable_urf(mock_urf_stable):
     """Test governance allows request when URF is stable."""
-    from orchestrator.governance.engine import GovernanceEngine
+    from nova.orchestrator.governance.engine import GovernanceEngine
 
     with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_stable):
         engine = GovernanceEngine()
@@ -68,7 +68,7 @@ def test_governance_passes_stable_urf(mock_urf_stable):
 
 def test_governance_blocks_high_composite_risk(mock_urf_high_risk):
     """Test governance blocks when composite_risk >= 0.7."""
-    from orchestrator.governance.engine import GovernanceEngine
+    from nova.orchestrator.governance.engine import GovernanceEngine
 
     with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_high_risk):
         engine = GovernanceEngine()
@@ -81,7 +81,7 @@ def test_governance_blocks_high_composite_risk(mock_urf_high_risk):
 
 def test_governance_blocks_low_alignment(mock_urf_divergent):
     """Test governance blocks when alignment_score < 0.5."""
-    from orchestrator.governance.engine import GovernanceEngine
+    from nova.orchestrator.governance.engine import GovernanceEngine
 
     with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_divergent):
         engine = GovernanceEngine()
@@ -97,8 +97,8 @@ def test_governance_blocks_low_alignment(mock_urf_divergent):
 
 def test_router_passes_stable_urf(mock_urf_stable):
     """Test router allows route when URF is stable."""
-    from orchestrator.router.epistemic_router import EpistemicRouter
-    from orchestrator.router.constraints import ConstraintResult
+    from nova.orchestrator.router.epistemic_router import EpistemicRouter
+    from nova.orchestrator.router.constraints import ConstraintResult
 
     with patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_stable):
         router = EpistemicRouter()
@@ -114,7 +114,7 @@ def test_router_passes_stable_urf(mock_urf_stable):
 
 def test_router_blocks_high_composite_risk(mock_urf_high_risk):
     """Test router forces safe_mode when composite_risk >= 0.7."""
-    from orchestrator.router.epistemic_router import EpistemicRouter
+    from nova.orchestrator.router.epistemic_router import EpistemicRouter
 
     with patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_high_risk):
         router = EpistemicRouter()
@@ -130,7 +130,7 @@ def test_router_blocks_high_composite_risk(mock_urf_high_risk):
 
 def test_router_applies_penalty_low_alignment(mock_urf_divergent):
     """Test router applies penalty when alignment_score < 0.5."""
-    from orchestrator.router.epistemic_router import EpistemicRouter
+    from nova.orchestrator.router.epistemic_router import EpistemicRouter
 
     with patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_divergent):
         router = EpistemicRouter()
@@ -146,7 +146,7 @@ def test_router_applies_penalty_low_alignment(mock_urf_divergent):
 
 def test_router_penalty_calculation():
     """Test router penalty formula for alignment and gap."""
-    from orchestrator.router.epistemic_router import EpistemicRouter
+    from nova.orchestrator.router.epistemic_router import EpistemicRouter
 
     urf = {
         "alignment_score": 0.3,  # 0.5 - 0.3 = 0.2 → penalty += 0.2 * 0.5 = 0.1
@@ -239,8 +239,8 @@ def test_slot10_blocks_high_risk_gap():
 
 def test_urf_e2e_cascading_blocks(mock_urf_high_risk):
     """Test all three systems block on same high-risk URF signal."""
-    from orchestrator.governance.engine import GovernanceEngine
-    from orchestrator.router.epistemic_router import EpistemicRouter
+    from nova.orchestrator.governance.engine import GovernanceEngine
+    from nova.orchestrator.router.epistemic_router import EpistemicRouter
     from src.nova.slots.slot10_civilizational_deployment.core.gatekeeper import Gatekeeper
 
     with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_high_risk), \

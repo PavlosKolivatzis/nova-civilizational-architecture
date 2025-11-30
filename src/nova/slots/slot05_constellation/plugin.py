@@ -1,6 +1,6 @@
 """Slot 5 Constellation Navigator plugin implementation."""
 
-from orchestrator.plugins.abc import SlotPlugin
+from nova.orchestrator.plugins.abc import SlotPlugin
 from typing import Any, Mapping, Callable, Dict
 
 

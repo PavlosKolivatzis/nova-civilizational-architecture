@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 from typing import Dict, Any
-from orchestrator.metrics import get_slot6_metrics
+from nova.orchestrator.metrics import get_slot6_metrics
 
 
 def _env_truthy(name: str) -> bool:

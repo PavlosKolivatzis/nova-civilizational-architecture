@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 # --- import healthkit (with graceful fallback) --------------------------------
 try:
-    from orchestrator.core.healthkit import ok, minimal, error
+    from nova.orchestrator.core.healthkit import ok, minimal, error
 except Exception:
     try:
         from core.healthkit import ok, minimal, error
@@ -77,7 +77,7 @@ def health() -> Dict[str, Any]:
         # Test Meta-Legitimacy Seal
         try:
             # Note: MLS requires slot6 adapter, so we'll test instantiation capability
-            from orchestrator.adapters.slot6_cultural import Slot6Adapter
+            from nova.orchestrator.adapters.slot6_cultural import Slot6Adapter
             slot6_adapter = Slot6Adapter()
             MetaLegitimacySeal(slot6_adapter)
             metrics.update({
@@ -125,7 +125,7 @@ def health() -> Dict[str, Any]:
         # Check adapter integrations
         adapters_available = 0
         try:
-            from orchestrator.adapters.slot6_cultural import Slot6Adapter
+            from nova.orchestrator.adapters.slot6_cultural import Slot6Adapter
             adapters_available = 2
             metrics.update({
                 "slot4_tri_adapter_available": True,

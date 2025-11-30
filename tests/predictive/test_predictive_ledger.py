@@ -1,6 +1,6 @@
 import pytest
 
-from orchestrator.predictive.ledger import PredictiveLedger, PredictiveLedgerError
+from nova.orchestrator.predictive.ledger import PredictiveLedger, PredictiveLedgerError
 
 
 def test_predictive_ledger_appends_entries():

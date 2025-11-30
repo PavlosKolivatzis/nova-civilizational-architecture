@@ -3,7 +3,7 @@ import logging
 from services.ids.integration import ids_service
 from services.ids.core import IDSState
 from config.feature_flags import IDS_ENABLED
-from orchestrator.semantic_mirror import get_semantic_mirror
+from nova.orchestrator.semantic_mirror import get_semantic_mirror
 
 logger = logging.getLogger(__name__)
 

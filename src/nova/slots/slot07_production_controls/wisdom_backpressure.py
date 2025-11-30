@@ -24,10 +24,10 @@ import typing as _typing
 from prometheus_client import Gauge as _Gauge
 from nova.governor import state as governor_state
 from nova.metrics.registry import REGISTRY as _REGISTRY
-from orchestrator.thresholds.manager import get_threshold, snapshot_thresholds
+from nova.orchestrator.thresholds.manager import get_threshold, snapshot_thresholds
 
 try:  # pragma: no cover - semantic mirror not always available in tests
-    from orchestrator.semantic_mirror import publish as _publish_context
+    from nova.orchestrator.semantic_mirror import publish as _publish_context
 except Exception:  # pragma: no cover
     _publish_context = None
 
@@ -73,7 +73,7 @@ def _read_tri_truth_signal() -> _typing.Dict[str, _typing.Any]:
     """Fetch latest TRI truth signal from Semantic Mirror (best-effort)."""
     global _tri_signal_snapshot
     try:
-        from orchestrator.semantic_mirror import get_semantic_mirror
+        from nova.orchestrator.semantic_mirror import get_semantic_mirror
 
         mirror = get_semantic_mirror()
     except Exception:
@@ -216,7 +216,7 @@ def _try_read_stability_from_poller() -> float | None:
     """
     try:
         # Avoid circular import by importing locally
-        import orchestrator.adaptive_wisdom_poller as poller
+        import nova.orchestrator.adaptive_wisdom_poller as poller
 
         # Check if poller is enabled and running
         if not poller.ENABLED:

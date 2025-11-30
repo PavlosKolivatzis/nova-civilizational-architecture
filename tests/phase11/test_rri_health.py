@@ -4,8 +4,8 @@ import math
 
 from prometheus_client import generate_latest
 
-from orchestrator import rri
-from orchestrator.prometheus_metrics import _REGISTRY
+from nova.orchestrator import rri
+from nova.orchestrator.prometheus_metrics import _REGISTRY
 
 
 def test_rri_updates_with_window():

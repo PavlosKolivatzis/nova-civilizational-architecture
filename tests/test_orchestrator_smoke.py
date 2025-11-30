@@ -6,7 +6,7 @@ from nova.slots.slot06_cultural_synthesis.engine import (
 )
 from frameworks.enums import DeploymentGuardrailResult
 
-from orchestrator.core import NovaOrchestrator
+from nova.orchestrator.core import NovaOrchestrator
 
 
 class StubSlot6:

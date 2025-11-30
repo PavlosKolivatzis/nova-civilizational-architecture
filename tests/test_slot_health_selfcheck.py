@@ -2,7 +2,7 @@
 Test for slot health self-check functionality.
 """
 from unittest.mock import patch, MagicMock
-from orchestrator.health import collect_slot_selfchecks, clear_slot_health_cache
+from nova.orchestrator.health import collect_slot_selfchecks, clear_slot_health_cache
 
 
 def test_collect_slot_selfchecks():

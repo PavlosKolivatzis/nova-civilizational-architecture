@@ -2,7 +2,7 @@
 Chaos engineering tests for router resilience.
 """
 from unittest.mock import MagicMock
-from orchestrator.core.router import AdaptiveRouter
+from nova.orchestrator.core.router import AdaptiveRouter
 
 
 def test_router_chooses_fallback_when_slow():

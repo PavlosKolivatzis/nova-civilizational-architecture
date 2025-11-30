@@ -9,7 +9,7 @@ Tests verify ORP posture adjustments are applied correctly in governance decisio
 
 import pytest
 from unittest.mock import patch, MagicMock
-from orchestrator.governance.engine import GovernanceEngine, GovernanceResult
+from nova.orchestrator.governance.engine import GovernanceEngine, GovernanceResult
 
 
 @pytest.fixture

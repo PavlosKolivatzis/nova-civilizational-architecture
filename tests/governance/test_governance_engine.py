@@ -1,8 +1,8 @@
-from orchestrator.governance.engine import GovernanceEngine
-from orchestrator.semantic_mirror import publish as mirror_publish, reset_semantic_mirror
-from orchestrator.temporal.adapters import publish_router_modifiers
-from orchestrator.predictive.trajectory_engine import PredictiveSnapshot
-from orchestrator.thresholds import reset_threshold_manager_for_tests
+from nova.orchestrator.governance.engine import GovernanceEngine
+from nova.orchestrator.semantic_mirror import publish as mirror_publish, reset_semantic_mirror
+from nova.orchestrator.temporal.adapters import publish_router_modifiers
+from nova.orchestrator.predictive.trajectory_engine import PredictiveSnapshot
+from nova.orchestrator.thresholds import reset_threshold_manager_for_tests
 
 
 class _StaticPredictiveEngine:

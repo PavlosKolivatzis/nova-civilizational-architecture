@@ -5,7 +5,7 @@ Phase 8 integration - verify record_csi() function.
 """
 
 import pytest
-from orchestrator.prometheus_metrics import record_csi
+from nova.orchestrator.prometheus_metrics import record_csi
 
 
 def test_record_csi_basic():

@@ -5,8 +5,8 @@ import logging
 import os
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
-from orchestrator.adapters.slot4_tri import Slot4TRIAdapter
-from orchestrator.adapters.slot6_cultural import Slot6Adapter
+from nova.orchestrator.adapters.slot4_tri import Slot4TRIAdapter
+from nova.orchestrator.adapters.slot6_cultural import Slot6Adapter
 
 from .models import (
     DeploymentMetrics,

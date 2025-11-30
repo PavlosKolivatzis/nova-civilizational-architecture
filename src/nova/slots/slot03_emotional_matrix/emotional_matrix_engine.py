@@ -103,7 +103,7 @@ class EmotionalMatrixEngine:
     def _refresh_tri_truth_signal(self) -> Optional[Dict[str, Any]]:
         """Fetch latest TRI truth signal from Semantic Mirror."""
         try:
-            from orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
 
             mirror = get_semantic_mirror()
         except Exception:
@@ -160,7 +160,7 @@ class EmotionalMatrixEngine:
 
         # Try mirror import and access
         try:
-            from orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
             try:
                 mirror = get_semantic_mirror()
             except Exception:

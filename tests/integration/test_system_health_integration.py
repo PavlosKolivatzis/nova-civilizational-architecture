@@ -19,9 +19,9 @@ class TestSystemHealthIntegration:
 
     def test_health_payload_structure(self):
         """Test the actual health payload structure matches expected format."""
-        from orchestrator.health import health_payload
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
+        from nova.orchestrator.health import health_payload
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
         import pkgutil
         import nova.slots as nova_slots
 
@@ -51,7 +51,7 @@ class TestSystemHealthIntegration:
 
     def test_slot_health_discovery(self):
         """Test that health system discovers all slot health modules."""
-        from orchestrator.health import collect_slot_selfchecks
+        from nova.orchestrator.health import collect_slot_selfchecks
         import pkgutil
         import nova.slots as nova_slots
 
@@ -97,9 +97,9 @@ class TestSystemHealthIntegration:
 
     def test_health_system_performance(self):
         """Test that health system responds within performance bounds."""
-        from orchestrator.health import health_payload
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
+        from nova.orchestrator.health import health_payload
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
         import pkgutil
         import nova.slots as nova_slots
 
@@ -165,10 +165,10 @@ class TestFlowFabricIntegration:
         """Test flow fabric health integration when flow metrics enabled."""
         # Set environment to enable flow metrics
         with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "1"}):
-            from orchestrator.health import health_payload
-            from orchestrator.core.performance_monitor import PerformanceMonitor
-            from orchestrator.core import create_router
-            from orchestrator.flow_fabric_init import initialize_flow_fabric
+            from nova.orchestrator.health import health_payload
+            from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+            from nova.orchestrator.core import create_router
+            from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
             import pkgutil
             import nova.slots as nova_slots
 
@@ -205,10 +205,10 @@ class TestFlowFabricIntegration:
     def test_flow_fabric_contract_tracking(self):
         """Test that flow fabric tracks all expected Nova contracts."""
         with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "1"}):
-            from orchestrator.health import health_payload
-            from orchestrator.core.performance_monitor import PerformanceMonitor
-            from orchestrator.core import create_router
-            from orchestrator.flow_fabric_init import initialize_flow_fabric, KNOWN_CONTRACTS
+            from nova.orchestrator.health import health_payload
+            from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+            from nova.orchestrator.core import create_router
+            from nova.orchestrator.flow_fabric_init import initialize_flow_fabric, KNOWN_CONTRACTS
             import pkgutil
             import nova.slots as nova_slots
 
@@ -238,7 +238,7 @@ class TestFlowFabricIntegration:
 
     def test_flow_fabric_status_function(self):
         """Test standalone flow fabric status function."""
-        from orchestrator.flow_fabric_init import initialize_flow_fabric, get_flow_fabric_status
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric, get_flow_fabric_status
 
         # Initialize flow fabric
         initialize_flow_fabric()
@@ -262,9 +262,9 @@ class TestCrossComponentIntegration:
 
     def test_health_aggregation_resilience(self):
         """Test health aggregation handles individual slot failures gracefully."""
-        from orchestrator.health import health_payload, collect_slot_selfchecks
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
+        from nova.orchestrator.health import health_payload, collect_slot_selfchecks
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
         import pkgutil
         import nova.slots as nova_slots
 
@@ -295,8 +295,8 @@ class TestCrossComponentIntegration:
 
     def test_config_integration(self):
         """Test configuration integration across components."""
-        from orchestrator.flow_fabric_init import load_adaptive_links_config
-        from orchestrator.config import SystemConfig
+        from nova.orchestrator.flow_fabric_init import load_adaptive_links_config
+        from nova.orchestrator.config import SystemConfig
 
         # Test flow fabric config loading
         config = load_adaptive_links_config()
@@ -309,8 +309,8 @@ class TestCrossComponentIntegration:
 
     def test_metrics_integration(self):
         """Test metrics collection integration."""
-        from orchestrator.adaptive_connections import adaptive_link_registry
-        from orchestrator.flow_fabric_init import initialize_flow_fabric
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
 
         # Initialize flow fabric to register links
         initialize_flow_fabric()
@@ -331,10 +331,10 @@ class TestEndToEndHealthWorkflow:
 
     def test_startup_to_health_response(self):
         """Test complete startup to health response workflow."""
-        from orchestrator.flow_fabric_init import initialize_flow_fabric, get_flow_fabric_status
-        from orchestrator.health import health_payload
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric, get_flow_fabric_status
+        from nova.orchestrator.health import health_payload
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
         import pkgutil
         import nova.slots as nova_slots
 
@@ -371,9 +371,9 @@ class TestEndToEndHealthWorkflow:
 
     def test_performance_under_load(self):
         """Test health system performance under simulated load."""
-        from orchestrator.health import health_payload
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
+        from nova.orchestrator.health import health_payload
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
         import pkgutil
         import nova.slots as nova_slots
 
@@ -411,7 +411,7 @@ class TestPolishSprintValidation:
 
     def test_polish_sprint_slot_coverage(self):
         """Test that polish sprint achieved target slot coverage."""
-        from orchestrator.health import collect_slot_selfchecks
+        from nova.orchestrator.health import collect_slot_selfchecks
         import pkgutil
         import nova.slots as nova_slots
 

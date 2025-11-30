@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from orchestrator import arc
+from nova.orchestrator import arc
 
 
 def test_arc_records_disagreement(monkeypatch):

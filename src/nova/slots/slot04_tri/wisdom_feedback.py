@@ -98,7 +98,7 @@ def get_tri_coherence() -> Optional[float]:
     # Try reading from semantic mirror first (published by TRI assess())
     try:
         if os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "1") == "1":
-            from orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
 
             mirror = get_semantic_mirror()
 

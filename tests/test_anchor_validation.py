@@ -1,5 +1,5 @@
 import pytest
-from orchestrator.core import NovaOrchestrator
+from nova.orchestrator.core import NovaOrchestrator
 from frameworks.enums import AnchorValidationMode, DeploymentGuardrailResult
 
 

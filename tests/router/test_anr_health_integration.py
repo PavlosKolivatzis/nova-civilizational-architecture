@@ -13,7 +13,7 @@ class TestANRContextualRouting:
 
     def test_anr_routing_decision_with_health_context(self):
         """Test that ANR makes routing decisions with health-influenced context."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         anr = AdaptiveNeuralRouter()
 
@@ -43,8 +43,8 @@ class TestANRContextualRouting:
 
     def test_anr_handles_degraded_health_states(self):
         """Test ANR routing with degraded health states via context."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
-        from orchestrator.router.features import build_feature_vector
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.features import build_feature_vector
 
         # Context reflecting degraded health scenario
         degraded_context = {
@@ -75,7 +75,7 @@ class TestANRContextualRouting:
 
     def test_anr_routing_with_mixed_health_context(self):
         """Test ANR routing with mixed health states via feature context."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         anr = AdaptiveNeuralRouter()
 
@@ -104,7 +104,7 @@ class TestANRContextualRouting:
 
     def test_anr_safety_mechanisms_with_health_inputs(self):
         """Test ANR behavior under critical health conditions."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         anr = AdaptiveNeuralRouter()
 
@@ -139,8 +139,8 @@ class TestANRPolishSprintIntegration:
 
     def test_anr_with_polish_sprint_health_improvements(self):
         """Test ANR behavior with improved health from polish sprint slots."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
-        from orchestrator.router.features import build_feature_vector
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.features import build_feature_vector
 
         # Context reflecting polish sprint improvements
         improved_context = {
@@ -175,8 +175,8 @@ class TestANRPolishSprintIntegration:
 
     def test_anr_feature_vector_completeness(self):
         """Test that ANR properly handles complete 11-dimensional feature vectors."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
-        from orchestrator.router.features import build_feature_vector, FEATURES
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.features import build_feature_vector, FEATURES
 
         # Complete context with all 11 features
         complete_context = {
@@ -207,7 +207,7 @@ class TestANRPolishSprintIntegration:
 
     def test_anr_performance_with_full_feature_context(self):
         """Test ANR performance with complete feature context."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
         import time
 
         # Full feature context representing optimal health across all slots
@@ -244,7 +244,7 @@ class TestANRLinUCBHealthLearning:
 
     def test_linucb_learns_from_health_correlated_rewards(self):
         """Test that LinUCB learns from health-outcome correlations."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         anr = AdaptiveNeuralRouter()
 
@@ -311,8 +311,8 @@ class TestANRLinUCBHealthLearning:
 
     def test_linucb_handles_feature_dimensionality(self):
         """Test LinUCB handles 11-dimensional feature vectors correctly."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
-        from orchestrator.router.features import build_feature_vector
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.features import build_feature_vector
 
         anr = AdaptiveNeuralRouter()
 
@@ -339,8 +339,8 @@ class TestANRHealthFailoverBehavior:
 
     def test_anr_handles_missing_context_data(self):
         """Test ANR graceful handling when context data is missing."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
-        from orchestrator.router.features import build_feature_vector
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.features import build_feature_vector
 
         anr = AdaptiveNeuralRouter()
 
@@ -358,8 +358,8 @@ class TestANRHealthFailoverBehavior:
 
     def test_anr_handles_malformed_context_data(self):
         """Test ANR handling of malformed context data."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
-        from orchestrator.router.features import build_feature_vector
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.features import build_feature_vector
 
         anr = AdaptiveNeuralRouter()
 
@@ -393,7 +393,7 @@ class TestANRHealthFailoverBehavior:
 
     def test_anr_high_uncertainty_context(self):
         """Test ANR behavior under high uncertainty conditions."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         anr = AdaptiveNeuralRouter()
 

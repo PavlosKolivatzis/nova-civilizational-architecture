@@ -63,7 +63,7 @@ def get_contract_audit_status() -> str:
 def collect_memory_resonance_data() -> dict:
     """Collect 7-day memory resonance statistics from live system."""
     try:
-        from orchestrator.predictive.memory_resonance import get_memory_window
+        from nova.orchestrator.predictive.memory_resonance import get_memory_window
 
         window = get_memory_window()
         stats = window.get_window_stats()
@@ -89,8 +89,8 @@ def collect_memory_resonance_data() -> dict:
 def collect_ris_data() -> dict:
     """Collect RIS computation data from live system."""
     try:
-        from orchestrator.predictive.memory_resonance import get_memory_window
-        from orchestrator.predictive.ris_calculator import compute_ris
+        from nova.orchestrator.predictive.memory_resonance import get_memory_window
+        from nova.orchestrator.predictive.ris_calculator import compute_ris
 
         memory_window = get_memory_window()
         memory_stability = memory_window.compute_memory_stability()
@@ -115,7 +115,7 @@ def collect_ris_data() -> dict:
 def collect_stress_resilience_data() -> dict:
     """Collect stress simulation results from live system."""
     try:
-        from orchestrator.predictive.stress_simulation import get_stress_simulator
+        from nova.orchestrator.predictive.stress_simulation import get_stress_simulator
 
         sim = get_stress_simulator()
 

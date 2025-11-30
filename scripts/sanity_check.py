@@ -7,10 +7,10 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 try:
-    from orchestrator.app import monitor, router, SLOT_REGISTRY
-    from orchestrator.health import health_payload, collect_slot_selfchecks
-    from orchestrator.config import config
-    from orchestrator.core import DEFAULT_FALLBACK_MAP
+    from nova.orchestrator.app import monitor, router, SLOT_REGISTRY
+    from nova.orchestrator.health import health_payload, collect_slot_selfchecks
+    from nova.orchestrator.config import config
+    from nova.orchestrator.core import DEFAULT_FALLBACK_MAP
 
     print("✅ Health Payload:")
     payload = health_payload(SLOT_REGISTRY, monitor, router)

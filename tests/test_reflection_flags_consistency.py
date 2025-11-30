@@ -12,7 +12,7 @@ def client(monkeypatch):
     monkeypatch.setenv("NOVA_ANR_PILOT", "0.0")
 
     # Import and create app with reflection router
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     if app is None:
         pytest.skip("FastAPI not available")
     return TestClient(app)

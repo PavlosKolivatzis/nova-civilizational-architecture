@@ -2,9 +2,9 @@
 
 import logging
 from typing import Any
-from orchestrator.contracts.emitter import subscribe
-from orchestrator.contracts.decay import pulse_weight_decay
-from orchestrator.unlearn_weighting import get_anomaly_multiplier, get_dynamic_half_life
+from nova.orchestrator.contracts.emitter import subscribe
+from nova.orchestrator.contracts.decay import pulse_weight_decay
+from nova.orchestrator.unlearn_weighting import get_anomaly_multiplier, get_dynamic_half_life
 import time
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ def _read_backpressure() -> float:
         Back-pressure level ∈ [0,1] (0=no pressure, 1=max pressure)
     """
     try:
-        from orchestrator.semantic_mirror import get_context
+        from nova.orchestrator.semantic_mirror import get_context
         ctx = get_context("slot07.backpressure") or {}
         level = float(ctx.get("level", 0.0))
         return max(0.0, min(1.0, level))

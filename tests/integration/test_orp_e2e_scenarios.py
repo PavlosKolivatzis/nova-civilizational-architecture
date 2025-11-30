@@ -8,8 +8,8 @@ Tests verify complete ORP behavior across Governance, Router, and Slot10:
 
 import pytest
 from unittest.mock import patch, MagicMock
-from orchestrator.governance.engine import GovernanceEngine
-from orchestrator.router.epistemic_router import EpistemicRouter
+from nova.orchestrator.governance.engine import GovernanceEngine
+from nova.orchestrator.router.epistemic_router import EpistemicRouter
 from src.nova.slots.slot10_civilizational_deployment.core.gatekeeper import Gatekeeper
 from src.nova.slots.slot10_civilizational_deployment.core.policy import Slot10Policy
 

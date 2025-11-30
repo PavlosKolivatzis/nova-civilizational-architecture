@@ -50,7 +50,7 @@ def _profile_consent(profile: Dict[str, Any]) -> bool:
 def _get_tri_truth_signal() -> Optional[Dict[str, Any]]:
     """Fetch canonical TRI truth signal (best-effort)."""
     try:
-        from orchestrator.semantic_mirror import get_semantic_mirror
+        from nova.orchestrator.semantic_mirror import get_semantic_mirror
 
         mirror = get_semantic_mirror()
     except Exception:
@@ -189,7 +189,7 @@ class CulturalSynthesisAdapter:
 
         # Record decision metrics
         try:
-            from orchestrator.metrics import get_slot6_metrics
+            from nova.orchestrator.metrics import get_slot6_metrics
             metrics_collector = get_slot6_metrics()
             metrics_collector.record_decision(
                 result_name=result.name if hasattr(result, 'name') else str(result),

@@ -47,7 +47,7 @@ async def test_slot1_e2e_request_path(mock_slot1):
 
 async def test_slot1_truth_threshold_compliance(mock_slot1):
     """Test that Slot-1 respects the configured truth threshold."""
-    from orchestrator.config import config
+    from nova.orchestrator.config import config
 
     test_content = {"content": "Test statement for verification"}
 

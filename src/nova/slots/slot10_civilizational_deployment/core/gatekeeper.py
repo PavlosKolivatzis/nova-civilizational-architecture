@@ -34,7 +34,7 @@ except Exception:
         return {}
 
 try:  # pragma: no cover - metrics optional
-    from orchestrator.prometheus_metrics import record_orp
+    from nova.orchestrator.prometheus_metrics import record_orp
 except Exception:  # pragma: no cover
     def record_orp(snapshot: dict, transition_from: str | None = None) -> None:  # type: ignore[misc]
         return

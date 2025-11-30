@@ -1,9 +1,9 @@
-from orchestrator.governance.engine import GovernanceEngine
-from orchestrator.router.epistemic_router import EpistemicRouter
-from orchestrator.router.temporal_constraints import TemporalConstraintEngine
-from orchestrator.temporal.ledger import TemporalLedger
-from orchestrator.semantic_mirror import reset_semantic_mirror
-from orchestrator.thresholds import reset_threshold_manager_for_tests
+from nova.orchestrator.governance.engine import GovernanceEngine
+from nova.orchestrator.router.epistemic_router import EpistemicRouter
+from nova.orchestrator.router.temporal_constraints import TemporalConstraintEngine
+from nova.orchestrator.temporal.ledger import TemporalLedger
+from nova.orchestrator.semantic_mirror import reset_semantic_mirror
+from nova.orchestrator.thresholds import reset_threshold_manager_for_tests
 
 
 def _seed_ledger(coherences):

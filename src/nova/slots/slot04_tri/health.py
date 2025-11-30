@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 # --- import healthkit (with graceful fallback) --------------------------------
 try:
-    from orchestrator.core.healthkit import ok, minimal, error
+    from nova.orchestrator.core.healthkit import ok, minimal, error
 except Exception:
     try:
         from core.healthkit import ok, minimal, error

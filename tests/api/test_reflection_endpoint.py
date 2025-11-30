@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 @pytest.mark.parametrize("path", ["/reflect"])
 def test_reflect_endpoint(path):
     """Test reflection endpoint contract and response structure."""
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     if app is None:
         pytest.skip("FastAPI not available")
@@ -101,7 +101,7 @@ def test_reflect_endpoint(path):
 
 def test_reflect_endpoint_consistency():
     """Test that reflection endpoint returns consistent schema across calls."""
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     if app is None:
         pytest.skip("FastAPI not available")
@@ -131,7 +131,7 @@ def test_reflect_endpoint_consistency():
 
 def test_reflect_endpoint_anr_routing_validity():
     """Test that ANR routing decisions in reflection are valid."""
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     if app is None:
         pytest.skip("FastAPI not available")
@@ -162,7 +162,7 @@ def test_reflect_endpoint_anr_routing_validity():
 
 def test_reflect_endpoint_production_readiness_claims():
     """Test production readiness claims are reasonable."""
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     if app is None:
         pytest.skip("FastAPI not available")

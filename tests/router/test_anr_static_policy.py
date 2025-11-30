@@ -1,4 +1,4 @@
-from orchestrator.router.anr_static_policy import StaticPolicyEngine, StaticPolicyConfig
+from nova.orchestrator.router.anr_static_policy import StaticPolicyEngine, StaticPolicyConfig
 
 
 def test_static_policy_scoring_balances_features():

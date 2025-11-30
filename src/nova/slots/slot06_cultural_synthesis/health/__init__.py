@@ -71,7 +71,7 @@ def health() -> dict:
 
     # Always attach provenance
     try:
-        from orchestrator.contracts.provenance import slot6_provenance
+        from nova.orchestrator.contracts.provenance import slot6_provenance
         result.update(slot6_provenance())
     except ImportError:
         # Fallback if provenance module not available

@@ -1,7 +1,7 @@
 import asyncio
 import pytest
 
-from orchestrator.bus import EventBus
+from nova.orchestrator.bus import EventBus
 
 
 @pytest.mark.asyncio

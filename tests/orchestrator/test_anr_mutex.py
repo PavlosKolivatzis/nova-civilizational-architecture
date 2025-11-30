@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from orchestrator import anr_mutex
+from nova.orchestrator import anr_mutex
 
 
 def test_file_lock_allows_single_holder_and_releases():

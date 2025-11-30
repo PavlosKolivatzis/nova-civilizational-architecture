@@ -9,7 +9,7 @@ def publish_phase_lock_to_mirror(value: Optional[float]) -> None:
         return
 
     try:
-        from orchestrator.semantic_mirror import get_semantic_mirror
+        from nova.orchestrator.semantic_mirror import get_semantic_mirror
     except Exception:
         return  # mirror not available; safe no-op
 

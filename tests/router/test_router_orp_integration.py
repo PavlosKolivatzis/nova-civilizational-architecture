@@ -10,7 +10,7 @@ Tests verify ORP posture adjustments in routing decisions:
 
 import pytest
 from unittest.mock import patch, MagicMock
-from orchestrator.router.epistemic_router import EpistemicRouter, RouterDecision
+from nova.orchestrator.router.epistemic_router import EpistemicRouter, RouterDecision
 
 
 @pytest.fixture

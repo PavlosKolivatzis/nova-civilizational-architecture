@@ -5,7 +5,7 @@ Targets uncovered paths in CreativityGovernor for DEF-006 coverage improvement.
 Sprint 1: Critical infrastructure (239 missing lines → 85% target)
 """
 import pytest
-from orchestrator.semantic_creativity import (
+from nova.orchestrator.semantic_creativity import (
     CreativityConfig,
     CreativityGovernor,
     SemanticHypothesis,

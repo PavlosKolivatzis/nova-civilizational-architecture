@@ -11,7 +11,7 @@ import os
 @pytest.mark.health
 def test_app_module_imports():
     """Health check: app module imports successfully."""
-    from orchestrator import app
+    from nova.orchestrator import app
 
     assert app is not None
     assert hasattr(app, 'monitor')
@@ -22,7 +22,7 @@ def test_app_module_imports():
 @pytest.mark.health
 def test_app_slot_registry():
     """Health check: SLOT_REGISTRY populated with adapters."""
-    from orchestrator.app import SLOT_REGISTRY
+    from nova.orchestrator.app import SLOT_REGISTRY
 
     assert len(SLOT_REGISTRY) > 0
     assert "slot02_deltathresh" in SLOT_REGISTRY
@@ -34,7 +34,7 @@ def test_app_slot_registry():
 @pytest.mark.health
 def test_app_metric_slot_registry():
     """Health check: METRIC_SLOT_REGISTRY includes all slot modules."""
-    from orchestrator.app import METRIC_SLOT_REGISTRY
+    from nova.orchestrator.app import METRIC_SLOT_REGISTRY
 
     assert len(METRIC_SLOT_REGISTRY) >= 10
     # Verify slot naming convention
@@ -45,7 +45,7 @@ def test_app_metric_slot_registry():
 def test_handle_request_function():
     """Test handle_request routes to slot functions."""
     import asyncio
-    from orchestrator.app import handle_request
+    from nova.orchestrator.app import handle_request
 
     # Minimal test to cover function definition
     result = asyncio.run(handle_request(
@@ -62,7 +62,7 @@ def test_fastapi_app_creation():
     """Test FastAPI app is created when available."""
     pytest.importorskip("fastapi")
 
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     assert app is not None
     # Verify app has routers
@@ -74,7 +74,7 @@ def test_health_endpoint_structure(monkeypatch):
     """Test /health endpoint returns expected structure."""
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     client = TestClient(app)
     response = client.get("/health")
@@ -94,7 +94,7 @@ def test_health_endpoint_pic_snapshot(monkeypatch):
     """Test /health endpoint includes PIC configuration snapshot."""
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     client = TestClient(app)
     response = client.get("/health")
@@ -111,7 +111,7 @@ def test_metrics_endpoint_disabled_by_default():
     """Test /metrics endpoint returns 404 when NOVA_ENABLE_PROMETHEUS not set."""
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     # Ensure prometheus is disabled
     if os.getenv("NOVA_ENABLE_PROMETHEUS"):
@@ -138,7 +138,7 @@ def test_ops_expire_now_endpoint():
     """Test /ops/expire-now endpoint for manual cleanup trigger."""
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     client = TestClient(app)
     response = client.post("/ops/expire-now")
@@ -155,7 +155,7 @@ def test_ops_expire_now_creates_test_context():
     """Test /ops/expire-now response structure."""
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     # Test basic functionality (test context creation depends on flag)
     client = TestClient(app)
@@ -194,16 +194,16 @@ def test_canary_loop_config():
 
 def test_performance_monitor_instance():
     """Test PerformanceMonitor is created and available."""
-    from orchestrator.app import monitor
-    from orchestrator.core.performance_monitor import PerformanceMonitor
+    from nova.orchestrator.app import monitor
+    from nova.orchestrator.core.performance_monitor import PerformanceMonitor
 
     assert isinstance(monitor, PerformanceMonitor)
 
 
 def test_event_bus_instance():
     """Test EventBus is created with monitor."""
-    from orchestrator.app import bus, monitor
-    from orchestrator.core.event_bus import EventBus
+    from nova.orchestrator.app import bus, monitor
+    from nova.orchestrator.core.event_bus import EventBus
 
     assert isinstance(bus, EventBus)
     # Verify bus has monitor reference
@@ -212,7 +212,7 @@ def test_event_bus_instance():
 
 def test_router_instance():
     """Test router is created from create_router."""
-    from orchestrator.app import router
+    from nova.orchestrator.app import router
 
     assert router is not None
     # Verify router has monitor (if supported by implementation)

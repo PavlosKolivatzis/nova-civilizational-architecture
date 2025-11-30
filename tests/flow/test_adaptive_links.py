@@ -7,8 +7,8 @@ Ensures contract payload immutability and backward compatibility.
 import pytest
 import time
 from unittest.mock import Mock
-from orchestrator.adaptive_connections import AdaptiveLink, AdaptiveLinkConfig, adaptive_link_registry
-from orchestrator.flow_metrics import flow_metrics
+from nova.orchestrator.adaptive_connections import AdaptiveLink, AdaptiveLinkConfig, adaptive_link_registry
+from nova.orchestrator.flow_metrics import flow_metrics
 
 
 class TestAdaptiveLink:

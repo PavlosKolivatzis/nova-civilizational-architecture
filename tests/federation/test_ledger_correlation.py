@@ -22,7 +22,7 @@ def reset_metrics():
 
 def test_ledger_reader_http_url(monkeypatch):
     """Test get_ledger_status with HTTP URL."""
-    from orchestrator.ledger_reader import get_ledger_status
+    from nova.orchestrator.ledger_reader import get_ledger_status
     from urllib import request
 
     mock_response = MagicMock()
@@ -44,7 +44,7 @@ def test_ledger_reader_shell_command(monkeypatch):
     """Test get_ledger_status with shell command."""
     import subprocess
 
-    from orchestrator.ledger_reader import get_ledger_status
+    from nova.orchestrator.ledger_reader import get_ledger_status
 
     now = time.time()
     mock_result = MagicMock()
@@ -66,7 +66,7 @@ def test_ledger_reader_fallback():
     """Test get_ledger_status returns zero values on error."""
     import os
 
-    from orchestrator.ledger_reader import get_ledger_status
+    from nova.orchestrator.ledger_reader import get_ledger_status
 
     # Clear any env vars
     os.environ.pop("NOVA_LEDGER_STATUS_URL", None)
@@ -79,7 +79,7 @@ def test_ledger_reader_fallback():
 
 def test_get_last_ledger_accessor():
     """Test get_last_ledger returns cached state."""
-    from orchestrator.federation_poller import _LAST_LEDGER, get_last_ledger
+    from nova.orchestrator.federation_poller import _LAST_LEDGER, get_last_ledger
 
     # Directly set the cache
     _LAST_LEDGER["height"] = 100
@@ -98,8 +98,8 @@ def test_get_last_ledger_accessor():
 
 def test_health_endpoint_includes_ledger():
     """Test /federation/health includes ledger field."""
-    from orchestrator.federation_health import get_peer_health
-    from orchestrator.federation_poller import _LAST_LEDGER
+    from nova.orchestrator.federation_health import get_peer_health
+    from nova.orchestrator.federation_poller import _LAST_LEDGER
 
     # Set up ledger state
     _LAST_LEDGER["height"] = 100

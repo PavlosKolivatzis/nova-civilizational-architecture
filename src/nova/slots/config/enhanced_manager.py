@@ -184,7 +184,7 @@ class EnhancedConfigManager:
 
         # Preserve optional SystemConfig
         try:
-            from orchestrator.config import config as system_config  # type: ignore
+            from nova.orchestrator.config import config as system_config  # type: ignore
             self.system_config = system_config
             logger.info("Loaded existing Nova SystemConfig")
         except Exception:

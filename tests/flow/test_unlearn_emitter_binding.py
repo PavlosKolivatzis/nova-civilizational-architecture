@@ -14,8 +14,8 @@ async def test_startup_binds_jsonl_emitter_and_emits(tmp_path, monkeypatch):
     monkeypatch.setenv("NOVA_UNLEARN_PULSE_PATH", str(out))
 
     # Import and run startup
-    from orchestrator.app import _startup
-    from orchestrator.contracts.emitter import get_contract_emitter, NoOpEmitter
+    from nova.orchestrator.app import _startup
+    from nova.orchestrator.contracts.emitter import get_contract_emitter, NoOpEmitter
 
     await _startup()
     emitter = get_contract_emitter()
@@ -23,7 +23,7 @@ async def test_startup_binds_jsonl_emitter_and_emits(tmp_path, monkeypatch):
     assert emitter.__class__.__name__ == "JsonlEmitter"
 
     # Force an expiring context → triggers UNLEARN_PULSE@1
-    from orchestrator.semantic_mirror import SemanticMirror, ContextScope
+    from nova.orchestrator.semantic_mirror import SemanticMirror, ContextScope
     sm = SemanticMirror()
     sm._contexts["slot03.phase_lock"] = SimpleNamespace(
         timestamp=0.0,
@@ -53,8 +53,8 @@ async def test_startup_binds_jsonl_emitter_and_emits(tmp_path, monkeypatch):
 def test_emitter_configuration_and_emission(tmp_path, monkeypatch):
     """Test emitter configuration and actual emission functionality."""
     import json
-    from orchestrator.contracts.emitter import set_contract_emitter
-    from orchestrator.contracts.unlearn_pulse import UnlearnPulseV1
+    from nova.orchestrator.contracts.emitter import set_contract_emitter
+    from nova.orchestrator.contracts.unlearn_pulse import UnlearnPulseV1
 
     # Create test emitter class (mirrors the one in app.py)
     class TestJsonlEmitter:

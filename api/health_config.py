@@ -9,7 +9,7 @@ def _get_plugin_info() -> Dict[str, Any]:
     """Get plugin system information."""
     try:
         import os
-        from orchestrator.plugins.loader import PluginLoader
+        from nova.orchestrator.plugins.loader import PluginLoader
         
         # Check if plugins are enabled
         enabled_env = os.getenv("NOVA_SLOTS", "").strip()
@@ -61,7 +61,7 @@ def _get_slot6_metrics() -> Dict[str, Any]:
     """Get Slot 6 observability metrics."""
     # Try centralized metrics first
     try:
-        from orchestrator.metrics import get_slot6_metrics
+        from nova.orchestrator.metrics import get_slot6_metrics
         return get_slot6_metrics().get_metrics()
     except ImportError:
         # Fall back to legacy-only metrics

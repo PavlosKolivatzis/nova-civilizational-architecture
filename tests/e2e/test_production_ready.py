@@ -1,5 +1,5 @@
 import pytest
-from orchestrator.app import handle_request, monitor
+from nova.orchestrator.app import handle_request, monitor
 pytestmark = pytest.mark.asyncio
 
 

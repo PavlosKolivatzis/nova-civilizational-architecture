@@ -5,7 +5,7 @@ import os
 import pytest
 
 from nova.governor import state as governor_state
-from orchestrator.thresholds.manager import reset_threshold_manager_for_tests
+from nova.orchestrator.thresholds.manager import reset_threshold_manager_for_tests
 from nova.slots.slot07_production_controls import wisdom_backpressure as module
 
 

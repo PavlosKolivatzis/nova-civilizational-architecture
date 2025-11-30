@@ -9,7 +9,7 @@ Tests:
 """
 import pytest
 import os
-from orchestrator.governance.engine import GovernanceEngine
+from nova.orchestrator.governance.engine import GovernanceEngine
 
 
 class TestGovernancePatternDetection:
@@ -54,7 +54,7 @@ class TestGovernancePatternDetection:
     def test_pattern_alert_published_to_mirror(self):
         """Pattern alerts should publish to predictive.pattern_alert."""
         try:
-            from orchestrator.semantic_mirror import reset_semantic_mirror
+            from nova.orchestrator.semantic_mirror import reset_semantic_mirror
             reset_semantic_mirror()
         except ImportError:
             pytest.skip("Semantic mirror not fully initialized")

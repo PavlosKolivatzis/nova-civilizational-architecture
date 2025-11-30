@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from orchestrator.core.quantization import (
+from nova.orchestrator.core.quantization import (
     QuantizedWeight8bit,
     flatten_quantized_weight,
     unflatten_quantized_weight,

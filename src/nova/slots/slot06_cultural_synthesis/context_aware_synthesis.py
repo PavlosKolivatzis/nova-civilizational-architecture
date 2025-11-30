@@ -11,7 +11,7 @@ import logging
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
-from orchestrator.semantic_mirror import get_semantic_mirror
+from nova.orchestrator.semantic_mirror import get_semantic_mirror
 
 logger = logging.getLogger(__name__)
 

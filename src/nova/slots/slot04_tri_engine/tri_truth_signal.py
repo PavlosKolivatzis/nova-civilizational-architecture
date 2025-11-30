@@ -109,7 +109,7 @@ def canonicalize_truth_signal(report: Dict[str, Any]) -> TriTruthSignal:
 def publish_to_semantic_mirror(signal: TriTruthSignal, ttl_seconds: int = 45) -> None:
     """Publish canonical signal to Semantic Mirror (best-effort)."""
     try:
-        from orchestrator.semantic_mirror import get_semantic_mirror
+        from nova.orchestrator.semantic_mirror import get_semantic_mirror
     except Exception:
         return
 

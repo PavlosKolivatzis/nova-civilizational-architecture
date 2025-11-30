@@ -2,7 +2,7 @@ import pytest
 
 
 def test_no_peers_after_threshold_emits_event(monkeypatch):
-    import orchestrator.federation_poller as fp
+    import nova.orchestrator.federation_poller as fp
     from nova.federation.metrics import m
 
     metrics = m()

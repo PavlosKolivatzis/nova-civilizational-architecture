@@ -18,7 +18,7 @@ import logging
 
 # Import from orchestrator contracts
 try:
-    from orchestrator.contracts import SlotResult
+    from nova.orchestrator.contracts import SlotResult
 except ImportError:
     # Fallback for testing
     from dataclasses import dataclass

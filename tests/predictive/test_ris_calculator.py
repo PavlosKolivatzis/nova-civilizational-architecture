@@ -6,7 +6,7 @@ Where M_s = Memory Stability, E_c = Ethical Compliance
 """
 import pytest
 import math
-from orchestrator.predictive.ris_calculator import (
+from nova.orchestrator.predictive.ris_calculator import (
     compute_ris,
     compute_ris_with_smoothing,
     ris_to_dict,

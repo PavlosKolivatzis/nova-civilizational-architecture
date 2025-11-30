@@ -1,4 +1,4 @@
-from orchestrator.router.epistemic_router import EpistemicRouter
+from nova.orchestrator.router.epistemic_router import EpistemicRouter
 
 
 def test_routing_pipeline_primary_path():

@@ -1,9 +1,9 @@
 import asyncio
 import pytest
 
-from orchestrator.core.performance_monitor import PerformanceMonitor
-from orchestrator.core.event_bus import EventBus, Event
-from orchestrator.core.router import AdaptiveRouter
+from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+from nova.orchestrator.core.event_bus import EventBus, Event
+from nova.orchestrator.core.router import AdaptiveRouter
 
 
 @pytest.mark.asyncio

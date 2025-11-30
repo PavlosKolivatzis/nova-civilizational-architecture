@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import patch
 
 from nova.slots.slot05_constellation.constellation_engine import ConstellationEngine
-from orchestrator.adapters.slot5_constellation import Slot5ConstellationAdapter
+from nova.orchestrator.adapters.slot5_constellation import Slot5ConstellationAdapter
 
 
 class TestConstellationEngine:

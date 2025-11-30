@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 
-from orchestrator.adapters.slot3_emotional import Slot3EmotionalAdapter
+from nova.orchestrator.adapters.slot3_emotional import Slot3EmotionalAdapter
 
 # Module-level fallback mock for tests that reference mock_engine without @patch
 try:

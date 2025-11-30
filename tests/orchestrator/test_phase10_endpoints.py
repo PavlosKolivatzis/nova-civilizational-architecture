@@ -7,7 +7,7 @@ import pytest
 def client():
     """FastAPI test client."""
     from fastapi.testclient import TestClient
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     return TestClient(app)
 
 
@@ -82,7 +82,7 @@ def test_fep_finalize_endpoint(client):
 
 def test_ag_boundary_enforcement(client):
     """Test AG blocks decisions when TRI violated."""
-    from orchestrator.phase10_manager import get_phase10_manager
+    from nova.orchestrator.phase10_manager import get_phase10_manager
 
     # Force TRI violation
     mgr = get_phase10_manager()

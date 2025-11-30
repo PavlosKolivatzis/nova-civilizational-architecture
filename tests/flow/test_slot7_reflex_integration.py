@@ -7,8 +7,8 @@ import pytest
 import time
 from unittest.mock import patch
 
-from orchestrator.reflex_signals import ReflexBus, ReflexSignal, setup_slot7_reflex_integration
-from orchestrator.adaptive_connections import AdaptiveLink, AdaptiveLinkConfig, adaptive_link_registry
+from nova.orchestrator.reflex_signals import ReflexBus, ReflexSignal, setup_slot7_reflex_integration
+from nova.orchestrator.adaptive_connections import AdaptiveLink, AdaptiveLinkConfig, adaptive_link_registry
 from nova.slots.slot07_production_controls.reflex_emitter import (
     ReflexEmitter, ReflexPolicyManager, get_reflex_emitter, reset_reflex_emitter
 )

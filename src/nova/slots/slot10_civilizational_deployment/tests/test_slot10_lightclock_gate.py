@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from orchestrator.thresholds.manager import reset_threshold_manager_for_tests
+from nova.orchestrator.thresholds.manager import reset_threshold_manager_for_tests
 from nova.slots.slot10_civilizational_deployment.core.lightclock_gatekeeper import LightClockGatekeeper
 
 

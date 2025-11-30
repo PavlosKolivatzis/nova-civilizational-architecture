@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def app_module(monkeypatch):
-    import orchestrator.app as app_mod
+    import nova.orchestrator.app as app_mod
 
     async def startup_stub():
         return None
@@ -35,7 +35,7 @@ def client(app_module):
 
 @pytest.mark.asyncio
 async def test_handle_request_invokes_orchestrator(monkeypatch):
-    import orchestrator.app as app_mod
+    import nova.orchestrator.app as app_mod
 
     monkeypatch.setattr(
         app_mod.router,
@@ -71,7 +71,7 @@ async def test_handle_request_invokes_orchestrator(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_handle_request_no_orchestrator_returns_none(monkeypatch):
-    import orchestrator.app as app_mod
+    import nova.orchestrator.app as app_mod
 
     monkeypatch.setattr(
         app_mod.router,

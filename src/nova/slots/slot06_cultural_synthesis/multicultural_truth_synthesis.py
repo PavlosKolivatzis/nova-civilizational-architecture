@@ -31,7 +31,7 @@ def _increment_legacy_usage():
 
     # Also record in centralized metrics if available
     try:
-        from orchestrator.metrics import get_slot6_metrics
+        from nova.orchestrator.metrics import get_slot6_metrics
         get_slot6_metrics().record_legacy_call()
     except ImportError:
         # Centralized metrics not available, use local counter only

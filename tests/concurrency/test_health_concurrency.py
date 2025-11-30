@@ -8,12 +8,12 @@ import pkgutil
 import nova.slots as nova_slots
 import concurrent.futures as cf
 import pytest
-from orchestrator.health import health_payload, collect_slot_selfchecks
-from orchestrator.core.performance_monitor import PerformanceMonitor
-from orchestrator.core import create_router
-from orchestrator.flow_fabric_init import initialize_flow_fabric
-from orchestrator.adaptive_connections import get_flow_health_summary
-from orchestrator.router.anr import AdaptiveNeuralRouter
+from nova.orchestrator.health import health_payload, collect_slot_selfchecks
+from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+from nova.orchestrator.core import create_router
+from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
+from nova.orchestrator.adaptive_connections import get_flow_health_summary
+from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
 
 def _slot_registry():
@@ -234,7 +234,7 @@ class TestHealthConcurrencyEdgeCases:
 
     def test_concurrent_initialization_safety(self):
         """Test that concurrent component initialization is safe."""
-        from orchestrator.flow_fabric_init import initialize_flow_fabric
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
 
         def init_task():
             initialize_flow_fabric()

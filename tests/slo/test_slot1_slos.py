@@ -8,7 +8,7 @@ pytestmark = [pytest.mark.slo, pytest.mark.asyncio]
 
 async def test_slot1_latency_slo():
     """Test Slot-1 meets latency SLO of < 1000ms average."""
-    from orchestrator.app import monitor
+    from nova.orchestrator.app import monitor
 
     # Get Slot-1 health data
     health_data = monitor.get_slot_health("slot1_truth_anchor")
@@ -19,7 +19,7 @@ async def test_slot1_latency_slo():
 
 async def test_slot1_error_rate_slo():
     """Test Slot-1 meets error rate SLO of < 0.2."""
-    from orchestrator.app import monitor
+    from nova.orchestrator.app import monitor
 
     # Get Slot-1 health data
     health_data = monitor.get_slot_health("slot1_truth_anchor")
@@ -30,7 +30,7 @@ async def test_slot1_error_rate_slo():
 
 async def test_slot1_throughput_slo():
     """Test Slot-1 maintains minimum throughput."""
-    from orchestrator.app import monitor
+    from nova.orchestrator.app import monitor
 
     # Get Slot-1 health data
     health_data = monitor.get_slot_health("slot1_truth_anchor")

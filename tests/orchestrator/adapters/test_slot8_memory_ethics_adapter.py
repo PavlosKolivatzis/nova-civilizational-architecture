@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import orchestrator.adapters.slot8_memory_ethics as slot8_adapter
+import nova.orchestrator.adapters.slot8_memory_ethics as slot8_adapter
 
 
 @pytest.fixture

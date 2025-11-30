@@ -16,18 +16,18 @@ Feature flag: NOVA_ENABLE_STRESS_TEST=true (test isolation)
 import pytest
 import time
 import os
-from orchestrator.temporal.engine import TemporalSnapshot
-from orchestrator.predictive.stress_simulation import (
+from nova.orchestrator.temporal.engine import TemporalSnapshot
+from nova.orchestrator.predictive.stress_simulation import (
     StressSimulator,
     get_stress_simulator,
     reset_stress_simulator,
     RecoveryMetrics,
 )
-from orchestrator.predictive.memory_resonance import (
+from nova.orchestrator.predictive.memory_resonance import (
     MemoryResonanceWindow,
     reset_memory_window,
 )
-from orchestrator.predictive.ris_calculator import compute_ris
+from nova.orchestrator.predictive.ris_calculator import compute_ris
 
 
 @pytest.fixture

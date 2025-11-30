@@ -23,7 +23,7 @@ def test_remediation_metrics_exist_and_increment():
 
 
 def test_update_empty_peers_triggers_threshold(monkeypatch):
-    from orchestrator import federation_poller
+    from nova.orchestrator import federation_poller
 
     metrics = m()
     counter = metrics["remediation_events"].labels(reason="no_peers")
@@ -53,7 +53,7 @@ def test_update_empty_peers_triggers_threshold(monkeypatch):
 
 
 def test_federation_force_errors_flag(monkeypatch):
-    from orchestrator import federation_client
+    from nova.orchestrator import federation_client
 
     monkeypatch.setenv("NOVA_FED_FORCE_ERRORS", "1")
 

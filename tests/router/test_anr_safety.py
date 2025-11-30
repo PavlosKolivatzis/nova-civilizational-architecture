@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import patch
 
-from orchestrator.router.anr import AdaptiveNeuralRouter
+from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
 
 class TestANRSafety:
@@ -13,7 +13,7 @@ class TestANRSafety:
         monkeypatch.setenv("NOVA_ANR_MAX_FAST_PROB", "0.15")
 
         # Mock anomaly as engaged
-        import orchestrator.unlearn_weighting as uw
+        import nova.orchestrator.unlearn_weighting as uw
         monkeypatch.setattr(uw, "get_anomaly_observability", lambda: {"engaged": 1}, raising=False)
 
         router = AdaptiveNeuralRouter()

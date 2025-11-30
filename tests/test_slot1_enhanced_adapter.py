@@ -1,7 +1,7 @@
 """Tests for enhanced Slot1 Truth Anchor adapter with cryptographic features."""
 
 import pytest
-from orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
+from nova.orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
 
 
 @pytest.fixture

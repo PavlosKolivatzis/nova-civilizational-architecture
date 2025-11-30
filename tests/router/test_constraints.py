@@ -1,4 +1,4 @@
-from orchestrator.router.constraints import evaluate_constraints
+from nova.orchestrator.router.constraints import evaluate_constraints
 
 
 def test_constraints_allow_when_all_signals_good():

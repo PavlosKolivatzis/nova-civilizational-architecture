@@ -9,7 +9,7 @@ import time
 import threading
 from unittest.mock import Mock, patch
 
-from orchestrator.semantic_mirror import (
+from nova.orchestrator.semantic_mirror import (
     SemanticMirror, ContextScope, get_semantic_mirror, reset_semantic_mirror
 )
 from nova.slots.slot07_production_controls.context_publisher import (

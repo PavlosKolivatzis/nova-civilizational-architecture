@@ -25,7 +25,7 @@ def test_memory_window():
     """Test Step 1: Memory Resonance Window"""
     print("\n=== Step 1: Memory Resonance Window ===")
 
-    from orchestrator.predictive.memory_resonance import get_memory_window
+    from nova.orchestrator.predictive.memory_resonance import get_memory_window
 
     window = get_memory_window()
 
@@ -60,7 +60,7 @@ def test_ris_calculator(memory_stability: float):
     """Test Step 2: RIS Calculator"""
     print("\n=== Step 2: RIS Calculator ===")
 
-    from orchestrator.predictive.ris_calculator import compute_ris
+    from nova.orchestrator.predictive.ris_calculator import compute_ris
 
     # Compute RIS with explicit ethics score
     ris = compute_ris(
@@ -111,7 +111,7 @@ def test_stress_simulation():
     print(f"  RC Threshold (>={rc_threshold}): {'PASS' if passes else 'FAIL'}")
 
     # Record to Prometheus
-    from orchestrator.prometheus_metrics import record_stress_recovery
+    from nova.orchestrator.prometheus_metrics import record_stress_recovery
     record_stress_recovery({
         "recovery_rate": metrics.recovery_rate,
         "baseline_ris": metrics.baseline_ris,
@@ -161,7 +161,7 @@ def test_rc_attestation(memory_stability: float, ris: float, recovery_rate: floa
     print(f"  Signature: {attestation['signature']}")
 
     # Record RC criteria to Prometheus
-    from orchestrator.prometheus_metrics import record_rc_criteria
+    from nova.orchestrator.prometheus_metrics import record_rc_criteria
     record_rc_criteria(criteria)
 
     print("[OK] RC attestation validated")
@@ -172,7 +172,7 @@ def test_prometheus_metrics():
     """Test Step 5: Prometheus Metrics Export"""
     print("\n=== Step 5: Prometheus Metrics Export ===")
 
-    from orchestrator.prometheus_metrics import (
+    from nova.orchestrator.prometheus_metrics import (
         memory_stability_gauge,
         ris_score_gauge,
         stress_recovery_rate_gauge,

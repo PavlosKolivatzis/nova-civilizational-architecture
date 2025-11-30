@@ -17,7 +17,7 @@ import uuid
 def safe_import():
     """Import semantic mirror with error handling."""
     try:
-        from orchestrator.semantic_mirror import SemanticMirror, ContextScope
+        from nova.orchestrator.semantic_mirror import SemanticMirror, ContextScope
         return SemanticMirror, ContextScope
     except ImportError as e:
         print(f"FAIL: Import error - {e}")

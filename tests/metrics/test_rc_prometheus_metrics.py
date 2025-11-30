@@ -6,7 +6,7 @@ Validates RC monitoring metrics export correctly to Prometheus.
 
 import pytest
 import time
-from orchestrator.prometheus_metrics import (
+from nova.orchestrator.prometheus_metrics import (
     record_memory_resonance,
     record_ris,
     record_stress_recovery,

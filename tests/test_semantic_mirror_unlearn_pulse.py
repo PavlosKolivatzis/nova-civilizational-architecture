@@ -1,7 +1,7 @@
 """Tests for Observable Pulse prototype in semantic mirror contextual unlearning."""
 
 from types import SimpleNamespace
-from orchestrator.semantic_mirror import SemanticMirror, ContextScope
+from nova.orchestrator.semantic_mirror import SemanticMirror, ContextScope
 
 
 def mk_entry(**kw):

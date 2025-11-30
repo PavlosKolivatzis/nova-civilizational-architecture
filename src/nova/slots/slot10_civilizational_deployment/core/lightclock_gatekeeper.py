@@ -5,15 +5,15 @@ from typing import Dict, List, Optional, Set
 
 # Real semantic mirror integration (optional)
 try:
-    from orchestrator.semantic_mirror import get_semantic_mirror
-    from orchestrator.mirror_utils import mirror_get
+    from nova.orchestrator.semantic_mirror import get_semantic_mirror
+    from nova.orchestrator.mirror_utils import mirror_get
     _global_mirror = get_semantic_mirror()
 except Exception:
     _global_mirror = None
     mirror_get = None
 
 try:
-    from orchestrator.thresholds.manager import snapshot_thresholds
+    from nova.orchestrator.thresholds.manager import snapshot_thresholds
 except Exception:  # pragma: no cover - fallback if orchestrator context absent
     snapshot_thresholds = None
 
@@ -124,7 +124,7 @@ class LightClockGatekeeper:
             # TRI adapter fallback
             if coherence is None:
                 try:
-                    from orchestrator.adapters.slot4_tri import Slot4TRIAdapter
+                    from nova.orchestrator.adapters.slot4_tri import Slot4TRIAdapter
                     rep = (Slot4TRIAdapter().get_latest_report() or {})
                     coherence = rep.get("coherence", 0.7)
                     if jitter is None:

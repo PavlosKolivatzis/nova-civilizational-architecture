@@ -42,7 +42,7 @@ for var in env_vars:
 
 print("\nTesting Governor Initialization...")
 try:
-    from orchestrator.semantic_creativity import get_creativity_governor
+    from nova.orchestrator.semantic_creativity import get_creativity_governor
 
     governor = get_creativity_governor()
     print(f"SUCCESS: Governor instance created: {id(governor)}")

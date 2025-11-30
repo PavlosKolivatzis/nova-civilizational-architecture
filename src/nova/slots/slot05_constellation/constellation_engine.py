@@ -39,8 +39,8 @@ class ConstellationEngine:
         # 1) Try mirror (preferred in steady-state)
         coherence = phase_jitter = None
         try:
-            from orchestrator.semantic_mirror import get_semantic_mirror
-            from orchestrator.mirror_utils import mirror_get as _mirror_get
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.mirror_utils import mirror_get as _mirror_get
             m = get_semantic_mirror()
             if m:
                 coherence = _mirror_get(m, "slot04.coherence", default=None, requester="slot05_constellation")
