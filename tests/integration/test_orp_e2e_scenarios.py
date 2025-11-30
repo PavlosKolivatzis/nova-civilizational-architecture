@@ -45,12 +45,12 @@ def test_e2e_normal_regime_all_systems_operational(governance_engine, router, ga
         },
     }
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_normal), \
-         patch("orchestrator.governance.engine.record_orp"), \
-         patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_normal), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_normal), \
+         patch("nova.orchestrator.governance.engine.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_normal), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper._orp_enabled", return_value=True), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.get_operational_regime", return_value=orp_normal), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.record_orp"):
@@ -88,13 +88,13 @@ def test_e2e_heightened_regime_tightened_operations(governance_engine, router, g
         },
     }
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_heightened), \
-         patch("orchestrator.governance.engine.record_orp"), \
-         patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_heightened), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.50), \
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_heightened), \
+         patch("nova.orchestrator.governance.engine.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_heightened), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.50), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper._orp_enabled", return_value=True), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.get_operational_regime", return_value=orp_heightened), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.record_orp"):
@@ -131,13 +131,13 @@ def test_e2e_controlled_degradation_regime_blocks_deployments(governance_engine,
         },
     }
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_controlled), \
-         patch("orchestrator.governance.engine.record_orp"), \
-         patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_controlled), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.70), \
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_controlled), \
+         patch("nova.orchestrator.governance.engine.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_controlled), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.70), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper._orp_enabled", return_value=True), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.get_operational_regime", return_value=orp_controlled), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.record_orp"):
@@ -176,13 +176,13 @@ def test_e2e_emergency_regime_forces_safe_mode_blocks_all(governance_engine, rou
         },
     }
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_emergency), \
-         patch("orchestrator.governance.engine.record_orp"), \
-         patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_emergency), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.10), \
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_emergency), \
+         patch("nova.orchestrator.governance.engine.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_emergency), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.10), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper._orp_enabled", return_value=True), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.get_operational_regime", return_value=orp_emergency), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.record_orp"), \
@@ -225,9 +225,9 @@ def test_e2e_recovery_regime_requires_manual_approval(governance_engine, router,
         },
     }
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_recovery), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_recovery), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         # Without manual_approval: BLOCKED
         gov_result = governance_engine.evaluate(state={
@@ -263,13 +263,13 @@ def test_e2e_regime_transition_normal_to_recovery_escalation(governance_engine, 
             "posture_adjustments": posture,
         }
 
-        with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-             patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_snapshot), \
-             patch("orchestrator.governance.engine.record_orp"), \
-             patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-             patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
-             patch("orchestrator.router.epistemic_router.record_orp"), \
-             patch("orchestrator.router.epistemic_router.random.random", return_value=0.05), \
+        with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+             patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_snapshot), \
+             patch("nova.orchestrator.governance.engine.record_orp"), \
+             patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+             patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
+             patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+             patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.05), \
              patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper._orp_enabled", return_value=True), \
              patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.get_operational_regime", return_value=orp_snapshot), \
              patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.record_orp"), \

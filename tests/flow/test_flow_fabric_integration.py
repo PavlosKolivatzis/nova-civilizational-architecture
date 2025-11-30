@@ -221,7 +221,7 @@ class TestFlowFabricErrorHandling:
     def test_flow_fabric_graceful_failure(self):
         from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
 
-        with patch("orchestrator.flow_fabric_init.adaptive_link_registry") as mock_registry:
+        with patch("nova.orchestrator.flow_fabric_init.adaptive_link_registry") as mock_registry:
             mock_registry.get_link.side_effect = Exception("Test error")
             try:
                 initialize_flow_fabric()

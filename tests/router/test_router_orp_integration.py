@@ -69,9 +69,9 @@ def router():
 
 def test_orp_normal_no_safe_mode_forcing(router, mock_orp_normal_regime):
     """Test normal regime does not force safe_mode."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_normal_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"):
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_normal_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"):
 
         # High wisdom score should route to creative
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
@@ -82,9 +82,9 @@ def test_orp_normal_no_safe_mode_forcing(router, mock_orp_normal_regime):
 
 def test_orp_emergency_forces_safe_mode(router, mock_orp_emergency_regime):
     """Test emergency regime forces safe_mode regardless of score."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"):
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"):
 
         # Even with high wisdom, should force safe_mode
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
@@ -97,9 +97,9 @@ def test_orp_emergency_forces_safe_mode(router, mock_orp_emergency_regime):
 
 def test_orp_safe_mode_forced_overrides_policy(router, mock_orp_emergency_regime):
     """Test safe_mode_forced takes precedence over policy route."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"):
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"):
 
         # Policy would normally route to creative
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
@@ -113,10 +113,10 @@ def test_orp_safe_mode_forced_overrides_policy(router, mock_orp_emergency_regime
 
 def test_orp_traffic_limit_rejects_requests(router, mock_orp_heightened_regime):
     """Test traffic_limit=0.90 rejects ~10% of requests."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.95):  # > 0.90 traffic_limit
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.95):  # > 0.90 traffic_limit
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -127,10 +127,10 @@ def test_orp_traffic_limit_rejects_requests(router, mock_orp_heightened_regime):
 
 def test_orp_traffic_limit_allows_requests_within_limit(router, mock_orp_heightened_regime):
     """Test traffic_limit=0.90 allows requests within limit."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.50):  # < 0.90 traffic_limit
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.50):  # < 0.90 traffic_limit
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -141,10 +141,10 @@ def test_orp_traffic_limit_allows_requests_within_limit(router, mock_orp_heighte
 def test_orp_emergency_traffic_limit_30_percent(router, mock_orp_emergency_regime):
     """Test emergency regime traffic_limit=0.30 rejects 70% of traffic."""
     # First test: request within 30% limit (allowed)
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.10):  # < 0.30
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.10):  # < 0.30
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -155,10 +155,10 @@ def test_orp_emergency_traffic_limit_30_percent(router, mock_orp_emergency_regim
 
 
     # Second test: request outside 30% limit would reject, but safe_mode_forced takes precedence
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.50):  # > 0.30
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_emergency_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.50):  # > 0.30
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -172,10 +172,10 @@ def test_orp_emergency_traffic_limit_30_percent(router, mock_orp_emergency_regim
 
 def test_orp_threshold_multiplier_reduces_scores(router, mock_orp_heightened_regime):
     """Test threshold_multiplier=0.85 applies 15% penalty to route scores."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.50):  # Pass traffic limit
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.50):  # Pass traffic limit
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -187,9 +187,9 @@ def test_orp_threshold_multiplier_reduces_scores(router, mock_orp_heightened_reg
 
 def test_orp_normal_no_score_penalty(router, mock_orp_normal_regime):
     """Test normal regime applies no score penalty (threshold_multiplier=1.0)."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_normal_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"):
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_normal_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"):
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -202,10 +202,10 @@ def test_orp_normal_no_score_penalty(router, mock_orp_normal_regime):
 
 def test_orp_metadata_recorded_in_decision(router, mock_orp_heightened_regime):
     """Test ORP metadata included in routing decision."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.50):
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_heightened_regime), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.50):
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -219,9 +219,9 @@ def test_orp_metadata_recorded_in_decision(router, mock_orp_heightened_regime):
 
 def test_orp_metrics_recorded_via_record_orp(router, mock_orp_normal_regime):
     """Test record_orp() called with ORP snapshot."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_normal_regime) as mock_get, \
-         patch("orchestrator.router.epistemic_router.record_orp") as mock_record:
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=mock_orp_normal_regime) as mock_get, \
+         patch("nova.orchestrator.router.epistemic_router.record_orp") as mock_record:
 
         router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -234,8 +234,8 @@ def test_orp_metrics_recorded_via_record_orp(router, mock_orp_normal_regime):
 
 def test_orp_disabled_no_adjustments(router):
     """Test NOVA_ENABLE_ORP=0 disables all ORP adjustments."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=False), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime") as mock_get:
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=False), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime") as mock_get:
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -247,9 +247,9 @@ def test_orp_disabled_no_adjustments(router):
 
 def test_orp_exception_does_not_crash_router(router, mock_orp_normal_regime):
     """Test ORP exception handled gracefully, routing continues."""
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", side_effect=Exception("ORP failed")), \
-         patch("orchestrator.router.epistemic_router.record_orp"):
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", side_effect=Exception("ORP failed")), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"):
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -273,10 +273,10 @@ def test_orp_traffic_limit_zero_rejects_all(router):
         },
     }
 
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.01):  # Any value > 0.0
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.01):  # Any value > 0.0
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -298,10 +298,10 @@ def test_orp_traffic_limit_one_accepts_all(router):
         },
     }
 
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
-         patch("orchestrator.router.epistemic_router.record_orp"), \
-         patch("orchestrator.router.epistemic_router.random.random", return_value=0.99):  # Even 0.99 < 1.0
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"), \
+         patch("nova.orchestrator.router.epistemic_router.random.random", return_value=0.99):  # Even 0.99 < 1.0
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 
@@ -316,9 +316,9 @@ def test_orp_missing_posture_uses_defaults(router):
         # Missing posture_adjustments
     }
 
-    with patch("orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
-         patch("orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
-         patch("orchestrator.router.epistemic_router.record_orp"):
+    with patch("nova.orchestrator.router.epistemic_router._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.router.epistemic_router.get_operational_regime", return_value=orp_snapshot), \
+         patch("nova.orchestrator.router.epistemic_router.record_orp"):
 
         decision = router.decide({"risk": 0.1, "novelty": 0.5})
 

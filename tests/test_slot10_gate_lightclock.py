@@ -98,7 +98,7 @@ def test_gate_fallback_to_tri_adapter():
     mock_adapter = Mock()
     mock_adapter.get_latest_report.return_value = {"coherence": 0.85, "phase_jitter": 0.12}
 
-    with patch("orchestrator.adapters.slot4_tri.Slot4TRIAdapter", return_value=mock_adapter):
+    with patch("nova.orchestrator.adapters.slot4_tri.Slot4TRIAdapter", return_value=mock_adapter):
         result = gatekeeper.should_open_gate()
         assert result is True
 
@@ -107,7 +107,7 @@ def test_gate_conservative_defaults():
     """Test gate uses conservative defaults when all sources fail."""
     gatekeeper = LightClockGatekeeper()  # No mirror
 
-    with patch("orchestrator.adapters.slot4_tri.Slot4TRIAdapter", side_effect=ImportError("Mock import error")):
+    with patch("nova.orchestrator.adapters.slot4_tri.Slot4TRIAdapter", side_effect=ImportError("Mock import error")):
         # Should use coherence=0.7, phase_lock=0.5
         result = gatekeeper.should_open_gate()
         # phase_lock=0.5 is within range [0.45,0.60] and coherence=0.7 > 0.66, so should pass

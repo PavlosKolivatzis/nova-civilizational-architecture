@@ -57,7 +57,7 @@ def test_governance_passes_stable_urf(mock_urf_stable):
     """Test governance allows request when URF is stable."""
     from nova.orchestrator.governance.engine import GovernanceEngine
 
-    with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_stable):
+    with patch("nova.orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_stable):
         engine = GovernanceEngine()
         result = engine.evaluate({"user_id": "test-user"})
 
@@ -70,7 +70,7 @@ def test_governance_blocks_high_composite_risk(mock_urf_high_risk):
     """Test governance blocks when composite_risk >= 0.7."""
     from nova.orchestrator.governance.engine import GovernanceEngine
 
-    with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_high_risk):
+    with patch("nova.orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_high_risk):
         engine = GovernanceEngine()
         result = engine.evaluate({"user_id": "test-user"})
 
@@ -83,7 +83,7 @@ def test_governance_blocks_low_alignment(mock_urf_divergent):
     """Test governance blocks when alignment_score < 0.5."""
     from nova.orchestrator.governance.engine import GovernanceEngine
 
-    with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_divergent):
+    with patch("nova.orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_divergent):
         engine = GovernanceEngine()
         result = engine.evaluate({"user_id": "test-user"})
 
@@ -100,7 +100,7 @@ def test_router_passes_stable_urf(mock_urf_stable):
     from nova.orchestrator.router.epistemic_router import EpistemicRouter
     from nova.orchestrator.router.constraints import ConstraintResult
 
-    with patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_stable):
+    with patch("nova.orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_stable):
         router = EpistemicRouter()
         request = {"user_id": "test-user", "query": "test"}
 
@@ -116,7 +116,7 @@ def test_router_blocks_high_composite_risk(mock_urf_high_risk):
     """Test router forces safe_mode when composite_risk >= 0.7."""
     from nova.orchestrator.router.epistemic_router import EpistemicRouter
 
-    with patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_high_risk):
+    with patch("nova.orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_high_risk):
         router = EpistemicRouter()
         request = {"user_id": "test-user", "query": "test"}
 
@@ -132,7 +132,7 @@ def test_router_applies_penalty_low_alignment(mock_urf_divergent):
     """Test router applies penalty when alignment_score < 0.5."""
     from nova.orchestrator.router.epistemic_router import EpistemicRouter
 
-    with patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_divergent):
+    with patch("nova.orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_divergent):
         router = EpistemicRouter()
         request = {"user_id": "test-user", "query": "test"}
 
@@ -154,7 +154,7 @@ def test_router_penalty_calculation():
         "composite_risk": 0.5,  # Below 0.7 threshold
     }
 
-    with patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=urf):
+    with patch("nova.orchestrator.router.epistemic_router.get_unified_risk_field", return_value=urf):
         router = EpistemicRouter()
         request = {"user_id": "test-user", "query": "test"}
 
@@ -243,8 +243,8 @@ def test_urf_e2e_cascading_blocks(mock_urf_high_risk):
     from nova.orchestrator.router.epistemic_router import EpistemicRouter
     from src.nova.slots.slot10_civilizational_deployment.core.gatekeeper import Gatekeeper
 
-    with patch("orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_high_risk), \
-         patch("orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_high_risk), \
+    with patch("nova.orchestrator.governance.engine.get_unified_risk_field", return_value=mock_urf_high_risk), \
+         patch("nova.orchestrator.router.epistemic_router.get_unified_risk_field", return_value=mock_urf_high_risk), \
          patch("src.nova.slots.slot10_civilizational_deployment.core.gatekeeper.get_unified_risk_field", return_value=mock_urf_high_risk):
 
         # Governance blocks
