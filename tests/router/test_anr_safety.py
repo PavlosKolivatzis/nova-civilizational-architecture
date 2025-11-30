@@ -97,7 +97,7 @@ class TestANRSafety:
         # Should have multiple route probabilities
         assert len([p for p in decision.probs.values() if p > 0]) > 1
 
-    @patch('orchestrator.unlearn_weighting.get_anomaly_observability')
+    @patch('nova.orchestrator.unlearn_weighting.get_anomaly_observability')
     def test_combined_safety_mechanisms(self, mock_anomaly, monkeypatch):
         """Test safety mechanisms work together."""
         monkeypatch.setenv("NOVA_ANR_ENABLED", "1")

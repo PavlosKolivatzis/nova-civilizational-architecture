@@ -21,7 +21,7 @@ def test_tri_signals_from_mirror():
     """Test TRI signals read from semantic mirror."""
     engine = ConstellationEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(coherence=0.85, phase_jitter=0.12)
 
         signals = engine._get_tri_signals()
@@ -34,7 +34,7 @@ def test_tri_signals_partial_mirror_data():
     """Test TRI signals with partial mirror data."""
     engine = ConstellationEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(coherence=0.75)  # No phase_jitter
 
         signals = engine._get_tri_signals()
@@ -48,7 +48,7 @@ def test_tri_signals_env_fallback():
     """Test TRI signals fall back to env vars when mirror unavailable."""
     engine = ConstellationEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror()  # No data
 
         with patch('os.getenv') as mock_getenv:
@@ -83,7 +83,7 @@ def test_tri_signals_mirror_import_error():
     """Test TRI signals gracefully handle mirror import errors."""
     engine = ConstellationEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
         with patch('os.getenv') as mock_getenv:
             mock_getenv.side_effect = lambda key, default=None: "0.7" if key == "TRI_COHERENCE" else default
 

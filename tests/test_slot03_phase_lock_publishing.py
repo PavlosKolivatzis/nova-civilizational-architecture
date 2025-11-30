@@ -16,7 +16,7 @@ def test_publish_phase_lock_success():
     """Test successful phase-lock publishing to mirror."""
     mock_mirror = MockMirror()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         publish_phase_lock_to_mirror(0.52)
 
     assert mock_mirror.contexts['slot03.phase_lock'] == 0.52
@@ -26,7 +26,7 @@ def test_publish_phase_lock_none_value():
     """Test handling of None value (should not publish)."""
     mock_mirror = MockMirror()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         publish_phase_lock_to_mirror(None)
 
     assert len(mock_mirror.contexts) == 0
@@ -34,7 +34,7 @@ def test_publish_phase_lock_none_value():
 
 def test_publish_phase_lock_import_error():
     """Test graceful handling when semantic mirror not available."""
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
         # Should not raise exception
         publish_phase_lock_to_mirror(0.48)
 
@@ -44,7 +44,7 @@ def test_publish_phase_lock_set_context_error():
     mock_mirror = MockMirror()
     mock_mirror.set_context = lambda key, value, ttl=None: (_ for _ in ()).throw(Exception("Mock set_context error"))
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         # Should not raise exception
         publish_phase_lock_to_mirror(0.55)
 
@@ -70,7 +70,7 @@ def test_publish_phase_lock_fallback_signature():
 
     mock_mirror.set_context = mock_set_context_with_ttl
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         publish_phase_lock_to_mirror(0.47)
 
     assert mock_mirror.contexts['slot03.phase_lock'] == 0.47

@@ -16,7 +16,7 @@ def test_publish_tri_to_mirror_success():
     """Test successful TRI signal publishing to mirror."""
     mock_mirror = MockMirror()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         publish_tri_to_mirror(0.8, 0.9, 0.1)
 
         assert mock_mirror.contexts['slot04.coherence'] == 0.8
@@ -28,7 +28,7 @@ def test_publish_tri_to_mirror_partial_data():
     """Test publishing with only some TRI signals available."""
     mock_mirror = MockMirror()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         publish_tri_to_mirror(0.7, None, 0.3)
 
         assert mock_mirror.contexts['slot04.coherence'] == 0.7
@@ -38,7 +38,7 @@ def test_publish_tri_to_mirror_partial_data():
 
 def test_publish_tri_to_mirror_import_error():
     """Test graceful handling when semantic mirror not available."""
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
         # Should not raise exception
         publish_tri_to_mirror(0.8, 0.9, 0.1)
 
@@ -47,7 +47,7 @@ def test_publish_tri_to_mirror_none_values():
     """Test handling of None values (should not publish)."""
     mock_mirror = MockMirror()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         publish_tri_to_mirror(None, None, None)
 
         assert len(mock_mirror.contexts) == 0
@@ -58,6 +58,6 @@ def test_publish_tri_to_mirror_set_context_error():
     mock_mirror = Mock()
     mock_mirror.set_context.side_effect = Exception("Mock set_context error")
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=mock_mirror):
         # Should not raise exception
         publish_tri_to_mirror(0.8, 0.9, 0.1)

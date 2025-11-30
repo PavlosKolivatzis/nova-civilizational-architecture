@@ -34,7 +34,7 @@ def test_tri_signals_mirror_available():
                 return 0.12
             return None
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=MockMirror()):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=MockMirror()):
         signals = engine._get_tri_signals()
 
         assert signals is not None
@@ -51,7 +51,7 @@ def test_tri_signals_env_fallback():
         def get_context(self, key, requester):
             return None
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', return_value=MockMirror()):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', return_value=MockMirror()):
         with patch('os.getenv') as mock_getenv:
             def env_side_effect(key, default=None):
                 if key == "TRI_COHERENCE":
@@ -75,7 +75,7 @@ def test_tri_signals_conservative_default():
     engine = ConstellationEngine()
 
     # Mock import error for mirror
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
         with patch('os.getenv', return_value=None):
             signals = engine._get_tri_signals()
 

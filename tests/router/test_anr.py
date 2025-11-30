@@ -67,7 +67,7 @@ class TestAdaptiveNeuralRouter:
         assert hasattr(plan, 'steps')
         assert hasattr(plan, 'conservative')
 
-    @patch('orchestrator.router.anr.publish')
+    @patch('nova.orchestrator.router.anr.publish')
     def test_credit_immediate(self, mock_publish):
         """Test immediate credit assignment publishes reward."""
         router = AdaptiveNeuralRouter()
@@ -81,7 +81,7 @@ class TestAdaptiveNeuralRouter:
         assert args[0][1]["latency"] == 0.5
         assert args[0][1]["tri_delta"] == 0.1
 
-    @patch('orchestrator.router.anr.publish')
+    @patch('nova.orchestrator.router.anr.publish')
     def test_credit_deployment(self, mock_publish):
         """Test deployment feedback credit assignment."""
         router = AdaptiveNeuralRouter()

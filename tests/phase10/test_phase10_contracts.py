@@ -12,7 +12,7 @@ def test_schema_exists():
 def test_fep_contract_policy_threshold():
     """Verify FEP contract enforces FCQ ≥ 0.90 threshold."""
     cfg = yaml.safe_load(
-        pathlib.Path("orchestrator/contracts/phase10_fep.yaml").read_text()
+        pathlib.Path("src/nova/orchestrator/contracts/phase10_fep.yaml").read_text()
     )
     assert cfg["policies"]["fcq_threshold"] >= 0.90
 
@@ -20,14 +20,14 @@ def test_fep_contract_policy_threshold():
 def test_fep_contract_dissent_recording():
     """Verify FEP contract preserves dissenting votes."""
     cfg = yaml.safe_load(
-        pathlib.Path("orchestrator/contracts/phase10_fep.yaml").read_text()
+        pathlib.Path("src/nova/orchestrator/contracts/phase10_fep.yaml").read_text()
     )
     assert cfg["policies"]["record_dissent"] is True
 
 
 def test_sim_outputs_fcq():
     """Verify simulation script produces valid FCQ decision."""
-    out = subprocess.check_output(["python", "scripts/simulate_federated_ethics.py"])
+    out = subprocess.check_output(["python3", "scripts/simulate_federated_ethics.py"])
     data = json.loads(out)
     assert 0.0 <= data["fcq"] <= 1.0
     assert "provenance" in data and "hash" in data["provenance"]
@@ -35,7 +35,7 @@ def test_sim_outputs_fcq():
 
 def test_sim_provenance_chain():
     """Verify simulation includes hash-linked provenance."""
-    out = subprocess.check_output(["python", "scripts/simulate_federated_ethics.py"])
+    out = subprocess.check_output(["python3", "scripts/simulate_federated_ethics.py"])
     data = json.loads(out)
     prov = data["provenance"]
     assert "hash" in prov
@@ -47,7 +47,7 @@ def test_sim_provenance_chain():
 
 def test_sim_votes_signed():
     """Verify all votes in simulation include signatures."""
-    out = subprocess.check_output(["python", "scripts/simulate_federated_ethics.py"])
+    out = subprocess.check_output(["python3", "scripts/simulate_federated_ethics.py"])
     data = json.loads(out)
     for vote in data["votes"]:
         assert "signature" in vote
@@ -56,7 +56,7 @@ def test_sim_votes_signed():
 
 def test_prometheus_metrics_defined():
     """Verify Phase 10 metrics are defined in Prometheus exporter."""
-    metrics_file = pathlib.Path("orchestrator/prometheus_metrics.py")
+    metrics_file = pathlib.Path("src/nova/orchestrator/prometheus_metrics.py")
     content = metrics_file.read_text()
     assert "phase10_eai_gauge" in content
     assert "phase10_fcq_gauge" in content

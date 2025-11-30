@@ -21,7 +21,7 @@ def test_phase_lock_uses_phase_coherence_when_available():
     """Test phase_lock uses direct phase coherence from TRI when available."""
     engine = EmotionalMatrixEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(phase=0.88)
 
         phase_lock = engine._get_phase_lock()
@@ -32,7 +32,7 @@ def test_phase_lock_modulates_with_pressure():
     """Test phase_lock modulates based on system pressure when phase coherence unavailable."""
     engine = EmotionalMatrixEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(pressure=0.8)
 
         phase_lock = engine._get_phase_lock()
@@ -45,13 +45,13 @@ def test_phase_lock_pressure_range():
     engine = EmotionalMatrixEngine()
 
     # Test low pressure
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(pressure=0.0)
         phase_lock = engine._get_phase_lock()
         assert abs(phase_lock - 0.60) < 0.01
 
     # Test high pressure
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(pressure=1.0)
         phase_lock = engine._get_phase_lock()
         assert abs(phase_lock - 0.45) < 0.01
@@ -61,7 +61,7 @@ def test_phase_lock_fallback_to_env():
     """Test phase_lock falls back to env var when mirror data unavailable."""
     engine = EmotionalMatrixEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror()  # No data
 
         with patch('os.getenv') as mock_getenv:
@@ -75,7 +75,7 @@ def test_phase_lock_import_error_fallback():
     """Test phase_lock gracefully handles semantic mirror import errors."""
     engine = EmotionalMatrixEngine()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
         phase_lock = engine._get_phase_lock()
         assert phase_lock == 0.5  # Hard fallback value
 

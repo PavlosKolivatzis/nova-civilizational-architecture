@@ -330,8 +330,8 @@ class TestSlot5ConstellationAdapter:
         else:
             assert health["status"] == "degraded"
 
-    @patch('orchestrator.adapters.slot5_constellation.ENGINE', None)
-    @patch('orchestrator.adapters.slot5_constellation.AVAILABLE', False)
+    @patch('nova.orchestrator.adapters.slot5_constellation.ENGINE', None)
+    @patch('nova.orchestrator.adapters.slot5_constellation.AVAILABLE', False)
     def test_unavailable_engine(self):
         """Test behavior when engine is unavailable."""
         adapter = Slot5ConstellationAdapter()

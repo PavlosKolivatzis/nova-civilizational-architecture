@@ -121,7 +121,7 @@ def test_predictive_penalty_reduces_score(monkeypatch):
         return {"collapse_risk": 0.2, "drift_acceleration": 0.5}
 
     monkeypatch.setattr(
-        "orchestrator.router.epistemic_router.read_predictive_snapshot",
+        "nova.orchestrator.router.epistemic_router.read_predictive_snapshot",
         fake_snapshot,
     )
     router = EpistemicRouter()
@@ -142,7 +142,7 @@ def test_predictive_collapse_forces_safe_mode(monkeypatch):
         return {"collapse_risk": 0.9, "drift_acceleration": 0.1}
 
     monkeypatch.setattr(
-        "orchestrator.router.epistemic_router.read_predictive_snapshot",
+        "nova.orchestrator.router.epistemic_router.read_predictive_snapshot",
         fake_snapshot,
     )
     router = EpistemicRouter()
