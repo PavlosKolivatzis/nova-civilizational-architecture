@@ -85,3 +85,14 @@ def create_ledger_store(config: Optional[LedgerConfig] = None, logger: Optional[
         if _memory_store_singleton is None:
             _memory_store_singleton = LedgerStore(logger=logger)
         return _memory_store_singleton
+
+
+def reset_memory_store_singleton():
+    """
+    Reset the memory store singleton for testing purposes.
+
+    This allows tests to start with a clean slate without directly
+    accessing private module variables.
+    """
+    global _memory_store_singleton
+    _memory_store_singleton = None

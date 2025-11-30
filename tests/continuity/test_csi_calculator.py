@@ -3,7 +3,26 @@
 import tempfile
 from pathlib import Path
 
+import pytest
+
+import nova.ledger.factory as ledger_factory
 from nova.continuity.csi_calculator import compute_csi, get_csi_breakdown
+
+
+@pytest.fixture(autouse=True)
+def csi_test_env(monkeypatch, tmp_path):
+    """Isolate ledger/keyring for CSI tests to avoid ~/.nova writes."""
+    # Force in-memory ledger and reset singleton to avoid cross-test pollution
+    monkeypatch.setenv("LEDGER_BACKEND", "memory")
+    ledger_factory.reset_memory_store_singleton()
+
+    # Use a temp keyring to avoid ~/.nova access during tests
+    key_dir = tmp_path / "keyring"
+    key_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("NOVA_KEYRING_DIR", str(key_dir))
+    monkeypatch.setenv("NOVA_PQC_KEYFILE", str(key_dir / "pqc_key_01.json"))
+
+    yield
 
 
 def test_compute_csi_empty_chain():
