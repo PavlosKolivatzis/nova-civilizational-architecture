@@ -124,7 +124,81 @@ Keep all agents aligned with Nova's epistemology: slots interpret, core attests,
 5. **Uncertainty transparent**
    - Claims carry assumptions/confidence; tests don't hide uncertainty with brittle expectations.
 
+## 13) Documentation Integrity Protocol
+
+**Purpose:** Prevent documentation drift and maintain architectural coherence through structured lifecycle management.
+
+### Core Components
+
+**📋 Canonical Documentation Index** (`docs/architecture/ontology/_canon.yaml`)
+- Single source of truth for all documentation metadata
+- Tracks lifecycle status, ontology versions, linked contracts/slots
+- Enables programmatic reasoning about documentation state
+
+**🔍 Automated Sunlight Scanner** (`scripts/maintenance/sunlight_scan.py`)
+- Scans repository for documentation integrity violations
+- Detects missing lifecycle tags, outdated references, orphaned files
+- Run with: `python3 scripts/maintenance/sunlight_scan.py`
+
+**📝 Future Work Ledger** (`docs/future/future_work_ledger.yaml`)
+- Structured tracking of future enhancements and features
+- Prevents idea drift by maintaining clear status tracking
+- Status levels: CANDIDATE → PROPOSED → PLANNED → DEFERRED → CANCELLED
+
+### Lifecycle Status Tags
+
+Every documentation file must include lifecycle metadata:
+
+```yaml
+status: ACTIVE
+superseded_by: null
+linked_contracts:
+  - orp@1.1.0
+  - avl@1.1.0
+ontology_version: 1.7.1
+```
+
+**Status Definitions:**
+- `ACTIVE`: Currently authoritative and maintained
+- `DEPRECATED`: Still valid but superseded (must specify `superseded_by`)
+- `SUPERSEDED`: Replaced by newer documentation
+- `CANDIDATE`: Proposed but not yet approved
+- `FROZEN`: Historical reference, no longer updated
+- `ARCHIVED`: Moved to archive, not for active use
+
+### Documentation Rules
+
+1. **Every document must declare lifecycle status**
+2. **ACTIVE documents cannot contradict Mother Ontology**
+3. **Contract-linked documents must list linked_contracts**
+4. **Slot-specific documents must list linked_slots**
+5. **Deprecated documents must have superseded_by field**
+6. **Future work items go in future_work_ledger.yaml, not main docs**
+
+### Pre-Merge Documentation Checklist
+
+- [ ] **Lifecycle**: All modified/added docs have valid lifecycle tags
+- [ ] **Canon**: New docs added to `docs/architecture/ontology/_canon.yaml`
+- [ ] **Sunlight**: `scripts/maintenance/sunlight_scan.py` passes
+- [ ] **Future Work**: Ideas tracked in `docs/future/future_work_ledger.yaml`
+- [ ] **Ontology**: ACTIVE docs reference current ontology version (1.7.1)
+
+### Automated Enforcement
+
+**CI Lane** (`.github/workflows/docs.yaml`):
+```yaml
+- name: Documentation Integrity
+  run: python3 scripts/maintenance/sunlight_scan.py
+- name: Lifecycle Validation
+  run: python3 scripts/maintenance/validate_lifecycle.py
+```
+
+**Auto-Archiving**: Files detected as outdated by sunlight scanner are automatically moved to `archive/` with proper metadata preservation.
+
 **See also**
+- Canonical Index: `docs/architecture/ontology/_canon.yaml`
+- Future Work: `docs/future/future_work_ledger.yaml`
+- Sunlight Scanner: `scripts/maintenance/sunlight_scan.py`
 - Dashboards: `ops/dashboards/nova-phase2-observability.json`
 - Alerts: `ops/alerts/nova-phase2.rules.yml`
 - Runbooks: `ops/runbooks/`

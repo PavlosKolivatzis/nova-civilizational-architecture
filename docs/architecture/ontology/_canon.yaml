@@ -1,0 +1,204 @@
+# Nova Documentation Canon - Mother Index of Truth
+# Generated: 2025-11-30
+# Purpose: Single source of truth for all documentation lifecycle and relationships
+# Follows Sunlight Doctrine: Observe → Canonize → Attest → Publish
+
+metadata:
+  version: "1.0.0"
+  ontology_version: "1.7.1"
+  last_updated: "2025-11-30"
+  maintainer: "Nova AI Operating Framework"
+  purpose: "Documentation lifecycle management and architectural coherence"
+
+# Core Framework Documents
+frameworks:
+  - path: "agents/nova_ai_operating_framework.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: []
+    superseded_by: null
+    description: "Core operating framework with sunlight doctrine and development guidelines"
+
+  - path: "docs/architecture/ontology/specs/nova_framework_ontology.v1.yaml"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: ["orp@1", "autonomous_verification_ledger@1", "temporal_consistency@1"]
+    linked_slots: ["slot01", "slot02", "slot03", "slot04", "slot05", "slot06", "slot07", "slot08", "slot09", "slot10"]
+    superseded_by: null
+    description: "Mother Ontology v1.7.1 - immutable physics and operating dynamics"
+
+  - path: "docs/Mother_Children_Invariance_Matrix_v1.7.1.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot01", "slot02", "slot03", "slot04", "slot05", "slot06", "slot07", "slot08", "slot09", "slot10"]
+    superseded_by: null
+    description: "Formal proof of invariant preservation across Mother-Children layers"
+
+# Contract Specifications
+contracts:
+  - path: "contracts/autonomous_verification_ledger@1.yaml"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot01", "slot02", "slot03", "slot04", "slot05", "slot06", "slot07", "slot08", "slot09", "slot10"]
+    superseded_by: null
+    description: "AVL contract for tamper-evident ledger operations"
+
+  - path: "contracts/orp@1.yaml"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot07", "slot09", "slot10"]
+    superseded_by: null
+    description: "Operational Regime Policy contract for stability management"
+
+  - path: "contracts/temporal_consistency@1.yaml"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot07", "slot10"]
+    superseded_by: null
+    description: "Temporal consistency contract for time-based invariants"
+
+# Architecture Decision Records
+adrs:
+  - path: "decisions/ADR-012-semantic-mirror-integration.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot01", "slot02", "slot03", "slot04", "slot05", "slot06", "slot07", "slot08", "slot09", "slot10"]
+    superseded_by: null
+    description: "ADR for semantic mirror integration across all slots"
+
+  - path: "docs/adr/ADR-13-Ledger-Final.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: ["autonomous_verification_ledger@1"]
+    linked_slots: ["slot01", "slot02", "slot03", "slot04", "slot05", "slot06", "slot07", "slot08", "slot09", "slot10"]
+    superseded_by: null
+    description: "Final ADR for ledger architecture and Phase 14 persistence"
+
+# Implementation Audits
+audits:
+  - path: "IMPLEMENTATION_AUDIT.md"
+    status: "ACTIVE"
+    ontology_version: "1.4.0"
+    linked_contracts: []
+    linked_slots: []
+    superseded_by: null
+    description: "Phase 1-3 implementation audit findings"
+
+  - path: "docs/phase11_step_c_audits/phase11_system_invariants.md"
+    status: "ACTIVE"
+    ontology_version: "1.5.0"
+    linked_contracts: ["orp@1"]
+    linked_slots: ["slot07", "slot09"]
+    superseded_by: null
+    description: "Phase 11 system invariants audit"
+
+# Slot Documentation
+slots:
+  - path: "docs/slots/slot01_truth_anchor.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot01"]
+    superseded_by: null
+    description: "Slot 1 Truth Anchor implementation and contracts"
+
+  - path: "docs/slots/slot02_deltathresh.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot02"]
+    superseded_by: null
+    description: "Slot 2 Delta Threshold distortion detection"
+
+  - path: "docs/slots/slot03_emotional_matrix.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot03"]
+    superseded_by: null
+    description: "Slot 3 Emotional Matrix for affective computing"
+
+  - path: "docs/slots/slot04_tri.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot04"]
+    superseded_by: null
+    description: "Slot 4 TRI truth inference engine"
+
+  - path: "docs/slots/slot05_constellation.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot05"]
+    superseded_by: null
+    description: "Slot 5 Constellation pattern recognition"
+
+  - path: "docs/slots/slot06_cultural_synthesis.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot06"]
+    superseded_by: null
+    description: "Slot 6 Cultural Synthesis for truth coherence"
+
+  - path: "docs/slots/slot07_production_controls.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: ["orp@1"]
+    linked_slots: ["slot07"]
+    superseded_by: null
+    description: "Slot 7 Production Controls with circuit breakers"
+
+  - path: "docs/slots/slot08_memory_ethics.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot08"]
+    superseded_by: null
+    description: "Slot 8 Memory Ethics governance"
+
+  - path: "docs/slots/slot09_distortion_protection.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot09"]
+    superseded_by: null
+    description: "Slot 9 Distortion Protection IDS"
+
+  - path: "docs/slots/slot10_civilizational_deployment.md"
+    status: "ACTIVE"
+    ontology_version: "1.7.1"
+    linked_contracts: []
+    linked_slots: ["slot10"]
+    superseded_by: null
+    description: "Slot 10 Civilizational Deployment orchestration"
+
+# Deprecated/Archived Documents
+deprecated:
+  - path: "archive/legacy-slot-migration/README.md"
+    status: "ARCHIVED"
+    ontology_version: "1.0.0"
+    linked_contracts: []
+    linked_slots: []
+    superseded_by: "docs/architecture/ontology/specs/nova_framework_ontology.v1.yaml"
+    description: "Legacy slot migration documentation - archived after Phase 13b"
+
+# Future Work Items (see docs/future/future_work_ledger.yaml for details)
+future_work_references:
+  - "docs/future/future_work_ledger.yaml"
+
+# Validation Rules
+validation_rules:
+  - "All ACTIVE documents must reference ontology_version"
+  - "All contract-linked documents must list linked_contracts"
+  - "All slot-specific documents must list linked_slots"
+  - "No ACTIVE document may contradict Mother Ontology"
+  - "Deprecated documents must have superseded_by field"
+  - "Future work items must be in future_work_ledger.yaml, not main docs"
