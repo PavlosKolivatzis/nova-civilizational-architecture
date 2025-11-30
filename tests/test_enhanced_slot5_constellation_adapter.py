@@ -7,7 +7,7 @@ import pytest
 @pytest.fixture
 def adapter_factory(monkeypatch):
     """Provide a factory that yields adapters backed by controllable stubs."""
-    module_name = "orchestrator.adapters.enhanced_slot5_constellation"
+    module_name = "nova.orchestrator.adapters.enhanced_slot5_constellation"
     module = importlib.import_module(module_name)
 
     class DummyAdaptiveProcessor:
