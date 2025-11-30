@@ -5,11 +5,14 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.6.0
+  version: 1.7.0
   status: active
-  date: 2025-11-28
+  date: 2025-11-30
   children: [nova.operating@1.0]
   changelog:
+    - version: 1.7.0
+      date: 2025-11-30
+      changes: "Phase 13 AVL - Autonomous Verification Ledger: Hash-chained regime transition verification with dual-modality consensus, drift detection, continuity proofs; 110 new tests; contracts: autonomous_verification_ledger@1.yaml; supersedes regime_transition_ledger@1"
     - version: 1.6.0
       date: 2025-11-28
       changes: "Phase 11 Finalization - Ontology hierarchy formalized: Mother (nova.frameworks) → Operating (nova.operating@1.0) → Children (slots); Step B structural validation passed; Step C cross-AI semantic audit (8 systems) confirmed interpretability; transformation geometry contract established"
@@ -257,6 +260,36 @@ signals:
     range: [0, 1]
     desc: "ADMM consensus score across distributed Nova nodes"
 
+  # Phase 13 AVL Signals
+  regime:
+    type: Text
+    enum: ["normal", "heightened", "controlled_degradation", "emergency_stabilization", "recovery"]
+    desc: "Current operational regime classification from ORP"
+
+  regime_transition_reason:
+    type: Text
+    enum: ["mse_instability", "urf_risk", "csi_stability", "hysteresis_block", "dual_modality_disagreement"]
+    desc: "Reason for regime transition or maintenance"
+
+  time_in_regime_s:
+    type: Scalar
+    min: 0.0
+    desc: "Seconds spent in current operational regime"
+
+  continuity_proof_type:
+    type: Text
+    enum: ["ledger_continuity", "temporal_continuity", "amplitude_continuity", "regime_continuity"]
+    desc: "Type of continuity proof being validated"
+
+  drift_detected:
+    type: Bool
+    desc: "True if drift detected in current AVL entry"
+
+  dual_modality_state:
+    type: Text
+    enum: ["agreement", "orp_only", "oracle_only", "disagreement"]
+    desc: "Consensus state between ORP and contract oracle"
+
   # Ethics
   consent_profile: {type: Text, desc: "CE-001 policy id"}
 
@@ -306,6 +339,11 @@ ledgers:
             gate_state,
             governance_state,
             hash,
+            # Phase 13 AVL continuity metadata
+            regime,
+            time_in_regime_s,
+            dual_modality_state,
+            drift_detected,
           ]
         contract: temporal_consistency@1
 
@@ -328,6 +366,29 @@ ledgers:
             source_snapshot_hash,
           ]
         contract: predictive_consistency@1
+
+  verification_ledger:
+    purpose: "Autonomous Verification Ledger - Hash-chained regime transition verification with dual-modality consensus"
+    storage: {backend: filesystem, path: ".verification_ledger/", format: jsonl}
+    integrity: {hash_chained: true, dual_modality_verification: true, drift_detection: true}
+    entries:
+      - type: autonomous_verification_entry
+        fields:
+          [
+            entry_id,
+            timestamp,
+            orp_regime,
+            orp_regime_score,
+            contributing_factors,
+            oracle_regime,
+            prev_entry_hash,
+            entry_hash,
+            node_id,
+            time_in_regime_s,
+            drift_detected,
+            drift_reasons,
+          ]
+        contract: autonomous_verification_ledger@1
 
 # ---------- Role Separation (Architectural Invariant) ----------
 role_separation:
@@ -1361,7 +1422,7 @@ validation:
       conclusion: "Necessary component"
 
   empirical_validation:
-    test_cases: 1749  # Updated with Phase 9 URF + Phase 10 MSE tests
+    test_cases: 1859  # Updated with Phase 13 AVL tests
     accuracy: 0.997
     false_positive_rate: 0.042
     dataset:
@@ -1380,6 +1441,12 @@ validation:
     phase_9_additions:
       urf_calculator: 10
       total_phase_9: 10
+    phase_13_additions:
+      avl_ledger: 28
+      drift_guard: 21
+      continuity_proofs: 21
+      orp_avl_integration: 9
+      total_phase_13: 110
 
 testing:
   reproducibility:
@@ -1421,6 +1488,16 @@ metrics:
     - {name: nova_predictive_consistency_culture_deploy, from: culture_deployment_conflict, desc: "Culture-deployment conflict [0..1]"}
     - {name: nova_predictive_consistency_prod_predictive, from: production_predictive_conflict, desc: "Production-predictive conflict [0..1]"}
 
+    # Phase 13 AVL Metrics
+    - {name: nova_avl_entries_total, type: counter, desc: "Total AVL entries appended"}
+    - {name: nova_avl_drift_events_total, type: counter, desc: "Total drift detection events"}
+    - {name: nova_avl_chain_verifications_total, type: counter, desc: "Total chain verification attempts"}
+    - {name: nova_avl_continuity_proofs_total, type: counter, labels: [proof_type, result], desc: "Continuity proof results"}
+    - {name: nova_orp_regime, type: gauge, desc: "Current ORP regime (0=normal, 1=heightened, 2=controlled, 3=emergency, 4=recovery)"}
+    - {name: nova_orp_regime_score, type: gauge, desc: "ORP composite regime severity score [0..1]"}
+    - {name: nova_orp_time_in_regime_s, type: gauge, desc: "Time in current regime (seconds)"}
+    - {name: nova_orp_dual_modality_state, type: gauge, desc: "Dual-modality consensus state (0=agreement, 1=orp_only, 2=oracle_only, 3=disagreement)"}
+
 # ---------- ANALYTIC INSTRUMENTS (Active Meta-Tools) ----------
 # PAD.E.L and INF-o-INITY are now **analytic instruments** under ARC, not standalone slots.
 # They process data from Slots 1-10 for diagnostic and interpretive purposes.
@@ -1447,20 +1524,21 @@ metrics:
 # - EffortlessLayer: Cognitive-symbolic interface concept, not implemented as dedicated slot
 
 # ---------- CONTINUATION PROMPT ----------
-# Context: Nova Framework Ontology v1.0 grounded in Universal Structure Mathematics
-# State: 7 core frameworks (slots 1,2,4,5,7,9 + ARC) + 6 coordination frameworks (RRI,MSE,EVF,NEM,PAG,FB)
-# Status: Empirically validated (99.7% accuracy, 1082 tests), USM theorems integrated
+# Context: Nova Framework Ontology v1.7.0 grounded in Universal Structure Mathematics
+# State: 7 core frameworks (slots 1,2,4,5,7,9 + ARC) + 6 coordination frameworks (RRI,MSE,EVF,NEM,PAG,FB) + 1 verification framework (AVL)
+# Status: Empirically validated (99.7% accuracy, 1859 tests), USM theorems integrated
 # Architecture:
 #   Core Slots: TruthAnchor(1), ΔTHRESH(2), TRI(4), Constellation(5), WisdomGov(7), DistortionProt(9)
 #   Analytic Instruments: PAD.E.L (psychological filter), INF-o-INITY (informational filter)
 #   Coordination: RRI (reflective resonance), MSE (validation), EVF (ethics), NEM (cognition), PAG (provenance), FB (federation)
-# Fixes Applied:
-#   - Explicit slot mappings (1,2,4,5,7,9)
-#   - Slot01/09 full definitions (TruthAnchor, DistortionProtection)
-#   - Spectral entropy clarity (raw H>2.5 vs normalized ε>0.7)
-#   - Convergence rates (κ_state, κ_energy for ADMM)
-#   - PAD.E.L & INF-o-INITY as analytic_instruments under ARC
-#   - 6 coordination frameworks for integrity, adaptability, civilizational scalability
+#   Verification: AVL (autonomous verification ledger) - Phase 13 addition
+# Phase 13 Fixes Applied:
+#   - Autonomous Verification Ledger (AVL) with hash-chained regime transitions
+#   - Dual-modality consensus (ORP vs contract oracle agreement)
+#   - Drift detection with configurable halt-on-critical-drift
+#   - Continuity proofs (ledger, temporal, amplitude, regime)
+#   - 110 new tests, autonomous_verification_ledger@1.yaml contract
+#   - Supersedes regime_transition_ledger@1 (Phase 11.3)
 # Integration Patterns:
 #   - arc.invoke('padel', state) / arc.invoke('infoinity', signals)
 #   - RRI.resonance_index → Router/Governance (epistemic quality monitoring)
@@ -1469,8 +1547,9 @@ metrics:
 #   - NEM.neuro_epistemic_vector → WisdomGovernor (human-AI cognition loop)
 #   - PAG.provenance_hashes → TruthAnchor/Slot10 (verifiable traceability)
 #   - FB.federated_consensus → Slot10 (distributed Nova synchronization)
-# Next: Implement src/nova/ontology/ (loader, validator, enforcer) + coordination/ + arc/instruments/ + tests
-# Key refs: .nova/meta.yaml learning_path, USM paper spectral/equilibrium math, ARC self-improvement
-# Critical: Maintain 3-ledger separation, role enforcement, consent gates, empirical thresholds, read-only observers
+#   - AVL.dual_modality_state → ORP (verification consensus monitoring)
+# Next: Phase 14 PostgreSQL persistent AVL + Phase 15 multi-node federation
+# Key refs: contracts/autonomous_verification_ledger@1.yaml, USM paper spectral/equilibrium math, ARC self-improvement
+# Critical: Maintain 4-ledger separation, role enforcement, consent gates, empirical thresholds, read-only observers
 
 
