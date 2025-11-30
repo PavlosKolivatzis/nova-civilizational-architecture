@@ -1,7 +1,7 @@
 """Unit tests for ORP Hysteresis Enforcement - Phase 11.4"""
 
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from src.nova.continuity.orp_hysteresis import (
     check_regime_hysteresis,
     get_hysteresis_metrics,
@@ -164,15 +164,15 @@ def test_check_regime_hysteresis_whitespace_trimmed():
 
 def test_check_regime_hysteresis_oscillation_detected():
     """Test oscillation detection when rapid switches occur."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Create ledger with 4 transitions in 5 minutes (oscillating)
     ledger = [
-        {"regime": "normal", "timestamp": (now - timedelta(seconds=290)).isoformat() + "Z", "duration_s": 10.0},
-        {"regime": "heightened", "timestamp": (now - timedelta(seconds=280)).isoformat() + "Z", "duration_s": 10.0},
-        {"regime": "normal", "timestamp": (now - timedelta(seconds=270)).isoformat() + "Z", "duration_s": 10.0},
-        {"regime": "heightened", "timestamp": (now - timedelta(seconds=260)).isoformat() + "Z", "duration_s": 10.0},
-        {"regime": "normal", "timestamp": now.isoformat() + "Z", "duration_s": 260.0},  # Current
+        {"regime": "normal", "timestamp": (now - timedelta(seconds=290)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
+        {"regime": "heightened", "timestamp": (now - timedelta(seconds=280)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
+        {"regime": "normal", "timestamp": (now - timedelta(seconds=270)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
+        {"regime": "heightened", "timestamp": (now - timedelta(seconds=260)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
+        {"regime": "normal", "timestamp": now.isoformat().replace('+00:00', 'Z'), "duration_s": 260.0},  # Current
     ]
 
     decision = check_regime_hysteresis("heightened", ledger, current_time=now)
@@ -186,12 +186,12 @@ def test_check_regime_hysteresis_oscillation_detected():
 
 def test_check_regime_hysteresis_no_oscillation():
     """Test no oscillation when transitions are infrequent."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Only 1 transition in window
     ledger = [
-        {"regime": "normal", "timestamp": (now - timedelta(seconds=400)).isoformat() + "Z", "duration_s": 100.0},
-        {"regime": "heightened", "timestamp": now.isoformat() + "Z", "duration_s": 400.0},  # Current
+        {"regime": "normal", "timestamp": (now - timedelta(seconds=400)).isoformat().replace('+00:00', 'Z'), "duration_s": 100.0},
+        {"regime": "heightened", "timestamp": now.isoformat().replace('+00:00', 'Z'), "duration_s": 400.0},  # Current
     ]
 
     decision = check_regime_hysteresis("normal", ledger, current_time=now)

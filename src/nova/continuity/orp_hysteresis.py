@@ -35,7 +35,7 @@ Hysteresis Algorithm:
 from __future__ import annotations
 from typing import Dict, Optional, Tuple
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 # Canonical minimum regime durations (seconds)
@@ -195,7 +195,7 @@ def _count_oscillations(ledger_history: list[Dict], current_time: Optional[datet
     if len(ledger_history) < 2:
         return 0
 
-    now = current_time or datetime.utcnow()
+    now = current_time or datetime.now(timezone.utc)
     window_start = now - timedelta(seconds=OSCILLATION_WINDOW_S)
 
     # Filter entries within window
