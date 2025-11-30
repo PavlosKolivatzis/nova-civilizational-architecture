@@ -5,11 +5,14 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.7.0
+  version: 1.7.1
   status: active
   date: 2025-11-30
   children: [nova.operating@1.0]
   changelog:
+    - version: 1.7.1
+      date: 2025-11-30
+      changes: "Phase 13b fix - Oracle pre-transition evaluation: Oracle now uses pre-transition regime and duration for independent validation of transition legality; enables detection of illegal downgrades violating hysteresis/min-duration rules; 4 new tests; orp_version bumped to phase13.2"
     - version: 1.7.0
       date: 2025-11-30
       changes: "Phase 13 AVL - Autonomous Verification Ledger: Hash-chained regime transition verification with dual-modality consensus, drift detection, continuity proofs; 110 new tests; contracts: autonomous_verification_ledger@1.yaml; supersedes regime_transition_ledger@1"
@@ -1422,7 +1425,7 @@ validation:
       conclusion: "Necessary component"
 
   empirical_validation:
-    test_cases: 1859  # Updated with Phase 13 AVL tests
+    test_cases: 1863  # Updated with Phase 13b tests
     accuracy: 0.997
     false_positive_rate: 0.042
     dataset:
@@ -1447,6 +1450,9 @@ validation:
       continuity_proofs: 21
       orp_avl_integration: 9
       total_phase_13: 110
+    phase_13b_additions:
+      oracle_pretransition_tests: 4
+      total_phase_13b: 4
 
 testing:
   reproducibility:
@@ -1524,14 +1530,14 @@ metrics:
 # - EffortlessLayer: Cognitive-symbolic interface concept, not implemented as dedicated slot
 
 # ---------- CONTINUATION PROMPT ----------
-# Context: Nova Framework Ontology v1.7.0 grounded in Universal Structure Mathematics
+# Context: Nova Framework Ontology v1.7.1 grounded in Universal Structure Mathematics
 # State: 7 core frameworks (slots 1,2,4,5,7,9 + ARC) + 6 coordination frameworks (RRI,MSE,EVF,NEM,PAG,FB) + 1 verification framework (AVL)
-# Status: Empirically validated (99.7% accuracy, 1859 tests), USM theorems integrated
+# Status: Empirically validated (99.7% accuracy, 1863 tests), USM theorems integrated
 # Architecture:
 #   Core Slots: TruthAnchor(1), ΔTHRESH(2), TRI(4), Constellation(5), WisdomGov(7), DistortionProt(9)
 #   Analytic Instruments: PAD.E.L (psychological filter), INF-o-INITY (informational filter)
 #   Coordination: RRI (reflective resonance), MSE (validation), EVF (ethics), NEM (cognition), PAG (provenance), FB (federation)
-#   Verification: AVL (autonomous verification ledger) - Phase 13 addition
+#   Verification: AVL (autonomous verification ledger) - Phase 13 + 13b
 # Phase 13 Fixes Applied:
 #   - Autonomous Verification Ledger (AVL) with hash-chained regime transitions
 #   - Dual-modality consensus (ORP vs contract oracle agreement)
@@ -1539,6 +1545,11 @@ metrics:
 #   - Continuity proofs (ledger, temporal, amplitude, regime)
 #   - 110 new tests, autonomous_verification_ledger@1.yaml contract
 #   - Supersedes regime_transition_ledger@1 (Phase 11.3)
+# Phase 13b Fixes Applied:
+#   - Oracle pre-transition evaluation: Oracle uses pre-transition regime/duration
+#   - Enables detection of illegal downgrades violating hysteresis/min-duration
+#   - 4 new tests for oracle pre-transition validation
+#   - orp_version bumped to phase13.2
 # Integration Patterns:
 #   - arc.invoke('padel', state) / arc.invoke('infoinity', signals)
 #   - RRI.resonance_index → Router/Governance (epistemic quality monitoring)

@@ -1,21 +1,26 @@
 # ============================================================================
-# Autonomous Verification Ledger (AVL) Contract - Phase 13
+# Autonomous Verification Ledger (AVL) Contract - Phase 13 + 13b
 # ============================================================================
-# Version: 1.0.0
+# Version: 1.1.0
 # Purpose: Define hash-chained ledger for regime transition verification
 # Supersedes: regime_transition_ledger@1 (Phase 11.3)
+# Phase 13b: Oracle pre-transition evaluation fix
 # ============================================================================
 
 schema_version: "1.0"
 contract_id: "autonomous_verification_ledger@1"
 name: "Autonomous Verification Ledger"
-version: "1.0.0"
-phase: "13"
+version: "1.1.0"
+phase: "13b"
 status: "active"
 description: |
   Cryptographically secure, hash-chained ledger providing autonomous verification
   of regime transitions through dual-modality consensus and drift detection.
   Supersedes simple transition logging with immutable, verifiable continuity proofs.
+  
+  Phase 13b fix: Oracle evaluation now uses pre-transition regime and duration
+  to independently validate transition legality. This enables detection of
+  illegal downgrades that violate hysteresis or min-duration rules.
 
 dependencies:
   - "orp@1"
@@ -155,6 +160,14 @@ semantics:
     agreement_required: true
     drift_on_disagreement: true
     oracle_source: "Contract-defined regime classification logic"
+    # Phase 13b: Oracle uses pre-transition state for independent validation
+    oracle_evaluation_context:
+      regime: "pre-transition regime (before ORP updates state)"
+      duration: "time spent in pre-transition regime"
+      rationale: |
+        Oracle must evaluate from the same starting point as ORP to detect
+        illegal transitions. If oracle used post-transition regime, it would
+        always agree with ORP on downgrades (since both would see the new regime).
 
   drift_detection_rules:
     dual_modality_disagreement:
@@ -259,16 +272,30 @@ integration:
   operational_regime:
     hook: "post_regime_evaluation"
     description: "AVL append triggered after each ORP evaluation"
+    # Phase 13b: Oracle uses pre-transition state for validation
     pseudocode: |
-      # After ORP computes new regime
-      oracle_regime = compute_oracle_regime(contributing_factors)
-      drift_result = detect_drift(orp_regime, oracle_regime, factors)
+      # BEFORE ORP updates state, capture pre-transition context
+      previous_regime = current_regime
+      previous_duration_s = time_in_regime_s
+      
+      # ORP computes new regime (may transition)
+      new_regime = classify_regime(factors, current_regime, time_in_regime_s)
+      
+      # Phase 13b: Oracle evaluates using PRE-TRANSITION state
+      # This allows independent validation of transition legality
+      oracle_regime = compute_oracle_regime(
+          factors,
+          current_regime=previous_regime,      # Pre-transition regime
+          time_in_regime_s=previous_duration_s  # Pre-transition duration
+      )
+      
+      drift_result = detect_drift(new_regime, oracle_regime, factors)
 
       if drift_result.halt_recommended and halt_on_drift:
           raise DriftDetectedError(drift_result.reasons)
 
       append_entry(
-          orp_regime=orp_regime,
+          orp_regime=new_regime,
           oracle_regime=oracle_regime,
           factors=contributing_factors,
           drift_reasons=drift_result.reasons
@@ -364,6 +391,11 @@ testing:
     - "test_continuity_proofs_all_pass"
     - "test_avl_metrics_exported"
     - "test_avl_observability_endpoints"
+    # Phase 13b: Oracle pre-transition evaluation tests
+    - "test_oracle_detects_illegal_downgrade_hysteresis"
+    - "test_oracle_detects_illegal_downgrade_min_duration"
+    - "test_oracle_allows_legal_downgrade"
+    - "test_oracle_pretransition_evaluation_on_upgrade"
 
   property_tests:
     - "test_hash_chain_resists_modification"

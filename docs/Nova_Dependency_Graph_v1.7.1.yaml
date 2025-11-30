@@ -1,0 +1,841 @@
+# Nova Framework Dependency Graph v1.7.1
+# Machine-readable YAML dependency graph for Mother→Operating→Children hierarchy
+
+graph_metadata:
+  version: 1.7.1
+  date: 2025-11-30
+  status: active
+  description: "Dependency graph showing signal flow and contract dependencies across ontology layers"
+  layers: ["mother", "operating", "children"]
+
+# ============================================================================
+# MOTHER LAYER: nova.frameworks v1.7.1
+# ============================================================================
+
+mother_ontology:
+  id: nova.frameworks
+  version: 1.7.1
+  status: active
+  file: specs/nova_framework_ontology.v1.yaml
+
+  provides:
+    primitives:
+      - Scalar
+      - Vector
+      - Matrix
+      - Bool
+      - Text
+      - Timestamp
+
+    signals:
+      usm_signals:
+        - spectral_entropy_H
+        - equilibrium_gradient_E
+        - equilibrium_ratio_rho
+
+      truth_signals:
+        - tri_coherence
+        - tri_drift_z
+        - tri_jitter
+        - tri_band
+
+      temporal_signals:
+        - temporal_drift
+        - temporal_variance
+        - temporal_prediction_error
+        - temporal_convergence_score
+        - temporal_divergence_penalty
+
+      stability_signals:
+        - drift_velocity
+        - drift_acceleration
+        - stability_pressure
+        - predictive_collapse_risk
+        - predictive_safe_corridor
+
+      convergence_signals:
+        - kappa_state
+        - kappa_energy
+
+      core_embeddings:
+        - user_intent_vector
+        - context_vector
+        - truth_vector
+        - symbolic_anchor
+
+      coordination_signals:
+        - resonance_index
+        - cross_slot_phase_error
+        - ethical_gradient
+        - neuro_epistemic_vector
+        - attention_stability
+        - provenance_hashes
+        - federated_consensus
+
+    theorems:
+      - id: SPECTRAL_INVARIANCE
+        threshold: 2.5  # raw entropy
+        threshold_normalized: 0.7
+        accuracy: 0.942
+
+      - id: EQUILIBRIUM_RATIO
+        threshold: 0.7
+        sensitivity: 0.891
+        specificity: 0.913
+
+    ledger_architecture:
+      - fact_ledger  # raw observations
+      - claim_ledger  # slot outputs
+      - attest_ledger  # hash-linked events
+
+  children:
+    - nova.operating@1.0
+
+# ============================================================================
+# OPERATING LAYER: nova.operating@1.0
+# ============================================================================
+
+operating_ontology:
+  id: nova.operating
+  version: 1.0.0
+  status: active
+  file: specs/operating_ontology.v1.yaml
+  parent: nova.frameworks@1.7.1
+
+  contracts:
+    - id: orp@1
+      version: 1.0.0
+      file: contracts/orp@1.yaml
+      purpose: "Operational Regime Policy classification rules"
+
+    - id: autonomous_verification_ledger@1
+      version: 1.1.0  # Phase 13b
+      file: contracts/autonomous_verification_ledger@1.yaml
+      purpose: "AVL schema, drift detection, continuity proofs"
+
+    - id: operating_transformation@1
+      version: 1.0.0
+      file: contracts/operating_transformation@1.yaml
+      purpose: "Transformation geometry contracts"
+
+  consumes_from_mother:
+    signals:
+      # Contributing factors for ORP
+      - signal: spectral_entropy_H
+        via: mse_meta_instability
+        usage: "Meta-stability Engine feeds MSE factor"
+
+      - signal: tri_coherence
+        via: csi_continuity_index
+        usage: "CSI inverted (1 - csi) for continuity factor"
+
+      - signal: tri_drift_z
+        via: urf_composite_risk
+        usage: "Universal Risk Framework composite"
+
+      - signal: predictive_collapse_risk
+        via: direct
+        usage: "Direct ORP contributing factor"
+
+      - signal: consistency_gap
+        via: direct
+        usage: "Direct ORP contributing factor (derived from cross-slot phase error)"
+
+    primitives:
+      - Scalar  # For regime_score, time_in_regime_s, etc.
+      - Timestamp  # For AVL entries
+      - Bool  # For drift_detected, dual_modality_agreement, etc.
+      - Text  # For regime enum values
+
+    theorems:
+      - SPECTRAL_INVARIANCE  # Used in MSE calculation
+      - EQUILIBRIUM_RATIO  # Used in URF calculation
+
+  provides_to_children:
+    signals:
+      regime_signals:
+        - regime  # Current operational regime
+        - regime_transition_reason  # Why transition occurred
+        - time_in_regime_s  # Duration in current regime
+
+      amplitude_signals:
+        - threshold_multiplier  # For slot02 threshold scaling
+        - traffic_limit  # For slot07 rate limiting
+        - deployment_freeze  # For production controls
+
+      verification_signals:
+        - drift_detected  # AVL drift detection result
+        - dual_modality_state  # ORP vs oracle consensus
+        - continuity_proof_type  # Which proof is being validated
+
+    rules:
+      regime_classification:
+        regimes: [normal, heightened, controlled_degradation, emergency_stabilization, recovery]
+        thresholds:
+          normal: [0.0, 0.30]
+          heightened: [0.30, 0.50]
+          controlled_degradation: [0.50, 0.70]
+          emergency_stabilization: [0.70, 0.85]
+          recovery: [0.85, 1.00]
+        hysteresis: 0.05  # Downgrade requires score < (threshold - 0.05)
+        min_duration_s: 300.0  # 5 minutes minimum in regime before downgrade
+
+      drift_detection:
+        - rule: dual_modality_disagreement
+          condition: "orp_regime != oracle_regime"
+
+        - rule: invariant_violation
+          condition: "not (hysteresis_enforced and min_duration_enforced and ledger_continuity and amplitude_valid)"
+
+        - rule: amplitude_bounds_exceeded
+          condition: "threshold_multiplier not in [0.5, 2.0] or traffic_limit not in [0.0, 1.0]"
+
+        - rule: score_computation_drift
+          condition: "abs(orp_regime_score - oracle_regime_score) > 1e-6"
+
+      continuity_proofs:
+        - proof: ledger_continuity
+          formula: "entry[N].transition_from == entry[N-1].regime (if transition)"
+
+        - proof: temporal_continuity
+          formula: "entry[N].elapsed_s > entry[N-1].elapsed_s"
+
+        - proof: amplitude_continuity
+          formula: "abs(entry[N].threshold_multiplier - entry[N-1].threshold_multiplier) <= 0.5"
+
+        - proof: regime_continuity
+          formula: "all(entry.hysteresis_enforced and entry.min_duration_enforced)"
+
+  children:
+    core_slots:
+      - slot01  # Truth Anchor
+      - slot02  # ΔTHRESH
+      - slot04  # TRI Engine
+      - slot05  # Constellation
+      - slot07  # Wisdom Governor
+      - slot09  # Distortion Protection
+      - arc  # Analytic Reflection Core
+
+    coordination:
+      - rri  # Reflective Resonance Index
+      - mse  # Meta-Stability Engine
+      - evf  # Ethical Valence Framework
+      - nem  # Neuro-Epistemic Mapping
+      - pag  # Provenance Audit Graph
+      - fb  # Federation Bridge
+
+    verification:
+      - avl  # Autonomous Verification Ledger
+
+# ============================================================================
+# CHILDREN LAYER: Slots + Coordination + Verification
+# ============================================================================
+
+children_ontologies:
+
+  # ---------- Core Slots ----------
+
+  - id: slot01
+    name: "Truth Anchor"
+    version: 1.0.0
+    file: src/nova/slots/slot01_truth_anchor/
+    contract: contracts/truth_anchor@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime  # For adaptive grounding
+        - drift_detected  # For anomaly response
+
+    consumes_from_mother:
+      signals:
+        - user_intent_vector
+        - context_vector
+        - tri_coherence
+      primitives:
+        - Vector
+
+    provides:
+      signals:
+        - symbolic_anchor
+        - truth_vector
+
+  - id: slot02
+    name: "ΔTHRESH (Adaptive Thresholding)"
+    version: 1.0.0
+    file: src/nova/slots/slot02_deltathresh/
+    contract: contracts/deltathresh@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - threshold_multiplier  # PRIMARY DEPENDENCY
+
+      rules:
+        - adaptive_scaling: "threshold_scaled = threshold_base * threshold_multiplier"
+        - regime_mapping:
+            normal: 1.0
+            heightened: 1.2
+            controlled_degradation: 1.5
+            emergency_stabilization: 1.8
+            recovery: 2.0
+
+    consumes_from_mother:
+      signals:
+        - spectral_entropy_H
+      primitives:
+        - Scalar
+
+    provides:
+      signals:
+        - adaptive_threshold
+        - threshold_delta
+
+  - id: slot04
+    name: "TRI Engine (Triple Resonance Index)"
+    version: 1.0.0
+    file: src/nova/slots/slot04_tri/
+    contract: contracts/tri_engine@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - dual_modality_state  # For consensus monitoring
+
+    consumes_from_mother:
+      signals:
+        - tri_coherence
+        - tri_drift_z
+        - tri_jitter
+        - tri_band
+      primitives:
+        - Scalar
+        - Text
+
+    provides:
+      signals:
+        - tri_coherence  # Feeds back to mother (circular dependency resolved via temporal lag)
+        - tri_drift_z
+        - tri_jitter
+        - tri_band
+
+  - id: slot05
+    name: "Constellation (Temporal Correlation)"
+    version: 1.0.0
+    file: src/nova/slots/slot05_constellation/
+    contract: contracts/constellation@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - time_in_regime_s
+
+    consumes_from_mother:
+      signals:
+        - temporal_drift
+        - temporal_variance
+        - temporal_prediction_error
+      primitives:
+        - Scalar
+
+    provides:
+      signals:
+        - correlation_matrix
+        - temporal_convergence_score
+
+  - id: slot07
+    name: "Wisdom Governor"
+    version: 1.0.0
+    file: src/nova/slots/slot07_production_controls/
+    contract: contracts/wisdom_governor@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - traffic_limit  # PRIMARY DEPENDENCY
+        - deployment_freeze  # PRIMARY DEPENDENCY
+
+      rules:
+        - traffic_control: "requests_per_second_max = base_limit * traffic_limit"
+        - deployment_gate: "if deployment_freeze: halt_deployments()"
+
+    consumes_from_mother:
+      signals:
+        - stability_pressure
+        - drift_velocity
+        - drift_acceleration
+      primitives:
+        - Scalar
+        - Bool
+
+    provides:
+      signals:
+        - governance_decision
+        - stability_margin
+
+  - id: slot09
+    name: "Distortion Protection"
+    version: 1.0.0
+    file: src/nova/slots/slot09_distortion_protection/
+    contract: contracts/distortion_protection@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime  # For adaptive filtering sensitivity
+
+    consumes_from_mother:
+      signals:
+        - spectral_entropy_H
+        - equilibrium_ratio_rho
+      primitives:
+        - Scalar
+
+    provides:
+      signals:
+        - distortion_index
+        - filtered_signal
+
+  - id: arc
+    name: "Analytic Reflection Core (PAD.E.L + INF-o-INITY)"
+    version: 1.0.0
+    file: src/nova/arc/
+    contract: contracts/arc@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - drift_detected
+
+    consumes_from_mother:
+      signals:
+        - spectral_entropy_H
+        - equilibrium_ratio_rho
+        - neuro_epistemic_vector
+      primitives:
+        - Scalar
+        - Vector
+
+    provides:
+      signals:
+        # PAD.E.L outputs
+        - reflex_integrity
+        - internal_stability_index
+        - emotional_coherence
+
+        # INF-o-INITY outputs
+        - distortion_index
+        - epistemic_entropy_profile
+        - narrative_coherence
+
+  # ---------- Coordination Frameworks ----------
+
+  - id: rri
+    name: "Reflective Resonance Index"
+    version: 1.0.0
+    file: src/nova/coordination/rri/
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+
+    consumes_from_mother:
+      signals:
+        - resonance_index
+        - cross_slot_phase_error
+      primitives:
+        - Scalar
+
+    provides:
+      signals:
+        - resonance_index  # 5m window of reflect/forecast/counterfactual traces
+
+  - id: mse
+    name: "Meta-Stability Engine"
+    version: 1.0.0
+    file: src/nova/coordination/mse/
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - continuity_proof_type
+
+    consumes_from_mother:
+      signals:
+        - spectral_entropy_H
+        - stability_pressure
+      primitives:
+        - Scalar
+
+    provides:
+      signals:
+        - mse_meta_instability  # Feeds ORP contributing factors
+
+  - id: evf
+    name: "Ethical Valence Framework"
+    version: 1.0.0
+    file: src/nova/coordination/evf/
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+
+    consumes_from_mother:
+      signals:
+        - ethical_gradient
+      primitives:
+        - Vector
+
+    provides:
+      signals:
+        - ethical_gradient  # [transparency, non_domination, reciprocity, accuracy]
+
+  - id: nem
+    name: "Neuro-Epistemic Mapping"
+    version: 1.0.0
+    file: src/nova/coordination/nem/
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+
+    consumes_from_mother:
+      signals:
+        - neuro_epistemic_vector
+        - attention_stability
+      primitives:
+        - Vector
+        - Scalar
+
+    provides:
+      signals:
+        - neuro_epistemic_vector
+        - attention_stability
+
+  - id: pag
+    name: "Provenance Audit Graph"
+    version: 1.0.0
+    file: src/nova/coordination/pag/
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - drift_detected
+
+    consumes_from_mother:
+      signals:
+        - provenance_hashes
+      primitives:
+        - Vector
+
+    provides:
+      signals:
+        - provenance_hashes  # SHA3-256 hashes of transformations
+
+  - id: fb
+    name: "Federation Bridge"
+    version: 1.0.0
+    file: src/nova/coordination/fb/
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+
+    consumes_from_mother:
+      signals:
+        - federated_consensus
+        - kappa_state
+        - kappa_energy
+      primitives:
+        - Scalar
+
+    provides:
+      signals:
+        - federated_consensus  # ADMM consensus score
+
+  # ---------- Verification Frameworks ----------
+
+  - id: avl
+    name: "Autonomous Verification Ledger"
+    version: 1.1.0  # Phase 13b
+    file: src/nova/continuity/avl_ledger.py
+    contract: contracts/autonomous_verification_ledger@1.yaml
+    parent: nova.operating@1.0
+
+    consumes_from_operating:
+      signals:
+        - regime
+        - regime_transition_reason
+        - time_in_regime_s
+        - threshold_multiplier
+        - traffic_limit
+        - deployment_freeze
+
+      rules:
+        - All ORP classification rules
+        - All drift detection rules
+        - All continuity proof rules
+
+    consumes_from_mother:
+      primitives:
+        - Timestamp
+        - Scalar
+        - Bool
+        - Text
+
+    provides:
+      signals:
+        - drift_detected
+        - dual_modality_state
+        - continuity_proof_type
+
+      ledger:
+        format: JSON Lines
+        fields:
+          - entry_id  # SHA256(timestamp + regime + factors)
+          - prev_entry_hash  # Hash chain pointer
+          - timestamp
+          - elapsed_s
+          - orp_regime
+          - orp_regime_score
+          - contributing_factors
+          - posture_adjustments
+          - oracle_regime
+          - oracle_regime_score
+          - dual_modality_agreement
+          - transition_from
+          - time_in_previous_regime_s
+          - hysteresis_enforced
+          - min_duration_enforced
+          - ledger_continuity
+          - amplitude_valid
+          - drift_detected
+          - drift_reasons
+          - node_id
+          - orp_version
+
+# ============================================================================
+# DEPENDENCY EDGES (Signal Flow)
+# ============================================================================
+
+dependency_edges:
+
+  # Mother → Operating
+  - from: nova.frameworks
+    to: nova.operating
+    signals:
+      - spectral_entropy_H → mse_meta_instability
+      - tri_coherence → csi_continuity_index
+      - tri_drift_z → urf_composite_risk
+      - predictive_collapse_risk → ORP factor
+      - consistency_gap → ORP factor
+    primitives: [Scalar, Timestamp, Bool, Text]
+    theorems: [SPECTRAL_INVARIANCE, EQUILIBRIUM_RATIO]
+
+  # Operating → Children (Broadcast)
+  - from: nova.operating
+    to: [slot02, slot07, slot09]
+    signals:
+      - regime → adaptive behavior
+      - threshold_multiplier → slot02 scaling
+      - traffic_limit → slot07 rate limiting
+      - deployment_freeze → slot07 safety halt
+
+  # Operating → AVL (Verification Loop)
+  - from: nova.operating
+    to: avl
+    signals:
+      - regime → ledger entry
+      - All ORP outputs → AVL entry fields
+
+  - from: avl
+    to: nova.operating
+    signals:
+      - drift_detected → anomaly alert
+      - dual_modality_state → consensus indicator
+
+  # Mother → Children (Direct)
+  - from: nova.frameworks
+    to: slot04
+    signals:
+      - tri_coherence → TRI computation
+      - tri_drift_z → TRI computation
+
+  - from: slot04
+    to: nova.frameworks
+    signals:
+      - tri_coherence → (circular dependency, resolved via temporal lag)
+
+  # Coordination → Operating (Feedback Loop)
+  - from: mse
+    to: nova.operating
+    signals:
+      - mse_meta_instability → ORP contributing factor
+
+  - from: nova.operating
+    to: mse
+    signals:
+      - regime → MSE adaptive behavior
+
+# ============================================================================
+# INVARIANCE MATRIX
+# ============================================================================
+
+invariance_matrix:
+  mother_invariants:
+    - property: type_safety
+      assertion: "All signals conform to declared types"
+      validation: pytest -k test_signal_types
+
+    - property: usm_theorems
+      assertion: "Spectral entropy < 2.5 (raw), equilibrium ratio < 0.7"
+      validation: pytest -k test_usm_theorems
+
+    - property: signal_ranges
+      assertion: "All bounded signals within declared ranges"
+      validation: pytest -k test_signal_bounds
+
+    - property: temporal_monotonicity
+      assertion: "Timestamps always increase"
+      validation: pytest -k test_timestamp_monotonic
+
+  operating_invariants:
+    - property: regime_determinism
+      assertion: "Same inputs → same regime"
+      validation: pytest -k test_regime_deterministic
+
+    - property: hysteresis_enforcement
+      assertion: "Downgrades require score < (threshold - 0.05)"
+      validation: pytest -k test_hysteresis
+
+    - property: min_duration_enforcement
+      assertion: "Downgrades require time_in_regime >= 300s"
+      validation: pytest -k test_min_duration
+
+    - property: amplitude_bounds
+      assertion: "threshold_multiplier in [0.5, 2.0], traffic_limit in [0.0, 1.0]"
+      validation: pytest -k test_amplitude_bounds
+
+    - property: hash_chain_integrity
+      assertion: "entry[N].prev_entry_hash == SHA256(entry[N-1])"
+      validation: pytest -k test_hash_chain
+
+    - property: ledger_continuity
+      assertion: "entry[N].transition_from == entry[N-1].regime (if transition)"
+      validation: pytest -k test_ledger_continuity
+
+    - property: temporal_continuity
+      assertion: "entry[N].elapsed_s > entry[N-1].elapsed_s"
+      validation: pytest -k test_temporal_continuity
+
+    - property: dual_modality_agreement
+      assertion: "ORP == oracle on canonical trajectories"
+      validation: pytest -k test_dual_modality
+
+  children_invariants:
+    - slot: slot02
+      property: threshold_scaling_monotonic
+      assertion: "Thresholds scale monotonically with regime severity"
+      validation: pytest tests/slot02/ -k test_threshold_monotonic
+
+    - slot: slot04
+      property: coherence_bounds
+      assertion: "tri_coherence in [0, 1], tri_drift_z in [-5, 5]"
+      validation: pytest tests/slot04/ -k test_tri_bounds
+
+    - slot: slot05
+      property: correlation_bounds
+      assertion: "Correlation coefficients in [-1, 1]"
+      validation: pytest tests/slot05/ -k test_correlation_bounds
+
+    - slot: slot07
+      property: stability_pressure_bounds
+      assertion: "stability_pressure in [0, 5]"
+      validation: pytest tests/slot07/ -k test_stability_bounds
+
+    - slot: slot09
+      property: entropy_normalized
+      assertion: "Spectral entropy normalized in [0, 1]"
+      validation: pytest tests/slot09/ -k test_entropy_normalized
+
+# ============================================================================
+# TEST COVERAGE MAP
+# ============================================================================
+
+test_coverage:
+  total_tests: 2021
+  accuracy: 0.997
+
+  by_layer:
+    mother:
+      tests: 543
+      coverage: "USM theorem validation"
+      key_files:
+        - tests/test_usm_theorems.py
+        - tests/test_signal_validation.py
+
+    operating:
+      tests: 247
+      coverage: "Regime transitions, drift detection, continuity proofs"
+      key_files:
+        - tests/continuity/test_orp_*.py (19 files)
+        - tests/integration/test_orp_avl.py (13 tests)
+        - tests/e2e/test_regime_cycle.py (22 tests)
+
+    children:
+      tests: 1273
+      coverage: "Slot implementations, cross-slot integration"
+      key_files:
+        - tests/slot*/ (7 slots)
+        - tests/arc/
+        - tests/coordination/
+
+  phase_13b_additions:
+    new_tests: 4
+    files:
+      - tests/integration/test_orp_avl.py:
+          - test_oracle_detects_illegal_downgrade_hysteresis
+          - test_oracle_detects_illegal_downgrade_min_duration
+          - test_oracle_allows_legal_downgrade
+          - test_oracle_pretransition_evaluation_on_upgrade
+
+# ============================================================================
+# VERSION HISTORY
+# ============================================================================
+
+version_history:
+  - version: 1.7.1
+    date: 2025-11-30
+    phase: 13b
+    changes:
+      - "Oracle pre-transition evaluation fix"
+      - "4 new tests for illegal downgrade detection"
+      - "orp_version bumped to phase13.2"
+      - "Contract autonomous_verification_ledger@1 bumped to v1.1.0"
+
+  - version: 1.7.0
+    date: 2025-11-30
+    phase: 13
+    changes:
+      - "Autonomous Verification Ledger (AVL) introduced"
+      - "110 new tests"
+      - "Contract autonomous_verification_ledger@1.yaml created"
+
+  - version: 1.6.0
+    date: 2025-11-28
+    phase: 11
+    changes:
+      - "Ontology hierarchy formalized (Mother→Operating→Children)"
+      - "Transformation geometry contract"
+      - "Cross-AI semantic audit (8 systems)"

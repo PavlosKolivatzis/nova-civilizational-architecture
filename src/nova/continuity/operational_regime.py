@@ -349,7 +349,10 @@ class OperationalRegimePolicy:
         time_in_regime_s = (now - self._current_regime_start).total_seconds()
 
         # Classify regime with hysteresis
+        # IMPORTANT: Capture pre-transition state BEFORE any updates (Phase 13b fix)
         previous_regime = self._current_regime
+        previous_duration_s = time_in_regime_s  # Duration in the pre-transition regime
+        
         new_regime = self.classify_regime(regime_score, self._current_regime, time_in_regime_s)
 
         # Handle regime transition
@@ -394,9 +397,15 @@ class OperationalRegimePolicy:
         self._last_snapshot = snapshot
         
         # Phase 13: Write to AVL if enabled
+        # Phase 13b: Pass pre-transition regime/duration for oracle validation
         if _AVL_AVAILABLE and avl_enabled():
             try:
-                self._write_to_avl(snapshot, factors, time_in_regime_s)
+                self._write_to_avl(
+                    snapshot,
+                    factors,
+                    previous_regime=previous_regime,
+                    previous_duration_s=previous_duration_s,
+                )
             except DriftDetectedError:
                 raise  # Re-raise drift errors
             except Exception as e:
@@ -409,23 +418,36 @@ class OperationalRegimePolicy:
         self,
         snapshot: RegimeSnapshot,
         factors: ContributingFactors,
-        time_in_previous_regime_s: float,
+        previous_regime: Regime,
+        previous_duration_s: float,
     ) -> None:
-        """Write ORP evaluation to AVL ledger (Phase 13).
+        """Write ORP evaluation to AVL ledger (Phase 13 + 13b).
         
         Creates AVLEntry with dual-modality verification and drift detection.
+        
+        Phase 13b fix: Oracle evaluation uses pre-transition regime and duration
+        to independently validate whether the transition was legal. This allows
+        the oracle to detect illegal downgrades that violate hysteresis or
+        min-duration rules.
+        
+        Args:
+            snapshot: Current regime snapshot (post-transition state)
+            factors: Contributing factors used for evaluation
+            previous_regime: Regime BEFORE any transition (for oracle validation)
+            previous_duration_s: Duration in previous regime (for oracle validation)
         """
-        # Get oracle verification
+        # Phase 13b: Oracle evaluates using PRE-TRANSITION state
+        # This allows independent validation of transition legality
         oracle_result = compute_and_classify(
             factors.to_dict(),
-            current_regime=self._current_regime.value,
-            time_in_regime_s=time_in_previous_regime_s,
+            current_regime=previous_regime.value,  # Use pre-transition regime
+            time_in_regime_s=previous_duration_s,   # Use pre-transition duration
         )
         
         # Create AVL entry
         entry = AVLEntry(
             timestamp=snapshot.timestamp,
-            elapsed_s=time_in_previous_regime_s,
+            elapsed_s=previous_duration_s,
             orp_regime=snapshot.regime.value,
             orp_regime_score=snapshot.regime_score,
             contributing_factors=factors.to_dict(),
@@ -434,13 +456,13 @@ class OperationalRegimePolicy:
             oracle_regime_score=oracle_result["regime_score"],
             dual_modality_agreement=(snapshot.regime.value == oracle_result["regime"]),
             transition_from=snapshot.transition_from.value if snapshot.transition_from else None,
-            time_in_previous_regime_s=time_in_previous_regime_s,
+            time_in_previous_regime_s=previous_duration_s,
             hysteresis_enforced=True,  # ORP always enforces
             min_duration_enforced=True,  # ORP always enforces
             ledger_continuity=True,  # Will be validated by AVL
             amplitude_valid=self._check_amplitude_valid(snapshot.posture_adjustments),
             node_id=os.environ.get("NOVA_AVL_NODE_ID", "default"),
-            orp_version="phase13.1",
+            orp_version="phase13.2",  # Bumped for 13b fix
         )
         
         # Run drift guard check (may raise DriftDetectedError)

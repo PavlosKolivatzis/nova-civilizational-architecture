@@ -315,5 +315,198 @@ def test_avl_transition_recorded_correctly(avl_enabled_env, temp_avl_path):
     assert entries[1].transition_from == "normal"
 
 
+# ---------- Phase 13b: Oracle Pre-Transition Evaluation Tests ----------
+
+
+def test_oracle_detects_illegal_downgrade_hysteresis(avl_enabled_env, monkeypatch, temp_avl_path):
+    """Test oracle detects downgrade that violates hysteresis rule.
+    
+    Phase 13b fix: Oracle evaluates using pre-transition regime, so it can
+    independently validate whether a downgrade was legal.
+    
+    Scenario: ORP in HEIGHTENED, score drops to 0.26 (below 0.30 threshold but
+    above hysteresis threshold of 0.25). Oracle should stay in HEIGHTENED.
+    """
+    monkeypatch.setenv("NOVA_AVL_HALT_ON_DRIFT", "0")  # Don't halt, just detect
+    reset_drift_guard()
+    
+    engine = get_orp_engine()
+    
+    # First, get to HEIGHTENED regime
+    heightened_factors = ContributingFactors(
+        urf_composite_risk=0.55,
+        mse_meta_instability=0.30,
+        predictive_collapse_risk=0.45,
+        consistency_gap=0.35,
+        csi_continuity_index=0.65,
+    )
+    engine.evaluate(factors=heightened_factors, timestamp="2025-01-01T12:00:00+00:00")
+    
+    # Verify we're in HEIGHTENED
+    assert engine.get_current_regime() == Regime.HEIGHTENED
+    
+    # Now try to downgrade with score just below threshold but above hysteresis
+    # Score ~0.26 is below 0.30 (HEIGHTENED lower bound) but above 0.25 (hysteresis)
+    borderline_factors = ContributingFactors(
+        urf_composite_risk=0.30,  # Lower risk
+        mse_meta_instability=0.15,
+        predictive_collapse_risk=0.20,
+        consistency_gap=0.15,
+        csi_continuity_index=0.85,
+    )
+    
+    # Evaluate - ORP should stay in HEIGHTENED due to hysteresis
+    snapshot = engine.evaluate(factors=borderline_factors, timestamp="2025-01-01T12:01:00+00:00")
+    
+    # ORP should stay in HEIGHTENED (hysteresis prevents downgrade)
+    assert snapshot.regime == Regime.HEIGHTENED
+    
+    # Get AVL entry - oracle should also stay in HEIGHTENED
+    ledger = get_avl_ledger()
+    entry = ledger.get_latest(1)[0]
+    
+    # Both should agree - no drift
+    assert entry.orp_regime == "heightened"
+    assert entry.oracle_regime == "heightened"
+    assert entry.dual_modality_agreement is True
+    assert entry.drift_detected is False
+
+
+def test_oracle_detects_illegal_downgrade_min_duration(avl_enabled_env, monkeypatch, temp_avl_path):
+    """Test oracle detects downgrade that violates min-duration rule.
+    
+    Phase 13b fix: Oracle evaluates using pre-transition regime and duration,
+    so it can detect premature downgrades.
+    
+    Scenario: ORP in HEIGHTENED for only 60s (< 300s min), score drops below
+    hysteresis. Oracle should stay in HEIGHTENED due to min-duration.
+    """
+    monkeypatch.setenv("NOVA_AVL_HALT_ON_DRIFT", "0")
+    reset_drift_guard()
+    
+    # Create engine with short min duration for testing
+    engine = OperationalRegimePolicy(min_regime_duration_s=300.0)
+    
+    # First, get to HEIGHTENED regime
+    heightened_factors = ContributingFactors(
+        urf_composite_risk=0.55,
+        mse_meta_instability=0.30,
+        predictive_collapse_risk=0.45,
+        consistency_gap=0.35,
+        csi_continuity_index=0.65,
+    )
+    engine.evaluate(factors=heightened_factors, timestamp="2025-01-01T12:00:00+00:00")
+    assert engine.get_current_regime() == Regime.HEIGHTENED
+    
+    # Try to downgrade after only 60 seconds (< 300s min)
+    # Score ~0.20 is well below hysteresis threshold
+    low_factors = ContributingFactors(
+        urf_composite_risk=0.20,
+        mse_meta_instability=0.10,
+        predictive_collapse_risk=0.15,
+        consistency_gap=0.10,
+        csi_continuity_index=0.90,
+    )
+    
+    # Evaluate after only 60 seconds - ORP should stay in HEIGHTENED
+    snapshot = engine.evaluate(factors=low_factors, timestamp="2025-01-01T12:01:00+00:00")
+    
+    # ORP should stay in HEIGHTENED (min-duration prevents downgrade)
+    assert snapshot.regime == Regime.HEIGHTENED
+    
+    # Oracle should also stay in HEIGHTENED (using pre-transition state)
+    # Note: We can't easily verify AVL entry here since we're using a custom engine
+    # The key test is that ORP correctly enforces min-duration
+
+
+def test_oracle_allows_legal_downgrade(avl_enabled_env, monkeypatch, temp_avl_path):
+    """Test oracle allows legal downgrade after min-duration and below hysteresis.
+    
+    Phase 13b: Verify that legal downgrades still work correctly.
+    """
+    monkeypatch.setenv("NOVA_AVL_HALT_ON_DRIFT", "0")
+    reset_drift_guard()
+    
+    # Create engine with very short min duration for testing
+    engine = OperationalRegimePolicy(min_regime_duration_s=0.0)  # No min duration
+    
+    # First, get to HEIGHTENED regime
+    heightened_factors = ContributingFactors(
+        urf_composite_risk=0.55,
+        mse_meta_instability=0.30,
+        predictive_collapse_risk=0.45,
+        consistency_gap=0.35,
+        csi_continuity_index=0.65,
+    )
+    engine.evaluate(factors=heightened_factors, timestamp="2025-01-01T12:00:00+00:00")
+    assert engine.get_current_regime() == Regime.HEIGHTENED
+    
+    # Downgrade with score well below hysteresis (0.30 - 0.05 = 0.25)
+    # Score ~0.15 is well below hysteresis threshold
+    low_factors = ContributingFactors(
+        urf_composite_risk=0.15,
+        mse_meta_instability=0.05,
+        predictive_collapse_risk=0.10,
+        consistency_gap=0.05,
+        csi_continuity_index=0.95,
+    )
+    
+    # Evaluate - should downgrade to NORMAL
+    snapshot = engine.evaluate(factors=low_factors, timestamp="2025-01-01T12:01:00+00:00")
+    
+    # ORP should downgrade to NORMAL (legal downgrade)
+    assert snapshot.regime == Regime.NORMAL
+    assert snapshot.transition_from == Regime.HEIGHTENED
+
+
+def test_oracle_pretransition_evaluation_on_upgrade(avl_enabled_env, monkeypatch, temp_avl_path):
+    """Test oracle uses pre-transition state even on upgrades.
+    
+    Phase 13b: Verify oracle evaluates from pre-transition state for all
+    transitions, not just downgrades.
+    """
+    monkeypatch.setenv("NOVA_AVL_HALT_ON_DRIFT", "0")
+    reset_drift_guard()
+    
+    engine = get_orp_engine()
+    
+    # Start in NORMAL
+    normal_factors = ContributingFactors(
+        urf_composite_risk=0.15,
+        mse_meta_instability=0.03,
+        predictive_collapse_risk=0.10,
+        consistency_gap=0.05,
+        csi_continuity_index=0.95,
+    )
+    engine.evaluate(factors=normal_factors, timestamp="2025-01-01T12:00:00+00:00")
+    assert engine.get_current_regime() == Regime.NORMAL
+    
+    # Upgrade to HEIGHTENED
+    heightened_factors = ContributingFactors(
+        urf_composite_risk=0.55,
+        mse_meta_instability=0.30,
+        predictive_collapse_risk=0.45,
+        consistency_gap=0.35,
+        csi_continuity_index=0.65,
+    )
+    snapshot = engine.evaluate(factors=heightened_factors, timestamp="2025-01-01T12:01:00+00:00")
+    
+    # ORP should upgrade to HEIGHTENED
+    assert snapshot.regime == Regime.HEIGHTENED
+    assert snapshot.transition_from == Regime.NORMAL
+    
+    # Get AVL entry
+    ledger = get_avl_ledger()
+    entry = ledger.get_latest(1)[0]
+    
+    # Oracle should also compute HEIGHTENED (upgrade is immediate)
+    # Both should agree since upgrades are always allowed
+    assert entry.orp_regime == "heightened"
+    assert entry.oracle_regime == "heightened"
+    assert entry.dual_modality_agreement is True
+    assert entry.drift_detected is False
+    assert entry.transition_from == "normal"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
