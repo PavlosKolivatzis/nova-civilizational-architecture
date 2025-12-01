@@ -1,6 +1,6 @@
 """Slot 6 Cultural Synthesis plugin implementation."""
 
-from orchestrator.plugins.abc import SlotPlugin
+from nova.orchestrator.plugins.abc import SlotPlugin
 from typing import Any, Mapping, Callable, Dict
 
 

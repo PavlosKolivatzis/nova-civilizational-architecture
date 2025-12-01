@@ -13,7 +13,7 @@ import pytest
 
 from config.feature_flags import get_production_controls_config
 from nova.governor import state as governor_state
-from orchestrator.thresholds.manager import reset_threshold_manager_for_tests
+from nova.orchestrator.thresholds.manager import reset_threshold_manager_for_tests
 from nova.slots.slot07_production_controls.production_control_engine import (
     ProductionControlEngine,
 )

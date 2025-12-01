@@ -1,6 +1,6 @@
-from orchestrator.predictive.trajectory_engine import PredictiveTrajectoryEngine
-from orchestrator.predictive.ledger import PredictiveLedger
-from orchestrator.temporal.engine import TemporalSnapshot
+from nova.orchestrator.predictive.trajectory_engine import PredictiveTrajectoryEngine
+from nova.orchestrator.predictive.ledger import PredictiveLedger
+from nova.orchestrator.temporal.engine import TemporalSnapshot
 
 
 def mock_snapshot(

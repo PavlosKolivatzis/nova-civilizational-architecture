@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 
 def _client():
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     return TestClient(app)
 
 
@@ -32,7 +32,7 @@ def test_ready_when_metric_ready(monkeypatch):
 
 
 def test_ready_when_metric_absent(monkeypatch):
-    from orchestrator import federation_health
+    from nova.orchestrator import federation_health
 
     def boom():
         raise RuntimeError("boom")

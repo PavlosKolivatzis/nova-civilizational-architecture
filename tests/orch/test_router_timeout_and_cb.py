@@ -1,9 +1,9 @@
 import pytest
 
-from orchestrator.core.performance_monitor import PerformanceMonitor
-from orchestrator.core.router import AdaptiveRouter
-from orchestrator.core.circuit_breaker import CircuitBreaker, CircuitBreakerError
-from orchestrator.core import DEFAULT_FALLBACK_MAP
+from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+from nova.orchestrator.core.router import AdaptiveRouter
+from nova.orchestrator.core.circuit_breaker import CircuitBreaker, CircuitBreakerError
+from nova.orchestrator.core import DEFAULT_FALLBACK_MAP
 
 def _seed_latency(mon, slot, ms):
     mon._slot_lat[slot] = [ms]

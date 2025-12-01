@@ -93,7 +93,7 @@ def test_anr_functionality() -> None:
     try:
         # Test ANR router import and instantiation
         sys.path.insert(0, os.getcwd())
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         router = AdaptiveNeuralRouter()
         print(f"  OK: ANR router instantiated (enabled={router.enabled}, pilot={router.pilot})")
@@ -110,7 +110,7 @@ def test_anr_functionality() -> None:
         print(f"  OK: Shadow decision: route={decision.route}, shadow={decision.shadow}")
 
         # Test semantic mirror integration
-        from orchestrator.semantic_mirror import get_semantic_mirror
+        from nova.orchestrator.semantic_mirror import get_semantic_mirror
         sm = get_semantic_mirror()
 
         # Check router access rules
@@ -129,7 +129,7 @@ def check_safety_mechanisms() -> None:
     print("• Checking safety mechanisms...")
 
     try:
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         # Test kill switch
         original_kill = os.getenv("NOVA_ANR_KILL")

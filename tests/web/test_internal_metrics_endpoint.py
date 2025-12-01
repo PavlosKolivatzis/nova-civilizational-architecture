@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 
 def _client():
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     return TestClient(app)
 

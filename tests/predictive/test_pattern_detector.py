@@ -9,7 +9,7 @@ Tests three pattern types:
 Plus debouncing, boundary cases, and negative scenarios.
 """
 import pytest
-from orchestrator.predictive.pattern_detector import detect_patterns, PatternAlert
+from nova.orchestrator.predictive.pattern_detector import detect_patterns, PatternAlert
 
 
 class TestGovernanceOscillation:

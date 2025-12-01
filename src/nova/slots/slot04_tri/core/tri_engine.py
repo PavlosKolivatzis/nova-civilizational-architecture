@@ -140,7 +140,7 @@ class TriEngine:
                 health.tri_score is not None and
                 os.getenv("NOVA_PUBLISH_TRI", "1") == "1" and
                 os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "1") == "1"):
-                from orchestrator.semantic_mirror import get_semantic_mirror
+                from nova.orchestrator.semantic_mirror import get_semantic_mirror
                 # Create belief state from tri_score with uncertainty from std
                 tri_variance = (health.tri_std ** 2) if health.tri_std else 0.01
                 tri_belief = BeliefState.from_point_estimate(health.tri_score, tri_variance)

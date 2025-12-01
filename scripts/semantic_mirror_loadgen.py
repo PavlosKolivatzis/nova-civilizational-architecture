@@ -20,7 +20,7 @@ from typing import Dict, Any
 def safe_import_semantic_mirror():
     """Import semantic mirror functions with graceful fallback."""
     try:
-        from orchestrator.semantic_mirror import publish, query
+        from nova.orchestrator.semantic_mirror import publish, query
         return publish, query
     except ImportError as e:
         print(f"Failed to import semantic mirror: {e}")

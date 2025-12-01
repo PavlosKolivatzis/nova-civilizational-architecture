@@ -1,5 +1,5 @@
-from orchestrator.router.advisors.slot05 import score_slot05
-from orchestrator.router.advisors.slot08 import score_slot08
+from nova.orchestrator.router.advisors.slot05 import score_slot05
+from nova.orchestrator.router.advisors.slot08 import score_slot08
 
 
 def test_slot05_advisor_uses_request_override():

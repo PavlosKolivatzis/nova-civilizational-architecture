@@ -86,10 +86,10 @@ class VaultVerifier:
             with open(self.manifest_path, 'r', encoding='utf-8') as f:
                 self.manifest = yaml.safe_load(f)
             if self.verbose:
-                print(f"✓ Loaded manifest: {self.manifest_path}".encode('utf-8').decode('utf-8', errors='replace'))
+                print(f"✓ Loaded manifest: {self.manifest_path}")
             return True
         except (FileNotFoundError, yaml.YAMLError) as e:
-            print(f"✗ Failed to load manifest: {e}".encode('utf-8').decode('utf-8', errors='replace'))
+            print(f"✗ Failed to load manifest: {e}")
             return False
 
     def execute_step(self, step: Dict[str, str]) -> Tuple[bool, str]:
@@ -107,8 +107,8 @@ class VaultVerifier:
 
         try:
             if self.verbose:
-                print(f"→ Executing: {name}".encode('utf-8').decode('utf-8', errors='replace'))
-                print(f"  Command: {cmd}".encode('utf-8').decode('utf-8', errors='replace'))
+                print(f"→ Executing: {name}")
+                print(f"  Command: {cmd}")
 
             # Use shell=True on Windows with Git Bash tools in PATH
             # Ensure commands run in text mode with proper encoding
@@ -127,9 +127,9 @@ class VaultVerifier:
 
             if self.verbose:
                 status = "✓" if success else "✗"
-                print(f"{status} {name}: {'PASSED' if success else 'FAILED'}".encode('utf-8').decode('utf-8', errors='replace'))
+                print(f"{status} {name}: {'PASSED' if success else 'FAILED'}")
                 if output.strip():
-                    print(f"  Output: {output.strip()}".encode('utf-8').decode('utf-8', errors='replace'))
+                    print(f"  Output: {output.strip()}")
 
             return success, output
 
@@ -150,7 +150,7 @@ class VaultVerifier:
         steps = verification.get('steps', [])
 
         if not steps:
-            print("✗ No verification steps defined in manifest".encode('utf-8').decode('utf-8', errors='replace'))
+            print("✗ No verification steps defined in manifest")
             return False, []
 
         results = []
@@ -178,16 +178,16 @@ class VaultVerifier:
         passed = sum(1 for r in results if r['success'])
         total = len(results)
 
-        print(f"\n📊 Verification Summary: {passed}/{total} steps passed".encode('utf-8').decode('utf-8', errors='replace'))
+        print(f"\n📊 Verification Summary: {passed}/{total} steps passed")
 
         if passed == total:
-            print("🎉 All vault verifications PASSED".encode('utf-8').decode('utf-8', errors='replace'))
+            print("🎉 All vault verifications PASSED")
         else:
-            print("❌ Some vault verifications FAILED".encode('utf-8').decode('utf-8', errors='replace'))
+            print("❌ Some vault verifications FAILED")
             print("\nFailed steps:")
             for result in results:
                 if not result['success']:
-                    print(f"  ✗ {result['step']}: {result['output']}".encode('utf-8').decode('utf-8', errors='replace'))
+                    print(f"  ✗ {result['step']}: {result['output']}")
 
     def check_dependencies(self) -> bool:
         """Check if required tools are available."""
@@ -213,8 +213,8 @@ class VaultVerifier:
                 missing.append(tool)
 
         if missing:
-            print(f"✗ Missing required tools: {', '.join(missing)}".encode('utf-8').decode('utf-8', errors='replace'))
-            print("Install missing tools and try again.".encode('utf-8').decode('utf-8', errors='replace'))
+            print(f"✗ Missing required tools: {', '.join(missing)}")
+            print("Install missing tools and try again.")
             return False
 
         if self.verbose:
@@ -264,7 +264,7 @@ def main():
             with phase11_path.open("r", encoding="utf-8") as fh:
                 phase11_data = json.load(fh)
         except json.JSONDecodeError as exc:
-            print(f"? Phase 11 attestation invalid JSON: {exc}".encode('utf-8').decode('utf-8', errors='replace'))
+            print(f"? Phase 11 attestation invalid JSON: {exc}")
             return 1
 
         required_keys = {
@@ -276,10 +276,10 @@ def main():
         }
         missing = sorted(required_keys - phase11_data.keys())
         if missing:
-            print(f"? Phase 11 attestation missing keys: {', '.join(missing)}".encode('utf-8').decode('utf-8', errors='replace'))
+            print(f"? Phase 11 attestation missing keys: {', '.join(missing)}")
             return 1
 
-        print(f"✅ Phase 11 attestation present: {phase11_data['branch']} @ {phase11_data['base_commit']}".encode('utf-8').decode('utf-8', errors='replace'))
+        print(f"✅ Phase 11 attestation present: {phase11_data['branch']} @ {phase11_data['base_commit']}")
 
     # Execute verifications
     success, results = verifier.verify_all()

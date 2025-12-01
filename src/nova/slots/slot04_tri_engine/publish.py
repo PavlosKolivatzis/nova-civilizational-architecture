@@ -8,7 +8,7 @@ def publish_tri_to_mirror(coherence: Optional[float],
                           phase_jitter: Optional[float]) -> None:
     """Publish TRI metrics to the Semantic Mirror with safe fallbacks."""
     try:
-        from orchestrator.semantic_mirror import get_semantic_mirror
+        from nova.orchestrator.semantic_mirror import get_semantic_mirror
     except Exception:
         return  # mirror not available; safe no-op
 

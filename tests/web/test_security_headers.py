@@ -10,7 +10,7 @@ def test_security_headers_present(monkeypatch):
     """Ensure every response includes the hardened security headers."""
     # Ensure deterministic flag state
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "0")
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     client = TestClient(app)
     response = client.get("/health")

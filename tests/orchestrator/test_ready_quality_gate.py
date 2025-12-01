@@ -9,13 +9,13 @@ from nova.federation.metrics import m
 
 
 def _client():
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
 
     return TestClient(app)
 
 
 def test_quality_gating_controls_ready(monkeypatch):
-    from orchestrator import federation_poller as poller
+    from nova.orchestrator import federation_poller as poller
 
     monkeypatch.setenv("NOVA_FED_MIN_PEER_QUALITY", "0.6")
     monkeypatch.setenv("NOVA_FED_MIN_GOOD_PEERS", "1")

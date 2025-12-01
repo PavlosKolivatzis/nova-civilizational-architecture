@@ -78,8 +78,8 @@ def get_unified_risk_field() -> Dict:
     """
     try:
         # Import lazily to avoid circular dependencies
-        from orchestrator.rri import RRI_GAUGE
-        from orchestrator.prometheus_metrics import predictive_collapse_risk_gauge
+        from nova.orchestrator.rri import RRI_GAUGE
+        from nova.orchestrator.prometheus_metrics import predictive_collapse_risk_gauge
 
         # Read current gauge values
         rri_value = RRI_GAUGE._value._value if hasattr(RRI_GAUGE, '_value') else 0.0

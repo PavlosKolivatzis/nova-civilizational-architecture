@@ -2,8 +2,8 @@
 import pytest
 from unittest.mock import patch
 
-from orchestrator.router.anr import AdaptiveNeuralRouter, RouteDecision
-from orchestrator.router.routes import build_plan_for_route
+from nova.orchestrator.router.anr import AdaptiveNeuralRouter, RouteDecision
+from nova.orchestrator.router.routes import build_plan_for_route
 
 
 class TestAdaptiveNeuralRouter:
@@ -46,7 +46,7 @@ class TestAdaptiveNeuralRouter:
 
     def test_anomaly_coordination(self, monkeypatch):
         """Test Phase 4.1 anomaly coordination masks aggressive routes."""
-        import orchestrator.unlearn_weighting as uw
+        import nova.orchestrator.unlearn_weighting as uw
         monkeypatch.setattr(uw, "get_anomaly_observability", lambda: {"engaged": 1}, raising=False)
 
         router = AdaptiveNeuralRouter()
@@ -67,7 +67,7 @@ class TestAdaptiveNeuralRouter:
         assert hasattr(plan, 'steps')
         assert hasattr(plan, 'conservative')
 
-    @patch('orchestrator.router.anr.publish')
+    @patch('nova.orchestrator.router.anr.publish')
     def test_credit_immediate(self, mock_publish):
         """Test immediate credit assignment publishes reward."""
         router = AdaptiveNeuralRouter()
@@ -81,7 +81,7 @@ class TestAdaptiveNeuralRouter:
         assert args[0][1]["latency"] == 0.5
         assert args[0][1]["tri_delta"] == 0.1
 
-    @patch('orchestrator.router.anr.publish')
+    @patch('nova.orchestrator.router.anr.publish')
     def test_credit_deployment(self, mock_publish):
         """Test deployment feedback credit assignment."""
         router = AdaptiveNeuralRouter()

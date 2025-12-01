@@ -1,4 +1,4 @@
-from orchestrator.governance.ethics import evaluate_ethics
+from nova.orchestrator.governance.ethics import evaluate_ethics
 
 
 def test_ethics_checks_fail_for_invalid_state():

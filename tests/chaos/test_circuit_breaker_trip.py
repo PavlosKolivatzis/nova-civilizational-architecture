@@ -3,7 +3,7 @@ Chaos test for circuit breaker trip behavior.
 """
 import pytest
 import asyncio
-from orchestrator.core.circuit_breaker import CircuitBreaker
+from nova.orchestrator.core.circuit_breaker import CircuitBreaker
 
 pytestmark = [pytest.mark.chaos, pytest.mark.asyncio]
 

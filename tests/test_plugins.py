@@ -4,7 +4,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-from orchestrator.plugins import PythonFilePlugin, RestAPIPlugin
+from nova.orchestrator.plugins import PythonFilePlugin, RestAPIPlugin
 
 
 def test_python_file_plugin(tmp_path: Path, monkeypatch) -> None:

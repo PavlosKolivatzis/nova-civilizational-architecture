@@ -9,7 +9,7 @@ Tests verify ORP posture adjustments are applied correctly in governance decisio
 
 import pytest
 from unittest.mock import patch, MagicMock
-from orchestrator.governance.engine import GovernanceEngine, GovernanceResult
+from nova.orchestrator.governance.engine import GovernanceEngine, GovernanceResult
 
 
 @pytest.fixture
@@ -88,9 +88,9 @@ def test_orp_normal_regime_no_threshold_adjustment(mock_orp_normal_regime):
     """Test normal regime applies threshold_multiplier=1.0 (no adjustment)."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_normal_regime), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_normal_regime), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.8, "jitter": 0.1},
@@ -108,10 +108,10 @@ def test_orp_heightened_regime_tightens_thresholds(mock_orp_heightened_regime):
     """Test heightened regime applies threshold_multiplier=0.85 (15% tighter)."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_heightened_regime), \
-         patch("orchestrator.governance.engine.record_orp"), \
-         patch("orchestrator.governance.engine._current_thresholds") as mock_thresholds:
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_heightened_regime), \
+         patch("nova.orchestrator.governance.engine.record_orp"), \
+         patch("nova.orchestrator.governance.engine._current_thresholds") as mock_thresholds:
 
         # Set base threshold that would normally pass
         mock_thresholds.return_value = {
@@ -140,9 +140,9 @@ def test_orp_recovery_regime_very_tight_thresholds(mock_orp_recovery_regime):
     """Test recovery regime applies threshold_multiplier=0.50 (50% tighter)."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_recovery_regime), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_recovery_regime), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.7, "jitter": 0.1},
@@ -164,9 +164,9 @@ def test_orp_recovery_blocks_without_manual_approval(mock_orp_recovery_regime):
     """Test recovery regime blocks requests without manual_approval flag."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_recovery_regime), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_recovery_regime), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.9, "jitter": 0.05},
@@ -183,9 +183,9 @@ def test_orp_recovery_allows_with_manual_approval(mock_orp_recovery_regime):
     """Test recovery regime allows requests with manual_approval=True."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_recovery_regime), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_recovery_regime), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.9, "jitter": 0.05},
@@ -207,9 +207,9 @@ def test_orp_metadata_recorded_in_result(mock_orp_heightened_regime):
     """Test ORP snapshot recorded in governance result metadata."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_heightened_regime), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_heightened_regime), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.8, "jitter": 0.1},
@@ -229,9 +229,9 @@ def test_orp_metrics_recorded_via_record_orp(mock_orp_normal_regime):
     """Test record_orp() called with ORP snapshot."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_normal_regime) as mock_get, \
-         patch("orchestrator.governance.engine.record_orp") as mock_record:
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=mock_orp_normal_regime) as mock_get, \
+         patch("nova.orchestrator.governance.engine.record_orp") as mock_record:
 
         state = {
             "tri_signal": {"coherence": 0.8, "jitter": 0.1},
@@ -250,8 +250,8 @@ def test_orp_disabled_no_adjustments():
     """Test NOVA_ENABLE_ORP=0 disables all ORP adjustments."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=False), \
-         patch("orchestrator.governance.engine.get_operational_regime") as mock_get:
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=False), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime") as mock_get:
 
         state = {
             "tri_signal": {"coherence": 0.8, "jitter": 0.1},
@@ -269,9 +269,9 @@ def test_orp_exception_does_not_crash_governance(mock_orp_normal_regime):
     """Test ORP exception handled gracefully, governance continues."""
     engine = GovernanceEngine()
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", side_effect=Exception("ORP failed")), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", side_effect=Exception("ORP failed")), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.8, "jitter": 0.1},
@@ -302,9 +302,9 @@ def test_orp_threshold_multiplier_zero_handled():
         },
     }
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_snapshot), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_snapshot), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.9, "jitter": 0.05},
@@ -327,9 +327,9 @@ def test_orp_missing_posture_adjustments_uses_defaults():
         # Missing posture_adjustments
     }
 
-    with patch("orchestrator.governance.engine._orp_enabled", return_value=True), \
-         patch("orchestrator.governance.engine.get_operational_regime", return_value=orp_snapshot), \
-         patch("orchestrator.governance.engine.record_orp"):
+    with patch("nova.orchestrator.governance.engine._orp_enabled", return_value=True), \
+         patch("nova.orchestrator.governance.engine.get_operational_regime", return_value=orp_snapshot), \
+         patch("nova.orchestrator.governance.engine.record_orp"):
 
         state = {
             "tri_signal": {"coherence": 0.8, "jitter": 0.1},

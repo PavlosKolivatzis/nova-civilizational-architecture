@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from nova.adaptive_wisdom_core import Params3D, State3D, ThreeDProvider
+from nova.core.adaptive_wisdom_core import Params3D, State3D, ThreeDProvider
 from nova.bifurcation_monitor import BifurcationMonitor
 
 

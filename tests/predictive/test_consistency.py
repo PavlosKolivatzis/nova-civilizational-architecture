@@ -9,7 +9,7 @@ Tests three conflict detector algorithms:
 Plus composite gap scoring and severity calculation.
 """
 import pytest
-from orchestrator.predictive.consistency import (
+from nova.orchestrator.predictive.consistency import (
     compute_consistency_gap,
     ConsistencyProfile,
     _compute_safety_production_conflict,

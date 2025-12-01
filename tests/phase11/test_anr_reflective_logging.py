@@ -2,8 +2,8 @@
 
 import pytest
 
-from orchestrator.router.anr import AdaptiveNeuralRouter
-from orchestrator.semantic_mirror import get_semantic_mirror, reset_semantic_mirror
+from nova.orchestrator.router.anr import AdaptiveNeuralRouter
+from nova.orchestrator.semantic_mirror import get_semantic_mirror, reset_semantic_mirror
 
 
 @pytest.mark.health

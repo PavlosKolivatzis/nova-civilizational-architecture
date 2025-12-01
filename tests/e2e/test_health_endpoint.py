@@ -4,7 +4,7 @@ Tests for health endpoint functionality.
 import pytest
 from unittest.mock import MagicMock
 
-from orchestrator.health import collect_slot_health, health_payload
+from nova.orchestrator.health import collect_slot_health, health_payload
 
 pytestmark = pytest.mark.health
 

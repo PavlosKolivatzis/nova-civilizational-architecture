@@ -7,7 +7,7 @@ across adversarial inputs using Hypothesis property-based testing.
 import math
 import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
-from orchestrator.router.features import build_feature_vector
+from nova.orchestrator.router.features import build_feature_vector
 
 # Keep runtime predictable on CI
 settings.register_profile("ci", max_examples=150, deadline=500)

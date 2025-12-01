@@ -10,7 +10,7 @@ from src.nova.continuity.risk_reconciliation import (
     get_unified_risk_field,
     _clamp
 )
-from orchestrator.prometheus_metrics import record_urf
+from nova.orchestrator.prometheus_metrics import record_urf
 
 
 def test_compute_risk_alignment_perfect():

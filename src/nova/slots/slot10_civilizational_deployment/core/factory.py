@@ -22,7 +22,7 @@ class SemanticMirrorAdapter(MirrorReader):
 
     def __init__(self):
         try:
-            from orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
             self.semantic_mirror = get_semantic_mirror()
         except ImportError:
             self.semantic_mirror = None

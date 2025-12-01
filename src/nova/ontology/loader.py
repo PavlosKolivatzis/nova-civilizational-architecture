@@ -1,5 +1,5 @@
 """
-Ontology loader - parses specs/nova_framework_ontology.v1.yaml.
+Ontology loader - parses docs/architecture/ontology/specs/nova_framework_ontology.v1.yaml.
 
 Validates:
 - YAML structure
@@ -59,11 +59,11 @@ class OntologyLoader:
         Initialize loader.
 
         Args:
-            ontology_path: Path to ontology YAML. Defaults to specs/nova_framework_ontology.v1.yaml
+            ontology_path: Path to ontology YAML. Defaults to docs/architecture/ontology/specs/nova_framework_ontology.v1.yaml
         """
         if ontology_path is None:
             repo_root = Path(__file__).parent.parent.parent.parent
-            ontology_path = repo_root / "specs" / "nova_framework_ontology.v1.yaml"
+            ontology_path = repo_root / "docs" / "architecture" / "ontology" / "specs" / "nova_framework_ontology.v1.yaml"
 
         self.ontology_path = ontology_path
         self._raw: Optional[Dict[str, Any]] = None

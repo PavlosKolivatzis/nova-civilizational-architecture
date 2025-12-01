@@ -1,0 +1,13 @@
+phase13b_temporal_snapshot:
+  description: "Phase 13b temporal snapshot integration for pre-transition state capture"
+  version: "1.0"
+  status: "active"
+  dependencies:
+    - "temporal_snapshot@1.0"
+    - "continuity_proof@1.0"
+    - "drift_guard@1.0"
+  invariants:
+    - "snapshot must be created before ORP state update"
+    - "oracle evaluation uses pre-transition regime and duration"
+    - "snapshot immutability ensures deterministic ledger hashing"
+    - "dual-modality verification requires pre-transition context"

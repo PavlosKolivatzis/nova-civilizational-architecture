@@ -1,5 +1,5 @@
 import logging
-import orchestrator.adapters.slot6_cultural as slot6
+import nova.orchestrator.adapters.slot6_cultural as slot6
 from frameworks.enums import DeploymentGuardrailResult
 
 

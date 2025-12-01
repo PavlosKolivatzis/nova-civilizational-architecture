@@ -626,7 +626,7 @@ class ProductionControlEngine:
         try:
             if (os.getenv("NOVA_PUBLISH_PHASE_LOCK", "1") == "1" and
                 os.getenv("NOVA_ENABLE_PROBABILISTIC_CONTRACTS", "1") == "1"):
-                from orchestrator.semantic_mirror import get_semantic_mirror
+                from nova.orchestrator.semantic_mirror import get_semantic_mirror
                 get_semantic_mirror().publish_context(
                     "slot07.phase_lock_belief", self._phase_lock_belief, source="slot07_production", ttl_s=300
                 )

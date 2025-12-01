@@ -11,7 +11,7 @@ from prometheus_client import CONTENT_TYPE_LATEST
 def test_metrics_404_when_disabled(monkeypatch):
     """Test that /metrics returns 404 when NOVA_ENABLE_PROMETHEUS is disabled."""
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "0")
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     client = TestClient(app)
     r = client.get("/metrics")
     assert r.status_code == 404
@@ -20,7 +20,7 @@ def test_metrics_404_when_disabled(monkeypatch):
 def test_metrics_200_when_enabled(monkeypatch):
     """Test that /metrics returns 200 when NOVA_ENABLE_PROMETHEUS is enabled."""
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     client = TestClient(app)
     r = client.get("/metrics")
     assert r.status_code == 200
@@ -34,7 +34,7 @@ def test_metrics_200_when_enabled(monkeypatch):
 def test_metrics_disabled_variants(monkeypatch, flag_value):
     """All non-\"1\" values should keep the metrics endpoint disabled."""
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", flag_value)
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     client = TestClient(app)
     r = client.get("/metrics")
     assert r.status_code == 404
@@ -44,7 +44,7 @@ def test_metrics_disabled_variants(monkeypatch, flag_value):
 def test_metrics_enabled_variants(monkeypatch, flag_value):
     """Only the canonical \"1\" value should enable the endpoint."""
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", flag_value)
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     client = TestClient(app)
     r = client.get("/metrics")
     assert r.status_code == 200

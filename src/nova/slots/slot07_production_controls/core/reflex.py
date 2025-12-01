@@ -27,7 +27,7 @@ def emit_backpressure(level: float, reason: str = "load") -> None:
         reason: Human-readable reason for back-pressure ("load", "errors", "latency")
     """
     try:
-        from orchestrator.semantic_mirror import publish
+        from nova.orchestrator.semantic_mirror import publish
 
         # Clamp level to safe bounds
         level = max(0.0, min(1.0, float(level)))
@@ -81,7 +81,7 @@ def get_current_backpressure() -> Optional[dict]:
         Dict with level, reason, timestamp or None if no active signal
     """
     try:
-        from orchestrator.semantic_mirror import get_context
+        from nova.orchestrator.semantic_mirror import get_context
         return get_context("slot07.backpressure")
     except Exception as e:
         logger.warning(f"Failed to read backpressure state: {e}")
@@ -92,7 +92,7 @@ def update_reflex_metrics(level: float, reason: str) -> None:
     """Update Prometheus metrics for reflex system observability."""
     try:
         # Import locally to avoid hard dependency
-        from orchestrator.prometheus_metrics import reflex_backpressure_gauge, reflex_emissions_counter
+        from nova.orchestrator.prometheus_metrics import reflex_backpressure_gauge, reflex_emissions_counter
 
         reflex_backpressure_gauge.set(level)
         reflex_emissions_counter.labels(reason=reason).inc()

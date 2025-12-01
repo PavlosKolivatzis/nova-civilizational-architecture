@@ -33,7 +33,7 @@ class TestBeliefConvergence:
         engine = TriEngine()
 
         # Mock semantic mirror
-        with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+        with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
             mock_mirror = Mock()
             mock_get_mirror.return_value = mock_mirror
 
@@ -58,7 +58,7 @@ class TestBeliefConvergence:
         engine = TriEngine()
 
         # Mock mirror failure
-        with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+        with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
             mock_get_mirror.side_effect = Exception("Mirror unavailable")
 
             # Should not raise exception

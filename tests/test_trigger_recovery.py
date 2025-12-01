@@ -1,6 +1,6 @@
 import pytest
 
-from orchestrator.recovery import trigger_recovery
+from nova.orchestrator.recovery import trigger_recovery
 
 
 class Protocol:

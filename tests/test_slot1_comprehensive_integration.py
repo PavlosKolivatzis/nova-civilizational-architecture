@@ -2,7 +2,7 @@
 
 import tempfile
 import os
-from orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
+from nova.orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
 
 
 def test_slot1_full_integration():
@@ -73,7 +73,7 @@ def test_slot1_full_integration():
             assert isinstance(stats, dict)
 
         # Test 6: Prometheus metrics integration
-        from orchestrator.prometheus_metrics import update_slot1_metrics
+        from nova.orchestrator.prometheus_metrics import update_slot1_metrics
         update_slot1_metrics()
         assert True  # If we get here, metrics update worked
 
@@ -86,7 +86,7 @@ def test_slot1_full_integration():
 
 def test_slot1_prometheus_metrics_export():
     """Test that Slot1 metrics are properly exported to Prometheus."""
-    from orchestrator.prometheus_metrics import get_metrics_response
+    from nova.orchestrator.prometheus_metrics import get_metrics_response
 
     # Generate some activity
     adapter = Slot1TruthAnchorAdapter()

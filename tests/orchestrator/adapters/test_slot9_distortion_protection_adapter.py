@@ -1,6 +1,6 @@
 import pytest
 
-import orchestrator.adapters.slot9_distortion_protection as slot9_adapter
+import nova.orchestrator.adapters.slot9_distortion_protection as slot9_adapter
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import hashlib
 
-from orchestrator.lock import RealityLock
+from nova.orchestrator.lock import RealityLock
 
 
 def test_lock_verify_integrity_passes():

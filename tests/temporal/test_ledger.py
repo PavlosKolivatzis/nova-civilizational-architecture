@@ -1,6 +1,6 @@
 import pytest
 
-from orchestrator.temporal.ledger import TemporalLedger, TemporalLedgerError
+from nova.orchestrator.temporal.ledger import TemporalLedger, TemporalLedgerError
 
 
 def test_temporal_ledger_append_and_hash_chain():

@@ -7,7 +7,7 @@ import pytest
 def test_slot7_adapter_exposes_flag_metrics():
     """Ensure Slot7 adapter exposes feature_flags block in metrics."""
     try:
-        from orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter
+        from nova.orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter
     except Exception:
         pytest.skip("Slot7 adapter not available")
 
@@ -65,7 +65,7 @@ def test_slot7_adapter_exposes_flag_metrics():
 def test_slot7_adapter_metrics_health_check():
     """Lightweight health check for Slot7 adapter."""
     try:
-        from orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter
+        from nova.orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter
         adapter = Slot7ProductionControlsAdapter()
         # Just verify adapter can be created and has expected interface
         assert hasattr(adapter, "process")
@@ -78,12 +78,12 @@ def test_slot7_adapter_metrics_health_check():
 def test_slot7_adapter_includes_slot6_p95():
     """Test that Slot7 adapter exposes Slot6 p95 residual risk."""
     try:
-        from orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter
+        from nova.orchestrator.adapters.slot7_production_controls import Slot7ProductionControlsAdapter
     except Exception:
         pytest.skip("Slot7 adapter not available")
 
     # Prime Slot6 so p95 is not None
-    from orchestrator.metrics import get_slot6_metrics
+    from nova.orchestrator.metrics import get_slot6_metrics
     m = get_slot6_metrics()
     # ensure clean window (no cross-test residue)
     m.reset()

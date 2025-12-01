@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 
 def publish(*args, **kwargs):
     """Proxy for orchestrator.semantic_mirror.publish."""
-    from orchestrator import semantic_mirror
+    from nova.orchestrator import semantic_mirror
     return semantic_mirror.publish(*args, **kwargs)
 
 def get_context(*args, **kwargs):
     """Proxy for orchestrator.semantic_mirror.get_context."""
-    from orchestrator import semantic_mirror
+    from nova.orchestrator import semantic_mirror
     return semantic_mirror.get_context(*args, **kwargs)
 
 
@@ -174,7 +174,7 @@ def _update_feedback_metrics(feedback_data: dict) -> None:
     """Update Prometheus metrics for deployment feedback observability."""
     try:
         # Import locally to avoid hard dependency
-        from orchestrator.prometheus_metrics import (
+        from nova.orchestrator.prometheus_metrics import (
             deployment_feedback_transform_rate_gauge,
             deployment_feedback_rollback_counter,
             deployment_feedback_total_counter

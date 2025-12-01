@@ -57,38 +57,22 @@ groups:
           NOVA_ENABLE_PROMETHEUS: "1"
         expr: vector(1)
 
-      - alert: NovaFlagUnexpected_TRI
-        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_ENABLE_TRI_LINK"}, "expected", "$1", "flag", "NOVA_ENABLE_TRI_LINK"))
-             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
-        for: 10m
-        labels: { severity: info, service: nova, flag: "NOVA_ENABLE_TRI_LINK" }
-        annotations:
-          summary: "Feature flag drift: TRI link"
-          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
+      # Compare observed flags against their expected values.
+      # The expression joins the observed metric with the expected labels,
+      # then compares the value of the flag with the value of the 'expected' label.
+      - record: nova:feature_flag:unexpected
+        expr: |
+          nova_feature_flag_enabled != on(flag) group_left(expected) (
+            label_replace(nova:expected_flags, "flag", "$1", "NOVA_ENABLE_TRI_LINK", ".*")
+            or label_replace(nova:expected_flags, "flag", "$1", "NOVA_ENABLE_LIFESPAN", ".*")
+            or label_replace(nova:expected_flags, "flag", "$1", "NOVA_USE_SHARED_HASH", ".*")
+            or label_replace(nova:expected_flags, "flag", "$1", "NOVA_ENABLE_PROMETHEUS", ".*")
+          )
 
-      - alert: NovaFlagUnexpected_Lifespan
-        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_ENABLE_LIFESPAN"}, "expected", "$1", "flag", "NOVA_ENABLE_LIFESPAN"))
-             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
+      - alert: NovaFlagUnexpected
+        expr: nova:feature_flag:unexpected == 1
         for: 10m
-        labels: { severity: info, service: nova, flag: "NOVA_ENABLE_LIFESPAN" }
+        labels: { severity: info, service: nova }
         annotations:
-          summary: "Feature flag drift: Lifespan"
-          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
-
-      - alert: NovaFlagUnexpected_SharedHash
-        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_USE_SHARED_HASH"}, "expected", "$1", "flag", "NOVA_USE_SHARED_HASH"))
-             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
-        for: 10m
-        labels: { severity: info, service: nova, flag: "NOVA_USE_SHARED_HASH" }
-        annotations:
-          summary: "Feature flag drift: Shared Hash"
-          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
-
-      - alert: NovaFlagUnexpected_Prometheus
-        expr: on() (label_replace(nova_feature_flag_enabled{flag="NOVA_ENABLE_PROMETHEUS"}, "expected", "$1", "flag", "NOVA_ENABLE_PROMETHEUS"))
-             != on() (vector(label_replace(label_join(nova:expected_flags, "expected", "", ""), "dummy", "1", "", "")) * 0 + bool vector(1))
-        for: 10m
-        labels: { severity: info, service: nova, flag: "NOVA_ENABLE_PROMETHEUS" }
-        annotations:
-          summary: "Feature flag drift: Prometheus"
-          description: "Observed value != expected (see nova:expected_flags labels). Verify deployment intent."
+          summary: "Feature flag drift detected for '{{ $labels.flag }}'"
+          description: "Observed value for '{{ $labels.flag }}' is {{ $value }}, but expected value is {{ $labels.expected }}. Please verify deployment intent."

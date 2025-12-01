@@ -15,7 +15,7 @@ class TestFlowFabricHealthResponsiveness:
 
     def test_adaptive_connections_respond_to_health_degradation(self):
         """Test that adaptive connections throttle when health degrades."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         # Enable adaptive connections
         config = AdaptiveLinkConfig(adaptation_enabled=True, base_frequency=1.0)
@@ -46,7 +46,7 @@ class TestFlowFabricHealthResponsiveness:
 
     def test_adaptive_links_weight_adjustment_with_health(self):
         """Test weight adjustment based on slot health status."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         # Enable adaptive connections
         config = AdaptiveLinkConfig(adaptation_enabled=True, base_weight=1.0)
@@ -67,10 +67,10 @@ class TestFlowFabricHealthResponsiveness:
 
     def test_flow_fabric_health_integration_end_to_end(self):
         """Test end-to-end flow fabric behavior with health integration."""
-        from orchestrator.health import health_payload
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
-        from orchestrator.flow_fabric_init import initialize_flow_fabric
+        from nova.orchestrator.health import health_payload
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
         import pkgutil
         import nova.slots as nova_slots
 
@@ -102,7 +102,7 @@ class TestFlowFabricHealthResponsiveness:
 
     def test_contract_prioritization_based_on_health(self):
         """Test that contracts are prioritized based on slot health."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         # Create links for different contracts
         contracts = ["EMOTION_REPORT@1", "TRI_REPORT@1", "CULTURAL_PROFILE@1"]
@@ -132,7 +132,7 @@ class TestFlowFabricPolishSprintIntegration:
 
     def test_flow_fabric_recognizes_new_slot_capabilities(self):
         """Test that flow fabric adapts to new slot capabilities from polish sprint."""
-        from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
+        from nova.orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
         # Verify all expected contracts are known
         expected_contracts = [
@@ -156,7 +156,7 @@ class TestFlowFabricPolishSprintIntegration:
 
     def test_flow_fabric_handles_polish_sprint_health_states(self):
         """Test flow fabric adaptation to polish sprint health states."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         # Test with realistic polish sprint health scenarios
         health_scenarios = [
@@ -197,7 +197,7 @@ class TestFlowFabricPolishSprintIntegration:
 
     def test_flow_fabric_metrics_during_health_transitions(self):
         """Test flow fabric metrics during health state transitions."""
-        from orchestrator.adaptive_connections import get_flow_health_summary
+        from nova.orchestrator.adaptive_connections import get_flow_health_summary
 
         # Get initial metrics
         initial_summary = get_flow_health_summary()
@@ -216,7 +216,7 @@ class TestFlowFabricConfigurationValidation:
 
     def test_adaptive_links_config_loading(self):
         """Test loading of adaptive links configuration."""
-        from orchestrator.flow_fabric_init import load_adaptive_links_config
+        from nova.orchestrator.flow_fabric_init import load_adaptive_links_config
 
         config = load_adaptive_links_config()
         assert isinstance(config, dict)
@@ -227,20 +227,20 @@ class TestFlowFabricConfigurationValidation:
     def test_environment_flag_behavior(self):
         """Test flow fabric behavior under different environment flags."""
         with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "1"}):
-            from orchestrator.adaptive_connections import get_flow_health_summary
+            from nova.orchestrator.adaptive_connections import get_flow_health_summary
 
             summary = get_flow_health_summary()
             assert summary["adaptive_connections_active"] is True
 
         with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "0"}):
-            from orchestrator.adaptive_connections import get_flow_health_summary
+            from nova.orchestrator.adaptive_connections import get_flow_health_summary
 
             summary = get_flow_health_summary()
             assert summary["adaptive_connections_active"] is False
 
     def test_flow_fabric_contract_registration(self):
         """Test that all contracts get registered properly."""
-        from orchestrator.flow_fabric_init import initialize_flow_fabric, get_flow_fabric_status
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric, get_flow_fabric_status
 
         # Initialize flow fabric
         initialize_flow_fabric()
@@ -258,7 +258,7 @@ class TestFlowFabricErrorHandling:
 
     def test_flow_fabric_handles_missing_health_data(self):
         """Test flow fabric graceful handling when health data is missing."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         # Create link without health context
         config = AdaptiveLinkConfig(adaptation_enabled=True)
@@ -274,7 +274,7 @@ class TestFlowFabricErrorHandling:
 
     def test_flow_fabric_disabled_adaptation_fallback(self):
         """Test flow fabric behavior when adaptation is disabled."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         # Create link with adaptation disabled
         config = AdaptiveLinkConfig(adaptation_enabled=False)
@@ -292,7 +292,7 @@ class TestFlowFabricErrorHandling:
 
     def test_flow_fabric_performance_under_load(self):
         """Test flow fabric performance under simulated load."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         config = AdaptiveLinkConfig(adaptation_enabled=True)
         link = adaptive_link_registry.get_link("LOAD_TEST@1", config)
@@ -321,7 +321,7 @@ class TestFlowFabricHealthAwareness:
 
     def test_flow_fabric_responds_to_slot_health_changes(self):
         """Test that flow fabric adapts behavior based on slot health changes."""
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         # Create links for polish sprint slots
         slot_links = {

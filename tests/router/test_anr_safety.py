@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import patch
 
-from orchestrator.router.anr import AdaptiveNeuralRouter
+from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
 
 class TestANRSafety:
@@ -13,7 +13,7 @@ class TestANRSafety:
         monkeypatch.setenv("NOVA_ANR_MAX_FAST_PROB", "0.15")
 
         # Mock anomaly as engaged
-        import orchestrator.unlearn_weighting as uw
+        import nova.orchestrator.unlearn_weighting as uw
         monkeypatch.setattr(uw, "get_anomaly_observability", lambda: {"engaged": 1}, raising=False)
 
         router = AdaptiveNeuralRouter()
@@ -97,7 +97,7 @@ class TestANRSafety:
         # Should have multiple route probabilities
         assert len([p for p in decision.probs.values() if p > 0]) > 1
 
-    @patch('orchestrator.unlearn_weighting.get_anomaly_observability')
+    @patch('nova.orchestrator.unlearn_weighting.get_anomaly_observability')
     def test_combined_safety_mechanisms(self, mock_anomaly, monkeypatch):
         """Test safety mechanisms work together."""
         monkeypatch.setenv("NOVA_ANR_ENABLED", "1")

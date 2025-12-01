@@ -8,7 +8,7 @@ Tests:
 4. Feature flag enables/disables MSC
 """
 import pytest
-from orchestrator.governance.engine import GovernanceEngine
+from nova.orchestrator.governance.engine import GovernanceEngine
 
 
 class TestGovernanceConsistencyIntegration:
@@ -172,7 +172,7 @@ class TestGovernanceConsistencyIntegration:
 
     def test_consistency_gap_published_to_mirror(self):
         """Consistency gap should publish to semantic mirror."""
-        from orchestrator.semantic_mirror import reset_semantic_mirror
+        from nova.orchestrator.semantic_mirror import reset_semantic_mirror
 
         reset_semantic_mirror()
         engine = GovernanceEngine()

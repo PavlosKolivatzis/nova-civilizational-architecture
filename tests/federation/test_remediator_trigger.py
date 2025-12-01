@@ -32,7 +32,7 @@ class DummyPoller:
 
 
 def test_remediator_triggers_and_restarts_poller():
-    from orchestrator.federation_remediator import FederationRemediator
+    from nova.orchestrator.federation_remediator import FederationRemediator
 
     metrics = m()
     poller = DummyPoller()
@@ -73,7 +73,7 @@ def test_remediator_triggers_and_restarts_poller():
 
 
 def test_remediator_logs_config_error_without_restart():
-    from orchestrator.federation_remediator import FederationRemediator
+    from nova.orchestrator.federation_remediator import FederationRemediator
 
     metrics = m()
     poller = DummyPoller()

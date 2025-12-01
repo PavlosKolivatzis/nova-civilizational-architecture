@@ -1,7 +1,7 @@
 import pytest
 
-from orchestrator.temporal.engine import TemporalEngine
-from orchestrator.temporal.ledger import TemporalLedger
+from nova.orchestrator.temporal.engine import TemporalEngine
+from nova.orchestrator.temporal.ledger import TemporalLedger
 
 
 def test_temporal_engine_computes_drift_and_error():

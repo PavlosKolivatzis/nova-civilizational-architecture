@@ -38,7 +38,7 @@ def _reset_metrics():
 
 
 def test_remediator_triggers_on_error_rate(monkeypatch):
-    from orchestrator.federation_remediator import FederationRemediator
+    from nova.orchestrator.federation_remediator import FederationRemediator
 
     metrics = m()
     dummy = DummyPoller()
@@ -71,7 +71,7 @@ def test_remediator_triggers_on_error_rate(monkeypatch):
 
 
 def test_remediator_triggers_on_readiness_drop():
-    from orchestrator.federation_remediator import FederationRemediator
+    from nova.orchestrator.federation_remediator import FederationRemediator
 
     metrics = m()
     dummy = DummyPoller()

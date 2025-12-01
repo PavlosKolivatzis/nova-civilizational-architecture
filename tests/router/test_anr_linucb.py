@@ -1,6 +1,6 @@
 import pytest
 
-from orchestrator.router.anr import AdaptiveNeuralRouter
+from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
 np = pytest.importorskip("numpy")
 

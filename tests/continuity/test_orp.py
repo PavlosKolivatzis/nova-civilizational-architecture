@@ -392,7 +392,7 @@ def test_get_posture_adjustments_after_evaluation():
 
 def test_record_orp_metrics_normal():
     """Test record_orp() with NORMAL regime."""
-    from orchestrator.prometheus_metrics import record_orp, orp_regime_gauge
+    from nova.orchestrator.prometheus_metrics import record_orp, orp_regime_gauge
 
     snapshot = {
         "regime": "normal",
@@ -413,7 +413,7 @@ def test_record_orp_metrics_normal():
 
 def test_record_orp_metrics_heightened():
     """Test record_orp() with HEIGHTENED regime."""
-    from orchestrator.prometheus_metrics import (
+    from nova.orchestrator.prometheus_metrics import (
         record_orp,
         orp_regime_gauge,
         orp_regime_score_gauge,
@@ -439,7 +439,7 @@ def test_record_orp_metrics_heightened():
 
 def test_record_orp_metrics_emergency():
     """Test record_orp() with EMERGENCY regime and forced flags."""
-    from orchestrator.prometheus_metrics import (
+    from nova.orchestrator.prometheus_metrics import (
         record_orp,
         orp_regime_gauge,
         orp_deployment_freeze_gauge,
@@ -465,7 +465,7 @@ def test_record_orp_metrics_emergency():
 
 def test_record_orp_transition_counter():
     """Test record_orp() increments transition counter."""
-    from orchestrator.prometheus_metrics import record_orp, orp_regime_transitions_counter
+    from nova.orchestrator.prometheus_metrics import record_orp, orp_regime_transitions_counter
 
     # Get initial count
     initial = orp_regime_transitions_counter.labels(

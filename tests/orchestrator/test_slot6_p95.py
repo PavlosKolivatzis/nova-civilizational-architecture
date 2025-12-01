@@ -2,7 +2,7 @@
 
 import pytest
 import threading
-from orchestrator.metrics import Slot6Metrics
+from nova.orchestrator.metrics import Slot6Metrics
 
 
 @pytest.mark.health

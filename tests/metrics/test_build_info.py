@@ -7,7 +7,7 @@ from prometheus_client import generate_latest
 
 def test_build_info_export():
     """Verify build info metric is exported with required labels."""
-    from orchestrator.prometheus_metrics import _REGISTRY
+    from nova.orchestrator.prometheus_metrics import _REGISTRY
 
     # Generate metrics output
     text = generate_latest(_REGISTRY).decode("utf-8")
@@ -28,7 +28,7 @@ def test_build_info_export():
 
 def test_build_info_sha_fallback():
     """Verify SHA fallback works when git is unavailable."""
-    from orchestrator.prometheus_metrics import _get_git_sha_short
+    from nova.orchestrator.prometheus_metrics import _get_git_sha_short
     import os
 
     # Test with NOVA_BUILD_SHA environment variable
@@ -48,7 +48,7 @@ def test_build_info_sha_fallback():
 
 def test_default_collectors_registered():
     """Verify process/platform/GC collectors are included."""
-    from orchestrator.prometheus_metrics import _REGISTRY
+    from nova.orchestrator.prometheus_metrics import _REGISTRY
 
     text = generate_latest(_REGISTRY).decode("utf-8")
 
@@ -61,7 +61,7 @@ def test_default_collectors_registered():
 
 def test_metrics_endpoint_integration():
     """Test that metrics endpoint works with custom registry."""
-    from orchestrator.http_metrics import router
+    from nova.orchestrator.http_metrics import router
     from fastapi.testclient import TestClient
     from fastapi import FastAPI
 

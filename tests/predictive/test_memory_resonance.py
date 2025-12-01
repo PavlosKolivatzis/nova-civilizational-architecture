@@ -6,7 +6,7 @@ and trend analysis.
 """
 import pytest
 import time
-from orchestrator.predictive.memory_resonance import (
+from nova.orchestrator.predictive.memory_resonance import (
     MemoryResonanceWindow,
     TRSISample,
     get_memory_window,

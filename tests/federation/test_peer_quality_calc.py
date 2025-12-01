@@ -1,7 +1,7 @@
 from collections import deque
 import time
 
-from orchestrator import federation_poller as poller
+from nova.orchestrator import federation_poller as poller
 
 
 def test_quality_prefers_fast_success():

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 
 def _client():
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     return TestClient(app)
 
 
@@ -17,7 +17,7 @@ def test_slot1_metrics_in_prometheus_export(monkeypatch):
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
 
     # Generate some Slot1 activity
-    from orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
+    from nova.orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
     adapter = Slot1TruthAnchorAdapter()
 
     if adapter.available:
@@ -42,7 +42,7 @@ def test_slot1_metrics_values_match_adapter(monkeypatch):
     """Test that Prometheus metrics match adapter snapshot values."""
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
 
-    from orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
+    from nova.orchestrator.adapters.slot1_truth_anchor import Slot1TruthAnchorAdapter
     adapter = Slot1TruthAnchorAdapter()
 
     if adapter.available:

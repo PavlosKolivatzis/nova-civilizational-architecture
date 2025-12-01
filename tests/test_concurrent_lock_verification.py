@@ -1,8 +1,8 @@
 import time
 from threading import Thread
 
-from orchestrator.lock import RealityLock
-from orchestrator.reality_verifier import RealityVerifier
+from nova.orchestrator.lock import RealityLock
+from nova.orchestrator.reality_verifier import RealityVerifier
 
 
 class SlowRealityLock(RealityLock):

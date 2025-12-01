@@ -21,14 +21,14 @@ class TestFlowFabricInitialization:
     """Flow fabric initialization and contract registration."""
 
     def test_flow_fabric_init_imports(self):
-        from orchestrator.flow_fabric_init import initialize_flow_fabric, KNOWN_CONTRACTS
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric, KNOWN_CONTRACTS
 
         assert callable(initialize_flow_fabric)
         assert isinstance(KNOWN_CONTRACTS, list)
         assert len(KNOWN_CONTRACTS) == 9  # SIGNALS@1 removed (DEF-028)
 
     def test_known_contracts_format(self):
-        from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
+        from nova.orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
         expected_contracts = [
             "TRI_REPORT@1",
@@ -45,13 +45,13 @@ class TestFlowFabricInitialization:
         assert KNOWN_CONTRACTS == expected_contracts
 
     def test_config_loading(self):
-        from orchestrator.flow_fabric_init import load_adaptive_links_config
+        from nova.orchestrator.flow_fabric_init import load_adaptive_links_config
 
         config = load_adaptive_links_config()
         assert isinstance(config, dict)
 
     def test_adaptive_link_config_creation(self):
-        from orchestrator.flow_fabric_init import create_adaptive_link_config
+        from nova.orchestrator.flow_fabric_init import create_adaptive_link_config
 
         config_data = {
             "adaptive_connections_enabled": True,
@@ -75,7 +75,7 @@ class TestFlowFabricInitialization:
 
     def test_initialize_flow_fabric_execution(self):
         # Should run without exceptions even if no external config is present.
-        from orchestrator.flow_fabric_init import initialize_flow_fabric
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
 
         try:
             initialize_flow_fabric()
@@ -83,7 +83,7 @@ class TestFlowFabricInitialization:
             pytest.fail(f"Flow fabric initialization failed: {e}")
 
     def test_flow_fabric_status_function(self):
-        from orchestrator.flow_fabric_init import get_flow_fabric_status
+        from nova.orchestrator.flow_fabric_init import get_flow_fabric_status
 
         status = get_flow_fabric_status()
         assert isinstance(status, dict)
@@ -108,9 +108,9 @@ class TestFlowFabricHealthIntegration:
     """Flow fabric integration with the health system."""
 
     def test_flow_fabric_health_reporting(self):
-        from orchestrator.health import health_payload
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
+        from nova.orchestrator.health import health_payload
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
 
         monitor = PerformanceMonitor()
         router = create_router(monitor)
@@ -134,7 +134,7 @@ class TestFlowFabricHealthIntegration:
             assert field in flow_fabric, f"Missing flow fabric field: {field}"
 
     def test_flow_fabric_metrics_collection(self):
-        from orchestrator.adaptive_connections import adaptive_link_registry
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry
 
         metrics = adaptive_link_registry.get_all_metrics()
         assert isinstance(metrics, list)
@@ -149,13 +149,13 @@ class TestFlowFabricAdaptiveConnections:
     """Adaptive connections behavior."""
 
     def test_adaptive_link_registry_singleton(self):
-        from orchestrator.adaptive_connections import adaptive_link_registry
-        from orchestrator.adaptive_connections import adaptive_link_registry as registry2
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry as registry2
 
         assert adaptive_link_registry is registry2
 
     def test_adaptive_connection_configuration(self):
-        from orchestrator.adaptive_connections import AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import AdaptiveLinkConfig
 
         cfg = AdaptiveLinkConfig(
             base_weight=1.0,
@@ -170,7 +170,7 @@ class TestFlowFabricAdaptiveConnections:
         assert cfg.max_weight == 3.0
 
     def test_adaptive_link_creation(self):
-        from orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
+        from nova.orchestrator.adaptive_connections import adaptive_link_registry, AdaptiveLinkConfig
 
         cfg = AdaptiveLinkConfig(base_weight=1.0, base_frequency=1.0, adaptation_enabled=False)
         link = adaptive_link_registry.get_link("TEST_CONTRACT@1", cfg)
@@ -181,7 +181,7 @@ class TestFlowFabricAdaptiveConnections:
 
 class TestFlowHealthSummary:
     def test_flow_health_summary(self):
-        from orchestrator.flow_metrics import FlowMetrics
+        from nova.orchestrator.flow_metrics import FlowMetrics
 
         flow_metrics = FlowMetrics()
         summary = flow_metrics.get_flow_health_summary()
@@ -196,7 +196,7 @@ class TestFlowFabricEnvironmentFlags:
 
     def test_flow_metrics_environment_flag(self):
         with patch.dict(os.environ, {"NOVA_FLOW_METRICS_ENABLED": "0"}):
-            from orchestrator.flow_fabric_init import initialize_flow_fabric
+            from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
             try:
                 initialize_flow_fabric()
             except Exception as e:  # pragma: no cover - defensive
@@ -204,7 +204,7 @@ class TestFlowFabricEnvironmentFlags:
 
     def test_adaptive_connections_environment_flag(self):
         with patch.dict(os.environ, {"NOVA_ADAPTIVE_CONNECTIONS_ENABLED": "1"}):
-            from orchestrator.flow_fabric_init import initialize_flow_fabric
+            from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
             try:
                 initialize_flow_fabric()
             except Exception as e:  # pragma: no cover - defensive
@@ -213,15 +213,15 @@ class TestFlowFabricEnvironmentFlags:
 
 class TestFlowFabricErrorHandling:
     def test_missing_config_file_handling(self):
-        from orchestrator.flow_fabric_init import load_adaptive_links_config
+        from nova.orchestrator.flow_fabric_init import load_adaptive_links_config
 
         cfg = load_adaptive_links_config()
         assert isinstance(cfg, dict)
 
     def test_flow_fabric_graceful_failure(self):
-        from orchestrator.flow_fabric_init import initialize_flow_fabric
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
 
-        with patch("orchestrator.flow_fabric_init.adaptive_link_registry") as mock_registry:
+        with patch("nova.orchestrator.flow_fabric_init.adaptive_link_registry") as mock_registry:
             mock_registry.get_link.side_effect = Exception("Test error")
             try:
                 initialize_flow_fabric()
@@ -229,9 +229,9 @@ class TestFlowFabricErrorHandling:
                 pytest.fail(f"Flow fabric should fail gracefully: {e}")
 
     def test_health_reporting_without_flow_fabric(self):
-        from orchestrator.health import health_payload
-        from orchestrator.core.performance_monitor import PerformanceMonitor
-        from orchestrator.core import create_router
+        from nova.orchestrator.health import health_payload
+        from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+        from nova.orchestrator.core import create_router
 
         monitor = PerformanceMonitor()
         router = create_router(monitor)
@@ -246,7 +246,7 @@ class TestFlowFabricConfigurationValidation:
     """Configuration validation + edge cases."""
 
     def test_contract_name_validation(self):
-        from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
+        from nova.orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
         for c in KNOWN_CONTRACTS:
             assert "@" in c
@@ -255,7 +255,7 @@ class TestFlowFabricConfigurationValidation:
             assert version.isdigit()
 
     def test_configuration_merging(self):
-        from orchestrator.flow_fabric_init import create_adaptive_link_config
+        from nova.orchestrator.flow_fabric_init import create_adaptive_link_config
 
         data = {
             "adaptive_connections_enabled": True,
@@ -267,7 +267,7 @@ class TestFlowFabricConfigurationValidation:
         assert cfg.min_weight == 0.1    # default
 
     def test_empty_configuration_handling(self):
-        from orchestrator.flow_fabric_init import create_adaptive_link_config
+        from nova.orchestrator.flow_fabric_init import create_adaptive_link_config
 
         cfg = create_adaptive_link_config("TEST@1", {})
         assert cfg.base_weight == 1.0

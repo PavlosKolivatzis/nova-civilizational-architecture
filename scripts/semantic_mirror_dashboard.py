@@ -45,7 +45,7 @@ def _get_config_source():
 
     # Check orchestrator.config module
     try:
-        from orchestrator.config import config
+        from nova.orchestrator.config import config
         if hasattr(config, "SEMANTIC_MIRROR_ENABLED"):
             return "config"
     except (ImportError, AttributeError):
@@ -72,12 +72,12 @@ def _read_health() -> Dict[str, Any]:
     """
     try:
         # Preferred: Use the setup module's health function
-        from orchestrator.semantic_mirror_setup import get_semantic_mirror_health
+        from nova.orchestrator.semantic_mirror_setup import get_semantic_mirror_health
         return get_semantic_mirror_health()
     except ImportError:
         try:
             # Fallback: Synthesize health from semantic mirror metrics
-            from orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
             mirror = get_semantic_mirror()
             metrics = mirror.get_metrics()
 

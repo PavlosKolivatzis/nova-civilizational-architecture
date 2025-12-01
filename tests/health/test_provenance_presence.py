@@ -2,7 +2,7 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from orchestrator.app import app
+from nova.orchestrator.app import app
 
 pytestmark = pytest.mark.health
 

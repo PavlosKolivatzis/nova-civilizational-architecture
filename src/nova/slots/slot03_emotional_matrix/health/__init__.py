@@ -63,7 +63,7 @@ def health() -> dict:
 
         # Always attach provenance even in error case
         try:
-            from orchestrator.contracts.provenance import slot3_provenance
+            from nova.orchestrator.contracts.provenance import slot3_provenance
 
             result.update(slot3_provenance())
         except ImportError:
@@ -107,7 +107,7 @@ def health() -> dict:
 
     # Always attach provenance
     try:
-        from orchestrator.contracts.provenance import slot3_provenance
+        from nova.orchestrator.contracts.provenance import slot3_provenance
 
         result.update(slot3_provenance())
     except ImportError:

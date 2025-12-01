@@ -168,11 +168,11 @@ def test_check_regime_hysteresis_oscillation_detected():
 
     # Create ledger with 4 transitions in 5 minutes (oscillating)
     ledger = [
-        {"regime": "normal", "timestamp": (now - timedelta(seconds=290)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
-        {"regime": "heightened", "timestamp": (now - timedelta(seconds=280)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
-        {"regime": "normal", "timestamp": (now - timedelta(seconds=270)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
-        {"regime": "heightened", "timestamp": (now - timedelta(seconds=260)).isoformat().replace('+00:00', 'Z'), "duration_s": 10.0},
-        {"regime": "normal", "timestamp": now.isoformat().replace('+00:00', 'Z'), "duration_s": 260.0},  # Current
+        {"regime": "normal", "timestamp": (now - timedelta(seconds=290)).isoformat(), "duration_s": 10.0},
+        {"regime": "heightened", "timestamp": (now - timedelta(seconds=280)).isoformat(), "duration_s": 10.0},
+        {"regime": "normal", "timestamp": (now - timedelta(seconds=270)).isoformat(), "duration_s": 10.0},
+        {"regime": "heightened", "timestamp": (now - timedelta(seconds=260)).isoformat(), "duration_s": 10.0},
+        {"regime": "normal", "timestamp": now.isoformat(), "duration_s": 260.0},  # Current
     ]
 
     decision = check_regime_hysteresis("heightened", ledger, current_time=now)
@@ -190,8 +190,8 @@ def test_check_regime_hysteresis_no_oscillation():
 
     # Only 1 transition in window
     ledger = [
-        {"regime": "normal", "timestamp": (now - timedelta(seconds=400)).isoformat().replace('+00:00', 'Z'), "duration_s": 100.0},
-        {"regime": "heightened", "timestamp": now.isoformat().replace('+00:00', 'Z'), "duration_s": 400.0},  # Current
+        {"regime": "normal", "timestamp": (now - timedelta(seconds=400)).isoformat(), "duration_s": 100.0},
+        {"regime": "heightened", "timestamp": now.isoformat(), "duration_s": 400.0},  # Current
     ]
 
     decision = check_regime_hysteresis("normal", ledger, current_time=now)

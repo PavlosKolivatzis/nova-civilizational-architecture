@@ -11,7 +11,7 @@ Validates:
 Usage:
     python scripts/validate_ontology_structure.py
     python scripts/validate_ontology_structure.py --verbose
-    python scripts/validate_ontology_structure.py --ontology specs/nova.slot03@1.0.yaml
+    python scripts/validate_ontology_structure.py --ontology docs/architecture/ontology/specs/nova.slot03@1.0.yaml
 """
 
 import argparse
@@ -26,7 +26,7 @@ class OntologyValidator:
 
     def __init__(self, repo_root: Path):
         self.repo_root = repo_root
-        self.specs_dir = repo_root / "specs"
+        self.specs_dir = repo_root / "docs" / "architecture" / "ontology" / "specs"
         self.contracts_dir = repo_root / "contracts"
         self.errors: List[str] = []
         self.warnings: List[str] = []

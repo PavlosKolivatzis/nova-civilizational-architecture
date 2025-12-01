@@ -10,9 +10,9 @@ import pkgutil
 import os
 import gc
 import nova.slots as nova_slots
-from orchestrator.health import health_payload
-from orchestrator.core.performance_monitor import PerformanceMonitor
-from orchestrator.core import create_router
+from nova.orchestrator.health import health_payload
+from nova.orchestrator.core.performance_monitor import PerformanceMonitor
+from nova.orchestrator.core import create_router
 
 # Performance scaling factor for CI/different environments
 PERF_SCALE = float(os.getenv("NOVA_PERF_SCALE", "1.0"))
@@ -81,7 +81,7 @@ class TestHealthPerformanceGuards:
 
     def test_slot_self_checks_performance(self):
         """Test individual slot self-check performance."""
-        from orchestrator.health import collect_slot_selfchecks
+        from nova.orchestrator.health import collect_slot_selfchecks
 
         slot_registry = {
             name: None
@@ -110,7 +110,7 @@ class TestHealthPerformanceGuards:
 
     def test_anr_decision_performance(self):
         """Test ANR routing decision performance."""
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         anr = AdaptiveNeuralRouter()
 
@@ -150,8 +150,8 @@ class TestHealthPerformanceGuards:
 
     def test_flow_fabric_health_performance(self):
         """Test flow fabric health summary performance."""
-        from orchestrator.adaptive_connections import get_flow_health_summary
-        from orchestrator.flow_fabric_init import initialize_flow_fabric
+        from nova.orchestrator.adaptive_connections import get_flow_health_summary
+        from nova.orchestrator.flow_fabric_init import initialize_flow_fabric
 
         # Initialize flow fabric to register links
         initialize_flow_fabric()
@@ -263,7 +263,7 @@ class TestHealthMemoryPerformance:
         psutil = pytest.importorskip("psutil")
 
         process = psutil.Process(os.getpid())
-        from orchestrator.router.anr import AdaptiveNeuralRouter
+        from nova.orchestrator.router.anr import AdaptiveNeuralRouter
 
         anr = AdaptiveNeuralRouter()
 

@@ -4,7 +4,7 @@ import importlib.util
 
 # --- import healthkit (with graceful fallback) --------------------------------
 try:
-    from orchestrator.core.healthkit import ok, minimal, error  # preferred
+    from nova.orchestrator.core.healthkit import ok, minimal, error  # preferred
 except Exception:
     try:
         from core.healthkit import ok, minimal, error  # alt location
@@ -62,7 +62,7 @@ def health() -> Dict[str, Any]:
             # Adapter-only fallback path
             adapter_ok = False
             try:
-                from orchestrator.adapters.slot2_deltathresh import AVAILABLE, ENGINE
+                from nova.orchestrator.adapters.slot2_deltathresh import AVAILABLE, ENGINE
                 adapter_ok = bool(AVAILABLE and ENGINE)
             except Exception:
                 pass

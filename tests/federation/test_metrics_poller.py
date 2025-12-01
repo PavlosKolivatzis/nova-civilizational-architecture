@@ -14,7 +14,7 @@ def test_metrics_singleton_cache():
 
 
 def test_poller_loop_updates_metrics(monkeypatch):
-    from orchestrator import federation_poller as poller
+    from nova.orchestrator import federation_poller as poller
 
     metrics = m()
     metrics["peers"].set(0)
@@ -84,7 +84,7 @@ def test_poller_loop_updates_metrics(monkeypatch):
 
 
 def test_poller_marks_not_ready_on_error(monkeypatch):
-    from orchestrator import federation_poller as poller
+    from nova.orchestrator import federation_poller as poller
 
     metrics = m()
 
@@ -123,7 +123,7 @@ def test_poller_marks_not_ready_on_error(monkeypatch):
 
 
 def test_poller_not_ready_when_no_peers(monkeypatch):
-    from orchestrator import federation_poller as poller
+    from nova.orchestrator import federation_poller as poller
 
     metrics = m()
     metrics["ready"].set(1.0)

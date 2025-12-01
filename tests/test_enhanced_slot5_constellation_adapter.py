@@ -7,7 +7,7 @@ import pytest
 @pytest.fixture
 def adapter_factory(monkeypatch):
     """Provide a factory that yields adapters backed by controllable stubs."""
-    module_name = "orchestrator.adapters.enhanced_slot5_constellation"
+    module_name = "nova.orchestrator.adapters.enhanced_slot5_constellation"
     module = importlib.import_module(module_name)
 
     class DummyAdaptiveProcessor:
@@ -241,7 +241,7 @@ def test_reset_adaptive_state_not_supported(adapter_factory):
 def test_enable_cross_slot_coordination_success(adapter_factory, monkeypatch):
     module, adapter, engine = adapter_factory()
     mirror = object()
-    monkeypatch.setattr("orchestrator.semantic_mirror.get_semantic_mirror", lambda: mirror)
+    monkeypatch.setattr("nova.orchestrator.semantic_mirror.get_semantic_mirror", lambda: mirror)
 
     assert adapter.enable_cross_slot_coordination() is True
     assert engine.semantic_mirror is mirror
@@ -250,7 +250,7 @@ def test_enable_cross_slot_coordination_success(adapter_factory, monkeypatch):
 def test_enable_cross_slot_coordination_handles_failure(adapter_factory, monkeypatch):
     module, adapter, engine = adapter_factory()
     engine.fail_coordination = True
-    monkeypatch.setattr("orchestrator.semantic_mirror.get_semantic_mirror", lambda: object())
+    monkeypatch.setattr("nova.orchestrator.semantic_mirror.get_semantic_mirror", lambda: object())
 
     assert adapter.enable_cross_slot_coordination() is False
 

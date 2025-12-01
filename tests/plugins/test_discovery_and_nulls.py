@@ -3,8 +3,8 @@
 import os
 import pytest
 
-from orchestrator.plugins.loader import PluginLoader
-from orchestrator.adapters.registry import AdapterRegistry
+from nova.orchestrator.plugins.loader import PluginLoader
+from nova.orchestrator.adapters.registry import AdapterRegistry
 
 
 def test_discovery_respects_whitelist(monkeypatch):

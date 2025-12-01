@@ -1,7 +1,7 @@
 import pytest
 
 from nova.federation.metrics import m
-from orchestrator import federation_health
+from nova.orchestrator import federation_health
 
 
 def test_peer_quality_metrics_exposed_in_health():

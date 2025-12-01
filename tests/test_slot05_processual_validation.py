@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from nova.slots.slot05_constellation.enhanced_constellation_engine import EnhancedConstellationEngine
 from nova.slots.slot05_constellation.adaptive_processor import AdaptiveProcessor
-from orchestrator.adapters.enhanced_slot5_constellation import EnhancedSlot5ConstellationAdapter
+from nova.orchestrator.adapters.enhanced_slot5_constellation import EnhancedSlot5ConstellationAdapter
 
 
 class TestAdaptiveProcessor:
@@ -317,7 +317,7 @@ class TestProcessualCapabilityIntegration:
     def test_end_to_end_adaptive_processing(self):
         """Test complete adaptive processing workflow."""
         try:
-            from orchestrator.semantic_mirror import get_semantic_mirror
+            from nova.orchestrator.semantic_mirror import get_semantic_mirror
             semantic_mirror = get_semantic_mirror()
         except Exception:
             semantic_mirror = MagicMock()

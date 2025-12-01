@@ -4,7 +4,7 @@ pytestmark = pytest.mark.health
 
 try:
     from fastapi.testclient import TestClient
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     if app is None:
         raise RuntimeError("FastAPI app unavailable")
 except Exception:  # pragma: no cover

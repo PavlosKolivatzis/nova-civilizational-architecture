@@ -72,7 +72,7 @@ def _contract_list(meta_path: Path, data: dict[str, object], key: str) -> list[s
 
 def test_all_flow_fabric_contracts_have_metadata():
     """Verify every KNOWN_CONTRACTS entry has produces/consumes in meta.yaml."""
-    from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
+    from nova.orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
     meta_files = _iter_slot_meta_files()
     assert meta_files, "No slot metadata files discovered under 'slots/' or 'src/nova/slots/'"
@@ -92,7 +92,7 @@ def test_all_flow_fabric_contracts_have_metadata():
 
 def test_all_metadata_contracts_are_registered():
     """Verify every produces/consumes contract is registered in flow fabric."""
-    from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
+    from nova.orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
     registered = set(KNOWN_CONTRACTS)
     referenced: set[str] = set()
@@ -111,7 +111,7 @@ def test_all_metadata_contracts_are_registered():
 
 def test_flow_fabric_slots_have_metadata():
     """Ensure each flow-fabric contract is linked to at least one slot metadata file."""
-    from orchestrator.flow_fabric_init import KNOWN_CONTRACTS
+    from nova.orchestrator.flow_fabric_init import KNOWN_CONTRACTS
 
     contract_to_slots: dict[str, set[str]] = defaultdict(set)
 

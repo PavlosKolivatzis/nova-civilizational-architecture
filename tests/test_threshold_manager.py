@@ -1,6 +1,6 @@
 import importlib
 
-from orchestrator.thresholds.manager import (
+from nova.orchestrator.thresholds.manager import (
     ThresholdManager,
     ThresholdConfig,
     get_threshold,
@@ -17,7 +17,7 @@ def test_defaults_load_correctly(monkeypatch):
 
 def test_env_override(monkeypatch):
     monkeypatch.setenv("NOVA_SLOT07_TRI_DRIFT_THRESHOLD", "5.5")
-    import orchestrator.thresholds.manager as mgrmod
+    import nova.orchestrator.thresholds.manager as mgrmod
 
     importlib.reload(mgrmod)
     val = mgrmod.get_threshold("slot07_tri_drift_threshold")

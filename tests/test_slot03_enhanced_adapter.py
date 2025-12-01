@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 
-from orchestrator.adapters.slot3_emotional import Slot3EmotionalAdapter
+from nova.orchestrator.adapters.slot3_emotional import Slot3EmotionalAdapter
 
 # Module-level fallback mock for tests that reference mock_engine without @patch
 try:
@@ -21,10 +21,10 @@ class TestSlot3EmotionalAdapter:
             'slot07_ethical': Mock()
         }
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
-    @patch('orchestrator.adapters.slot3_emotional.ENGINE')
-    @patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
-    @patch('orchestrator.adapters.slot3_emotional.ESCALATION_MANAGER')
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True)
+    @patch('nova.orchestrator.adapters.slot3_emotional.ENGINE')
+    @patch('nova.orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
+    @patch('nova.orchestrator.adapters.slot3_emotional.ESCALATION_MANAGER')
     def test_basic_analysis(self, mock_escalation_mgr, mock_safety_policy, mock_engine):
         """Test basic emotional analysis functionality."""
         # Setup mocks
@@ -53,10 +53,10 @@ class TestSlot3EmotionalAdapter:
         assert result['threat_level'] == 'low'
         assert result['escalation']['triggered'] is False
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
-    @patch('orchestrator.adapters.slot3_emotional.ENGINE')
-    @patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
-    @patch('orchestrator.adapters.slot3_emotional.ESCALATION_MANAGER')
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True)
+    @patch('nova.orchestrator.adapters.slot3_emotional.ENGINE')
+    @patch('nova.orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
+    @patch('nova.orchestrator.adapters.slot3_emotional.ESCALATION_MANAGER')
     def test_escalation_triggering(self, mock_escalation_mgr, mock_safety_policy, mock_engine):
         """Test escalation triggering for high threats."""
         # Setup mocks
@@ -94,9 +94,9 @@ class TestSlot3EmotionalAdapter:
         assert len(result['escalation']['suggested_actions']) > 0
         mock_escalation_mgr.escalate.assert_called_once()
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
-    @patch('orchestrator.adapters.slot3_emotional.ENGINE')
-    @patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True)
+    @patch('nova.orchestrator.adapters.slot3_emotional.ENGINE')
+    @patch('nova.orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
     def test_safety_policy_blocking(self, mock_safety_policy, mock_engine):
         """Test that safety policy violations prevent escalation."""
         mock_engine.analyze.return_value = {
@@ -126,9 +126,9 @@ class TestSlot3EmotionalAdapter:
         # Escalation should not be triggered due to safety violation
         assert 'escalation' not in result
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
-    @patch('orchestrator.adapters.slot3_emotional.ENGINE')
-    @patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True)
+    @patch('nova.orchestrator.adapters.slot3_emotional.ENGINE')
+    @patch('nova.orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
     def test_rate_limiting(self, mock_safety_policy, mock_engine):
         """Test rate limiting functionality."""
         mock_engine.analyze.return_value = {
@@ -157,7 +157,7 @@ class TestSlot3EmotionalAdapter:
         # Should not proceed with escalation when rate limited
         assert 'escalation' not in result
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', False)
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', False)
     def test_unavailable_adapter(self):
         """Test adapter behavior when components are unavailable."""
         adapter = Slot3EmotionalAdapter()
@@ -175,9 +175,9 @@ class TestSlot3EmotionalAdapter:
 
     def test_escalation_disabling(self):
         """Test analysis with escalation disabled."""
-        with patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True), \
-             patch('orchestrator.adapters.slot3_emotional.ENGINE') as mock_engine, \
-             patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY') as mock_safety_policy:
+        with patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True), \
+             patch('nova.orchestrator.adapters.slot3_emotional.ENGINE') as mock_engine, \
+             patch('nova.orchestrator.adapters.slot3_emotional.SAFETY_POLICY') as mock_safety_policy:
 
             mock_engine.analyze.return_value = {
                 'emotional_tone': 'anger',
@@ -244,9 +244,9 @@ class TestSlot3EmotionalAdapter:
         result = adapter.receive_escalation("invalid_event")
         assert result is False
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
-    @patch('orchestrator.adapters.slot3_emotional.ESCALATION_MANAGER')
-    @patch('orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True)
+    @patch('nova.orchestrator.adapters.slot3_emotional.ESCALATION_MANAGER')
+    @patch('nova.orchestrator.adapters.slot3_emotional.SAFETY_POLICY')
     def test_health_status(self, mock_safety_policy, mock_escalation_mgr):
         """Test health status reporting."""
         mock_escalation_mgr.get_escalation_summary.return_value = {
@@ -292,8 +292,8 @@ class TestSlot3EmotionalAdapter:
 
         assert adapter.adapter_registry == new_registry
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
-    @patch('orchestrator.adapters.slot3_emotional.ENGINE')
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True)
+    @patch('nova.orchestrator.adapters.slot3_emotional.ENGINE')
     def test_analysis_error_handling(self, mock_engine):
         """Test error handling during analysis."""
         mock_engine.analyze.side_effect = Exception("Analysis failed")
@@ -309,8 +309,8 @@ class TestSlot3EmotionalAdapter:
         result = adapter.analyze("test content")
         assert result == {}
 
-    @patch('orchestrator.adapters.slot3_emotional.AVAILABLE', True)
-    @patch('orchestrator.adapters.slot3_emotional.ENGINE')
+    @patch('nova.orchestrator.adapters.slot3_emotional.AVAILABLE', True)
+    @patch('nova.orchestrator.adapters.slot3_emotional.ENGINE')
     def test_full_integration(self, mock_engine):
         """Test full integration with actual components."""
         adapter = Slot3EmotionalAdapter()

@@ -20,7 +20,7 @@ from src.nova.continuity.meta_stability import (
     should_block_governance,
     should_block_deployment,
 )
-from orchestrator.prometheus_metrics import record_mse
+from nova.orchestrator.prometheus_metrics import record_mse
 
 
 # ========== MSE Engine Core Tests ==========

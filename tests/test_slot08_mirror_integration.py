@@ -21,7 +21,7 @@ def test_phase_lock_prefers_phase_coherence():
     """Test phase_lock prefers TRI phase coherence when available."""
     planner = RepairPlanner()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(phase_coherence=0.82, pressure=0.9)
 
         phase_lock = planner._get_phase_lock()
@@ -32,7 +32,7 @@ def test_phase_lock_pressure_modulation():
     """Test phase_lock modulates based on system pressure."""
     planner = RepairPlanner()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(pressure=0.8)
 
         phase_lock = planner._get_phase_lock()
@@ -45,13 +45,13 @@ def test_phase_lock_pressure_range():
     planner = RepairPlanner()
 
     # Test low pressure
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(pressure=0.0)
         phase_lock = planner._get_phase_lock()
         assert abs(phase_lock - 0.60) < 0.01
 
     # Test high pressure
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror(pressure=1.0)
         phase_lock = planner._get_phase_lock()
         assert abs(phase_lock - 0.40) < 0.01
@@ -61,7 +61,7 @@ def test_phase_lock_env_fallback():
     """Test phase_lock falls back to env var when mirror unavailable."""
     planner = RepairPlanner()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror') as mock_get_mirror:
         mock_get_mirror.return_value = MockMirror()  # No data
 
         with patch('os.getenv') as mock_getenv:
@@ -75,7 +75,7 @@ def test_phase_lock_default_fallback():
     """Test phase_lock uses default when all else fails."""
     planner = RepairPlanner()
 
-    with patch('orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
+    with patch('nova.orchestrator.semantic_mirror.get_semantic_mirror', side_effect=ImportError("Mock import error")):
         phase_lock = planner._get_phase_lock()
         assert phase_lock == 0.5
 

@@ -1,8 +1,8 @@
 """Tests for UNLEARN_PULSE@1 contract emission from semantic mirror."""
 
 from types import SimpleNamespace
-from orchestrator.semantic_mirror import SemanticMirror, ContextScope
-from orchestrator.contracts.emitter import set_contract_emitter, NoOpEmitter
+from nova.orchestrator.semantic_mirror import SemanticMirror, ContextScope
+from nova.orchestrator.contracts.emitter import set_contract_emitter, NoOpEmitter
 
 
 class StubEmitter:

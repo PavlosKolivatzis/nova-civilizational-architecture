@@ -1,7 +1,7 @@
 from nova.federation.metrics import m
 
 def test_prometheus_response_includes_federation_metrics(monkeypatch):
-    from orchestrator import prometheus_metrics as pm
+    from nova.orchestrator import prometheus_metrics as pm
 
     # Avoid heavy imports during the update phase
     monkeypatch.setattr(pm, "update_slot6_metrics", lambda: None)

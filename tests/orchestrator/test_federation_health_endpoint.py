@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 
 def _client():
-    from orchestrator.app import app
+    from nova.orchestrator.app import app
     return TestClient(app)
 
 
@@ -37,7 +37,7 @@ def test_federation_health_payload():
 
 
 def test_federation_health_handles_exception(monkeypatch):
-    from orchestrator import federation_health
+    from nova.orchestrator import federation_health
 
     def boom():
         raise RuntimeError("broken")

@@ -196,7 +196,7 @@ def _is_reflex_shadow_mode() -> bool:
 def _get_health_provenance() -> Dict[str, Any]:
     """Get health schema provenance for contract compliance."""
     try:
-        from orchestrator.contracts.provenance import slot7_provenance
+        from nova.orchestrator.contracts.provenance import slot7_provenance
         return slot7_provenance()
     except ImportError:
         # Fallback provenance if centralized module not available

@@ -12,6 +12,7 @@ venv/
 # Packaging artifacts
 build/
 dist/
+.build/
 *.egg-info/
 
 # Testing and coverage

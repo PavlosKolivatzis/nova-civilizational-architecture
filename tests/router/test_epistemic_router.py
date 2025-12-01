@@ -1,9 +1,9 @@
-from orchestrator.router.decision import ConstraintResult
-from orchestrator.router.epistemic_router import EpistemicRouter
-from orchestrator.router.anr_static_policy import StaticPolicyEngine, StaticPolicyConfig
-from orchestrator.router.temporal_constraints import TemporalConstraintResult
-from orchestrator.semantic_mirror import get_semantic_mirror, reset_semantic_mirror
-from orchestrator.thresholds import reset_threshold_manager_for_tests
+from nova.orchestrator.router.decision import ConstraintResult
+from nova.orchestrator.router.epistemic_router import EpistemicRouter
+from nova.orchestrator.router.anr_static_policy import StaticPolicyEngine, StaticPolicyConfig
+from nova.orchestrator.router.temporal_constraints import TemporalConstraintResult
+from nova.orchestrator.semantic_mirror import get_semantic_mirror, reset_semantic_mirror
+from nova.orchestrator.thresholds import reset_threshold_manager_for_tests
 
 
 class _StaticTemporalEngine:
@@ -121,7 +121,7 @@ def test_predictive_penalty_reduces_score(monkeypatch):
         return {"collapse_risk": 0.2, "drift_acceleration": 0.5}
 
     monkeypatch.setattr(
-        "orchestrator.router.epistemic_router.read_predictive_snapshot",
+        "nova.orchestrator.router.epistemic_router.read_predictive_snapshot",
         fake_snapshot,
     )
     router = EpistemicRouter()
@@ -142,7 +142,7 @@ def test_predictive_collapse_forces_safe_mode(monkeypatch):
         return {"collapse_risk": 0.9, "drift_acceleration": 0.1}
 
     monkeypatch.setattr(
-        "orchestrator.router.epistemic_router.read_predictive_snapshot",
+        "nova.orchestrator.router.epistemic_router.read_predictive_snapshot",
         fake_snapshot,
     )
     router = EpistemicRouter()

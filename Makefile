@@ -63,4 +63,21 @@ arxiv-pdf:
 	@echo "PDF generated: universal_structure_mathematics.pdf"
 
 arc-verify:
-	python scripts/verify_vault.py
+	python scripts/verify_vault.py-e 
+# Navigation and Development Targets
+.PHONY: nav tree docs test-quick setup
+
+nav: ## Show repository navigation guide
+	@cat docs/NAVIGATION.md
+
+tree: ## Show visual directory tree
+	@cat TREE.md
+
+docs: ## Open documentation in browser
+	@python3 -c "import webbrowser; webbrowser.open('docs/README.md')"
+
+test-quick: ## Run health tests only (fast)
+	@pytest -m health -q --tb=short
+
+setup: ## Bootstrap development environment
+	@./scripts/bootstrap_dev_env.sh

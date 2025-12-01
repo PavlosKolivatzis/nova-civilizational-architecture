@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def app_module(monkeypatch):
-    import orchestrator.app as app_mod
+    import nova.orchestrator.app as app_mod
 
     async def startup_stub():
         return None
@@ -35,7 +35,7 @@ def client(app_module):
 
 @pytest.mark.asyncio
 async def test_handle_request_invokes_orchestrator(monkeypatch):
-    import orchestrator.app as app_mod
+    import nova.orchestrator.app as app_mod
 
     monkeypatch.setattr(
         app_mod.router,
@@ -71,7 +71,7 @@ async def test_handle_request_invokes_orchestrator(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_handle_request_no_orchestrator_returns_none(monkeypatch):
-    import orchestrator.app as app_mod
+    import nova.orchestrator.app as app_mod
 
     monkeypatch.setattr(
         app_mod.router,
@@ -105,7 +105,7 @@ def test_metrics_endpoint_respects_flag(app_module, monkeypatch):
 
     monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
     monkeypatch.setattr(
-        "orchestrator.prometheus_metrics.get_metrics_response",
+        "nova.orchestrator.prometheus_metrics.get_metrics_response",
         lambda: (b"metrics-data", "text/custom"),
     )
     with TestClient(app_module.app) as client:
@@ -118,7 +118,7 @@ def test_metrics_endpoint_respects_flag(app_module, monkeypatch):
 def test_force_expire_now_uses_semantic_mirror(app_module, monkeypatch):
     monkeypatch.setenv("NOVA_ALLOW_EXPIRE_TEST", "1")
     monkeypatch.setattr(
-        "orchestrator.prometheus_metrics.update_semantic_mirror_metrics", lambda: None
+        "nova.orchestrator.prometheus_metrics.update_semantic_mirror_metrics", lambda: None
     )
 
     class DummyScope:
@@ -141,8 +141,8 @@ def test_force_expire_now_uses_semantic_mirror(app_module, monkeypatch):
             self._contexts.clear()
 
     stub = StubMirror()
-    monkeypatch.setattr("orchestrator.semantic_mirror.ContextScope", DummyScope)
-    monkeypatch.setattr("orchestrator.semantic_mirror.get_semantic_mirror", lambda: stub)
+    monkeypatch.setattr("nova.orchestrator.semantic_mirror.ContextScope", DummyScope)
+    monkeypatch.setattr("nova.orchestrator.semantic_mirror.get_semantic_mirror", lambda: stub)
 
     with TestClient(app_module.app) as client:
         resp = client.post("/ops/expire-now")
