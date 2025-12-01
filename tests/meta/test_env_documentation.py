@@ -33,7 +33,7 @@ def test_env_example_documents_all_env_vars():
             continue
 
     # Collect all documented vars from .env.example
-    env_example_path = Path('.env.example')
+    env_example_path = Path('config/.env.example')
     if not env_example_path.exists():
         pytest.fail(".env.example file not found")
 
@@ -76,7 +76,7 @@ def test_no_orphaned_env_documentation():
             continue
 
     # Collect documented vars
-    env_example_path = Path('.env.example')
+    env_example_path = Path('config/.env.example')
     documented_vars = set()
     for line in env_example_path.read_text(encoding='utf-8').splitlines():
         match = re.match(r'^([A-Z_][A-Z0-9_]*)=', line)
@@ -95,7 +95,7 @@ def test_no_orphaned_env_documentation():
 def test_env_example_has_comments():
     """Verify .env.example has inline documentation for variables"""
 
-    env_example_path = Path('.env.example')
+    env_example_path = Path('config/.env.example')
     content = env_example_path.read_text(encoding='utf-8')
     lines = content.splitlines()
 
@@ -124,7 +124,7 @@ def test_env_example_has_comments():
 def test_env_example_organized_by_sections():
     """Verify .env.example uses section headers for organization"""
 
-    env_example_path = Path('.env.example')
+    env_example_path = Path('config/.env.example')
     content = env_example_path.read_text(encoding='utf-8')
 
     # Look for section headers (lines with only # and -)

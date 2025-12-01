@@ -41,7 +41,7 @@ def _load_meta(path: str) -> Dict[str, object]:
 
 def test_meta_shape():
     """Test that all meta.yaml files have required keys and structure."""
-    meta_files = _discover_slot_meta_files() + ["meta.yaml"]
+    meta_files = _discover_slot_meta_files() + ["config/meta.yaml"]
 
     assert meta_files, "No meta.yaml files found"
 
@@ -62,7 +62,7 @@ def test_meta_shape():
 
 def test_feature_flag_consistency():
     """Test that feature flags are from known set and properly documented."""
-    meta_files = _discover_slot_meta_files() + ["meta.yaml"]
+    meta_files = _discover_slot_meta_files() + ["config/meta.yaml"]
 
     for path in meta_files:
         meta = _load_meta(path)
@@ -89,8 +89,8 @@ def test_phase2_flag_mapping():
         raise AssertionError(f"No metadata found for {slot}")
 
     root_expected = ["NOVA_ENABLE_LIFESPAN", "NOVA_ENABLE_PROMETHEUS"]
-    assert os.path.exists("meta.yaml"), "Root meta.yaml missing"
-    root_meta = _load_meta("meta.yaml")
+    assert os.path.exists("config/meta.yaml"), "Root meta.yaml missing"
+    root_meta = _load_meta("config/meta.yaml")
     assert root_meta["feature_flags"] == root_expected, (
         f"meta.yaml expected flags {root_expected}, got {root_meta['feature_flags']}"
     )
