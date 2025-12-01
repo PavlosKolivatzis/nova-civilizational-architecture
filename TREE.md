@@ -1,186 +1,262 @@
-# Nova Civilizational Architecture - Directory Tree
+# Nova Civilizational Architecture - Phase 14 Repository Structure
 
-```
-nova-civilizational-architecture/
-├── 📁 config/           # Configuration files (moved from root)
-│   ├── .env.example     # Environment variables template
-│   ├── pyproject.toml   # Python project configuration
-│   ├── pytest.ini       # Test configuration
-│   ├── mypy.ini         # Type checking configuration
-│   ├── .editorconfig    # Code style settings
-│   ├── .pre-commit-config.yaml  # Pre-commit hooks
-│   ├── commitlint.config.js    # Commit message linting
-│   ├── package.json     # NPM dependencies
-│   ├── vercel.json      # Vercel deployment config
-│   ├── zenodo-metadata.json    # Academic publishing metadata
-│   ├── meta.yaml        # Feature flags and metadata
-│   ├── feature_flags.py # Feature flag definitions
-│   ├── adaptive_links.yaml     # Link configuration
-│   ├── peers.yaml       # Federation peer configuration
-│   └── .coveragerc      # Coverage configuration
-├── 📁 .github/          # CI/CD workflows (moved from root)
-│   └── .secrets.baseline  # Secret scanning baseline
-├── 📁 .build/           # Build artifacts (empty - for future use)
-├── 📁 src/nova/         # 🏗️ Core framework code
-│   ├── slots/           # 10 cognitive processing slots
-│   │   ├── slot01_truth_anchor/     # Reality verification
-│   │   ├── slot02_deltathresh/      # Pattern detection
-│   │   ├── slot03_emotional_matrix/ # Cognitive processing
-│   │   ├── slot04_tri/              # Flow-mesh reasoning
-│   │   ├── slot05_constellation/    # Spatial navigation
-│   │   ├── slot06_cultural_synthesis/ # Ethical guardrails
-│   │   ├── slot07_production_controls/ # Circuit breaker
-│   │   ├── slot08_memory_guard/     # ACL & self-healing
-│   │   ├── slot09_distortion_protection/ # Hybrid defense
-│   │   └── slot10_civilizational_deployment/ # MetaLegitimacySeal
-│   ├── ledger/          # Three Ledgers system
-│   │   ├── factory.py   # Ledger creation
-│   │   └── [fact|claim|attest]_ledger/ # Ledger implementations
-│   ├── ontology/        # Mother Ontology v1.7.1
-│   │   ├── loader.py    # Ontology loading
-│   │   └── specs/       # Ontology specifications
-│   ├── continuity/      # Temporal continuity systems
-│   │   └── orp_hysteresis.py # Operational Regime Policy
-│   └── README.md        # Framework overview
-├── 📁 tests/            # 🧪 Test suite (2,089 tests)
-│   ├── api/             # API endpoint tests
-│   ├── attestation/     # Cryptographic verification
-│   ├── chaos/           # Resilience testing
-│   ├── concurrency/     # Thread safety tests
-│   ├── continuity/      # Temporal system tests
-│   ├── federation/      # Multi-peer coordination
-│   ├── health/          # Health check tests
-│   ├── orchestrator/    # Coordination layer tests
-│   ├── performance/     # Performance benchmarks
-│   ├── property/        # Property-based testing
-│   ├── slo/             # Service level objectives
-│   ├── meta/            # Documentation validation
-│   ├── slot*/           # Slot-specific tests
-│   ├── conftest.py      # Global test fixtures
-│   └── README.md        # Test suite documentation
-├── 📁 docs/             # 📖 Documentation (comprehensive)
-│   ├── README.md        # Documentation index
-│   ├── NAVIGATION.md    # Navigation guide
-│   ├── GLOSSARY.md      # Terms and concepts
-│   ├── ARCHITECTURE.md  # System architecture
-│   ├── SYSTEM_ANALYSIS.md # System analysis
-│   ├── architecture/    # Architecture documentation
-│   │   ├── ontology/    # Ontology specifications
-│   │   ├── adr/         # Architectural decisions
-│   │   └── system_map.yaml # Component relationships
-│   ├── guides/          # User guides
-│   │   ├── quickstart/  # Getting started
-│   │   └── contributing/ # Contribution guidelines
-│   ├── api/             # API documentation
-│   │   ├── contracts/   # Contract specifications
-│   │   └── slots/       # Slot API docs
-│   ├── operations/      # Operations & monitoring
-│   │   ├── runbooks/    # Operational procedures
-│   │   ├── alerts/      # Alert configurations
-│   │   └── monitoring/  # Monitoring setup
-│   ├── compliance/      # Security & compliance
-│   │   ├── security/    # Security policies
-│   │   ├── audits/      # Audit reports
-│   │   ├── defects/     # Defect tracking
-│   │   └── attestations/ # System attestations
-│   ├── research/        # Research & analysis
-│   │   ├── papers/      # Research papers
-│   │   ├── analysis/    # Analysis reports
-│   │   └── manifests/   # Epoch manifests
-│   └── archive/         # Historical documentation
-│       ├── phase-docs/  # Phase-specific docs
-│       └── legacy/      # Legacy system docs
-├── 📁 contracts/        # 📋 System contracts
-│   ├── autonomous_verification_ledger@1.yaml
-│   ├── csi@1.yaml       # Cognitive State Interface
-│   ├── csi_breakdown@1.yaml
-│   ├── distortion_detection_response.schema.json
-│   ├── feature.ids.contract.json
-│   ├── hysteresis_decision@1.yaml
-│   ├── memory_resonance_stats@1.yaml
-│   ├── meta_lens_report@1.json
-│   ├── mse@1.yaml       # Meta Stability Engine
-│   ├── orp@1.yaml       # Operational Regime Policy
-│   ├── orp_stabilization@1.yaml
-│   ├── predictive_consistency@1.yaml
-│   ├── predictive_consistency_gap@1.yaml
-│   ├── predictive_pattern_alert@1.yaml
-│   ├── predictive_snapshot@1.yaml
-│   ├── rc_attestation@1.yaml
-│   ├── rc_criteria_result@1.yaml
-│   ├── regime@1.yaml
-│   ├── regime_transition_ledger@1.yaml
-│   ├── slot_map.json    # Slot maturity mapping
-│   ├── slot*_*.yaml     # Slot-specific contracts
-│   ├── temporal_consistency@1.yaml
-│   ├── transformation_geometry@1.yaml
-│   ├── tri_truth_signal@1.yaml
-│   ├── urf@1.yaml       # Universal Reference Framework
-│   └── validators/      # Contract validators
-├── 📁 scripts/          # 🔧 Utilities & maintenance
-│   ├── bootstrap_dev_env.sh     # Development setup
-│   ├── validate_ontology_structure.py # Ontology validation
-│   ├── maintenance/     # Maintenance scripts
-│   │   └── sunlight_scan.py    # Documentation governance
-│   └── README.md        # Script documentation
-├── 📁 ops/              # 📊 Operations & monitoring
-│   ├── alerts/          # Alert configurations
-│   │   └── nova-phase2.rules.yml # Prometheus alerts
-│   └── README.md        # Operations guide
-├── 📁 monitoring/       # 📈 Monitoring setup
-│   ├── docker-compose.yml      # Monitoring stack
-│   ├── grafana/         # Dashboard configurations
-│   ├── prometheus/      # Metrics collection
-│   └── standalone-prometheus.py # Standalone monitoring
-├── 📁 agents/           # 🤖 AI collaboration framework
-│   └── nova_ai_operating_framework.md # Operating principles
-├── 📁 archive/          # 🗂️ Legacy migration artifacts
-│   ├── legacy-slot-migration/  # Pre-namespaced docs
-│   └── README.md        # Archive documentation
-├── 🔧 Root Files (14 essential files)
-│   ├── README.md        # Project overview
-│   ├── requirements.txt # Python dependencies
-│   ├── Makefile         # Build automation
-│   ├── app.py           # Main application
-│   ├── auth.py          # Authentication
-│   ├── conftest.py      # Global test config
-│   ├── logging_config.py # Logging setup
-│   ├── slot_loader.py   # Slot loading utilities
-│   ├── src_bootstrap.py # Source bootstrapping
-│   ├── content_analysis.py # Content analysis
-│   ├── lifespan.py      # ASGI lifespan management
-│   ├── verify_pilot_ready.py # Pilot readiness checks
-│   ├── .gitignore       # Git ignore patterns
-│   └── .gitattributes   # Git attributes
-└── 📦 Distribution Files
-    ├── nova_civilizational_architecture_v9.0-final.tar.gz
-    ├── nova_reproducibility_kit.zip
-    ├── phase11_docs_archive.tar.gz
-    └── CITATION.cff     # Citation metadata
-```
-
-## Legend
-
-- 📁 **Directory** - Organizational folder
-- 📖 **Documentation** - Markdown/text files
-- 🏗️ **Source Code** - Python implementation
-- 🧪 **Tests** - Test files and fixtures
-- 📋 **Contracts** - System specifications
-- 🔧 **Tools** - Scripts and utilities
-- 📊 **Operations** - Monitoring and alerts
-- 🤖 **AI Framework** - Collaboration guidelines
-- 🗂️ **Archive** - Historical content
-- 🔧 **Root Files** - Essential repository files
-- 📦 **Distribution** - Release artifacts
-
-## Navigation Tips
-
-- **New to the project?** Start with `docs/NAVIGATION.md`
-- **Understanding architecture?** See `docs/architecture/`
-- **Running tests?** Check `tests/README.md`
-- **Contributing?** Read `docs/guides/contributing/`
-- **API documentation?** Look in `docs/api/`
+**Last updated: Phase 14-0 Consolidation | Ontology v1.7.1 | 2145 Tests @ 100% Pass**
 
 ---
 
-*Generated during Phase 14-0 Repository Consolidation - Last updated: 2025-12-01*
+## 🎯 **SYSTEM ZONES OVERVIEW**
+
+```
+nova-civilizational-architecture/
+├── 🔧 DEVELOPMENT CORE      # Entry points & configuration
+├── 🏗️ SOURCE ARCHITECTURE   # Nova framework implementation  
+├── 🧪 VALIDATION LAYER      # Testing & quality assurance
+├── 📚 KNOWLEDGE BASE        # Documentation & specifications
+├── ⚙️ INFRASTRUCTURE         # Operations & deployment
+└── 📦 DISTRIBUTION          # Release artifacts
+```
+
+---
+
+## 🔧 **DEVELOPMENT CORE** - Entry Points & Configuration
+
+**Responsibilities**: Project setup, dependencies, build configuration, development workflow**
+
+```
+├── 📄 README.md              # → Project overview & getting started
+├── 📄 requirements.txt       # → Python dependencies (core runtime)
+├── 📄 Makefile               # → Build automation & common tasks
+├── 🐍 app.py                 # → 🚀 MAIN APPLICATION ENTRYPOINT
+├── 🐍 auth.py                # → Authentication & authorization
+├── 🐍 conftest.py            # → Global test configuration
+├── 🐍 logging_config.py      # → Centralized logging setup
+├── 🐍 slot_loader.py         # → Dynamic slot loading system
+├── 🐍 src_bootstrap.py       # → Source code bootstrapping
+├── 🐍 content_analysis.py    # → Content processing utilities
+├── 🐍 lifespan.py            # → ASGI lifespan management
+├── 🐍 verify_pilot_ready.py  # → System readiness validation
+├── 📄 .gitignore             # → Git ignore patterns
+├── 📄 .gitattributes         # → Git file attributes
+├── 📁 config/                # → ⚙️ Configuration files (13 files)
+│   ├── 📄 pyproject.toml     # → Python project metadata & dependencies
+│   ├── 📄 pytest.ini          # → Test framework configuration
+│   ├── 📄 mypy.ini            # → Type checking rules
+│   ├── 📄 .env.example        # → Environment variables template
+│   └── 📄 feature_flags.py    # → Feature flag definitions
+├── 📁 .github/               # → CI/CD workflows & security
+│   └── 📄 .secrets.baseline   # → Secret scanning configuration
+└── 📁 .build/                # → Build artifacts (reserved for future)
+```
+
+**AI Agent Search Heuristics**:
+- `app.py` = Application entry point
+- `config/` = All configuration files
+- `requirements.txt` = Runtime dependencies
+
+---
+
+## 🏗️ **SOURCE ARCHITECTURE** - Nova Framework Implementation
+
+**Responsibilities**: Core Nova system, 10-slot cognition, temporal continuity, truth verification**
+
+```
+├── 📁 src/nova/               # → 🏗️ NOVA FRAMEWORK CORE
+│   ├── 📖 README.md           # → 📚 Internal architecture overview
+│   ├── 📁 slots/              # → 🧠 10 COGNITIVE SLOTS (01-10)
+│   │   ├── 📁 slot01_truth_anchor/        # → Reality verification
+│   │   ├── 📁 slot02_deltathresh/         # → Pattern detection  
+│   │   ├── 📁 slot03_emotional_matrix/    # → Cognitive processing
+│   │   ├── 📁 slot04_tri/                 # → Flow-mesh reasoning
+│   │   ├── 📁 slot05_constellation/       # → Spatial navigation
+│   │   ├── 📁 slot06_cultural_synthesis/  # → Ethical guardrails
+│   │   ├── 📁 slot07_production_controls/ # → Circuit breaker system
+│   │   ├── 📁 slot08_memory_ethics/       # → ACL protection
+│   │   ├── 📁 slot09_distortion_protection/ # → Hybrid defense
+│   │   └── 📁 slot10_civilizational_deployment/ # → MetaLegitimacySeal
+│   ├── 📁 ledger/             # → 📊 THREE LEDGERS SYSTEM
+│   │   ├── 🐍 factory.py      # → 🚀 LEDGER CREATION ENTRYPOINT
+│   │   └── 📁 [fact|claim|attest]_ledger/ # → Ledger implementations
+│   ├── 📁 continuity/         # → ⏰ TEMPORAL CONTINUITY SYSTEMS
+│   │   ├── 🐍 orp_hysteresis.py    # → 🚀 REGIME MANAGEMENT ENTRYPOINT
+│   │   ├── 🐍 temporal_snapshot.py # → Phase 13b temporal capture
+│   │   └── 🐍 avalon_ledger.py     # → Autonomous verification
+│   └── 📁 ontology/           # → 🧬 MOTHER ONTOLOGY v1.7.1
+│       ├── 🐍 loader.py       # → 🚀 ONTOLOGY LOADING ENTRYPOINT
+│       └── 📁 specs/          # → Ontology specifications
+```
+
+**AI Agent Search Heuristics**:
+- `src/nova/` = All core implementation
+- `slots/slot*/` = Individual cognitive components
+- `continuity/` = Temporal intelligence systems
+- `ledger/` = Truth verification systems
+- `ontology/` = Foundational specifications
+
+---
+
+## 🧪 **VALIDATION LAYER** - Testing & Quality Assurance
+
+**Responsibilities**: Comprehensive testing, quality validation, system verification**
+
+```
+├── 📁 tests/                  # → 🧪 TEST SUITE (2145 tests @ 100%)
+│   ├── 📖 README.md           # → Test suite documentation
+│   ├── 🐍 conftest.py         # → Global test fixtures
+│   ├── 📁 continuity/         # → ORP + AVL + temporal tests
+│   ├── 📁 slots/              # → Slot-specific behavior tests
+│   ├── 📁 integration/        # → Cross-slot coordination tests
+│   ├── 📁 health/             # → System stability tests
+│   ├── 📁 api/                # → API endpoint tests
+│   ├── 📁 attestation/        # → Cryptographic verification tests
+│   ├── 📁 concurrency/        # → Thread safety tests
+│   ├── 📁 chaos/              # → Fault injection tests
+│   ├── 📁 federation/         # → Multi-peer coordination tests
+│   ├── 📁 performance/        # → Benchmark tests
+│   ├── 📁 slo/                # → Service level objective tests
+│   └── 📁 meta/               # → Documentation validation tests
+```
+
+**AI Agent Search Heuristics**:
+- `tests/continuity/` = Temporal system tests
+- `tests/slots/` = Component behavior tests
+- `tests/integration/` = System interaction tests
+
+---
+
+## 📚 **KNOWLEDGE BASE** - Documentation & Specifications
+
+**Responsibilities**: Complete documentation, specifications, guides, and historical records**
+
+```
+├── 📁 docs/                   # → 📚 COMPREHENSIVE DOCUMENTATION
+│   ├── 📖 README.md           # → Documentation index & navigation
+│   ├── 📖 NAVIGATION.md       # → AI agent navigation guide
+│   ├── 📖 GLOSSARY.md         # → Unified technical vocabulary
+│   ├── 📖 ARCHITECTURE.md     # → System architecture overview
+│   ├── 📁 architecture/       # → 🏗️ ARCHITECTURE & DESIGN
+│   │   ├── 📁 ontology/       # → Mother Ontology v1.7.1 specs
+│   │   ├── 📁 adr/            # → Architectural decision records
+│   │   └── 📄 system_map.yaml # → Component relationships
+│   ├── 📁 guides/             # → 📖 USER GUIDES
+│   │   ├── 📁 quickstart/     # → Getting started guides
+│   │   └── 📁 contributing/   # → Contribution guidelines
+│   ├── 📁 api/                # → 🔌 API DOCUMENTATION
+│   │   ├── 📁 contracts/      # → Contract specifications
+│   │   └── 📁 slots/          # → Slot API documentation
+│   ├── 📁 operations/         # → ⚙️ OPERATIONS & MONITORING
+│   │   ├── 📁 runbooks/       # → Operational procedures
+│   │   ├── 📁 alerts/         # → Alert configurations
+│   │   └── 📁 monitoring/     # → Monitoring setup guides
+│   ├── 📁 compliance/         # → 🔒 SECURITY & COMPLIANCE
+│   │   ├── 📁 security/       # → Security policies
+│   │   ├── 📁 audits/         # → Audit reports & assessments
+│   │   ├── 📁 defects/        # → Defect tracking
+│   │   └── 📁 attestations/   # → System attestations
+│   ├── 📁 research/           # → 🔬 RESEARCH & ANALYSIS
+│   │   ├── 📁 papers/         # → Research publications
+│   │   ├── 📁 analysis/       # → Analysis reports
+│   │   └── 📁 manifests/      # → Epoch manifests
+│   └── 📁 archive/            # → 🗂️ HISTORICAL DOCUMENTATION
+│       ├── 📁 phase-docs/     # → Phase-specific documentation
+│       └── 📁 legacy/         # → Legacy system documentation
+├── 📁 contracts/              # → 📋 SYSTEM CONTRACTS & SPECS
+│   ├── 📄 slot*_*.yaml        # → Slot-specific contracts
+│   ├── 📄 *ledger*@*.yaml     # → Ledger contracts
+│   ├── 📄 orp@*.yaml          # → Regime policy contracts
+│   └── 📁 validators/         # → Contract validation logic
+```
+
+**AI Agent Search Heuristics**:
+- `docs/README.md` = Documentation index
+- `docs/NAVIGATION.md` = Navigation guide
+- `docs/GLOSSARY.md` = Technical vocabulary
+- `docs/architecture/` = System design
+- `contracts/` = All specifications
+
+---
+
+## ⚙️ **INFRASTRUCTURE** - Operations & Deployment
+
+**Responsibilities**: System operations, monitoring, deployment, and maintenance**
+
+```
+├── 📁 scripts/                # → 🔧 UTILITIES & MAINTENANCE
+│   ├── 📖 README.md           # → Script documentation
+│   ├── 🐍 validate_ontology_structure.py # → Ontology validation
+│   ├── 📁 maintenance/        # → Maintenance scripts
+│   │   └── 🐍 sunlight_scan.py # → Documentation governance
+│   └── 🐍 setup_bookmarks.py  # → Development environment setup
+├── 📁 ops/                    # → 📊 OPERATIONS & MONITORING
+│   ├── 📖 README.md           # → Operations guide
+│   └── 📁 alerts/             # → Alert configurations
+│       └── 📄 nova-phase2.rules.yml # → Prometheus alert rules
+├── 📁 monitoring/             # → 📈 MONITORING INFRASTRUCTURE
+│   ├── 📄 docker-compose.yml  # → Monitoring stack deployment
+│   ├── 📁 grafana/            # → Dashboard configurations
+│   ├── 📁 prometheus/         # → Metrics collection setup
+│   └── 🐍 standalone-prometheus.py # → Standalone monitoring
+├── 📁 agents/                 # → 🤖 AI COLLABORATION FRAMEWORK
+│   └── 📖 nova_ai_operating_framework.md # → AI operating principles
+└── 📁 archive/                # → 🗂️ LEGACY MIGRATION ARTIFACTS
+    ├── 📁 legacy-slot-migration/ # → Pre-namespaced documentation
+    └── 📖 README.md           # → Archive documentation
+```
+
+**AI Agent Search Heuristics**:
+- `scripts/` = Utility and maintenance tools
+- `ops/` = Operational procedures
+- `monitoring/` = Observability setup
+- `agents/` = AI collaboration guidelines
+
+---
+
+## 📦 **DISTRIBUTION** - Release Artifacts
+
+**Responsibilities**: Release packages, academic publishing, reproducibility**
+
+```
+├── 📦 nova_civilizational_architecture_v9.0-final.tar.gz
+├── 📦 nova_reproducibility_kit.zip
+├── 📦 phase11_docs_archive.tar.gz
+└── 📄 CITATION.cff            # → Academic citation metadata
+```
+
+---
+
+## 🎯 **AI AGENT QUICK REFERENCE**
+
+### **Finding Code Entry Points**
+- **Main Application**: `app.py`
+- **Ledger System**: `src/nova/ledger/factory.py`
+- **Regime Management**: `src/nova/continuity/orp_hysteresis.py`
+- **Ontology Loading**: `src/nova/ontology/loader.py`
+
+### **Finding Documentation**
+- **Architecture Overview**: `docs/README.md`
+- **Navigation Guide**: `docs/NAVIGATION.md`
+- **Technical Vocabulary**: `docs/GLOSSARY.md`
+- **Internal Details**: `src/nova/README.md`
+
+### **Finding Specifications**
+- **System Contracts**: `contracts/`
+- **Ontology Specs**: `docs/architecture/ontology/`
+- **Test Suite**: `tests/`
+
+### **Finding Operations**
+- **Monitoring Setup**: `monitoring/`
+- **Alert Configuration**: `ops/alerts/`
+- **Maintenance Scripts**: `scripts/`
+
+---
+
+## 📊 **REPOSITORY METRICS**
+
+- **Total Files**: ~2,500+ files
+- **Test Coverage**: 2145 tests @ 100% pass rate
+- **Ontology Version**: Mother Ontology v1.7.1
+- **Phase Status**: Phase 14-0 (Consolidated) → Phase 14.2 (PostgreSQL Persistence)
+- **Documentation Integrity**: Sunlight Doctrine compliant
+
+---
+
+*This repository structure reflects Phase 14-0 consolidation and provides a clean, navigable foundation for continued development. All directories are organized by system zones with clear responsibilities and AI agent search heuristics.*
