@@ -27,7 +27,7 @@ def test_fep_contract_dissent_recording():
 
 def test_sim_outputs_fcq():
     """Verify simulation script produces valid FCQ decision."""
-    out = subprocess.check_output(["python3", "scripts/simulate_federated_ethics.py"])
+    out = subprocess.check_output(["python", "scripts/simulate_federated_ethics.py"])
     data = json.loads(out)
     assert 0.0 <= data["fcq"] <= 1.0
     assert "provenance" in data and "hash" in data["provenance"]
@@ -35,7 +35,7 @@ def test_sim_outputs_fcq():
 
 def test_sim_provenance_chain():
     """Verify simulation includes hash-linked provenance."""
-    out = subprocess.check_output(["python3", "scripts/simulate_federated_ethics.py"])
+    out = subprocess.check_output(["python", "scripts/simulate_federated_ethics.py"])
     data = json.loads(out)
     prov = data["provenance"]
     assert "hash" in prov
@@ -47,7 +47,7 @@ def test_sim_provenance_chain():
 
 def test_sim_votes_signed():
     """Verify all votes in simulation include signatures."""
-    out = subprocess.check_output(["python3", "scripts/simulate_federated_ethics.py"])
+    out = subprocess.check_output(["python", "scripts/simulate_federated_ethics.py"])
     data = json.loads(out)
     for vote in data["votes"]:
         assert "signature" in vote
