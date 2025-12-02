@@ -208,7 +208,7 @@ class RegimeSnapshot:
 @dataclass
 class ORPState:
     """Public state accessor for ORP internals (Phase 16-2 hardening).
-    
+
     Provides a stable public API for simulator/oracle access instead of
     reaching into private attributes like _current_regime_start.
     """
@@ -352,7 +352,7 @@ class OperationalRegimePolicy:
         # IMPORTANT: Capture pre-transition state BEFORE any updates (Phase 13b fix)
         previous_regime = self._current_regime
         previous_duration_s = time_in_regime_s  # Duration in the pre-transition regime
-        
+
         new_regime = self.classify_regime(regime_score, self._current_regime, time_in_regime_s)
 
         # Handle regime transition
@@ -395,7 +395,7 @@ class OperationalRegimePolicy:
         )
 
         self._last_snapshot = snapshot
-        
+
         # Phase 13: Write to AVL if enabled
         # Phase 13b: Pass pre-transition regime/duration for oracle validation
         if _AVL_AVAILABLE and avl_enabled():
@@ -411,9 +411,9 @@ class OperationalRegimePolicy:
             except Exception as e:
                 logger.warning(f"AVL write failed: {e}")
                 # Don't fail ORP evaluation on AVL errors
-        
+
         return snapshot
-    
+
     def _write_to_avl(
         self,
         snapshot: RegimeSnapshot,
@@ -422,14 +422,14 @@ class OperationalRegimePolicy:
         previous_duration_s: float,
     ) -> None:
         """Write ORP evaluation to AVL ledger (Phase 13 + 13b).
-        
+
         Creates AVLEntry with dual-modality verification and drift detection.
-        
+
         Phase 13b fix: Oracle evaluation uses pre-transition regime and duration
         to independently validate whether the transition was legal. This allows
         the oracle to detect illegal downgrades that violate hysteresis or
         min-duration rules.
-        
+
         Args:
             snapshot: Current regime snapshot (post-transition state)
             factors: Contributing factors used for evaluation
@@ -443,7 +443,7 @@ class OperationalRegimePolicy:
             current_regime=previous_regime.value,  # Use pre-transition regime
             time_in_regime_s=previous_duration_s,   # Use pre-transition duration
         )
-        
+
         # Create AVL entry
         entry = AVLEntry(
             timestamp=snapshot.timestamp,
@@ -464,17 +464,17 @@ class OperationalRegimePolicy:
             node_id=os.environ.get("NOVA_AVL_NODE_ID", "default"),
             orp_version="phase13.2",  # Bumped for 13b fix
         )
-        
+
         # Run drift guard check (may raise DriftDetectedError)
         drift_guard = get_drift_guard()
         entry = drift_guard.check_and_update(entry)
-        
+
         # Append to ledger
         avl_ledger = get_avl_ledger()
         avl_ledger.append(entry)
-        
+
         logger.debug(f"AVL entry written: {entry.entry_id[:16]}...")
-    
+
     def _check_amplitude_valid(self, posture: PostureAdjustments) -> bool:
         """Check if posture adjustments are within amplitude bounds."""
         mult = posture.threshold_multiplier
@@ -491,24 +491,24 @@ class OperationalRegimePolicy:
 
     def get_state(self, now: Optional[datetime] = None) -> ORPState:
         """Get current ORP state via public API (Phase 16-2 hardening).
-        
+
         Provides stable accessor for simulator/oracle instead of private attrs.
-        
+
         Args:
             now: Optional timestamp for time_in_regime_s calculation.
                  If None, uses current wall-clock time.
-        
+
         Returns:
             ORPState with current_regime, current_regime_start, time_in_regime_s,
             and last_snapshot.
         """
         if now is None:
             now = datetime.now(timezone.utc)
-        
+
         time_in_regime_s = 0.0
         if self._current_regime_start is not None:
             time_in_regime_s = (now - self._current_regime_start).total_seconds()
-        
+
         return ORPState(
             current_regime=self._current_regime,
             current_regime_start=self._current_regime_start,

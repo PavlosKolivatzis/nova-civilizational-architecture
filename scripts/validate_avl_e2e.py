@@ -52,7 +52,7 @@ def run_trajectory_through_avl(
     ledger_path: str,
 ) -> Tuple[AVLLedger, List[Dict[str, Any]]]:
     """Run trajectory through ORP + AVL.
-    
+
     Returns:
         Tuple of (AVLLedger, list of step results)
     """
@@ -60,15 +60,15 @@ def run_trajectory_through_avl(
     reset_orp_engine()
     reset_avl_ledger()
     reset_drift_guard()
-    
+
     # Create fresh ORP and AVL
     orp = OperationalRegimePolicy()
     ledger = AVLLedger(ledger_path)
     drift_guard = DriftGuard(halt_on_drift=False)
-    
+
     steps = trajectory.get("steps", [])
     results = []
-    
+
     for i, step in enumerate(steps):
         # Extract factors
         factors = ContributingFactors(
@@ -78,13 +78,13 @@ def run_trajectory_through_avl(
             consistency_gap=step.get("consistency_gap", 0.0),
             csi_continuity_index=step.get("csi_continuity_index", 1.0),
         )
-        
+
         # Get timestamp
         timestamp = step.get("timestamp", f"2025-01-01T12:{i:02d}:00+00:00")
-        
+
         # Evaluate ORP
         snapshot = orp.evaluate(factors=factors, timestamp=timestamp)
-        
+
         # Get oracle verification
         state = orp.get_state()
         oracle_result = compute_and_classify(
@@ -92,7 +92,7 @@ def run_trajectory_through_avl(
             current_regime=state.current_regime.value,
             time_in_regime_s=state.time_in_regime_s,
         )
-        
+
         # Create AVL entry
         entry = AVLEntry(
             timestamp=timestamp,
@@ -113,13 +113,13 @@ def run_trajectory_through_avl(
             node_id="e2e-validator",
             orp_version="phase13.1",
         )
-        
+
         # Run drift guard
         entry = drift_guard.check_and_update(entry)
-        
+
         # Append to ledger
         ledger.append(entry)
-        
+
         results.append({
             "step": i,
             "timestamp": timestamp,
@@ -128,13 +128,13 @@ def run_trajectory_through_avl(
             "drift_detected": entry.drift_detected,
             "drift_reasons": entry.drift_reasons,
         })
-    
+
     return ledger, results
 
 
 def validate_ledger(ledger: AVLLedger) -> Dict[str, Any]:
     """Validate ledger integrity and continuity proofs.
-    
+
     Returns:
         Validation results dict
     """
@@ -146,22 +146,22 @@ def validate_ledger(ledger: AVLLedger) -> Dict[str, Any]:
         "proofs": {},
         "all_passed": False,
     }
-    
+
     # Hash chain
     is_valid, violations = ledger.verify_hash_chain()
     results["hash_chain_valid"] = is_valid
     results["hash_chain_violations"] = violations
-    
+
     # Entry IDs
     is_valid, violations = ledger.verify_entry_ids()
     results["entry_ids_valid"] = is_valid
     results["entry_id_violations"] = violations
-    
+
     # Continuity proofs
     proof = ContinuityProof()
     entries = ledger.get_entries()
     proof_results = proof.prove_all(entries)
-    
+
     results["proofs"] = {
         name: {
             "passed": r.passed,
@@ -170,31 +170,31 @@ def validate_ledger(ledger: AVLLedger) -> Dict[str, Any]:
         }
         for name, r in proof_results.items()
     }
-    
+
     # Overall
     results["all_passed"] = (
         results["hash_chain_valid"]
         and results["entry_ids_valid"]
         and all(r.passed for r in proof_results.values())
     )
-    
+
     return results
 
 
 def run_all_trajectories(output_dir: Optional[str] = None) -> Dict[str, Any]:
     """Run all 20 trajectories and collect results.
-    
+
     Returns:
         Summary dict with all results
     """
     if output_dir is None:
         output_dir = tempfile.mkdtemp(prefix="avl_e2e_")
-    
+
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    
+
     trajectory_files = sorted(TRAJECTORY_DIR.glob("*.json"))
-    
+
     summary = {
         "total_trajectories": len(trajectory_files),
         "passed": 0,
@@ -203,23 +203,23 @@ def run_all_trajectories(output_dir: Optional[str] = None) -> Dict[str, Any]:
         "total_entries": 0,
         "trajectories": {},
     }
-    
+
     for traj_file in trajectory_files:
         print(f"Processing {traj_file.name}...")
-        
+
         try:
             trajectory = load_trajectory(traj_file)
             ledger_path = str(output_path / f"{traj_file.stem}_ledger.jsonl")
-            
+
             # Run trajectory
             ledger, step_results = run_trajectory_through_avl(trajectory, ledger_path)
-            
+
             # Validate
             validation = validate_ledger(ledger)
-            
+
             # Count drift events
             drift_count = sum(1 for r in step_results if r["drift_detected"])
-            
+
             # Record results
             traj_result = {
                 "entries": len(ledger),
@@ -227,11 +227,11 @@ def run_all_trajectories(output_dir: Optional[str] = None) -> Dict[str, Any]:
                 "validation": validation,
                 "passed": validation["all_passed"] and drift_count == 0,
             }
-            
+
             summary["trajectories"][traj_file.name] = traj_result
             summary["total_entries"] += len(ledger)
             summary["drift_events"] += drift_count
-            
+
             if traj_result["passed"]:
                 summary["passed"] += 1
                 print(f"  [PASS] ({len(ledger)} entries, {drift_count} drift)")
@@ -242,7 +242,7 @@ def run_all_trajectories(output_dir: Optional[str] = None) -> Dict[str, Any]:
                     for name, proof in validation["proofs"].items():
                         if not proof["passed"]:
                             print(f"    - {name}: {proof['violations'][:2]}")
-        
+
         except Exception as e:
             print(f"  [ERROR] {e}")
             summary["trajectories"][traj_file.name] = {
@@ -250,7 +250,7 @@ def run_all_trajectories(output_dir: Optional[str] = None) -> Dict[str, Any]:
                 "passed": False,
             }
             summary["failed"] += 1
-    
+
     return summary
 
 
@@ -271,23 +271,23 @@ def main():
         action="store_true",
         help="Output results as JSON",
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.trajectory:
         # Single trajectory
         traj_path = TRAJECTORY_DIR / args.trajectory
         if not traj_path.exists():
             print(f"Trajectory not found: {traj_path}")
             sys.exit(1)
-        
+
         trajectory = load_trajectory(traj_path)
         with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
             ledger_path = f.name
-        
+
         ledger, step_results = run_trajectory_through_avl(trajectory, ledger_path)
         validation = validate_ledger(ledger)
-        
+
         if args.json:
             print(json.dumps({
                 "trajectory": args.trajectory,
@@ -305,11 +305,11 @@ def main():
                 status = "[PASS]" if proof["passed"] else "[FAIL]"
                 print(f"  {status} {name}")
             print(f"\nOverall: {'PASSED' if validation['all_passed'] else 'FAILED'}")
-    
+
     else:
         # All trajectories
         summary = run_all_trajectories(args.output_dir)
-        
+
         if args.json:
             print(json.dumps(summary, indent=2))
         else:
@@ -322,7 +322,7 @@ def main():
             print(f"Total entries: {summary['total_entries']}")
             print(f"Drift events: {summary['drift_events']}")
             print("=" * 60)
-            
+
             if summary["failed"] > 0:
                 print("\nFailed trajectories:")
                 for name, result in summary["trajectories"].items():

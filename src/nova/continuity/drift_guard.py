@@ -30,7 +30,7 @@ class DriftResult:
     drift_detected: bool
     reasons: List[str]
     entry: AVLEntry
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "drift_detected": self.drift_detected,
@@ -42,11 +42,11 @@ class DriftResult:
 
 class DriftGuard:
     """Drift detection engine.
-    
+
     Detects divergence between ORP implementation and contract oracle.
     Can optionally halt transitions on drift detection.
     """
-    
+
     def __init__(
         self,
         halt_on_drift: bool = False,
@@ -55,7 +55,7 @@ class DriftGuard:
         enabled: bool = True,
     ):
         """Initialize drift guard.
-        
+
         Args:
             halt_on_drift: If True, raise exception on drift detection
             score_drift_threshold: Maximum allowed score difference (default 1e-6)
@@ -66,11 +66,11 @@ class DriftGuard:
         self._score_drift_threshold = score_drift_threshold
         self._amplitude_bounds = amplitude_bounds or AMPLITUDE_BOUNDS
         self._enabled = enabled
-        
+
         # Load from environment
         if os.environ.get("NOVA_AVL_HALT_ON_DRIFT", "0") == "1":
             self._halt_on_drift = True
-    
+
     def configure(
         self,
         halt_on_drift: Optional[bool] = None,
@@ -78,7 +78,7 @@ class DriftGuard:
         enabled: Optional[bool] = None,
     ) -> None:
         """Configure drift guard settings.
-        
+
         Args:
             halt_on_drift: If True, raise exception on drift detection
             score_drift_threshold: Maximum allowed score difference
@@ -90,36 +90,36 @@ class DriftGuard:
             self._score_drift_threshold = score_drift_threshold
         if enabled is not None:
             self._enabled = enabled
-    
+
     def check(self, entry: AVLEntry) -> Tuple[bool, List[str]]:
         """Check entry for drift.
-        
+
         Detects:
         1. Dual-modality disagreement (ORP ≠ oracle regime)
         2. Score computation drift (|ORP_score - oracle_score| > threshold)
         3. Invariant violations (hysteresis, min-duration, ledger continuity, amplitude)
         4. Amplitude bounds exceeded
-        
+
         Args:
             entry: AVLEntry to check
-        
+
         Returns:
             Tuple of (drift_detected, list of reason strings)
-        
+
         Raises:
             DriftDetectedError: If halt_on_drift=True and drift detected
         """
         if not self._enabled:
             return False, []
-        
+
         reasons: List[str] = []
-        
+
         # 1. Dual-modality disagreement
         if entry.orp_regime != entry.oracle_regime:
             reasons.append(
                 f"Dual-modality disagreement: ORP={entry.orp_regime} vs Oracle={entry.oracle_regime}"
             )
-        
+
         # 2. Score computation drift
         score_diff = abs(entry.orp_regime_score - entry.oracle_regime_score)
         if score_diff > self._score_drift_threshold:
@@ -127,56 +127,56 @@ class DriftGuard:
                 f"Score drift: ORP={entry.orp_regime_score:.6f} vs "
                 f"Oracle={entry.oracle_regime_score:.6f} (diff={score_diff:.6f})"
             )
-        
+
         # 3. Invariant violations
         invariant_violations = self._check_invariants(entry)
         reasons.extend(invariant_violations)
-        
+
         # 4. Amplitude bounds
         amplitude_violations = self._check_amplitude_bounds(entry)
         reasons.extend(amplitude_violations)
-        
+
         drift_detected = len(reasons) > 0
-        
+
         if drift_detected:
             logger.warning(
                 f"Drift detected at {entry.timestamp}: {reasons}"
             )
-            
+
             if self._halt_on_drift:
                 raise DriftDetectedError(reasons, entry)
-        
+
         return drift_detected, reasons
-    
+
     def _check_invariants(self, entry: AVLEntry) -> List[str]:
         """Check invariant flags in entry.
-        
+
         Returns list of violation messages.
         """
         violations = []
-        
+
         if not entry.hysteresis_enforced:
             violations.append("Invariant violation: hysteresis not enforced")
-        
+
         if not entry.min_duration_enforced:
             violations.append("Invariant violation: min-duration not enforced")
-        
+
         if not entry.ledger_continuity:
             violations.append("Invariant violation: ledger continuity broken")
-        
+
         if not entry.amplitude_valid:
             violations.append("Invariant violation: amplitude invalid")
-        
+
         return violations
-    
+
     def _check_amplitude_bounds(self, entry: AVLEntry) -> List[str]:
         """Check amplitude parameters are within bounds.
-        
+
         Returns list of violation messages.
         """
         violations = []
         posture = entry.posture_adjustments
-        
+
         # Check threshold_multiplier
         if "threshold_multiplier" in posture:
             mult = posture["threshold_multiplier"]
@@ -186,7 +186,7 @@ class DriftGuard:
                     f"Amplitude out of bounds: threshold_multiplier={mult} "
                     f"(expected [{low}, {high}])"
                 )
-        
+
         # Check traffic_limit
         if "traffic_limit" in posture:
             limit = posture["traffic_limit"]
@@ -196,17 +196,17 @@ class DriftGuard:
                     f"Amplitude out of bounds: traffic_limit={limit} "
                     f"(expected [{low}, {high}])"
                 )
-        
+
         return violations
-    
+
     def check_and_update(self, entry: AVLEntry) -> AVLEntry:
         """Check entry for drift and update its drift fields.
-        
+
         Convenience method that checks and updates entry in place.
-        
+
         Args:
             entry: AVLEntry to check and update
-        
+
         Returns:
             Updated entry with drift_detected and drift_reasons set
         """
@@ -215,17 +215,17 @@ class DriftGuard:
         entry.drift_reasons = reasons
         entry.dual_modality_agreement = (entry.orp_regime == entry.oracle_regime)
         return entry
-    
+
     @property
     def halt_on_drift(self) -> bool:
         """Get halt_on_drift setting."""
         return self._halt_on_drift
-    
+
     @property
     def enabled(self) -> bool:
         """Get enabled setting."""
         return self._enabled
-    
+
     @property
     def score_drift_threshold(self) -> float:
         """Get score drift threshold."""
@@ -234,7 +234,7 @@ class DriftGuard:
 
 class DriftDetectedError(Exception):
     """Exception raised when drift is detected and halt_on_drift=True."""
-    
+
     def __init__(self, reasons: List[str], entry: AVLEntry):
         self.reasons = reasons
         self.entry = entry

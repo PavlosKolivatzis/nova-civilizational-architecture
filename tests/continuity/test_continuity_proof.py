@@ -205,7 +205,7 @@ def broken_regime_continuity():
 def test_ledger_continuity_proof_pass(proof, valid_ledger):
     """Test valid ledger passes ledger continuity proof."""
     result = proof.prove_ledger_continuity(valid_ledger)
-    
+
     assert result.passed is True
     assert result.violations == []
     assert result.proof_name == "ledger_continuity"
@@ -215,7 +215,7 @@ def test_ledger_continuity_proof_pass(proof, valid_ledger):
 def test_ledger_continuity_empty_ledger(proof):
     """Test empty ledger passes ledger continuity proof."""
     result = proof.prove_ledger_continuity([])
-    
+
     assert result.passed is True
     assert result.entries_checked == 0
 
@@ -223,7 +223,7 @@ def test_ledger_continuity_empty_ledger(proof):
 def test_ledger_continuity_single_entry(proof, valid_ledger):
     """Test single entry ledger passes ledger continuity proof."""
     result = proof.prove_ledger_continuity([valid_ledger[0]])
-    
+
     assert result.passed is True
     assert result.entries_checked == 1
 
@@ -234,7 +234,7 @@ def test_ledger_continuity_single_entry(proof, valid_ledger):
 def test_ledger_continuity_proof_fail(proof, broken_ledger_continuity):
     """Test broken continuity is detected."""
     result = proof.prove_ledger_continuity(broken_ledger_continuity)
-    
+
     assert result.passed is False
     assert len(result.violations) == 1
     assert "transition_from=controlled_degradation" in result.violations[0]
@@ -247,7 +247,7 @@ def test_ledger_continuity_proof_fail(proof, broken_ledger_continuity):
 def test_temporal_continuity_proof_pass(proof, valid_ledger):
     """Test monotonic timestamps pass temporal continuity proof."""
     result = proof.prove_temporal_continuity(valid_ledger)
-    
+
     assert result.passed is True
     assert result.violations == []
     assert result.proof_name == "temporal_continuity"
@@ -256,7 +256,7 @@ def test_temporal_continuity_proof_pass(proof, valid_ledger):
 def test_temporal_continuity_empty_ledger(proof):
     """Test empty ledger passes temporal continuity proof."""
     result = proof.prove_temporal_continuity([])
-    
+
     assert result.passed is True
 
 
@@ -266,7 +266,7 @@ def test_temporal_continuity_empty_ledger(proof):
 def test_temporal_continuity_proof_fail(proof, broken_temporal_continuity):
     """Test out-of-order timestamps are detected."""
     result = proof.prove_temporal_continuity(broken_temporal_continuity)
-    
+
     assert result.passed is False
     assert len(result.violations) >= 1
     # Should detect both elapsed_s and timestamp violations
@@ -280,7 +280,7 @@ def test_temporal_continuity_proof_fail(proof, broken_temporal_continuity):
 def test_amplitude_continuity_proof_pass(proof, valid_ledger):
     """Test smooth transitions pass amplitude continuity proof."""
     result = proof.prove_amplitude_continuity(valid_ledger)
-    
+
     assert result.passed is True
     assert result.violations == []
     assert result.proof_name == "amplitude_continuity"
@@ -289,7 +289,7 @@ def test_amplitude_continuity_proof_pass(proof, valid_ledger):
 def test_amplitude_continuity_empty_ledger(proof):
     """Test empty ledger passes amplitude continuity proof."""
     result = proof.prove_amplitude_continuity([])
-    
+
     assert result.passed is True
 
 
@@ -299,7 +299,7 @@ def test_amplitude_continuity_empty_ledger(proof):
 def test_amplitude_continuity_proof_fail(proof, broken_amplitude_continuity):
     """Test discontinuous jumps are detected."""
     result = proof.prove_amplitude_continuity(broken_amplitude_continuity)
-    
+
     assert result.passed is False
     assert len(result.violations) >= 1
     # Should detect both threshold_multiplier and traffic_limit jumps
@@ -311,7 +311,7 @@ def test_amplitude_continuity_custom_delta(proof, broken_amplitude_continuity):
     """Test custom delta threshold."""
     # With large delta (1.0), the jumps should pass
     result = proof.prove_amplitude_continuity(broken_amplitude_continuity, max_delta=1.0)
-    
+
     assert result.passed is True
 
 
@@ -321,7 +321,7 @@ def test_amplitude_continuity_custom_delta(proof, broken_amplitude_continuity):
 def test_regime_continuity_proof_pass(proof, valid_ledger):
     """Test invariants respected passes regime continuity proof."""
     result = proof.prove_regime_continuity(valid_ledger)
-    
+
     assert result.passed is True
     assert result.violations == []
     assert result.proof_name == "regime_continuity"
@@ -333,7 +333,7 @@ def test_regime_continuity_proof_pass(proof, valid_ledger):
 def test_regime_continuity_proof_fail(proof, broken_regime_continuity):
     """Test invariant violations are detected."""
     result = proof.prove_regime_continuity(broken_regime_continuity)
-    
+
     assert result.passed is False
     assert len(result.violations) == 2
     assert any("hysteresis not enforced" in v for v in result.violations)
@@ -346,12 +346,12 @@ def test_regime_continuity_proof_fail(proof, broken_regime_continuity):
 def test_prove_all(proof, valid_ledger):
     """Test prove_all runs all proofs."""
     results = proof.prove_all(valid_ledger)
-    
+
     assert "ledger_continuity" in results
     assert "temporal_continuity" in results
     assert "amplitude_continuity" in results
     assert "regime_continuity" in results
-    
+
     # All should pass for valid ledger
     assert all(r.passed for r in results.values())
 
@@ -359,7 +359,7 @@ def test_prove_all(proof, valid_ledger):
 def test_prove_all_pass(proof, valid_ledger):
     """Test prove_all_pass returns overall status."""
     all_passed, results = proof.prove_all_pass(valid_ledger)
-    
+
     assert all_passed is True
     assert len(results) == 4
 
@@ -367,7 +367,7 @@ def test_prove_all_pass(proof, valid_ledger):
 def test_prove_all_with_failures(proof, broken_ledger_continuity):
     """Test prove_all_pass detects failures."""
     all_passed, results = proof.prove_all_pass(broken_ledger_continuity)
-    
+
     assert all_passed is False
     assert results["ledger_continuity"].passed is False
 
@@ -376,7 +376,7 @@ def test_get_summary(proof, valid_ledger):
     """Test get_summary provides correct counts."""
     results = proof.prove_all(valid_ledger)
     summary = proof.get_summary(results)
-    
+
     assert summary["total_proofs"] == 4
     assert summary["passed"] == 4
     assert summary["failed"] == 0
@@ -389,7 +389,7 @@ def test_get_summary_with_failures(proof, broken_regime_continuity):
     """Test get_summary with failures."""
     results = proof.prove_all(broken_regime_continuity)
     summary = proof.get_summary(results)
-    
+
     assert summary["failed"] >= 1
     assert summary["all_passed"] is False
     assert len(summary["failed_proofs"]) >= 1
@@ -400,7 +400,7 @@ def test_proof_result_to_dict(proof, valid_ledger):
     """Test ProofResult serialization."""
     result = proof.prove_ledger_continuity(valid_ledger)
     d = result.to_dict()
-    
+
     assert d["proof_name"] == "ledger_continuity"
     assert d["passed"] is True
     assert d["violations"] == []
@@ -410,12 +410,12 @@ def test_proof_result_to_dict(proof, valid_ledger):
 def test_get_continuity_proof_singleton():
     """Test global continuity proof singleton."""
     reset_continuity_proof()
-    
+
     proof1 = get_continuity_proof()
     proof2 = get_continuity_proof()
-    
+
     assert proof1 is proof2
-    
+
     reset_continuity_proof()
 
 
@@ -423,7 +423,7 @@ def test_amplitude_delta_configurable():
     """Test amplitude delta is configurable."""
     proof_strict = ContinuityProof(amplitude_delta=0.1)
     proof_relaxed = ContinuityProof(amplitude_delta=1.0)
-    
+
     ledger = [
         AVLEntry(
             timestamp="2025-01-01T12:00:00+00:00",
@@ -444,11 +444,11 @@ def test_amplitude_delta_configurable():
             min_duration_enforced=True,
         ),
     ]
-    
+
     # Strict should fail (delta 0.3 > 0.1)
     result_strict = proof_strict.prove_amplitude_continuity(ledger)
     assert result_strict.passed is False
-    
+
     # Relaxed should pass (delta 0.3 < 1.0)
     result_relaxed = proof_relaxed.prove_amplitude_continuity(ledger)
     assert result_relaxed.passed is True

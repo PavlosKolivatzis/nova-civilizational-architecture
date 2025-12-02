@@ -145,7 +145,7 @@ def amplitude_bounds_entry():
 def test_dual_modality_drift_detected(drift_guard, dual_modality_drift_entry):
     """Test ORP ≠ oracle triggers drift."""
     drift_detected, reasons = drift_guard.check(dual_modality_drift_entry)
-    
+
     assert drift_detected is True
     assert len(reasons) >= 1
     assert any("Dual-modality disagreement" in r for r in reasons)
@@ -159,7 +159,7 @@ def test_dual_modality_drift_detected(drift_guard, dual_modality_drift_entry):
 def test_invariant_violation_drift(drift_guard, invariant_violation_entry):
     """Test failed invariant triggers drift."""
     drift_detected, reasons = drift_guard.check(invariant_violation_entry)
-    
+
     assert drift_detected is True
     assert any("hysteresis not enforced" in r for r in reasons)
 
@@ -179,9 +179,9 @@ def test_multiple_invariant_violations(drift_guard):
         ledger_continuity=False,  # Violation 3
         amplitude_valid=False,  # Violation 4
     )
-    
+
     drift_detected, reasons = drift_guard.check(entry)
-    
+
     assert drift_detected is True
     assert len(reasons) == 4
     assert any("hysteresis" in r for r in reasons)
@@ -196,7 +196,7 @@ def test_multiple_invariant_violations(drift_guard):
 def test_amplitude_bounds_drift(drift_guard, amplitude_bounds_entry):
     """Test out-of-bounds amplitude triggers drift."""
     drift_detected, reasons = drift_guard.check(amplitude_bounds_entry)
-    
+
     assert drift_detected is True
     assert any("threshold_multiplier" in r for r in reasons)
     assert any("out of bounds" in r.lower() for r in reasons)
@@ -220,9 +220,9 @@ def test_amplitude_bounds_traffic_limit(drift_guard):
         ledger_continuity=True,
         amplitude_valid=True,
     )
-    
+
     drift_detected, reasons = drift_guard.check(entry)
-    
+
     assert drift_detected is True
     assert any("traffic_limit" in r for r in reasons)
 
@@ -233,7 +233,7 @@ def test_amplitude_bounds_traffic_limit(drift_guard):
 def test_score_drift_detected(drift_guard, score_drift_entry):
     """Test score mismatch triggers drift."""
     drift_detected, reasons = drift_guard.check(score_drift_entry)
-    
+
     assert drift_detected is True
     assert any("Score drift" in r for r in reasons)
 
@@ -253,9 +253,9 @@ def test_score_drift_within_threshold(drift_guard):
         ledger_continuity=True,
         amplitude_valid=True,
     )
-    
+
     drift_detected, reasons = drift_guard.check(entry)
-    
+
     assert drift_detected is False
     assert len(reasons) == 0
 
@@ -266,7 +266,7 @@ def test_score_drift_within_threshold(drift_guard):
 def test_no_drift_on_valid_entry(drift_guard, valid_entry):
     """Test no false positives on valid entry."""
     drift_detected, reasons = drift_guard.check(valid_entry)
-    
+
     assert drift_detected is False
     assert reasons == []
 
@@ -277,7 +277,7 @@ def test_no_drift_on_valid_entry(drift_guard, valid_entry):
 def test_drift_reasons_accurate(drift_guard, dual_modality_drift_entry):
     """Test reason messages are correct and informative."""
     drift_detected, reasons = drift_guard.check(dual_modality_drift_entry)
-    
+
     assert drift_detected is True
     # Reason should contain both regimes
     reason = reasons[0]
@@ -294,12 +294,12 @@ def test_halt_on_drift_configurable(dual_modality_drift_entry):
     guard = DriftGuard(halt_on_drift=False)
     drift_detected, reasons = guard.check(dual_modality_drift_entry)
     assert drift_detected is True  # Detected but no exception
-    
+
     # With halt
     guard_halt = DriftGuard(halt_on_drift=True)
     with pytest.raises(DriftDetectedError) as exc_info:
         guard_halt.check(dual_modality_drift_entry)
-    
+
     assert "Dual-modality disagreement" in str(exc_info.value)
     assert exc_info.value.entry == dual_modality_drift_entry
 
@@ -307,10 +307,10 @@ def test_halt_on_drift_configurable(dual_modality_drift_entry):
 def test_halt_on_drift_via_configure(dual_modality_drift_entry):
     """Test halt can be configured after creation."""
     guard = DriftGuard(halt_on_drift=False)
-    
+
     # Configure to halt
     guard.configure(halt_on_drift=True)
-    
+
     with pytest.raises(DriftDetectedError):
         guard.check(dual_modality_drift_entry)
 
@@ -336,9 +336,9 @@ def test_multiple_drift_reasons(drift_guard):
         ledger_continuity=True,
         amplitude_valid=True,
     )
-    
+
     drift_detected, reasons = drift_guard.check(entry)
-    
+
     assert drift_detected is True
     assert len(reasons) >= 3  # At least 3 violations
     assert any("Dual-modality" in r for r in reasons)
@@ -364,12 +364,12 @@ def test_drift_threshold_tunable():
         ledger_continuity=True,
         amplitude_valid=True,
     )
-    
+
     # Default threshold (1e-6) - should detect drift
     guard_strict = DriftGuard(score_drift_threshold=1e-6)
     drift_detected, _ = guard_strict.check(entry)
     assert drift_detected is True
-    
+
     # Relaxed threshold (0.1) - should not detect drift
     guard_relaxed = DriftGuard(score_drift_threshold=0.1)
     drift_detected, _ = guard_relaxed.check(entry)
@@ -391,13 +391,13 @@ def test_drift_threshold_via_configure():
         ledger_continuity=True,
         amplitude_valid=True,
     )
-    
+
     guard = DriftGuard(score_drift_threshold=1e-6)
-    
+
     # Initially detects drift
     drift_detected, _ = guard.check(entry)
     assert drift_detected is True
-    
+
     # Relax threshold
     guard.configure(score_drift_threshold=0.1)
     drift_detected, _ = guard.check(entry)
@@ -410,9 +410,9 @@ def test_drift_threshold_via_configure():
 def test_drift_guard_disabled(dual_modality_drift_entry):
     """Test drift detection can be disabled."""
     guard = DriftGuard(enabled=False)
-    
+
     drift_detected, reasons = guard.check(dual_modality_drift_entry)
-    
+
     assert drift_detected is False
     assert reasons == []
 
@@ -420,11 +420,11 @@ def test_drift_guard_disabled(dual_modality_drift_entry):
 def test_drift_guard_disable_via_configure(dual_modality_drift_entry):
     """Test drift detection can be disabled via configure."""
     guard = DriftGuard(enabled=True)
-    
+
     # Initially detects drift
     drift_detected, _ = guard.check(dual_modality_drift_entry)
     assert drift_detected is True
-    
+
     # Disable
     guard.configure(enabled=False)
     drift_detected, _ = guard.check(dual_modality_drift_entry)
@@ -439,10 +439,10 @@ def test_check_and_update(drift_guard, dual_modality_drift_entry):
     # Entry starts with no drift info
     assert dual_modality_drift_entry.drift_detected is False
     assert dual_modality_drift_entry.drift_reasons == []
-    
+
     # Check and update
     updated = drift_guard.check_and_update(dual_modality_drift_entry)
-    
+
     assert updated.drift_detected is True
     assert len(updated.drift_reasons) > 0
     assert updated.dual_modality_agreement is False
@@ -451,13 +451,13 @@ def test_check_and_update(drift_guard, dual_modality_drift_entry):
 def test_drift_result_to_dict(drift_guard, dual_modality_drift_entry):
     """Test DriftResult serialization."""
     drift_detected, reasons = drift_guard.check(dual_modality_drift_entry)
-    
+
     result = DriftResult(
         drift_detected=drift_detected,
         reasons=reasons,
         entry=dual_modality_drift_entry,
     )
-    
+
     d = result.to_dict()
     assert d["drift_detected"] is True
     assert len(d["reasons"]) > 0
@@ -467,12 +467,12 @@ def test_drift_result_to_dict(drift_guard, dual_modality_drift_entry):
 def test_get_drift_guard_singleton():
     """Test global drift guard singleton."""
     reset_drift_guard()
-    
+
     guard1 = get_drift_guard()
     guard2 = get_drift_guard()
-    
+
     assert guard1 is guard2
-    
+
     reset_drift_guard()
 
 
@@ -486,10 +486,10 @@ def test_drift_guard_properties(drift_guard):
 def test_drift_detected_error_attributes(dual_modality_drift_entry):
     """Test DriftDetectedError has correct attributes."""
     guard = DriftGuard(halt_on_drift=True)
-    
+
     with pytest.raises(DriftDetectedError) as exc_info:
         guard.check(dual_modality_drift_entry)
-    
+
     error = exc_info.value
     assert error.entry == dual_modality_drift_entry
     assert len(error.reasons) > 0

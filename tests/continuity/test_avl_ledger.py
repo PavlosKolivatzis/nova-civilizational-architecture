@@ -1,6 +1,6 @@
 """Unit tests for Autonomous Verification Ledger (AVL) - Phase 13
 
-Tests for avl_ledger.py: entry creation, hash chain integrity, 
+Tests for avl_ledger.py: entry creation, hash chain integrity,
 ledger operations, persistence, and query API.
 
 Per Phase13_Implementation_Checklist.md: 15 tests required.
@@ -114,7 +114,7 @@ def test_entry_creation(sample_entry):
 def test_entry_to_dict(sample_entry):
     """Test AVLEntry serialization to dict."""
     d = sample_entry.to_dict()
-    
+
     assert isinstance(d, dict)
     assert d["timestamp"] == "2025-01-01T12:00:00+00:00"
     assert d["orp_regime"] == "normal"
@@ -125,7 +125,7 @@ def test_entry_from_dict(sample_entry):
     """Test AVLEntry deserialization from dict."""
     d = sample_entry.to_dict()
     restored = AVLEntry.from_dict(d)
-    
+
     assert restored.timestamp == sample_entry.timestamp
     assert restored.orp_regime == sample_entry.orp_regime
     assert restored.contributing_factors == sample_entry.contributing_factors
@@ -135,7 +135,7 @@ def test_entry_json_roundtrip(sample_entry):
     """Test AVLEntry JSON serialization roundtrip."""
     json_str = sample_entry.to_json()
     restored = AVLEntry.from_json(json_str)
-    
+
     assert restored.timestamp == sample_entry.timestamp
     assert restored.orp_regime == sample_entry.orp_regime
 
@@ -147,7 +147,7 @@ def test_compute_entry_hash_deterministic(sample_entry):
     """Test hash computation is deterministic (same inputs → same hash)."""
     hash1 = compute_entry_hash(sample_entry)
     hash2 = compute_entry_hash(sample_entry)
-    
+
     assert hash1 == hash2
     assert len(hash1) == 64  # SHA256 hex length
 
@@ -168,10 +168,10 @@ def test_compute_entry_hash_different_inputs():
         contributing_factors={"urf_composite_risk": 0.15},
         oracle_regime="normal",
     )
-    
+
     hash1 = compute_entry_hash(entry1)
     hash2 = compute_entry_hash(entry2)
-    
+
     assert hash1 != hash2
 
 
@@ -179,7 +179,7 @@ def test_compute_entry_id_deterministic(sample_entry):
     """Test entry ID computation is deterministic."""
     id1 = compute_entry_id(sample_entry)
     id2 = compute_entry_id(sample_entry)
-    
+
     assert id1 == id2
     assert len(id1) == 64
 
@@ -192,11 +192,11 @@ def test_hash_chain_integrity(ledger, sample_entry, sample_entry_heightened):
     # Append first entry
     entry1 = ledger.append(sample_entry)
     assert entry1.prev_entry_hash == GENESIS_HASH
-    
+
     # Append second entry
     entry2 = ledger.append(sample_entry_heightened)
     assert entry2.prev_entry_hash == compute_entry_hash(entry1)
-    
+
     # Verify chain
     is_valid, violations = ledger.verify_hash_chain()
     assert is_valid, f"Hash chain invalid: {violations}"
@@ -205,9 +205,9 @@ def test_hash_chain_integrity(ledger, sample_entry, sample_entry_heightened):
 def test_hash_chain_genesis_entry(ledger, sample_entry):
     """Test genesis entry has correct prev_entry_hash."""
     entry = ledger.append(sample_entry)
-    
+
     assert entry.prev_entry_hash == GENESIS_HASH
-    
+
     is_valid, violations = ledger.verify_hash_chain()
     assert is_valid
 
@@ -218,12 +218,12 @@ def test_hash_chain_genesis_entry(ledger, sample_entry):
 def test_ledger_append_only(ledger, sample_entry):
     """Test ledger is append-only (no modifications)."""
     entry = ledger.append(sample_entry)
-    
+
     # Verify entry is in ledger
     entries = ledger.get_entries()
     assert len(entries) == 1
     assert entries[0].entry_id == entry.entry_id
-    
+
     # Append another
     entry2 = AVLEntry(
         timestamp="2025-01-01T12:01:00+00:00",
@@ -233,7 +233,7 @@ def test_ledger_append_only(ledger, sample_entry):
         oracle_regime="normal",
     )
     ledger.append(entry2)
-    
+
     entries = ledger.get_entries()
     assert len(entries) == 2
 
@@ -241,7 +241,7 @@ def test_ledger_append_only(ledger, sample_entry):
 def test_ledger_duplicate_entry_rejected(ledger, sample_entry):
     """Test duplicate entry_id is rejected."""
     ledger.append(sample_entry)
-    
+
     # Try to append same entry again (same timestamp + regime + factors = same ID)
     with pytest.raises(ValueError, match="Duplicate entry_id"):
         ledger.append(sample_entry)
@@ -256,16 +256,16 @@ def test_ledger_persistence(temp_ledger_path, sample_entry, sample_entry_heighte
     ledger1 = AVLLedger(temp_ledger_path)
     ledger1.append(sample_entry)
     ledger1.append(sample_entry_heightened)
-    
+
     # Create new ledger instance (simulates restart)
     ledger2 = AVLLedger(temp_ledger_path)
-    
+
     # Verify entries persisted
     entries = ledger2.get_entries()
     assert len(entries) == 2
     assert entries[0].orp_regime == "normal"
     assert entries[1].orp_regime == "heightened"
-    
+
     # Verify hash chain intact
     is_valid, violations = ledger2.verify_hash_chain()
     assert is_valid, f"Hash chain broken after restart: {violations}"
@@ -287,13 +287,13 @@ def test_query_by_time_window(ledger):
             oracle_regime="normal",
         )
         ledger.append(entry)
-    
+
     # Query middle range
     results = ledger.query_by_time_window(
         "2025-01-01T12:01:00+00:00",
         "2025-01-01T12:03:00+00:00"
     )
-    
+
     assert len(results) == 3
     assert results[0].timestamp == "2025-01-01T12:01:00+00:00"
     assert results[2].timestamp == "2025-01-01T12:03:00+00:00"
@@ -306,7 +306,7 @@ def test_query_by_regime(ledger, sample_entry, sample_entry_heightened):
     """Test regime filtering works correctly."""
     ledger.append(sample_entry)
     ledger.append(sample_entry_heightened)
-    
+
     # Add another normal entry
     entry3 = AVLEntry(
         timestamp="2025-01-01T12:10:00+00:00",
@@ -316,11 +316,11 @@ def test_query_by_regime(ledger, sample_entry, sample_entry_heightened):
         oracle_regime="normal",
     )
     ledger.append(entry3)
-    
+
     # Query normal regime
     normal_entries = ledger.query_by_regime("normal")
     assert len(normal_entries) == 2
-    
+
     # Query heightened regime
     heightened_entries = ledger.query_by_regime("heightened")
     assert len(heightened_entries) == 1
@@ -341,7 +341,7 @@ def test_query_drift_events(ledger):
         drift_detected=False,
     )
     ledger.append(entry1)
-    
+
     # Add drift entry
     entry2 = AVLEntry(
         timestamp="2025-01-01T12:01:00+00:00",
@@ -354,7 +354,7 @@ def test_query_drift_events(ledger):
         drift_reasons=["ORP=heightened vs Oracle=normal"],
     )
     ledger.append(entry2)
-    
+
     # Query drift events
     drift_entries = ledger.query_drift_events()
     assert len(drift_entries) == 1
@@ -377,13 +377,13 @@ def test_get_latest(ledger):
             oracle_regime="normal",
         )
         ledger.append(entry)
-    
+
     # Get last 3
     latest = ledger.get_latest(3)
     assert len(latest) == 3
     assert latest[0].timestamp == "2025-01-01T12:07:00+00:00"
     assert latest[2].timestamp == "2025-01-01T12:09:00+00:00"
-    
+
     # Get more than available
     all_entries = ledger.get_latest(20)
     assert len(all_entries) == 10
@@ -396,7 +396,7 @@ def test_verify_integrity(ledger, sample_entry, sample_entry_heightened):
     """Test hash chain + proofs verification."""
     ledger.append(sample_entry)
     ledger.append(sample_entry_heightened)
-    
+
     is_valid, violations = ledger.verify_integrity()
     assert is_valid, f"Integrity check failed: {violations}"
     assert violations == []
@@ -407,24 +407,24 @@ def test_verify_integrity_detects_tampering(temp_ledger_path, sample_entry, samp
     ledger = AVLLedger(temp_ledger_path)
     entry1 = ledger.append(sample_entry)
     entry2 = ledger.append(sample_entry_heightened)
-    
+
     # Manually tamper with file - modify first entry's score
     # This should break the hash chain since entry2.prev_entry_hash
     # was computed from the original entry1
     with open(temp_ledger_path, "r") as f:
         lines = f.readlines()
-    
+
     # Modify first entry (changes its hash)
     entry1_dict = json.loads(lines[0])
     entry1_dict["orp_regime_score"] = 0.99  # Tamper!
-    
+
     with open(temp_ledger_path, "w") as f:
         f.write(json.dumps(entry1_dict, sort_keys=True) + "\n")
         f.write(lines[1])  # Keep second entry unchanged
-    
+
     # Reload and verify
     ledger2 = AVLLedger(temp_ledger_path)
-    
+
     # Hash chain should be broken (entry2.prev_entry_hash != hash(tampered_entry1))
     is_valid, hash_violations = ledger2.verify_hash_chain()
     assert not is_valid, "Hash chain should be invalid after tampering"
@@ -437,10 +437,10 @@ def test_verify_integrity_detects_tampering(temp_ledger_path, sample_entry, samp
 def test_ledger_empty_state(ledger):
     """Test genesis entry handling on empty ledger."""
     assert len(ledger) == 0
-    
+
     entries = ledger.get_entries()
     assert entries == []
-    
+
     # Verify empty ledger is valid
     is_valid, violations = ledger.verify_integrity()
     assert is_valid
@@ -452,10 +452,10 @@ def test_ledger_empty_state(ledger):
 def test_ledger_concurrent_append(ledger):
     """Test thread safety for concurrent appends (basic test)."""
     import threading
-    
+
     results = []
     errors = []
-    
+
     def append_entry(idx):
         try:
             entry = AVLEntry(
@@ -469,18 +469,18 @@ def test_ledger_concurrent_append(ledger):
             results.append(idx)
         except Exception as e:
             errors.append((idx, str(e)))
-    
+
     # Create threads
     threads = [threading.Thread(target=append_entry, args=(i,)) for i in range(10)]
-    
+
     # Start all
     for t in threads:
         t.start()
-    
+
     # Wait for all
     for t in threads:
         t.join()
-    
+
     # Verify all appended (no duplicates due to different timestamps)
     assert len(results) == 10, f"Expected 10 appends, got {len(results)}, errors: {errors}"
     assert len(ledger) == 10
@@ -493,16 +493,16 @@ def test_export_jsonl(ledger, sample_entry, sample_entry_heightened, tmp_path):
     """Test export to file."""
     ledger.append(sample_entry)
     ledger.append(sample_entry_heightened)
-    
+
     export_path = str(tmp_path / "export.jsonl")
     ledger.export(export_path)
-    
+
     # Verify file exists and has correct content
     assert Path(export_path).exists()
-    
+
     with open(export_path, "r") as f:
         lines = f.readlines()
-    
+
     assert len(lines) == 2
 
 
@@ -521,17 +521,17 @@ def test_import_jsonl(temp_ledger_path, sample_entry, sample_entry_heightened, t
     source_ledger = AVLLedger(temp_ledger_path)
     source_ledger.append(sample_entry)
     source_ledger.append(sample_entry_heightened)
-    
+
     # Export to file
     export_path = str(tmp_path / "export.jsonl")
     source_ledger.export(export_path)
-    
+
     # Create new ledger and import
     dest_path = str(tmp_path / "dest_ledger.jsonl")
     dest_ledger = AVLLedger(dest_path)
-    
+
     imported = dest_ledger.import_jsonl(export_path)
-    
+
     assert imported == 2
     assert len(dest_ledger) == 2
 
@@ -557,11 +557,11 @@ def test_entry_id_unique(ledger):
             oracle_regime="normal",
         )
         ledger.append(entry)
-    
+
     # Verify all IDs unique
     entries = ledger.get_entries()
     ids = [e.entry_id for e in entries]
-    
+
     assert len(ids) == len(set(ids)), "Duplicate entry IDs found"
 
 
@@ -572,17 +572,17 @@ def test_get_avl_ledger_singleton(monkeypatch, tmp_path):
     """Test global AVL ledger singleton."""
     # Reset first
     reset_avl_ledger()
-    
+
     # Set custom path
     ledger_path = str(tmp_path / "singleton_ledger.jsonl")
     monkeypatch.setenv("NOVA_AVL_PATH", ledger_path)
-    
+
     # Get singleton
     ledger1 = get_avl_ledger()
     ledger2 = get_avl_ledger()
-    
+
     assert ledger1 is ledger2
-    
+
     # Cleanup
     reset_avl_ledger()
 
@@ -592,11 +592,11 @@ def test_avl_enabled(monkeypatch):
     # Default disabled
     monkeypatch.delenv("NOVA_ENABLE_AVL", raising=False)
     assert avl_enabled() is False
-    
+
     # Enable
     monkeypatch.setenv("NOVA_ENABLE_AVL", "1")
     assert avl_enabled() is True
-    
+
     # Disable explicitly
     monkeypatch.setenv("NOVA_ENABLE_AVL", "0")
     assert avl_enabled() is False
@@ -608,11 +608,11 @@ def test_avl_enabled(monkeypatch):
 def test_query_by_entry_id(ledger, sample_entry):
     """Test finding entry by entry_id."""
     appended = ledger.append(sample_entry)
-    
+
     found = ledger.query_by_entry_id(appended.entry_id)
     assert found is not None
     assert found.timestamp == sample_entry.timestamp
-    
+
     # Not found
     not_found = ledger.query_by_entry_id("nonexistent")
     assert not_found is None

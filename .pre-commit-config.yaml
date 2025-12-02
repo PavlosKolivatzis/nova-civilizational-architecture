@@ -12,11 +12,11 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
-        files: ^((src|orchestrator|tests|scripts|ops|config)/|README\.md)
+        files: ^((src|tests|scripts|ops|config)/|README\.md)
       - id: end-of-file-fixer
-        files: ^((src|orchestrator|tests|scripts|ops|config)/|README\.md)
+        files: ^((src|tests|scripts|ops|config)/|README\.md)
       - id: check-yaml
-        files: ^(src|orchestrator|tests|scripts|ops|config)/.*\.(ya?ml|YML|YAML)$
+        files: ^(src|tests|scripts|ops|config)/.*\.(ya?ml|YML|YAML)$
       - id: check-json
         files: ^contracts/.*\.json$
 
@@ -25,12 +25,11 @@ repos:
     hooks:
       - id: ruff
         name: ruff (lint)
-        files: ^(src|orchestrator|tests)/
+        files: ^(src|tests)/
         args:
           - --config
           - pyproject.toml
           - src
-          - orchestrator
           - tests
 
   - repo: https://github.com/Yelp/detect-secrets
