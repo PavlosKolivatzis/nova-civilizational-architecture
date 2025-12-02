@@ -49,9 +49,9 @@ jobs:
     - name: Run mypy (typed surfaces)
       run: |
         python -m mypy --hide-error-context --pretty --follow-imports=skip \
-          orchestrator/plugins/loader.py \
-          orchestrator/core/performance_monitor.py \
-          orchestrator/metrics.py \
+          src/nova/orchestrator/plugins/loader.py \
+          src/nova/orchestrator/core/performance_monitor.py \
+          src/nova/orchestrator/metrics.py \
           src/nova/slots/slot02_deltathresh/adapters/versioning.py \
           src/nova/slots/slot02_deltathresh/core.py \
           src/nova/slots/slot03_emotional_matrix/advanced_policy.py \
