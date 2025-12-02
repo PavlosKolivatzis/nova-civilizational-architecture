@@ -89,10 +89,10 @@ for build_info in (build_info_internal, build_info_public):
     })
 
 # Prometheus gauges
-slot6_p95_residual_risk_gauge = Gauge(
+slot6_p95_residual_risk_gauge = _get_or_register_gauge(
     "nova_slot6_p95_residual_risk",
     "Slot6 95th percentile residual risk from cultural synthesis decisions",
-    ["slot"],
+    labelnames=["slot"],
     registry=_INTERNAL_REGISTRY,
 )
 
