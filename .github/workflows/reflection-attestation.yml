@@ -48,9 +48,9 @@ jobs:
 
       - name: Reflection snapshot (no server needed)
         run: |
-          PYTHONPATH=. python - <<'PY'
+          PYTHONPATH=src python - <<'PY'
           import os, json, math, hmac, hashlib
-          from orchestrator.reflection import nova_reflect
+          from nova.orchestrator.reflection import nova_reflect
 
           snap = nova_reflect()
 
@@ -149,9 +149,9 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts
-          PYTHONPATH=. python - <<'PY' > artifacts/reflection.json
+          PYTHONPATH=src python - <<'PY' > artifacts/reflection.json
           import json
-          from orchestrator.reflection import nova_reflect
+          from nova.orchestrator.reflection import nova_reflect
           print(json.dumps(nova_reflect(), ensure_ascii=False, indent=2))
           PY
         shell: bash

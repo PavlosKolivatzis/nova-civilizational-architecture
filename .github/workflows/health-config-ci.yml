@@ -45,10 +45,10 @@ jobs:
         run: |
           if ${{ matrix.serverless }}; then export VERCEL=1; fi
           export NOVA_HOT_RELOAD=false
-          python - <<'PY'
+          PYTHONPATH=src python - <<'PY'
           import json
           from fastapi.testclient import TestClient
-          from orchestrator.app import app
+          from nova.orchestrator.app import app
           c = TestClient(app)
           r = c.get("/health/config")
           assert r.status_code == 200, r.text
@@ -63,10 +63,10 @@ jobs:
         run: |
           if ${{ matrix.serverless }}; then export VERCEL=1; fi
           export NOVA_HOT_RELOAD=false
-          python - <<'PY'
+          PYTHONPATH=src python - <<'PY'
           import json
           from fastapi.testclient import TestClient
-          from orchestrator.app import app
+          from nova.orchestrator.app import app
           c = TestClient(app)
           r = c.get("/health")
           assert r.status_code == 200, r.text
