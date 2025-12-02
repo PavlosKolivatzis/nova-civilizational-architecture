@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Nova ARC Results Analyzer
+"""Nova ARC Results Analyzer.
+
 Phase 11B: Autonomous Reflection Cycle
 
 Analyzes the results of ARC calibration cycles to demonstrate self-improvement.
