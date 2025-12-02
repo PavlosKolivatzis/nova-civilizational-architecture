@@ -1,0 +1,43 @@
+# Pre-commit hooks for code quality and schema validation
+repos:
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.28.6
+    hooks:
+      - id: check-jsonschema
+        name: Validate contract schemas
+        files: ^contracts/.*\.json$
+        args: ['--schemafile', 'http://json-schema.org/draft-07/schema#']
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        files: ^((src|orchestrator|tests|scripts|ops|config)/|README\.md)
+      - id: end-of-file-fixer
+        files: ^((src|orchestrator|tests|scripts|ops|config)/|README\.md)
+      - id: check-yaml
+        files: ^(src|orchestrator|tests|scripts|ops|config)/.*\.(ya?ml|YML|YAML)$
+      - id: check-json
+        files: ^contracts/.*\.json$
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.4
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        files: ^(src|orchestrator|tests)/
+        args:
+          - --config
+          - pyproject.toml
+          - src
+          - orchestrator
+          - tests
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: detect-secrets (baseline)
+        args:
+          - --baseline
+          - .secrets.baseline

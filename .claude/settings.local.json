@@ -31,7 +31,10 @@
       "Bash(powershell -Command \"& { $env:NOVA_ENABLE_PROMETHEUS=''1''; $env:PYTHONPATH=''C:\\code\\nova-civilizational-architecture''; python orchestrator/app.py }\")",
       "Bash(NOVA_ENABLE_URF=0 python -m pytest:*)",
       "Bash(NOVA_ENABLE_URF=1 python -m pytest:*)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(git log:*)",
+      "Bash(gh run view:*)",
+      "Bash(pip show:*)"
     ],
     "deny": [],
     "ask": []
