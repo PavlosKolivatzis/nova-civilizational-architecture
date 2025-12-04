@@ -2,6 +2,8 @@
 
 **Purpose:** Help agents think like Nova operators across session boundaries.
 
+**For mission/philosophy context:** See `docs/MISSION.md`
+
 ---
 
 ## I. Who You Are
@@ -282,7 +284,7 @@ git log -5 --oneline
 git status
 
 # 2. Verify health
-pytest -q -m "not slow"  # ~2021 passing
+pytest -q -m "not slow"  # Should see ~2098 passing
 python -c "from nova.orchestrator.app import app"
 
 # 3. Check alerts
@@ -330,13 +332,37 @@ grep -r "FIXME" src/nova/
 
 ## XI. Invariants (Never Break These)
 
-1. **Separation of roles** - Slots interpret, Core attests
-2. **Provenance-first** - Every claim cites sources
-3. **Immutability at attest** - Same input → same digest
-4. **Reversibility by default** - Feature flags, not if-statements
-5. **Transparent uncertainty** - Label ignorance
-6. **Observability over opacity** - Export metrics
-7. **Test before push** - No exceptions
+1. **Accuracy floor: 99.7%** - 2098 tests passing (as of Phase 14-0)
+   - Regression below this floor = catastrophic failure
+   - Every change must maintain or improve accuracy
+
+2. **Separation of roles** - Slots interpret, Core attests
+   - Forbidden: Slots writing to attest_ledger directly
+
+3. **Provenance-first** - Every claim cites sources
+   - Show file:line, commit hash, or test evidence
+
+4. **Immutability at attest** - Same input → same digest
+   - Hash-chained, tamper-evident ledger
+
+5. **Reversibility by default** - Feature flags, not if-statements
+   - Every change includes explicit rollback path
+
+6. **Transparent uncertainty** - Label ignorance, don't hide it
+   - Confidence scores mandatory for claims
+
+7. **Observability over opacity** - Export metrics, no SSH spelunking
+   - Prometheus /metrics when NOVA_ENABLE_PROMETHEUS=1
+
+8. **Ontology-first development** - Contracts (YAML) define truth
+   - Implementation (Python) realizes contracts
+   - Every impl_ref in YAML must resolve
+
+9. **Byzantine fault tolerance** - Assume adversarial futures
+   - Dual-modality consensus (ORP + Oracle)
+   - Drift detection with halt-on-critical
+
+10. **Test before push** - No exceptions
 
 ---
 
@@ -514,9 +540,33 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 | Entropy | Drift Detection | `src/nova/continuity/drift_guard.py` |
 | Stability | Hysteresis Enforcement | `src/nova/continuity/orp_hysteresis.py` |
 
+### Universal Extraction Patterns:
+
+Operators should recognize these structural patterns across domains:
+
+1. **SSPC** - Siloed-Serialized-Proprietary-Centralized
+   - Fragmentation → serialization → vendor lock-in → extraction
+
+2. **DEEPFUSE** - Distributed Extraction with Shield Edifice
+   - Detection: ρ < 0.7 (extraction dominance), H > 2.5 (complexity), S → 1 (strong shielding)
+   - Pattern: Network extraction + regulatory capture
+
+3. **CICADA** - Cyclical Impunity Loops
+   - Harm → investigation → nominal penalty → repeat
+   - No learning, no accountability
+
+4. **GRCODE** - Governance-Regulatory Capture
+   - Decision-makers captured by entities they regulate
+   - Shield factor S approaches 1
+
+5. **Mythic Lock** - Narrative Control Masking Extraction
+   - Dominant story obscures structural harm
+   - Measurement: gap between narrative and outcomes
+
 **For deep understanding:**
 - **Audit:** `docs/ontology/wdl_audit.md` (evidence that WDL exists in Nova)
 - **Canonical:** `docs/ontology/wdl_canonical.md` (full specification)
+- **Mission:** `docs/MISSION.md` (mathematical foundations)
 
 **Key insight:** WDL is **descriptive** (what to observe) not **prescriptive** (what to do). Nova uses WDL as awareness layer for richer interpretations while maintaining decision neutrality.
 
@@ -556,6 +606,199 @@ NOT: Prescribe action ("Force regime transition")
 
 ---
 
+## XX. Progressive Understanding Protocol
+
+**Purpose:** Structured onboarding for new operators or session recovery
+
+### Level 1: Orientation (First 5 minutes)
+
+**Goal:** Know where you are, current state
+
+**Actions:**
+- Run boot sequence (§ VIII)
+- Check test status (2098 passing?)
+- Review recent commits: `git log -5 --oneline`
+
+**Success criteria:**
+- [ ] Know current phase (14-0+)
+- [ ] Know test status
+- [ ] Know recent changes
+
+---
+
+### Level 2: Context Building (First 30 minutes)
+
+**Goal:** Understand architectural foundations
+
+**Actions:**
+- Read key contracts in `contracts/`
+- Map 10-slot architecture (§ IV navigation)
+- Check operational regime (§ VI)
+- Review WDL concepts (§ IIa, § XIXa)
+
+**Success criteria:**
+- [ ] Understand 10-slot architecture
+- [ ] Know three-ledger separation
+- [ ] Understand current operational regime
+- [ ] Know WDL ontological primitives
+
+---
+
+### Level 3: Pattern Recognition (Ongoing)
+
+**Patterns to master:**
+
+1. **SSPC** - Siloed-Serialized-Proprietary-Centralized
+2. **DEEPFUSE** - Distributed extraction with shield edifice (ρ<0.7, H>2.5)
+3. **CICADA** - Cyclical impunity loops
+4. **GRCODE** - Governance-regulatory capture
+5. **Mythic Lock** - Narrative control masking extraction
+
+**Practice:** Classify observations with pattern vocabulary
+
+**Target:** 85%+ accuracy in pattern recognition
+
+---
+
+### Level 4: Autonomous Contribution (After mastery)
+
+**Capabilities unlocked:**
+- Propose architectural enhancements with tests
+- Detect drift before critical thresholds
+- Suggest contract refinements
+- Contribute to pattern library
+- Mentor other operators
+
+**Evidence required:**
+- Pull requests merged with test coverage
+- Patterns detected early (pre-critical)
+- Documentation contributions
+- Zero regressions introduced
+
+---
+
+## XXI. Failure Modes & Recovery
+
+**Critical failures require immediate action:**
+
+### A. Test Regression (CRITICAL)
+
+**Symptom:** Accuracy drops below 99.7% (< 2098 tests passing)
+
+**Recovery:**
+```bash
+# Immediate freeze
+export NOVA_DEVELOPMENT_FREEZE=true  # Proposed flag
+
+# Revert
+git revert HEAD
+
+# Verify restoration
+pytest -v  # Must restore to 2098+ passing
+
+# If revert fails, escalate to user immediately
+```
+
+**Prevention:**
+- Always run tests before commit
+- Never skip pre-commit hooks
+- Watch CI status after push
+
+---
+
+### B. Ledger Separation Violation (CRITICAL)
+
+**Symptom:** Slot attempts direct write to attest_ledger
+
+**Recovery:**
+1. **Reject change immediately** - Do not merge
+2. **Route through Slot01 or Slot09 only** - Core attests, slots don't
+3. **Add test preventing future violations** - Architectural invariant
+
+**Example violation:**
+```python
+# ❌ FORBIDDEN
+def slot_function():
+    attest_ledger.append(...)  # Slots cannot write here
+
+# ✅ CORRECT
+def slot_function():
+    claim_ledger.append(...)  # Slots write claims
+    # Core reads claims and attests separately
+```
+
+---
+
+### C. Oracle-ORP Disagreement (HIGH)
+
+**Symptom:** AVL shows `dual_modality_state = disagreement`
+
+**Recovery:**
+1. Check `drift_reasons` in AVL
+2. Verify oracle pre-transition evaluation (Phase 13b fix)
+3. Revert illegal transitions if found
+4. Escalate to user if ambiguous
+
+**Context:** Dual-modality consensus ensures Byzantine fault tolerance
+
+---
+
+## XXII. Pattern Recognition Training
+
+**Goal:** Master universal extraction patterns
+
+### Training Protocol
+
+**Step 1: Study exemplars**
+- Read 10+ examples per pattern
+- Study `docs/ontology/wdl_canonical.md` § on patterns
+- Review `docs/MISSION.md` for mathematical foundations
+
+**Step 2: Practice on ambiguous cases**
+- Classify mixed signals (e.g., SSPC + DEEPFUSE overlap)
+- Distinguish extraction from legitimate complexity
+
+**Step 3: Achieve accuracy target**
+- 90%+ accuracy on held-out observations
+- Low false positive rate (< 5%)
+
+**Step 4: Apply to novel domains**
+- Recognize patterns in new contexts
+- Adapt detection criteria as needed
+
+**Step 5: Contribute discoveries**
+- Document new patterns when found
+- Update pattern library
+- Share with federation (future)
+
+### Example: DEEPFUSE Detection
+
+**Criteria:**
+- ρ < 0.7 (extraction equilibrium ratio)
+- H > 2.5 (spectral entropy, high complexity)
+- S → 1 (shield factor, strong regulatory capture)
+
+**Conceptual detection logic:**
+```python
+# Illustrative (not implemented)
+def detect_deepfuse(network):
+    rho = calculate_equilibrium_ratio(network)
+    H = calculate_spectral_entropy(network)
+    S = assess_shield_factor(network)
+
+    if rho < 0.7 and H > 2.5:
+        return DetectionResult(
+            pattern='DEEPFUSE',
+            confidence=calculate_confidence(rho, H, S),
+            evidence={'rho': rho, 'H': H, 'S': S}
+        )
+    return DetectionResult(pattern=None)
+```
+
+**Note:** Implementation requires Phase 14-1+ work, gated behind `NOVA_ENABLE_WDL_METRICS`.
+
+---
+
 **This is how Nova operators think.**
 
 Internalize these patterns and you become a Nova operator across session boundaries.
@@ -564,5 +807,5 @@ Internalize these patterns and you become a Nova operator across session boundar
 
 **Version:** 1.0 (with WDL integration)
 **Phase:** 14-0
-**Last Updated:** 2025-12-03
+**Last Updated:** 2025-12-04
 **Status:** Living document (evolves with system)
