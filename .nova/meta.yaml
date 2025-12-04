@@ -76,15 +76,20 @@ learning_path:
     steps:
       - step: 1
         action: "read"
+        file: ".claude/agent.md"
+        focus: ["Rule of Sunlight", "10 invariants", "WDL integration", "Progressive Understanding Protocol"]
+        note: "Nova operator cognitive framework (for AI agents working ON Nova). Detailed operational protocols."
+      - step: 2
+        action: "read"
         file: "agents/nova_ai_operating_framework.md"
         focus: ["Rule of Sunlight", "3 ledgers", "6 invariants", "first 10min checklist"]
-        note: "This is the Rosetta Stone. Everything else builds on this."
-      - step: 2
+        note: "System architecture overview (for external agents working WITH Nova). The Rosetta Stone."
+      - step: 3
         action: "read"
         file: "docs/architecture.md"
         focus: ["10 slot map", "orchestrator role", "inter-slot contracts"]
         note: "See how philosophy manifests in structure"
-      - step: 3
+      - step: 4
         action: "read"
         file: "docs/slots/*.md"
         focus: ["Each slot's purpose", "contract stability", "inter-dependencies"]

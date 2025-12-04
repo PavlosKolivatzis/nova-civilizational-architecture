@@ -60,10 +60,28 @@ The canonical navigation index for Nova. Contains:
 
 ## Learning Path Summary
 
+### Operator vs External Agent Paths
+
+**Two entry points, same destination:**
+
+- **AI operators working ON Nova** → `.claude/agent.md`
+  - Cognitive framework with operational protocols
+  - Enhanced with WDL integration, failure modes, pattern recognition
+  - Detailed: 811 lines, 22 sections
+
+- **External agents working WITH Nova** → `agents/nova_ai_operating_framework.md`
+  - System architecture overview
+  - Rule of Sunlight, 3 ledgers, 6 invariants
+  - Concise: First 10min checklist
+
+**Both paths converge** at core principles, but operator path is more detailed for daily work.
+
+---
+
 ### Phase 1: Orientation (~15 min)
 - **Goal**: Understand Nova's mental model
-- **Read**: `agents/nova_ai_operating_framework.md`, `docs/architecture.md`, `docs/slots/*.md`
-- **Focus**: Rule of Sunlight, 3 ledgers, 6 invariants, slot boundaries
+- **Read**: `.claude/agent.md`, `agents/nova_ai_operating_framework.md`, `docs/architecture.md`, `docs/slots/*.md`
+- **Focus**: Rule of Sunlight, 10 invariants, WDL integration, slot boundaries
 
 ### Phase 2: Introspection (~10 min)
 - **Goal**: Probe current system state

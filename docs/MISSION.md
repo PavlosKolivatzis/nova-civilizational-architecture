@@ -140,14 +140,18 @@ These principles are **non-negotiable**:
 ## For Operators
 
 **If you need:**
-- Daily operational guidance → `.claude/agent.md`
+- Daily operational guidance → `.claude/agent.md` (operators working ON Nova)
+- System overview → `agents/nova_ai_operating_framework.md` (agents working WITH Nova)
 - World dynamics vocabulary → `docs/ontology/wdl_canonical.md`
 - Mission/philosophy context → This document
 - Technical architecture → `docs/ARCHITECTURE.md`
+- Entry protocol → `.nova/README.md` and `.nova/meta.yaml`
 
 **This document answers "Why Nova exists?"**
 
-**Agent.md answers "How do I work on Nova?"**
+**`.claude/agent.md` answers "How do I work on Nova?"**
+
+**`agents/nova_ai_operating_framework.md` answers "How does Nova work?"**
 
 ---
 
