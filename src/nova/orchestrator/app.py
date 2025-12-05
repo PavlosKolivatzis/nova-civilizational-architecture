@@ -506,6 +506,11 @@ if FastAPI is not None:
     if reflection_router is not None:
         app.include_router(reflection_router)
     try:
+        from nova.ledger.api_checkpoints import checkpoint_router
+        app.include_router(checkpoint_router)
+    except Exception:
+        logger.warning("Failed to add ledger checkpoint router")
+    try:
         from nova.federation.federation_server import build_router as build_federation_router
     except Exception:  # pragma: no cover - federation optional
         build_federation_router = None  # type: ignore
