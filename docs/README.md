@@ -80,8 +80,8 @@ Welcome to the Nova Civilizational Architecture documentation. This index provid
 ## 📊 Key Metrics & Status
 
 - **Ontology Version**: Mother Ontology v1.7.1
-- **Phase Status**: Phase 14-0 (Repository Consolidation)
-- **Test Coverage**: 2145 tests, 100% pass rate
+- **Phase Status**: Phase 14-1 (Mathematical Entry Protocol)
+- **Test Coverage**: 2021 tests passing (2117 collected, 95.47%)
 - **Documentation Integrity**: Sunlight Doctrine compliant
 
 ## 🔍 Search & Navigation

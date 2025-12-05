@@ -123,7 +123,7 @@ learning_path:
       - step: 3
         action: "run"
         command: "pytest -q -m 'not slow'"
-        expect: "≈2145 tests passing (current baseline)"
+        expect: "2021 tests passing (2117 collected, current baseline)"
         note: "Tests are documentation. Read failures to understand boundaries."
       - step: 4
         action: "run"
@@ -359,8 +359,8 @@ runtime:
 
   tests:
     command: "pytest -q -m 'not slow'"
-    expected_pass_count: 2145
-    total_collected: 2145
+    expected_pass_count: 2021
+    total_collected: 2117
     coverage_target: "85% (configurable thresholds; current >95%)"
 
   metrics:

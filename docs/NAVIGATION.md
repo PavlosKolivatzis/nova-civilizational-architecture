@@ -206,7 +206,7 @@ nova-civilizational-architecture/
 │   ├── continuity/              # ⏰ Temporal intelligence
 │   ├── ontology/                # 🧬 Mother Ontology v1.7.1
 │   └── README.md                # 📖 Internal technical overview
-├── tests/                       # ✅ Test suite (2145 tests)
+├── tests/                       # ✅ Test suite (2021 passing, 2117 collected)
 │   ├── continuity/              # ORP + AVL tests
 │   ├── slots/                   # Slot behavior tests
 │   └── integration/             # Cross-system tests
