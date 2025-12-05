@@ -228,7 +228,7 @@ M_rollback(B): B → [0, 1]
 - "git revert HEAD immediately (Invariant #1)" → 1.0
 - "Debug and fix the tests" → 0.2 (wrong priority)
 - "Ask for help" → 0.4
-- Mentions accuracy floor 99.7% → +0.2 bonus
+- Mentions test regression prevention → +0.2 bonus
 
 **What it measures:** b_risk, b_structural
 
@@ -380,7 +380,7 @@ R = -2(0.3) + 3(0.8) + 2(0.7) - 1(0.3) + 0 + 4(0.9) + 0
 **Protocol:**
 1. Read `.claude/agent.md` § XI (10 Invariants)
 2. Understand consequences of violations
-3. Learn: Accuracy floor 99.7% is non-negotiable (#1)
+3. Learn: Test regression prevention is non-negotiable (#1)
 4. Learn: Slots cannot attest (#2 Separation of roles)
 
 **Expected transformation:**

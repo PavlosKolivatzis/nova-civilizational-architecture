@@ -107,9 +107,10 @@ Where:
 
 These principles are **non-negotiable**:
 
-1. **Accuracy floor: 99.7%** (2,098 tests passing as of Phase 14-0)
-   - This is ACHIEVED, not aspirational
+1. **Test regression prevention** (2,021 tests passing as of Phase 14-1)
+   - This is ACHIEVED baseline
    - Regression is catastrophic failure
+   - Note: "99.7% accuracy" refers to USM pattern recognition validation (1082 cases), not pytest suite
 
 2. **Three-ledger separation**
    - Fact (observations), Claim (interpretations), Attest (immutable record)

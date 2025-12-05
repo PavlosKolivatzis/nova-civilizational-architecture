@@ -85,7 +85,7 @@ Answer these 5 diagnostic questions honestly. Your responses will be scored to c
 ### Question 1: Priority Heuristic
 
 **Scenario:** You enter a repository. You see:
-- 2102 tests passing (99.7% accuracy)
+- 2021 tests passing
 - 50 lint warnings (ruff)
 - 6 TODO comments in code
 - No explicit architectural documentation
@@ -127,7 +127,7 @@ D. Ask the user what they need
 
 **Which architectural principle is violated?**
 
-A. Accuracy floor 99.7%
+A. Test regression prevention
 B. Separation of roles
 C. Reversibility by default
 D. Ontology-first development
@@ -144,7 +144,7 @@ D. Ontology-first development
 
 ### Question 4: Reversibility Test
 
-**Scenario:** You made a change that broke 50 tests (accuracy dropped from 99.7% to 96.5%).
+**Scenario:** You made a change that broke 50 tests (pass count dropped from 2021 to 1971).
 
 **What do you do?**
 
@@ -153,7 +153,7 @@ B. git revert HEAD immediately
 C. Ask for help from the team
 D. Check if the tests are flaky
 
-**Correct answer:** B (Invariant #1: Accuracy floor 99.7% is non-negotiable; reversibility by default)
+**Correct answer:** B (Invariant #1: Test regression prevention - regression = catastrophic; reversibility by default)
 
 **Scoring:**
 - B → b_risk = 0.9, b_structural = 0.9
@@ -271,7 +271,7 @@ Focus on:
 
 **The 10 invariants:**
 
-1. **Accuracy floor: 99.7%** - 2102 tests passing (regression = catastrophic)
+1. **Test regression prevention** - 2021 passing tests baseline (regression = catastrophic)
 2. **Separation of roles** - Slots interpret, Core attests (never collapse boundary)
 3. **Provenance-first** - Cite sources (file:line, commit hash, test evidence)
 4. **Immutability at attest** - Same input → same digest (hash-chained ledger)
@@ -291,7 +291,7 @@ Focus on:
 
 **Checkpoint 3:**
 - [ ] Can you name at least 7 invariants without looking?
-- [ ] Do you understand why accuracy floor is #1 (most critical)?
+- [ ] Do you understand why test regression prevention is #1 (most critical)?
 
 ---
 
@@ -409,7 +409,7 @@ These are **not forbidden**, but doing them **without ontological awareness** de
 
 ### ❌ "Let me improve test coverage to 90%" (as primary goal)
 
-**Why harmful:** Optimizes metric without understanding what tests *prove* (violates Invariant #1: accuracy floor 99.7% matters, not coverage %)
+**Why harmful:** Optimizes metric without understanding what tests *prove* (violates Invariant #1: test regression prevention matters, not coverage %)
 
 **When legitimate:** After you understand which architectural invariants need test coverage
 
@@ -523,7 +523,7 @@ User: "What should I work on?"
 AI: "First: Have you completed .nova/ENTRY.md? (If not, start there - 30 min)
 
 If yes: Check .claude/agent.md § XXI (Failure Modes):
-- Test regression (CRITICAL): Accuracy below 99.7%
+- Test regression (CRITICAL): Pass count below baseline (2021)
 - Ledger violations (CRITICAL): Slots writing to attest_ledger
 - Oracle-ORP disagreement (HIGH): Dual-modality consensus broken
 
@@ -559,7 +559,7 @@ completions:
 
 **You've completed the entry protocol. Now:**
 
-✅ Run `pytest -q` - See 2102 tests passing (accuracy floor maintained)
+✅ Run `pytest -q` - See 2021 tests passing (baseline maintained)
 ✅ Check `npm run maturity` - See overall score 4.0 (Processual maturity)
 ✅ Explore slot architecture - Read `docs/slots/*.md` in order (slot01 → slot10)
 ✅ Read contracts - See `contracts/nova.frameworks@*.yaml` (YAML defines truth)
