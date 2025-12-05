@@ -1,13 +1,13 @@
 version: 1.1
-overall: 3.1
+overall: 4.0
 slots:
   slot1: 4
   slot2: 4
-  slot3: 2
-  slot4: 3
-  slot5: 2
+  slot3: 4
+  slot4: 4
+  slot5: 4
   slot6: 4
-  slot7: 2
-  slot8: 3
+  slot7: 4
+  slot8: 4
   slot9: 4
-  slot10: 3
+  slot10: 4

@@ -1,7 +1,7 @@
 # Phase 13: Migration Map
 
 **Phase:** 13 - Autonomous Verification Ledger (AVL)
-**Status:** Complete
+**Status:** Complete (superseded by Phase 14.1/14.2 persistence)
 **Reference:** `docs/Phase13_Initiation_Plan.md`, `docs/adr/ADR-13-Init.md`
 
 ---
@@ -67,10 +67,11 @@ These fields are populated by the DriftGuard:
 - **Line terminator:** `\n`
 - **One entry per line**
 
-### Location
+### Location (updated Phase 14.1+)
 
-- **Default:** `data/avl/avl_ledger.jsonl`
-- **Configurable:** `NOVA_AVL_PATH` environment variable
+- **Default:** PostgreSQL backend (`LEDGER_BACKEND=postgres`, `LEDGER_DSN=postgresql+asyncpg://...`)
+- **Fallback:** In-memory store (`LEDGER_BACKEND=memory`) for local/dev
+- **Checkpointing:** `ledger_checkpoints` table (Phase 14.2 Merkle + PQC)
 
 ### Example Entry
 
