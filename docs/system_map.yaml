@@ -1,38 +1,41 @@
 nodes:
-  - id: S02
-    name: "ΔTHRESH"
-    version: 2.3
-  - id: S04
-    name: "TRI Engine"
-    version: 1.0
-  - id: S05
-    name: "Constellation"
-    version: 1.0
-  - id: S06
-    name: "Cultural Synthesis"
-    version: 4.2
-  - id: S09
-    name: "Distortion Protection"
-    version: 1.0
-  - id: S10
-    name: "Deployment"
-    version: 1.0
-  - id: S03
-    name: "Emotional Matrix"
-    version: 1.0
-  - id: S07
-    name: "Production Controls"
-    version: 1.0
   - id: S01
     name: "Truth Anchor"
-    version: 1.0
+    version: 4.0
+  - id: S02
+    name: "ëTHRESH"
+    version: 4.0
+  - id: S03
+    name: "Emotional Matrix"
+    version: 4.0
+  - id: S04
+    name: "TRI Engine"
+    version: 4.0
+  - id: S05
+    name: "Constellation"
+    version: 4.0
+  - id: S06
+    name: "Cultural Synthesis"
+    version: 4.0
+  - id: S07
+    name: "Production Controls"
+    version: 4.0
   - id: S08
     name: "Memory Ethics"
-    version: 1.0
+    version: 4.0
+  - id: S09
+    name: "Distortion Protection"
+    version: 4.0
+  - id: S10
+    name: "Deployment"
+    version: 4.0
   - id: O
     name: "Orchestrator"
-    version: 1.0
+    version: 4.0
 edges:
+  - from: S01
+    to: [S02, S06, S10]
+    contract: TRUTH_ANCHOR
   - from: S02
     to: S04
     contract: TRI_QUERY
@@ -63,6 +66,9 @@ edges:
   - from: S07
     to: O
     contract: CONTROL_CMDS@1
+  - from: S08
+    to: [S06, S09, S10]
+    contract: MEMORY_ETHICS
 constraints:
   - from: S01
     to: [S02, S06, S10]
