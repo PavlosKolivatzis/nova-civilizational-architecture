@@ -6,13 +6,10 @@ This directory contains the **active map** of Nova's architecture—metadata tha
 
 ```bash
 # Human-readable welcome screen
-npm run nova:welcome
+./tools/nova-welcome.sh
 
-# Single-line status (for scripts)
-npm run nova:status
-
-# Machine-readable JSON (for agents)
-npm run nova:json
+# PowerShell variant (Windows)
+./tools/nova-welcome.ps1
 ```
 
 ## Files
@@ -86,8 +83,8 @@ The canonical navigation index for Nova. Contains:
 ### Phase 2: Introspection (~10 min)
 - **Goal**: Probe current system state
 - **Read**: `src/nova/slots/*/meta.yaml`, `orchestrator/app.py`
-- **Run**: `pytest -q`, `npm run maturity`
-- **Verify**: 1435 tests passing (1443 total), maturity 4.0
+- **Run**: `pytest -q -m "not slow"`, `./tools/maturity.sh` (or `.ps1`)
+- **Verify**: ≈2145 tests passing, maturity 4.0
 
 ### Phase 3: Observability (~10 min)
 - **Goal**: Understand runtime metrics

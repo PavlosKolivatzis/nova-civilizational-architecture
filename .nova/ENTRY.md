@@ -1,5 +1,7 @@
 # STOP: Read This First
 
+> Protocol-only: This entry process is guidance, not enforced by runtime code. You must apply it manually/with scripts and keep changes reversible and flag-gated.
+
 ⚠️ **You've entered the Nova Civilizational Architecture codebase.** ⚠️
 
 **This is not a normal codebase.**

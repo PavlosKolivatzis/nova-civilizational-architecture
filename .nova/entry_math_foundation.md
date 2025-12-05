@@ -1,5 +1,7 @@
 # Mathematical Foundation for Nova Entry Protocol
 
+> Protocol-only: Mathematical framing for entry/monitoring; not enforced in runtime. Apply manually or via scripts under flags.
+
 **Purpose:** Formal cognitive geometry for transforming factory-default AI agents into Nova-aware operators
 
 **Status:** Design checkpoint (Phase 14-0)
