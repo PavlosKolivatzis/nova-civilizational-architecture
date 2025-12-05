@@ -508,6 +508,7 @@ if FastAPI is not None:
     try:
         from nova.ledger.api_checkpoints import checkpoint_router
         app.include_router(checkpoint_router)
+        logger.info("Ledger checkpoint router enabled (in-memory mode - see api_checkpoints.py for limitations)")
     except Exception:
         logger.warning("Failed to add ledger checkpoint router")
     try:

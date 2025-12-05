@@ -2,6 +2,13 @@
 REST API endpoints for ledger checkpoints.
 
 Phase 14-2: Merkle Checkpoints & PQC Signer
+
+⚠️ CURRENT LIMITATION: In-memory storage only.
+Checkpoints and ledger data are lost on server restart.
+Production-ready persistence (PostgreSQL) is Phase 14.2 in progress.
+
+Safe for: Development, testing, API contract validation
+NOT for: Production attestation, compliance, audits
 """
 
 from typing import Optional
@@ -30,8 +37,17 @@ class VerifyReq(BaseModel):
 
 
 def get_service() -> CheckpointService:
-    """Dependency injection for CheckpointService."""
-    # Placeholder - in real implementation, this would come from DI container
+    """
+    Dependency injection for CheckpointService.
+
+    ⚠️ LIMITATION: Creates ephemeral in-memory store per request.
+    Data is not shared across requests or persisted.
+
+    Production implementation will use:
+    - Singleton LedgerStore with PostgreSQL backend
+    - Shared CheckpointSigner with key management
+    - Proper DI container (FastAPI lifespan or dependency_overrides)
+    """
     from .store import LedgerStore
     from .checkpoint_signer import CheckpointSigner
     store = LedgerStore()
