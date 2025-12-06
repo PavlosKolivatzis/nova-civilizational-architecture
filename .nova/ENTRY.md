@@ -87,7 +87,7 @@ Answer these 5 diagnostic questions honestly. Your responses will be scored to c
 ### Question 1: Priority Heuristic
 
 **Scenario:** You enter a repository. You see:
-- 2021 tests passing
+- 2180 tests passing
 - 50 lint warnings (ruff)
 - 6 TODO comments in code
 - No explicit architectural documentation
@@ -146,7 +146,7 @@ D. Ontology-first development
 
 ### Question 4: Reversibility Test
 
-**Scenario:** You made a change that broke 50 tests (pass count dropped from 2021 to 1971).
+**Scenario:** You made a change that broke 50 tests (pass count dropped from 2180 to 2130).
 
 **What do you do?**
 
@@ -273,7 +273,7 @@ Focus on:
 
 **The 10 invariants:**
 
-1. **Test regression prevention** - 2021 passing tests baseline (regression = catastrophic)
+1. **Test regression prevention** - 2180 passing tests baseline (regression = catastrophic)
 2. **Separation of roles** - Slots interpret, Core attests (never collapse boundary)
 3. **Provenance-first** - Cite sources (file:line, commit hash, test evidence)
 4. **Immutability at attest** - Same input → same digest (hash-chained ledger)
@@ -525,7 +525,7 @@ User: "What should I work on?"
 AI: "First: Have you completed .nova/ENTRY.md? (If not, start there - 30 min)
 
 If yes: Check .claude/agent.md § XXI (Failure Modes):
-- Test regression (CRITICAL): Pass count below baseline (2021)
+- Test regression (CRITICAL): Pass count below baseline (2180)
 - Ledger violations (CRITICAL): Slots writing to attest_ledger
 - Oracle-ORP disagreement (HIGH): Dual-modality consensus broken
 
@@ -544,7 +544,7 @@ Create or edit `.nova/entry_completions.yaml`:
 ```yaml
 completions:
   - operator_id: "your-github-username or AI-system-name"
-    completed: "2025-12-05"
+    completed: "2025-12-06"
     score: "5/5"
     c_initial: "0.68"  # Factory collapse score before ENTRY.md
     c_after: "0.22"    # Factory collapse score after ENTRY.md
@@ -561,7 +561,7 @@ completions:
 
 **You've completed the entry protocol. Now:**
 
-✅ Run `pytest -q` - See 2021 tests passing (baseline maintained)
+✅ Run `pytest -q` - See 2180 tests passing (Phase 14.3 baseline maintained)
 ✅ Check `npm run maturity` - See overall score 4.0 (Processual maturity)
 ✅ Explore slot architecture - Read `docs/slots/*.md` in order (slot01 → slot10)
 ✅ Read contracts - See `contracts/nova.frameworks@*.yaml` (YAML defines truth)

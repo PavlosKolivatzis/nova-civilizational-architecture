@@ -26,15 +26,19 @@ class TestTextGraphParser:
         parser = TextGraphParser(enable_logging=True)
         assert parser.enable_logging is True
 
-    def test_parse_empty_text_raises(self):
-        """Test parser rejects empty text"""
+    def test_parse_empty_text_returns_empty_graph(self):
+        """Empty input returns empty graph with parse_status metadata"""
         parser = TextGraphParser()
 
-        with pytest.raises(ValueError, match="Cannot parse empty text"):
-            parser.parse("")
+        graph = parser.parse("")
+        assert graph.actors == []
+        assert graph.relations == {}
+        assert graph.metadata.get("parse_status") == "empty_input"
 
-        with pytest.raises(ValueError, match="Cannot parse empty text"):
-            parser.parse("   ")
+        graph = parser.parse("   ")
+        assert graph.actors == []
+        assert graph.relations == {}
+        assert graph.metadata.get("parse_status") == "empty_input"
 
     def test_parse_simple_sentence(self):
         """Test parsing a simple sentence"""

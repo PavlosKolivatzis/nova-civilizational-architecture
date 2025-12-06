@@ -92,8 +92,11 @@ class TextGraphParser:
         Raises:
             ValueError: If text is empty or invalid
         """
-        if not text or not text.strip():
-            raise ValueError("Cannot parse empty text")
+        if text is None or (isinstance(text, str) and not text.strip()):
+            G = SystemGraph(actors=[], relations={}, metadata={"parse_status": "empty_input", "text_length": 0})
+            if self.enable_logging:
+                logger.info("Empty input provided; returning empty SystemGraph")
+            return G
 
         self.parse_count += 1
 

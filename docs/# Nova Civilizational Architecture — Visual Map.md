@@ -1,9 +1,10 @@
 \# Nova Civilizational Architecture — Visual Map
 
-**Version**: 8.0 (Phase 14.2)
+**Version**: 8.1 (Phase 14.3)
 \*\*Status\*\*: Processual 4.0 Maturity
 \*\*Scale\*\*: 50,000+ lines, 10 cognitive slots
-**Last Updated**: 2025-12-05
+**Phase Focus**: Slot02 USM bias detection pipeline (BIAS_REPORT@1) + persistent PQC checkpoints (PostgreSQL)
+**Last Updated**: 2025-12-06
 
 \---
 
@@ -327,7 +328,7 @@ graph TB
 \- \`/metrics\` — Prometheus scrape target
 
 \#\#\# CI/CD Pipelines
-1\. \*\*nova-ci.yml\*\* — Main test suite (1695 tests passing)
+1\. \*\*nova-ci.yml\*\* — Main test suite (2180 tests passing)
 2\. \*\*health-config-matrix.yml\*\* — Python 3.9-3.13 matrix
 3\. \*\*contracts-freeze.yml\*\* — Contract schema protection
 4\. \*\*contracts-nightly.yml\*\* — Nightly validation
@@ -380,15 +381,9 @@ graph TB
 
 \*\*Maturity\*\*: Processual 4.0 (Full Autonomous Operation)
 \*\*Scale\*\*: 50,000+ lines across 10 slots \+ orchestrator
-**Test Coverage**: 2021 tests passing (2117 collected)
+**Test Coverage**: 2180 tests passing (2200 collected)
 \*\*Production Ready\*\*: Yes, with comprehensive observability
 \*\*Recent Additions\*\*:
 \- Phase 8: Continuity Stability Index (CSI) cross-phase fusion
 \- Phase 14: Immutable ledger with PQC signatures (Dilithium2)
 \- Phase 7.0-RC: Release Candidate validation framework
-
-
-
-
-
-

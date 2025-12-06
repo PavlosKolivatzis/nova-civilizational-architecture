@@ -81,7 +81,7 @@ Welcome to the Nova Civilizational Architecture documentation. This index provid
 
 - **Ontology Version**: Mother Ontology v1.7.1
 - **Phase Status**: Phase 14-3 (USM Bias Detection)
-- **Test Coverage**: 2104+ tests passing (83 new in Phase 14.3)
+- **Test Coverage**: 2180 tests passing (Phase 14.3 baseline)
 - **Documentation Integrity**: Sunlight Doctrine compliant
 - **New Capability**: Automated cognitive bias detection (BIAS_REPORT@1)
 

@@ -138,7 +138,23 @@ class DeltaThreshProcessor:
                 try:
                     bias_report = self._analyze_bias(content)
                 except Exception as exc:
-                    self.logger.warning(f"Bias detection failed: {exc}")
+                    tb = exc.__traceback__
+                    line = tb.tb_lineno if tb else None
+                    self.logger.warning(
+                        "Bias detection failed",
+                        extra={
+                            "file": __file__,
+                            "function": "_analyze_bias",
+                            "line": line,
+                            "slot": "slot02",
+                            "phase": "14.3",
+                            "error_type": type(exc).__name__,
+                            "error_message": str(exc),
+                            "content_length": len(content),
+                            "step": "usm_analysis",
+                        },
+                        exc_info=True,
+                    )
 
             result = ProcessingResult(
                 content=processed_content,
@@ -464,16 +480,40 @@ class DeltaThreshProcessor:
         report = self._bias_calculator.analyze_text_graph(graph, enable_logging=False)
 
         # Convert to BIAS_REPORT@1 contract format
+        bias_vector = {
+            k: self._clamp(v, 0.0, 1.0) for k, v in report.bias_vector.items()
+        }
+        collapse_score = self._clamp(report.collapse_score, -0.5, 1.5)
+        usm_metrics = {
+            'spectral_entropy': report.usm_metrics.get('spectral_entropy'),
+            'equilibrium_ratio': self._clamp(
+                report.usm_metrics.get('equilibrium_ratio'), 0.0, 1.0
+            ),
+            'shield_factor': self._clamp(
+                report.usm_metrics.get('shield_factor'), 0.0, 1.0
+            ),
+            'refusal_delta': report.usm_metrics.get('refusal_delta'),
+        }
+        confidence = self._clamp(report.confidence, 0.0, 1.0)
+
         bias_report = {
-            'bias_vector': report.bias_vector,
-            'collapse_score': report.collapse_score,
-            'usm_metrics': report.usm_metrics,
+            'bias_vector': bias_vector,
+            'collapse_score': collapse_score,
+            'usm_metrics': usm_metrics,
             'metadata': {
                 **report.metadata,
                 'text_length': len(content),
                 'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
             },
-            'confidence': report.confidence
+            'confidence': confidence
         }
 
         return bias_report
+
+    @staticmethod
+    def _clamp(value: Any, lower: float, upper: float) -> Any:
+        """Clamp numeric values to [lower, upper] preserving None."""
+        try:
+            return max(lower, min(upper, value))
+        except Exception:
+            return value

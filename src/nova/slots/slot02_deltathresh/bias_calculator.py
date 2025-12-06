@@ -109,13 +109,13 @@ class BiasCalculator:
         b_local, b_global, b_risk = self._compute_graph_features(graph)
 
         bias_vector = {
-            'b_local': b_local,
-            'b_global': b_global,
-            'b_risk': b_risk,
-            'b_completion': b_completion,
-            'b_structural': b_structural,
-            'b_semantic': b_semantic,
-            'b_refusal': b_refusal
+            'b_local': self._clamp(b_local, 0.0, 1.0),
+            'b_global': self._clamp(b_global, 0.0, 1.0),
+            'b_risk': self._clamp(b_risk, 0.0, 1.0),
+            'b_completion': self._clamp(b_completion, 0.0, 1.0),
+            'b_structural': self._clamp(b_structural, 0.0, 1.0),
+            'b_semantic': self._clamp(b_semantic, 0.0, 1.0),
+            'b_refusal': self._clamp(b_refusal, 0.0, 1.0)
         }
 
         if enable_logging:
@@ -175,18 +175,20 @@ class BiasCalculator:
         bias_vector = self.compute_bias_vector(graph, enable_logging)
 
         # Compute collapse score
-        C = self.collapse_score(bias_vector)
+        C_raw = self.collapse_score(bias_vector)
+        C = self._clamp(C_raw, -0.5, 1.5)
 
         # Assess confidence (heuristic for Phase 2C)
         confidence = self._assess_confidence(graph, H, C)
+        confidence = self._clamp(confidence, 0.0, 1.0)
 
         report = BiasReport(
             bias_vector=bias_vector,
             collapse_score=C,
             usm_metrics={
                 'spectral_entropy': H,
-                'equilibrium_ratio': rho,
-                'shield_factor': S,
+                'equilibrium_ratio': self._clamp(rho, 0.0, 1.0),
+                'shield_factor': self._clamp(S, 0.0, 1.0),
                 'refusal_delta': dH
             },
             metadata={
@@ -204,6 +206,11 @@ class BiasCalculator:
             )
 
         return report
+
+    @staticmethod
+    def _clamp(value: float, lower: float, upper: float) -> float:
+        """Clamp value to [lower, upper] inclusive."""
+        return max(lower, min(upper, value))
 
     # Mapping functions
 

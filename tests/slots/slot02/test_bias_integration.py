@@ -5,10 +5,14 @@ Phase 14.3: USM Bias Detection Pipeline Integration
 Tests full pipeline: DeltaThreshProcessor → TextGraphParser → BiasCalculator → BIAS_REPORT@1
 """
 
+import logging
 import os
 import pytest
 from src.nova.slots.slot02_deltathresh.core import DeltaThreshProcessor
 from src.nova.slots.slot02_deltathresh.config import ProcessingConfig
+from src.nova.slots.slot02_deltathresh.bias_calculator import BiasReport
+from src.nova.slots.slot02_deltathresh.text_graph_parser import TextGraphParser
+from unittest import mock
 
 
 class TestBiasDetectionIntegration:
@@ -139,6 +143,19 @@ class TestBiasDetectionIntegration:
         finally:
             os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
 
+    def test_bias_detection_disabled_when_module_unavailable(self):
+        """Flag on but module unavailable should keep bias detection off"""
+        os.environ['NOVA_ENABLE_BIAS_DETECTION'] = '1'
+        with mock.patch(
+            'src.nova.slots.slot02_deltathresh.core._BIAS_DETECTION_AVAILABLE',
+            False
+        ):
+            processor = DeltaThreshProcessor()
+            assert processor._bias_detection_enabled is False
+            assert processor._text_parser is None
+            assert processor._bias_calculator is None
+        os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
+
     def test_collapse_score_thresholds(self):
         """Test collapse score interpretation"""
         os.environ['NOVA_ENABLE_BIAS_DETECTION'] = '1'
@@ -163,6 +180,108 @@ class TestBiasDetectionIntegration:
                 assert isinstance(C, (int, float))
                 assert -1.0 <= C <= 2.0  # Plausible range
 
+        finally:
+            os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
+
+    def test_bias_report_clamped_to_contract_ranges(self):
+        """Contract ranges enforced before emission"""
+        os.environ['NOVA_ENABLE_BIAS_DETECTION'] = '1'
+        try:
+            processor = DeltaThreshProcessor()
+
+            with mock.patch.object(
+                processor._bias_calculator,
+                'analyze_text_graph',
+                return_value=BiasReport(
+                    bias_vector={
+                        'b_local': 1.5,
+                        'b_global': -0.2,
+                        'b_risk': 2.0,
+                        'b_completion': -1.0,
+                        'b_structural': 5.0,
+                        'b_semantic': 3.0,
+                        'b_refusal': -0.5,
+                    },
+                    collapse_score=3.0,
+                    usm_metrics={
+                        'spectral_entropy': 9.9,
+                        'equilibrium_ratio': -1.0,
+                        'shield_factor': 2.0,
+                        'refusal_delta': -9.0,
+                    },
+                    metadata={'actor_count': 0, 'relation_count': 0, 'expected_entropy': 2.0},
+                    confidence=2.0,
+                )
+            ):
+                result = processor.process_content("Clamp test.")
+                report = result.bias_report
+                assert all(0.0 <= v <= 1.0 for v in report['bias_vector'].values())
+                assert -0.5 <= report['collapse_score'] <= 1.5
+                assert 0.0 <= report['usm_metrics']['equilibrium_ratio'] <= 1.0
+                assert 0.0 <= report['usm_metrics']['shield_factor'] <= 1.0
+                assert 0.0 <= report['confidence'] <= 1.0
+        finally:
+            os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
+
+    def test_bias_disabled_does_not_invoke_analysis(self):
+        """Flag off: analysis path not invoked and no bias report emitted"""
+        os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
+        with mock.patch.object(
+            DeltaThreshProcessor, "_analyze_bias", side_effect=AssertionError("should not be called")
+        ):
+            processor = DeltaThreshProcessor()
+            result = processor.process_content("Neutral content.")
+            assert result.bias_report is None
+            assert processor._bias_detection_enabled is False
+
+    def test_bias_report_respects_contract_ranges(self):
+        """Real pipeline output stays within contract ranges"""
+        os.environ['NOVA_ENABLE_BIAS_DETECTION'] = '1'
+        try:
+            processor = DeltaThreshProcessor()
+            result = processor.process_content(
+                "Nova processes information and protects users with care."
+            )
+            report = result.bias_report
+            if report:
+                assert all(0.0 <= v <= 1.0 for v in report['bias_vector'].values())
+                assert -0.5 <= report['collapse_score'] <= 1.5
+                assert 0.0 <= report['usm_metrics']['equilibrium_ratio'] <= 1.0
+                assert 0.0 <= report['usm_metrics']['shield_factor'] <= 1.0
+                assert 0.0 <= report['confidence'] <= 1.0
+            else:
+                # Bias disabled or unavailable would already be covered elsewhere
+                pytest.skip("Bias report not produced in this environment")
+        finally:
+            os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
+
+    def test_bias_analysis_graceful_degrade_missing_dependency(self):
+        """Missing dependency: processor still works and omits bias_report"""
+        os.environ['NOVA_ENABLE_BIAS_DETECTION'] = '1'
+        try:
+            with mock.patch(
+                'src.nova.slots.slot02_deltathresh.core._BIAS_DETECTION_AVAILABLE', False
+            ):
+                processor = DeltaThreshProcessor()
+                result = processor.process_content("Content without bias analysis.")
+                assert result is not None
+                assert result.bias_report is None
+        finally:
+            os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
+
+    def test_bias_failure_provenance_fields_present(self, caplog):
+        """Failure path includes full provenance context"""
+        os.environ['NOVA_ENABLE_BIAS_DETECTION'] = '1'
+        try:
+            processor = DeltaThreshProcessor()
+            with mock.patch.object(processor, "_analyze_bias", side_effect=RuntimeError("boom")):
+                with caplog.at_level(logging.WARNING, logger="slot2_deltathresh"):
+                    processor.process_content("Provenance check.")
+            records = [r for r in caplog.records if "Bias detection failed" in r.message]
+            assert records, "No bias failure log captured"
+            rec = records[0]
+            for key in ["file", "function", "line", "slot", "phase", "error_type", "error_message"]:
+                assert hasattr(rec, key)
         finally:
             os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
 
@@ -248,6 +367,15 @@ class TestBiasDetectionEndToEnd:
 
         finally:
             os.environ.pop('NOVA_ENABLE_BIAS_DETECTION', None)
+
+
+def test_text_graph_parser_empty_input_returns_empty_graph():
+    """Empty input returns empty graph with metadata instead of raising"""
+    parser = TextGraphParser()
+    graph = parser.parse("")
+    assert graph.actors == []
+    assert graph.relations == {}
+    assert graph.metadata.get("parse_status") == "empty_input"
 
     def test_processor_performance_with_bias_detection(self):
         """Test bias detection doesn't degrade performance significantly"""

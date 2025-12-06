@@ -15,7 +15,7 @@
 
 meta:
   schema_version: "1.0.0"
-  last_updated: "2025-12-05"
+  last_updated: "2025-12-06"
   maintainer: "Nova Core Team"
   purpose: "Active map of Nova's architecture, ontology, and runtime state"
 
@@ -26,7 +26,7 @@ system:
     A 10-slot AI governance system implementing provenance-first,
     immutable attestation, and civilizational-scale safety protocols.
 
-  phase: "Phase 14.2 - PostgreSQL Persistence & Merkle Checkpoints"
+  phase: "Phase 14.3 - USM Bias Detection + Persistent Checkpoints"
   maturity_level: "4.0 (Processual)"
   status: "stable"
 
@@ -123,7 +123,7 @@ learning_path:
       - step: 3
         action: "run"
         command: "pytest -q -m 'not slow'"
-        expect: "2021 tests passing (2117 collected, current baseline)"
+        expect: "2180 tests passing (2200 collected, Phase 14.3 baseline)"
         note: "Tests are documentation. Read failures to understand boundaries."
       - step: 4
         action: "run"
@@ -359,8 +359,8 @@ runtime:
 
   tests:
     command: "pytest -q -m 'not slow'"
-    expected_pass_count: 2021
-    total_collected: 2117
+    expected_pass_count: 2180
+    total_collected: 2200
     coverage_target: "85% (configurable thresholds; current >95%)"
 
   metrics:

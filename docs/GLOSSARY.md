@@ -340,7 +340,7 @@ This glossary provides definitions for key terms, concepts, and components in th
 - Documented in `docs/architecture/system_maturity.yaml`
 
 **Test Coverage**
-- Comprehensive testing strategy with 2021 tests passing (2117 collected)
+- Comprehensive testing strategy with 2180 tests passing (2200 collected)
 - Coverage metrics in `docs/architecture/SYSTEM_ANALYSIS.md`
 
 **Dependency Graph**

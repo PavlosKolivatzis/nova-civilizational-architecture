@@ -774,7 +774,7 @@ invariance_matrix:
 # ============================================================================
 
 test_coverage:
-  total_tests: 2021
+  total_tests: 2180
   accuracy: 0.997
 
   by_layer:
