@@ -23,6 +23,7 @@ jsonschema>=4.0,<5
 prometheus_client>=0.20
 dilithium-py>=1.1.0  # Post-quantum signatures (ML-DSA / FIPS 204)
 uuid6>=2024.1.12  # UUIDv7 support for time-sortable IDs
+networkx>=3.2.1,<4  # Required for SystemGraph/USM analysis
 
 # Phase 14-1: PostgreSQL persistence for Autonomous Verification Ledger
 SQLAlchemy>=2.0.0,<3.0.0
