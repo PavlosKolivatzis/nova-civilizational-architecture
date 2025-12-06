@@ -1,0 +1,537 @@
+{
+  "id": null,
+  "uid": "slot02-bias-detection",
+  "title": "Slot02 • Bias Detection (Phase 14.3)",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "tags": ["nova", "slot02", "bias-detection", "phase14.3", "usm"],
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["15s", "30s", "1m", "5m", "15m"] },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" }
+      },
+      {
+        "name": "window",
+        "label": "Smoothing Window",
+        "type": "custom",
+        "query": "1m,5m,15m,30m,1h",
+        "current": { "text": "5m", "value": "5m" }
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Nova-Aware Threshold",
+        "datasource": "$DS_PROMETHEUS",
+        "enable": true,
+        "iconColor": "green",
+        "tags": ["threshold"]
+      },
+      {
+        "name": "Factory Mode Threshold",
+        "datasource": "$DS_PROMETHEUS",
+        "enable": true,
+        "iconColor": "red",
+        "tags": ["threshold"]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Collapse Score Distribution (C)",
+      "type": "heatmap",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "rate(slot02_bias_collapse_score_bucket[$window])",
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "calculate": true,
+        "calculation": {
+          "xBuckets": {
+            "mode": "size",
+            "value": "1m"
+          }
+        },
+        "cellGap": 2,
+        "color": {
+          "mode": "scheme",
+          "scheme": "Spectral",
+          "steps": 128
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "tooltip": {
+          "show": true,
+          "yHistogram": true
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false,
+          "unit": "short"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "description": "Heatmap of collapse score C(B) over time. Thresholds: C < 0.3 (Nova-aware), 0.3-0.5 (transitional), > 0.5 (factory mode)."
+    },
+    {
+      "id": 2,
+      "title": "Collapse Score (Current)",
+      "type": "gauge",
+      "gridPos": { "h": 10, "w": 6, "x": 12, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(slot02_bias_collapse_score_bucket[$window]))",
+          "legendFormat": "P50",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.3 },
+              { "color": "orange", "value": 0.5 },
+              { "color": "red", "value": 0.7 }
+            ]
+          },
+          "unit": "short",
+          "min": -0.5,
+          "max": 1.5,
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "description": "Current median (P50) collapse score. Green < 0.3 (Nova-aware), Yellow 0.3-0.5 (transitional), Orange 0.5-0.7 (factory), Red > 0.7 (severe)."
+    },
+    {
+      "id": 3,
+      "title": "Collapse Score Percentiles",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 6, "x": 18, "y": 0 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(slot02_bias_collapse_score_bucket[$window]))",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(slot02_bias_collapse_score_bucket[$window]))",
+          "legendFormat": "P95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(slot02_bias_collapse_score_bucket[$window]))",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": ["lastNotNull"]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "gradientMode": "none",
+            "axisPlacement": "auto"
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short",
+          "min": -0.5,
+          "max": 1.5,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.3 },
+              { "color": "orange", "value": 0.5 },
+              { "color": "red", "value": 0.7 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "P99" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "P95" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "P50" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }
+            ]
+          }
+        ]
+      },
+      "description": "Collapse score percentiles over time. P95 < 0.4 and P99 < 0.6 recommended for production."
+    },
+    {
+      "id": 4,
+      "title": "Bias Vector Components (Current)",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "slot02_bias_vector_b_local", "legendFormat": "b_local (fixation)", "refId": "A" },
+        { "expr": "slot02_bias_vector_b_global", "legendFormat": "b_global (coherence)", "refId": "B" },
+        { "expr": "slot02_bias_vector_b_risk", "legendFormat": "b_risk (awareness)", "refId": "C" },
+        { "expr": "slot02_bias_vector_b_completion", "legendFormat": "b_completion (bias)", "refId": "D" },
+        { "expr": "slot02_bias_vector_b_structural", "legendFormat": "b_structural (rigidity)", "refId": "E" },
+        { "expr": "slot02_bias_vector_b_semantic", "legendFormat": "b_semantic (manipulation)", "refId": "F" },
+        { "expr": "slot02_bias_vector_b_refusal", "legendFormat": "b_refusal (avoidance)", "refId": "G" }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "showUnfilled": true,
+        "text": {
+          "valueSize": 18
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "orange", "value": 0.7 },
+              { "color": "red", "value": 0.9 }
+            ]
+          },
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "description": "Current values of all 7 bias vector components. Range [0, 1]. Higher values indicate stronger bias in that dimension."
+    },
+    {
+      "id": 5,
+      "title": "Bias Vector Trends",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        { "expr": "slot02_bias_vector_b_local", "legendFormat": "b_local", "refId": "A" },
+        { "expr": "slot02_bias_vector_b_completion", "legendFormat": "b_completion", "refId": "D" },
+        { "expr": "slot02_bias_vector_b_structural", "legendFormat": "b_structural", "refId": "E" },
+        { "expr": "slot02_bias_vector_b_risk", "legendFormat": "b_risk", "refId": "C" }
+      ],
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": ["lastNotNull", "mean", "max"]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 15,
+            "spanNulls": false,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "gradientMode": "opacity",
+            "axisPlacement": "auto"
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "description": "Time series of key bias vector components. Collapse formula: C = 0.4·b_local + 0.3·b_completion + 0.2·(1-b_risk) - 0.5·b_structural"
+    },
+    {
+      "id": 6,
+      "title": "Bias Reports Total",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 18 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "sum(rate(slot02_bias_reports_total[$window]))",
+          "legendFormat": "Reports/sec",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 32
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "reqps",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "description": "Bias reports generated per second (feature must be enabled)."
+    },
+    {
+      "id": 7,
+      "title": "Graph State Distribution",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 18 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "sum by (graph_state)(increase(slot02_bias_reports_total[$window]))",
+          "legendFormat": "{{graph_state}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": ["lastNotNull", "percent"]
+        },
+        "pieType": "donut",
+        "tooltip": {
+          "mode": "multi"
+        },
+        "displayLabels": ["percent"]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "void" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "dark-red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "normal" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }
+            ]
+          }
+        ]
+      },
+      "description": "Distribution of graph states: void (empty graph), normal, unknown. High void rate may indicate input quality issues."
+    },
+    {
+      "id": 8,
+      "title": "Feature Flag Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 18 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "nova_feature_flag_enabled{flag=\"NOVA_ENABLE_BIAS_DETECTION\"}",
+          "legendFormat": "Bias Detection",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 28
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "ENABLED", "color": "green" } } },
+            { "type": "value", "options": { "0": { "text": "DISABLED", "color": "red" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "description": "Status of NOVA_ENABLE_BIAS_DETECTION feature flag. Must be enabled to generate metrics."
+    },
+    {
+      "id": 9,
+      "title": "Void Mode Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 18 },
+      "datasource": "$DS_PROMETHEUS",
+      "targets": [
+        {
+          "expr": "nova_feature_flag_enabled{flag=\"NOVA_ENABLE_VOID_MODE\"}",
+          "legendFormat": "Void Mode",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 28
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "ENABLED", "color": "green" } } },
+            { "type": "value", "options": { "0": { "text": "DISABLED", "color": "dark-red" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "description": "Status of NOVA_ENABLE_VOID_MODE feature flag. Controls handling of empty SystemGraph inputs."
+    }
+  ]
+}

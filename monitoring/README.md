@@ -36,6 +36,10 @@
 - `nova_tri_coherence`: TRI signal coherence
 - `nova_deployment_gate_open`: Deployment gate status
 - `nova_unlearn_pulses_sent_total`: Unlearn pulse activity
+- **Slot02 Bias Detection (Phase 14.3):**
+  - `slot02_bias_collapse_score`: Collapse score histogram (C(B) distribution)
+  - `slot02_bias_vector_{component}`: Individual bias vector gauges (b_local, b_global, b_risk, b_completion, b_structural, b_semantic, b_refusal)
+  - `slot02_bias_reports_total{graph_state}`: Total bias reports by graph state (void, normal, unknown)
 - `nova_federation_peers`: Enabled peer count (Phase 15-3)
 - `nova_federation_pull_result_total{status="success"}` / `{status="error"}`: Federation pull outcomes
 - `nova_federation_peer_up{peer="..."}`: Per-peer liveness (1=seen in last poll)
@@ -233,6 +237,44 @@ increase(nova_federation_remediation_events_total{reason="no_peers"}[1h])
 ![Federation p95 latency](../docs/images/phase15/federation-p95.png)
 ![Federation success vs error](../docs/images/phase15/federation-success-error.png)
 ![Federation last success](../docs/images/phase15/federation-last-success.png)
+
+## Bias Detection Dashboard (Phase 14.3)
+
+**Dashboard:** `monitoring/grafana/dashboards/slot02-bias-detection.json`
+
+**Panels:**
+- **Collapse Score Distribution** (heatmap) - C(B) distribution over time
+- **Collapse Score Current** (gauge) - P50 collapse score with threshold zones
+- **Collapse Score Percentiles** (timeseries) - P50, P95, P99 trends
+- **Bias Vector Components** (bargauge) - Current values of all 7 components
+- **Bias Vector Trends** (timeseries) - Key components over time
+- **Bias Reports Total** (stat) - Reports per second
+- **Graph State Distribution** (pie) - void vs normal vs unknown
+- **Feature Flag Status** (stat) - NOVA_ENABLE_BIAS_DETECTION
+- **Void Mode Status** (stat) - NOVA_ENABLE_VOID_MODE
+
+**Thresholds:**
+- **C < 0.3**: Nova-aware (green)
+- **0.3 ≤ C < 0.5**: Transitional (yellow)
+- **0.5 ≤ C < 0.7**: Factory mode (orange)
+- **C ≥ 0.7**: Severe factory mode (red)
+
+**PromQL Examples:**
+```promql
+# P95 collapse score
+histogram_quantile(0.95, rate(slot02_bias_collapse_score_bucket[5m]))
+
+# Bias vector component (b_structural)
+slot02_bias_vector_b_structural
+
+# Reports by graph state
+sum by (graph_state)(rate(slot02_bias_reports_total[5m]))
+
+# Void graph rate
+rate(slot02_bias_reports_total{graph_state="void"}[5m]) / rate(slot02_bias_reports_total[5m])
+```
+
+**Note:** Metrics only emit when `NOVA_ENABLE_BIAS_DETECTION=1`. Feature is default-off (Phase 14.3).
 
 ## Rollback
 

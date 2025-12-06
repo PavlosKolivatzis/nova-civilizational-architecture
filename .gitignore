@@ -80,3 +80,4 @@ tools/audit/paths.env
 trust/private/
 trust/cosign.key
 temp_*.txt
+nul

@@ -36,7 +36,8 @@
       "Bash(gh run view:*)",
       "Bash(pip show:*)",
       "Bash(git describe:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": [],
     "ask": []
