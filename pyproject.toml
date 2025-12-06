@@ -99,7 +99,7 @@ packages = ["src.nova"]
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-"nova.*" = ["*.yaml", "*.json", "*.md", "*.txt"]
+"nova" = ["*.yaml", "*.json", "*.md", "*.txt"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
