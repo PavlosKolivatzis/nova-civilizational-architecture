@@ -80,9 +80,10 @@ Welcome to the Nova Civilizational Architecture documentation. This index provid
 ## 📊 Key Metrics & Status
 
 - **Ontology Version**: Mother Ontology v1.7.1
-- **Phase Status**: Phase 14-1 (Mathematical Entry Protocol)
-- **Test Coverage**: 2021 tests passing (2117 collected, 95.47%)
+- **Phase Status**: Phase 14-3 (USM Bias Detection)
+- **Test Coverage**: 2104+ tests passing (83 new in Phase 14.3)
 - **Documentation Integrity**: Sunlight Doctrine compliant
+- **New Capability**: Automated cognitive bias detection (BIAS_REPORT@1)
 
 ## 🔍 Search & Navigation
 
@@ -108,5 +109,23 @@ All documentation follows the Sunlight Doctrine:
 For questions or contributions to documentation, see [Contributing Guide](guides/contributing/CONTRIBUTING.md).
 
 ---
-*Last updated: Phase 14-0 Repository Consolidation*
-*Next review: Phase 14-2 (PostgreSQL Persistence)*
+*Last updated: Phase 14-3 (USM Bias Detection)*
+*Next review: Phase 15 (TBD)*
+
+## 🆕 Phase 14.3: USM Bias Detection
+
+**Implemented:** Automated cognitive bias detection for input text analysis.
+
+**Specification:** [`docs/specs/slot02_usm_bias_detection_spec.md`](specs/slot02_usm_bias_detection_spec.md)
+
+**Components:**
+- TextGraphParser (Slot02): Text → SystemGraph
+- BiasCalculator (Slot02): USM → B(T) → C(B)
+- QualityOracle (Slot01): Independent validation
+- CognitiveLoopController (Slot07): Recursive refinement
+
+**Contract:** [`contracts/bias_report@1.yaml`](../contracts/bias_report@1.yaml)
+
+**Feature Flag:** `NOVA_ENABLE_BIAS_DETECTION=0` (default off)
+
+**Research:** [`archive/ai_biases/`](../archive/ai_biases/) - ΔTHRESH signal framework analysis

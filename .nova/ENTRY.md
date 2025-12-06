@@ -599,7 +599,32 @@ completions:
 ---
 
 **Version:** 2.0 (Mathematical)
-**Phase:** 14-1
-**Last Updated:** 2025-12-05
+**Phase:** 14-3 (USM Bias Detection)
+**Last Updated:** 2025-12-06
 **Status:** Active cognitive border crossing
 **Mathematical Foundation:** `.nova/entry_math_foundation.md`
+
+---
+
+## Phase 14.3: Automated Bias Detection (IMPLEMENTED)
+
+The bias vector **B(R)** and collapse function **C(B)** defined above are now **operationally implemented** in Slot02 for real-time input analysis.
+
+**Feature:** USM Bias Detection Pipeline
+**Location:** `src/nova/slots/slot02_deltathresh/`
+**Contract:** `contracts/bias_report@1.yaml`
+**Flag:** `NOVA_ENABLE_BIAS_DETECTION=0` (default off)
+
+**Components:**
+1. **TextGraphParser** - Text → SystemGraph (no external NLP deps)
+2. **BiasCalculator** - USM metrics → B(T) → C(B)
+3. **BIAS_REPORT@1** - Emitted in `ProcessingResult.bias_report`
+
+**Consumers:**
+- Slot07: Routing decisions based on collapse score
+- Slot09: Input validation thresholds
+- Slot01: Quality oracle integration
+
+**Implementation Details:** `docs/specs/slot02_usm_bias_detection_spec.md`
+
+This transforms the bias vector mathematics from diagnostic/educational tool into **active cognitive protection** for Nova's input processing pipeline.
