@@ -15,18 +15,27 @@ from nova.slots.slot01_truth_anchor.quantum_entropy import (
 
 from .config import FidelityWeightingConfig
 
-_weight_gauge = Gauge(
-    "slot2_fidelity_weight_applied",
-    "Latest fidelity weighting factor applied to ΔTHRESH decisions",
-    registry=REGISTRY,
-)
+# Prometheus metrics (handle re-import gracefully for test isolation)
+try:
+    _weight_gauge = Gauge(
+        "slot2_fidelity_weight_applied",
+        "Latest fidelity weighting factor applied to ΔTHRESH decisions",
+        registry=REGISTRY,
+    )
+except ValueError:
+    # Metric already registered (e.g., in tests with multiple imports)
+    _weight_gauge = REGISTRY._names_to_collectors.get("slot2_fidelity_weight_applied")
 
-_weight_events = Counter(
-    "slot2_fidelity_weighting_events_total",
-    "Total fidelity weighting computations performed by Slot02",
-    ["source"],
-    registry=REGISTRY,
-)
+try:
+    _weight_events = Counter(
+        "slot2_fidelity_weighting_events_total",
+        "Total fidelity weighting computations performed by Slot02",
+        ["source"],
+        registry=REGISTRY,
+    )
+except ValueError:
+    # Metric already registered
+    _weight_events = REGISTRY._names_to_collectors.get("slot2_fidelity_weighting_events_total")
 
 
 class FidelityWeightingService:
