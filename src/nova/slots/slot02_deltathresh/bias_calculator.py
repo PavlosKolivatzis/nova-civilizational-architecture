@@ -20,12 +20,58 @@ Invariant Compliance:
 
 import logging
 import os
+from prometheus_client import Counter, Gauge, Histogram
 from typing import Dict, Optional
 from dataclasses import dataclass
 
 from src.nova.math.relations_pattern import SystemGraph, StructuralAnalyzer
+from nova.metrics.registry import REGISTRY
 
 logger = logging.getLogger(__name__)
+
+# Prometheus metrics (handle re-imports)
+try:
+    _collapse_hist = Histogram(
+        "slot02_bias_collapse_score",
+        "Collapse score distribution for Slot02 bias reports",
+        buckets=[-0.5, 0.0, 0.1, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0],
+        registry=REGISTRY,
+    )
+except Exception:
+    _collapse_hist = REGISTRY._names_to_collectors.get("slot02_bias_collapse_score")
+
+_BIAS_COMPONENTS = [
+    "b_local",
+    "b_global",
+    "b_risk",
+    "b_completion",
+    "b_structural",
+    "b_semantic",
+    "b_refusal",
+]
+
+_bias_gauges = {}
+for comp in _BIAS_COMPONENTS:
+    try:
+        _bias_gauges[comp] = Gauge(
+            f"slot02_bias_vector_{comp}",
+            f"Slot02 bias vector component {comp}",
+            registry=REGISTRY,
+        )
+    except Exception:
+        _bias_gauges[comp] = REGISTRY._names_to_collectors.get(
+            f"slot02_bias_vector_{comp}"
+        )
+
+try:
+    _bias_reports_total = Counter(
+        "slot02_bias_reports_total",
+        "Total bias reports produced by Slot02",
+        ["graph_state"],
+        registry=REGISTRY,
+    )
+except Exception:
+    _bias_reports_total = REGISTRY._names_to_collectors.get("slot02_bias_reports_total")
 
 
 @dataclass
@@ -169,7 +215,7 @@ class BiasCalculator:
         void_mode_enabled = os.getenv("NOVA_ENABLE_VOID_MODE", "1") == "1"
         if void_mode_enabled and len(graph.actors) == 0 and len(graph.relations) == 0:
             metadata = {**(graph.metadata or {}), "graph_state": "void"}
-            return BiasReport(
+            report = BiasReport(
                 bias_vector={
                     'b_local': 0.0,
                     'b_global': 0.0,
@@ -189,6 +235,8 @@ class BiasCalculator:
                 metadata=metadata,
                 confidence=1.0
             )
+            self._emit_metrics(report)
+            return report
 
         # Compute USM metrics
         H = StructuralAnalyzer.spectral_entropy(graph)
@@ -226,6 +274,7 @@ class BiasCalculator:
             },
             confidence=confidence
         )
+        self._emit_metrics(report)
 
         if enable_logging:
             logger.info(
@@ -234,6 +283,23 @@ class BiasCalculator:
             )
 
         return report
+
+    def _emit_metrics(self, report: BiasReport) -> None:
+        """Emit Prometheus metrics for bias report."""
+        if not report:
+            return
+        try:
+            _collapse_hist.observe(report.collapse_score)
+            for comp, val in report.bias_vector.items():
+                gauge = _bias_gauges.get(comp)
+                if gauge is not None:
+                    gauge.set(val)
+            _bias_reports_total.labels(
+                graph_state=report.metadata.get("graph_state", "unknown")
+            ).inc()
+        except Exception:
+            # Metrics must never break processing
+            return
 
     @staticmethod
     def _clamp(value: float, lower: float, upper: float) -> float:
