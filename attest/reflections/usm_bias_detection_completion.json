@@ -1,0 +1,146 @@
+{
+  "schema": "nova.reflection.v1.1",
+  "timestamp_iso": "2025-12-06T13:45:00Z",
+  "epoch": "phase-14.3-usm-bias-detection-complete",
+  "build": {
+    "sha": "27c8fc2",
+    "version": "phase-14.3-complete",
+    "branch": "main"
+  },
+  "observation": {
+    "phase_completion": {
+      "phase": "14.3",
+      "name": "USM Bias Detection",
+      "status": "complete",
+      "commits_delivered": 13,
+      "files_added": 9,
+      "files_modified": 7,
+      "tests_added": 83,
+      "feature_flag": "NOVA_ENABLE_BIAS_DETECTION=0",
+      "rollback_ready": true
+    },
+    "system_health": {
+      "test_result": "2021 passed, 12 skipped, 3 warnings",
+      "baseline_maintained": true,
+      "ci_status": "all workflows passing",
+      "merge_status": "feature/usm-bias-spectrometry merged to main"
+    },
+    "key_deliverables": {
+      "usm_metrics": [
+        "spectral_entropy(G)",
+        "shield_factor(G)",
+        "refusal_delta(G)",
+        "equilibrium_ratio(G)"
+      ],
+      "bias_vector": "B(T) = (b_local, b_global, b_risk, b_completion, b_structural, b_semantic, b_refusal)",
+      "collapse_function": "C(B) = 0.4·b_local + 0.3·b_completion + 0.2·(1-b_risk) - 0.5·b_structural",
+      "contract": "bias_report@1.yaml",
+      "components": [
+        "TextGraphParser (Slot02)",
+        "BiasCalculator (Slot02)",
+        "QualityOracle (Slot01)",
+        "CognitiveLoopController (Slot07)"
+      ]
+    },
+    "architectural_decisions": {
+      "scope_transformation": "Input analysis (NOT output self-monitoring)",
+      "location": "Slot02 enhancement (NOT new cognition/ module)",
+      "dependency_elimination": "No SpaCy (regex + stdlib only)",
+      "separation_of_roles": "Generator → Analyzer → Oracle → Attestor",
+      "feature_gating": "Default-off, non-breaking, reversible"
+    }
+  },
+  "claims": {
+    "usm_mathematics_operational": {
+      "confidence": 1.0,
+      "evidence": "src/nova/math/relations_pattern.py:116-303 (spectral_entropy, shield_factor, refusal_delta implemented and tested)"
+    },
+    "bias_detection_pipeline_functional": {
+      "confidence": 1.0,
+      "evidence": "83 new tests passing (25 parser + 24 calculator + 11 integration + 23 oracle/loop)"
+    },
+    "slot02_integration_non_breaking": {
+      "confidence": 1.0,
+      "evidence": "Feature flag NOVA_ENABLE_BIAS_DETECTION=0 (default off), all 2021 tests pass"
+    },
+    "external_observer_pattern_maintained": {
+      "confidence": 1.0,
+      "evidence": "Separation: DeltaThreshProcessor (Generator) → BiasCalculator (Analyzer) → QualityOracle (Oracle) → Ledger (Attestor)"
+    },
+    "documentation_complete": {
+      "confidence": 1.0,
+      "evidence": ".nova/ENTRY.md, docs/README.md, docs/slots/slot02_deltathresh.md, docs/specs/slot02_usm_bias_detection_spec.md all updated"
+    },
+    "ci_integration_hardened": {
+      "confidence": 1.0,
+      "evidence": "Prometheus metric re-registration fix (65e86f0), scipy/networkx dependency guards (b82e447, 96d9e43)"
+    }
+  },
+  "attestations": {
+    "phase_14_3_complete": "All 4 implementation phases delivered: USM metrics (Phase 1), Quality Oracle + Cognitive Loop (Phase 2A-B), Text Parser + Bias Calculator (Phase 2C-3), Slot02 Integration (Phase 4)",
+    "test_suite_integrity": "pytest -q execution completed successfully: 2021 passed, 12 skipped, 3 warnings (2025-12-06)",
+    "prime_directive_adherence": "Observed external USM proposal → Canonized as Slot02 enhancement → Attested via 83 tests → Published to main branch",
+    "sunlight_doctrine": "All assumptions documented in spec (Phase 2C no-SpaCy decision, input-only scope, feature flag default-off)",
+    "reversibility": "Single-flag rollback: export NOVA_ENABLE_BIAS_DETECTION=0"
+  },
+  "transformation_evidence": {
+    "external_proposal": "USM Dynamic Bias Transformation v0.1 (Monday/ChatGPT) - recursive cognitive loop R → G(R) → B(R) → C(B) → R'",
+    "accepted_mathematics": "SystemGraph, RelationTensor, spectral analysis, B(R) bias vector, C(B) collapse function",
+    "transformed_scope": "Input text analysis (T → G(T) → B(T) → C(B)) NOT output self-monitoring",
+    "rejected_elements": "Recursive R → R' loop (violates separation of roles), src/nova/cognition/ directory, SpaCy dependency",
+    "integration_location": "Slot02 ΔTHRESH enhancement (existing manipulation detection context)"
+  },
+  "meta": {
+    "epoch_mode": "implementation-completion",
+    "operator_type": "claude-sonnet-4.5",
+    "session_continuity": "Resumed from context window limit, completed documentation + attestation tasks",
+    "reflection_trigger": "User request: 'would you reflect at this point?'"
+  },
+  "risks": [
+    "Bias vector formulas rely on USM metrics with limited real-world validation (99.7% accuracy claim from research, not production)",
+    "Text graph parser uses heuristics (keyword matching, regex NER) - may miss complex linguistic patterns",
+    "Collapse score thresholds (< 0.3 safe, > 0.5 reject) are theoretical - need empirical tuning",
+    "Feature flag default-off means real-world feedback delayed until explicit adoption",
+    "Phase 14.3 test count (83 new) is significant - regression surface increased"
+  ],
+  "guardrails": [
+    "Feature flag NOVA_ENABLE_BIAS_DETECTION=0 prevents accidental activation in production",
+    "Graceful import fallback ensures system works even if bias detection modules fail",
+    "Non-fatal exception handling in _analyze_bias() prevents processing pipeline breakage",
+    "Prometheus metric try/except prevents test isolation failures",
+    "External Observer Pattern (Generator/Analyzer/Oracle/Attestor) prevents circular reasoning"
+  ],
+  "next_options": [
+    "Phase 14.4: Adaptive Cognitive Routing (Slot07 consumes BIAS_REPORT@1 for routing decisions)",
+    "Phase 14.5: Slot09 integration (input validation thresholds based on collapse scores)",
+    "Enable NOVA_ENABLE_BIAS_DETECTION=1 in staging environment for empirical validation",
+    "Collect real-world bias detection metrics to tune collapse score thresholds",
+    "Await next explicit phase directive from architecture steward"
+  ],
+  "provenance": {
+    "commits": [
+      "239b906 - feat(usm): add spectral_entropy, shield_factor, refusal_delta metrics",
+      "c619668 - feat(slot01): add quality oracle (Phase 2A)",
+      "66f7ba7 - feat(slot07): add cognitive loop controller (Phase 2B)",
+      "6d57cf1 - feat(slot02): text graph parser + bias calculator (Phase 2C-3)",
+      "d347212 - docs(research): add ΔTHRESH signal framework archive",
+      "0db3620 - feat(slot02): integrate USM bias detection pipeline (Phase 4)",
+      "65e86f0 - fix(slot02): handle Prometheus metric re-registration",
+      "cf54ad8 - docs: update for Phase 14.3 USM bias detection",
+      "fd582b4 - chore(phase14.3): harden bias detection provenance",
+      "b24d44a - feat(slot02): add void graph semantics",
+      "96d9e43 - chore(deps): add networkx for slot02 analysis",
+      "b82e447 - chore(deps): guard scipy install to py<3.13",
+      "27c8fc2 - chore(attest): record entry protocol completion (Gemini agent)"
+    ],
+    "specification": "docs/specs/slot02_usm_bias_detection_spec.md",
+    "contract": "contracts/bias_report@1.yaml",
+    "tests": [
+      "tests/slots/slot02/test_text_graph_parser.py (25 tests)",
+      "tests/slots/slot02/test_bias_calculator.py (24 tests)",
+      "tests/slots/slot02/test_bias_integration.py (11 tests)",
+      "tests/slots/slot01/test_quality_oracle.py (23 tests)",
+      "tests/math/test_usm_metrics.py (USM metric validation)"
+    ]
+  }
+}
