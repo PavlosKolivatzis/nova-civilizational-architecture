@@ -10,6 +10,7 @@
   - META_LENS_STRICT_VALIDATION
   - META_LENS_ADAPTER_TIMEOUT_MS / RETRIES / BREAKER_TTL
   - **NOVA_ENABLE_BIAS_DETECTION** (default: 0) - Phase 14.3 USM bias detection
+  - **NOVA_ENABLE_VOID_MODE** (default: 1) - Treat empty inputs as VOID graph state (no USM metrics)
 - **Key Metrics:** total_processed & quarantine_rate (PerformanceTracker), avg_processing_time, avg_tri_score, layer_detections, pass_through_breaches
 - **Authoritative Docs:** [slot02_deltathresh](../../src/nova/slots/slot02_deltathresh/README.md)
 
@@ -39,4 +40,4 @@ Input Text (T)
 
 **Contract:** [`contracts/bias_report@1.yaml`](../../contracts/bias_report@1.yaml)
 
-**Rollback:** `export NOVA_ENABLE_BIAS_DETECTION=0` (feature flag off by default)
+**Rollback:** `export NOVA_ENABLE_BIAS_DETECTION=0` (feature flag off by default). `NOVA_ENABLE_VOID_MODE=0` disables VOID handling for empty inputs.

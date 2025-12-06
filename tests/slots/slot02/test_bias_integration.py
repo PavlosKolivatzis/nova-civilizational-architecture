@@ -249,6 +249,7 @@ class TestBiasDetectionIntegration:
                 assert 0.0 <= report['usm_metrics']['equilibrium_ratio'] <= 1.0
                 assert 0.0 <= report['usm_metrics']['shield_factor'] <= 1.0
                 assert 0.0 <= report['confidence'] <= 1.0
+                assert report['metadata'].get('graph_state') == 'normal'
             else:
                 # Bias disabled or unavailable would already be covered elsewhere
                 pytest.skip("Bias report not produced in this environment")

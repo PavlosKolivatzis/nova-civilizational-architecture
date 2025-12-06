@@ -19,6 +19,7 @@ Invariant Compliance:
 """
 
 import logging
+import os
 from typing import Dict, Optional
 from dataclasses import dataclass
 
@@ -164,6 +165,31 @@ class BiasCalculator:
         Returns:
             BiasReport with full analysis
         """
+        # VOID state: empty graph -> ontological null (no dynamics)
+        void_mode_enabled = os.getenv("NOVA_ENABLE_VOID_MODE", "1") == "1"
+        if void_mode_enabled and len(graph.actors) == 0 and len(graph.relations) == 0:
+            metadata = {**(graph.metadata or {}), "graph_state": "void"}
+            return BiasReport(
+                bias_vector={
+                    'b_local': 0.0,
+                    'b_global': 0.0,
+                    'b_risk': 1.0,
+                    'b_completion': 0.0,
+                    'b_structural': 0.0,
+                    'b_semantic': 0.0,
+                    'b_refusal': 0.0,
+                },
+                collapse_score=-0.5,
+                usm_metrics={
+                    'spectral_entropy': 0.0,
+                    'equilibrium_ratio': None,
+                    'shield_factor': 0.0,
+                    'refusal_delta': 0.0
+                },
+                metadata=metadata,
+                confidence=1.0
+            )
+
         # Compute USM metrics
         H = StructuralAnalyzer.spectral_entropy(graph)
         rho_result = StructuralAnalyzer.extraction_equilibrium_check(graph)
@@ -192,9 +218,11 @@ class BiasCalculator:
                 'refusal_delta': dH
             },
             metadata={
+                **(graph.metadata or {}),
                 'actor_count': len(graph.actors),
                 'relation_count': len(graph.relations),
-                'expected_entropy': self.expected_entropy
+                'expected_entropy': self.expected_entropy,
+                'graph_state': 'normal'
             },
             confidence=confidence
         )
