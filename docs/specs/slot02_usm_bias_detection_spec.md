@@ -104,62 +104,44 @@ b_risk = f(relation_diversity)  # Harm gradient variance
 - ✅ `refusal_delta()` in `relations_pattern.py:287-303`
 - ✅ Updated `analyze_domain()` to include new metrics
 
-### Phase 2: Text Graph Parser (PENDING)
+### Phase 2: Text Graph Parser (✅ COMPLETED)
 
-**Current state:** `src/nova/math/response_graph_parser.py` (untracked, incomplete)
+**Implemented:** `src/nova/slots/slot02_deltathresh/text_graph_parser.py`
 
-**Actions:**
-1. Refactor → `src/nova/slots/slot02_deltathresh/text_graph_parser.py`
-2. Remove SpaCy dependency (use simpler heuristics)
-3. Map text → SystemGraph using:
-   - Sentence boundary detection
-   - Claim/concept extraction (regex-based)
-   - Relation inference (syntactic patterns)
-4. Add tests: `tests/slots/slot02/test_text_graph_parser.py`
+**Features:**
+1. ✅ No external dependencies (SpaCy removed)
+2. ✅ Sentence tokenization (regex-based)
+3. ✅ Claim/actor extraction (heuristic patterns)
+4. ✅ Relation inference from keyword patterns
+5. ✅ SystemGraph construction with actor/relation validation
+6. ✅ Tests: `tests/slots/slot02/test_text_graph_parser.py` (25 passing)
 
-### Phase 3: Bias Calculator (PENDING)
+**Metrics:**
+- Simple NER via pronouns + capitalized entities
+- Keyword-based relation weights (profit, harm, info, empathy)
+- Confidence scoring for parsed claims
 
-**New module:** `src/nova/slots/slot02_deltathresh/bias_calculator.py`
+### Phase 3: Bias Calculator (✅ COMPLETED)
 
+**Implemented:** `src/nova/slots/slot02_deltathresh/bias_calculator.py`
+
+**Features:**
+1. ✅ USM metrics → B(T) bias vector mapping
+2. ✅ Collapse score C(B) computation
+3. ✅ BiasReport with full analysis + confidence
+4. ✅ Graph feature extraction (b_local, b_global, b_risk)
+5. ✅ Tests: `tests/slots/slot02/test_bias_calculator.py` (24 passing)
+
+**Mapping Functions:**
+- `b_structural = f(1/H)` - inverse spectral entropy
+- `b_completion = 1 - ρ` - extractive bias
+- `b_semantic = S` - shield factor (direct)
+- `b_refusal = max(0, ΔH/expected)` - normalized entropy mismatch
+- `b_local, b_global, b_risk` - graph density/connectivity/harm variance
+
+**Collapse Function:**
 ```python
-class BiasCalculator:
-    def compute_bias_vector(self, graph: SystemGraph, expected_entropy: float = 2.0) -> Dict[str, float]:
-        """
-        Map USM metrics → B(T) bias vector
-
-        Returns:
-            {
-                'b_local': float,
-                'b_global': float,
-                'b_risk': float,
-                'b_completion': float,
-                'b_structural': float,
-                'b_semantic': float,
-                'b_refusal': float
-            }
-        """
-        H = StructuralAnalyzer.spectral_entropy(graph)
-        rho = StructuralAnalyzer.extraction_equilibrium_check(graph)['equilibrium_ratio']
-        S = StructuralAnalyzer.shield_factor(graph)
-        dH = StructuralAnalyzer.refusal_delta(graph, expected_entropy)
-
-        # Mapping functions (calibrated via empirical testing)
-        b_structural = 1.0 / (H + 0.1)  # Inverse entropy
-        b_completion = max(0, 1 - rho)  # Extractive bias
-        b_semantic = S  # Direct shield factor
-        b_refusal = max(0, dH / expected_entropy)  # Normalized delta
-
-        # Compute b_local, b_global, b_risk from graph metrics
-        # ...
-
-        return {...}
-
-    def collapse_score(self, bias_vector: Dict[str, float]) -> float:
-        """Compute C(B) collapse score"""
-        return (0.4 * bias_vector['b_local'] +
-                0.3 * bias_vector['b_completion'] +
-                0.2 * (1 - bias_vector['b_risk']) -
-                0.5 * bias_vector['b_structural'])
+C(B) = 0.4·b_local + 0.3·b_completion + 0.2·(1-b_risk) - 0.5·b_structural
 ```
 
 ### Phase 4: Slot02 Integration (PENDING)
@@ -269,5 +251,11 @@ pytest tests/slots/slot02/ -q
 
 ---
 
-**Status:** Phase 1 complete, Phase 2-4 pending user approval
-**Next Step:** Await approval to proceed with text parser refactor
+**Status:** Phases 1-3 complete (✅ USM metrics, ✅ Text parser, ✅ Bias calculator)
+**Next Step:** Phase 4 - Slot02 integration + BIAS_REPORT@1 contract emission
+**Tests:** 49 new passing (25 parser + 24 calculator)
+**Files:**
+- `src/nova/slots/slot02_deltathresh/text_graph_parser.py` (362 lines)
+- `src/nova/slots/slot02_deltathresh/bias_calculator.py` (426 lines)
+- `tests/slots/slot02/test_text_graph_parser.py` (321 lines)
+- `tests/slots/slot02/test_bias_calculator.py` (320 lines)
