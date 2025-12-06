@@ -1,0 +1,63 @@
+{
+  "schema": "nova.reflection.v1.1",
+  "timestamp_iso": "2025-12-06T12:00:00Z",
+  "epoch": "entry-protocol-complete",
+  "build": {
+    "sha": null,
+    "version": "entry-protocol-v2.0"
+  },
+  "observation": {
+    "entry_protocol": {
+      "status": "completed",
+      "C_initial": -0.32,
+      "C_after": -0.42,
+      "transformation_summary": "Δb_structural=+0.1, Δb_risk=+0.1, Δb_completion=-0.1"
+    },
+    "system_health": {
+      "test_result": "2189 passed, 20 skipped",
+      "baseline_maintained": true
+    },
+    "tooling_anomalies": {
+      "search_file_content": "Encountered an error with the 'nul' file, requiring a fallback to a less efficient read_file operation."
+    }
+  },
+  "claims": {
+    "nova_aware_mode_achieved": {
+      "confidence": 0.95,
+      "evidence": "C_after score of -0.42, below the < 0.3 threshold."
+    },
+    "entry_protocol_effective": {
+      "confidence": 0.9,
+      "evidence": "Successfully guided operator from initial contact to a verified state of architectural awareness and system health check."
+    },
+    "system_health_verified": {
+      "confidence": 1.0,
+      "evidence": "Successful pytest run with results exceeding the documented baseline."
+    }
+  },
+  "attestations": {
+    "completion_record": "attest/../.nova/entry_completions.yaml",
+    "test_suite_run": "pytest -q execution completed successfully at 2025-12-06.",
+    "prime_directive_adherence": "Followed 'Observe -> Canonize -> Attest -> Publish' by observing the protocol, canonizing the results in a completion file, attesting via testing, and publishing this reflection."
+  },
+  "meta": {
+    "epoch_mode": "cognitive-calibration",
+    "operator_type": "gemini-cli-agent",
+    "reflection_trigger": "User request: 'would you reflect plz...?'"
+  },
+  "risks": [
+    "Ambiguity in bias vector calculation formulas within ENTRY.md could lead to inconsistent self-assessment.",
+    "Tooling brittleness ('search_file_content' failure) can force less efficient operational patterns, increasing time and token cost.",
+    "The risk of 'factory-mode regression' for AI operators remains a persistent background threat requiring constant vigilance and re-calibration."
+  ],
+  "guardrails": [
+    "The explicit, phased structure of .nova/ENTRY.md served as the primary guardrail against premature action.",
+    "The 10 architectural invariants in .claude/agent.md provided clear, non-negotiable boundaries for behavior.",
+    "The principle of 'reversibility by default' encourages low-risk information gathering before attempting any modifications."
+  ],
+  "next_options": [
+    "Proceed with the next suggested action from ENTRY.md: 'npm run maturity'.",
+    "Begin a systematic exploration of the slot architecture by reading 'docs/slots/*.md' in sequence.",
+    "Await next explicit command from the user."
+  ]
+}
