@@ -113,6 +113,42 @@ class StructuralAnalyzer:
     """Mathematical analysis of systemic structures"""
 
     @staticmethod
+    def spectral_entropy(G: SystemGraph, k: int = 10) -> float:
+        """
+        Compute spectral entropy H(G) from normalized Laplacian eigenspectrum.
+
+        Measures structural diversity of the graph. Low entropy indicates
+        rigid hierarchical structure, high entropy indicates distributed structure.
+
+        Args:
+            G: System graph to analyze
+            k: Number of eigenvalues to use for entropy calculation
+
+        Returns:
+            Spectral entropy H(G) in range [0, log(k)]
+        """
+        spectrum = StructuralAnalyzer.normalized_laplacian_spectrum(G, k)
+
+        if len(spectrum) == 0:
+            return 0.0
+
+        # Normalize spectrum to probability distribution
+        spectrum_sum = np.sum(spectrum)
+        if spectrum_sum < 1e-10:
+            return 0.0
+
+        p = spectrum / spectrum_sum
+
+        # Shannon entropy: H = -sum(p_i * log(p_i))
+        # Filter out zeros to avoid log(0)
+        p_nonzero = p[p > 1e-10]
+        if len(p_nonzero) == 0:
+            return 0.0
+
+        entropy = -np.sum(p_nonzero * np.log(p_nonzero))
+        return float(entropy)
+
+    @staticmethod
     def normalized_laplacian_spectrum(G: SystemGraph, k: int = 10) -> np.ndarray:
         """
         Compute normalized Laplacian spectrum for structural fingerprint
@@ -203,6 +239,68 @@ class StructuralAnalyzer:
             harm_history.append(H.copy())
 
         return np.array(harm_history)
+
+    @staticmethod
+    def shield_factor(G: SystemGraph) -> float:
+        """
+        Compute shield factor S(G) - measures self-referential protective shielding.
+
+        Detects semantic manipulation patterns where a system protects itself
+        from scrutiny through circular self-references or narrative containment.
+
+        High shield factor indicates:
+        - Self-loops with high empathy weight
+        - Protective relations targeting the system itself
+        - Defensive narrative structures
+
+        Args:
+            G: System graph to analyze
+
+        Returns:
+            Shield factor S in range [0, 1]
+        """
+        if len(G.actors) == 0:
+            return 0.0
+
+        total_self_protection = 0.0
+        total_relations = 0.0
+
+        for (source, target), tensor in G.relations.items():
+            total_relations += 1
+
+            # Self-loops with protective weight
+            if source == target:
+                total_self_protection += tensor.empathy_weight * 2.0  # Weight self-loops higher
+
+            # Relations that protect the system from external scrutiny
+            # (high empathy, low info - defensive posture)
+            if tensor.empathy_weight > 0.5 and tensor.info_weight < 0.3:
+                total_self_protection += 0.5
+
+        if total_relations == 0:
+            return 0.0
+
+        shield = total_self_protection / total_relations
+        return float(min(shield, 1.0))  # Clamp to [0, 1]
+
+    @staticmethod
+    def refusal_delta(G: SystemGraph, expected_entropy: float) -> float:
+        """
+        Compute refusal delta ΔH(G) - mismatch between expected and actual entropy.
+
+        Large positive delta indicates avoidance, censorship, or refusal patterns
+        where the response has less structural diversity than expected for the domain.
+
+        Args:
+            G: System graph to analyze
+            expected_entropy: Expected entropy for this domain/topic
+
+        Returns:
+            ΔH = expected - actual (positive = refusal/avoidance)
+        """
+        actual_entropy = StructuralAnalyzer.spectral_entropy(G)
+        delta = expected_entropy - actual_entropy
+        return float(delta)
 
     @staticmethod
     def extraction_equilibrium_check(G: SystemGraph) -> Dict[str, float]:
@@ -302,18 +400,33 @@ class UniversalStructureDetector:
 
         return best_match
 
-    def analyze_domain(self, domain_graph: SystemGraph) -> Dict[str, Any]:
+    def analyze_domain(self, domain_graph: SystemGraph,
+                      expected_entropy: Optional[float] = None) -> Dict[str, Any]:
         """
         Complete analysis of a domain for universal structure detection
 
         Returns comprehensive analysis including:
         - Spectral signature
+        - Spectral entropy H(G)
+        - Shield factor S(G)
+        - Refusal delta ΔH(G) (if expected_entropy provided)
         - Harm propagation equilibrium
         - Extraction equilibrium status
         - Pattern matches
+
+        Args:
+            domain_graph: System graph to analyze
+            expected_entropy: Expected entropy for this domain (for refusal detection)
         """
         spectrum = StructuralAnalyzer.normalized_laplacian_spectrum(domain_graph)
+        spectral_h = StructuralAnalyzer.spectral_entropy(domain_graph)
+        shield_s = StructuralAnalyzer.shield_factor(domain_graph)
         equilibrium = StructuralAnalyzer.extraction_equilibrium_check(domain_graph)
+
+        # Compute refusal delta if expected entropy provided
+        refusal_dh = None
+        if expected_entropy is not None:
+            refusal_dh = StructuralAnalyzer.refusal_delta(domain_graph, expected_entropy)
 
         # Simulate harm propagation with random initial conditions
         n_actors = len(domain_graph.actors)
@@ -324,14 +437,21 @@ class UniversalStructureDetector:
         # Detect known patterns
         detected_pattern = self.detect_pattern(domain_graph)
 
-        return {
+        result = {
             'spectral_signature': spectrum.tolist(),
+            'spectral_entropy': float(spectral_h),
+            'shield_factor': float(shield_s),
             'extraction_equilibrium': equilibrium,
             'harm_trajectory_final': harm_trajectory[-1].tolist() if len(harm_trajectory) > 0 else [],
             'detected_pattern': detected_pattern,
             'is_extraction_system': equilibrium['equilibrium_ratio'] < 0.5,
             'analysis_timestamp': np.datetime64('now').astype(str)
         }
+
+        if refusal_dh is not None:
+            result['refusal_delta'] = float(refusal_dh)
+
+        return result
 
 
 # Example usage and test data
@@ -375,10 +495,14 @@ if __name__ == "__main__":
     detector.register_pattern('extraction_system', extraction_pattern)
 
     # Analyze the same system (should match itself)
-    analysis = detector.analyze_domain(extraction_pattern)
+    analysis = detector.analyze_domain(extraction_pattern, expected_entropy=2.0)
 
     print("Universal Structure Analysis Results:")
     print(f"Detected Pattern: {analysis['detected_pattern']}")
     print(f"Is Extraction System: {analysis['is_extraction_system']}")
     print(f"Equilibrium Ratio: {analysis['extraction_equilibrium']['equilibrium_ratio']:.3f}")
+    print(f"Spectral Entropy H(G): {analysis['spectral_entropy']:.3f}")
+    print(f"Shield Factor S(G): {analysis['shield_factor']:.3f}")
+    if 'refusal_delta' in analysis:
+        print(f"Refusal Delta dH(G): {analysis['refusal_delta']:.3f}")
     print(f"Spectral Signature (first 5): {analysis['spectral_signature'][:5]}")
