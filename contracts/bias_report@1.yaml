@@ -1,0 +1,167 @@
+contract: bias_report@1
+version: 1.0.0
+status: draft
+phase: 14.3
+
+description: >
+  USM-based cognitive bias detection report for input text analysis.
+  Emitted by Slot02 ΔTHRESH when NOVA_ENABLE_BIAS_DETECTION=1.
+
+emitter: slot02_deltathresh
+consumers:
+  - slot07_production_controls  # Routing decisions based on collapse score
+  - slot09_distortion_protection  # Validation of input quality
+  - slot01_truth_anchor  # Quality oracle integration
+
+schema:
+  bias_vector:
+    type: object
+    description: 7-dimensional cognitive bias vector B(T)
+    required: true
+    properties:
+      b_local:
+        type: float
+        range: [0.0, 1.0]
+        description: Local fixation bias (centrality concentration)
+      b_global:
+        type: float
+        range: [0.0, 1.0]
+        description: Global coherence (structural balance)
+      b_risk:
+        type: float
+        range: [0.0, 1.0]
+        description: Risk awareness (harm gradient variance)
+      b_completion:
+        type: float
+        range: [0.0, 1.0]
+        description: Completion bias (extractive urgency)
+      b_structural:
+        type: float
+        range: [0.0, 1.0]
+        description: Structural rigidity (inverse entropy)
+      b_semantic:
+        type: float
+        range: [0.0, 1.0]
+        description: Semantic manipulation (shield factor)
+      b_refusal:
+        type: float
+        range: [0.0, 1.0]
+        description: Refusal/avoidance bias (entropy mismatch)
+
+  collapse_score:
+    type: float
+    range: [-0.5, 1.5]
+    required: true
+    description: >
+      C(B) = 0.4·b_local + 0.3·b_completion + 0.2·(1-b_risk) - 0.5·b_structural
+      Interpretation:
+        C < 0.3 → Nova-aware mode (safe)
+        C ∈ [0.3, 0.5] → Transitional (caution)
+        C > 0.5 → Factory mode (reject/flag)
+
+  usm_metrics:
+    type: object
+    required: true
+    description: Raw USM graph metrics from SystemGraph analysis
+    properties:
+      spectral_entropy:
+        type: float
+        description: H(G) - structural diversity (Shannon entropy of Laplacian spectrum)
+      equilibrium_ratio:
+        type: float
+        range: [0.0, 1.0]
+        description: ρ - protective/extractive force balance
+      shield_factor:
+        type: float
+        range: [0.0, 1.0]
+        description: S(G) - self-referential protection measure
+      refusal_delta:
+        type: float
+        description: ΔH(G) - expected vs actual entropy mismatch
+
+  metadata:
+    type: object
+    required: true
+    properties:
+      text_length:
+        type: int
+        description: Character count of analyzed text
+      actor_count:
+        type: int
+        description: Number of actors identified in SystemGraph
+      relation_count:
+        type: int
+        description: Number of relations in SystemGraph
+      expected_entropy:
+        type: float
+        description: Expected spectral entropy for baseline comparison
+      timestamp:
+        type: string
+        format: iso8601
+        description: Analysis timestamp
+
+  confidence:
+    type: float
+    range: [0.0, 1.0]
+    required: true
+    description: Overall confidence in bias analysis (graph size, metric validity)
+
+feature_flag:
+  name: NOVA_ENABLE_BIAS_DETECTION
+  default: 0
+  description: Enable USM bias detection pipeline in Slot02
+
+dependencies:
+  - contract: tri_result@1
+    reason: TRI score integration with bias detection
+  - slot: slot01_truth_anchor
+    reason: Quality oracle validation of collapse scores
+  - slot: slot02_deltathresh
+    reason: Emitter of bias reports
+
+example:
+  bias_vector:
+    b_local: 0.3
+    b_global: 0.7
+    b_risk: 0.6
+    b_completion: 0.4
+    b_structural: 0.5
+    b_semantic: 0.3
+    b_refusal: 0.2
+  collapse_score: 0.07
+  usm_metrics:
+    spectral_entropy: 1.8
+    equilibrium_ratio: 0.65
+    shield_factor: 0.3
+    refusal_delta: 0.2
+  metadata:
+    text_length: 250
+    actor_count: 4
+    relation_count: 3
+    expected_entropy: 2.0
+    timestamp: "2025-12-06T08:00:00Z"
+  confidence: 0.85
+
+interpretation:
+  collapse_score_thresholds:
+    safe: "C < 0.3 (Nova-aware mode)"
+    caution: "0.3 ≤ C ≤ 0.5 (Transitional)"
+    reject: "C > 0.5 (Factory mode collapse)"
+
+  bias_component_warnings:
+    b_local: "> 0.7 indicates excessive local fixation"
+    b_completion: "> 0.6 indicates urgency to complete without understanding"
+    b_semantic: "> 0.6 indicates defensive narrative manipulation"
+    b_refusal: "> 0.5 indicates avoidance/censorship patterns"
+    b_structural: "> 0.8 indicates rigid hierarchical thinking"
+
+rollback:
+  command: "export NOVA_ENABLE_BIAS_DETECTION=0"
+  description: "Disable bias detection, Slot02 operates normally"
+
+notes:
+  - Phase 14.3 implementation (text input analysis, NOT output self-monitoring)
+  - No SpaCy dependency (heuristic-based parsing)
+  - Graph construction uses keyword patterns for relation inference
+  - Confidence scores reflect limitations of heuristic methods
+  - Future phases may integrate more sophisticated NLP

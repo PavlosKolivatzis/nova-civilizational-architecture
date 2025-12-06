@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import time
 
 @dataclass
@@ -18,3 +18,4 @@ class ProcessingResult:
     session_id: str = "default"
     anchor_integrity: float = 1.0
     version: str = "v1"
+    bias_report: Optional[Dict[str, Any]] = None  # BIAS_REPORT@1 (Phase 14.3)

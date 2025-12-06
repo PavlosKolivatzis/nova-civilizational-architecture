@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import threading
 import time
 from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
@@ -19,6 +20,14 @@ from .metrics import PerformanceTracker
 from .models import ProcessingResult
 from .patterns import PatternDetector, _word_count_fast
 from .fidelity_weighting import FidelityWeightingService
+
+# Phase 14.3: USM Bias Detection (feature-gated)
+try:
+    from .text_graph_parser import TextGraphParser
+    from .bias_calculator import BiasCalculator
+    _BIAS_DETECTION_AVAILABLE = True
+except ImportError:
+    _BIAS_DETECTION_AVAILABLE = False
 
 
 class DeltaThreshProcessor:
@@ -42,6 +51,20 @@ class DeltaThreshProcessor:
         if hasattr(self.config, "fidelity_weighting"):
             self._fidelity_service = FidelityWeightingService(self.config.fidelity_weighting)
         self._last_fidelity_weight = 1.0
+
+        # Phase 14.3: Bias detection (feature-gated)
+        self._bias_detection_enabled = (
+            os.getenv('NOVA_ENABLE_BIAS_DETECTION', '0') == '1' and
+            _BIAS_DETECTION_AVAILABLE
+        )
+        self._text_parser = None
+        self._bias_calculator = None
+        if self._bias_detection_enabled:
+            self._text_parser = TextGraphParser(enable_logging=False)
+            self._bias_calculator = BiasCalculator()
+            self.logger.info("USM Bias Detection: ENABLED")
+        else:
+            self.logger.info("USM Bias Detection: DISABLED")
 
         self.logger.info(f"ΔTHRESH Processor v{self.VERSION} initialized")
         self.logger.info(
@@ -109,6 +132,14 @@ class DeltaThreshProcessor:
                 processing_time_ms, reason_codes, layer_scores, tri_score
             )
 
+            # Phase 14.3: Bias detection (if enabled)
+            bias_report = None
+            if self._bias_detection_enabled:
+                try:
+                    bias_report = self._analyze_bias(content)
+                except Exception as exc:
+                    self.logger.warning(f"Bias detection failed: {exc}")
+
             result = ProcessingResult(
                 content=processed_content,
                 action=action,
@@ -122,6 +153,7 @@ class DeltaThreshProcessor:
                 operational_mode=self.config.operational_mode.value,
                 session_id=session_id,
                 anchor_integrity=anchor_integrity,
+                bias_report=bias_report,
             )
 
             self.logger.debug(
@@ -405,3 +437,43 @@ class DeltaThreshProcessor:
                 "Processing time approaching budget limits - optimize patterns"
             )
         return recs
+
+    # ------------------------------------------------------------------
+    # Phase 14.3: USM Bias Detection
+    # ------------------------------------------------------------------
+    def _analyze_bias(self, content: str) -> Dict[str, Any]:
+        """
+        Analyze input text for cognitive bias patterns using USM.
+
+        Args:
+            content: Input text to analyze
+
+        Returns:
+            BIAS_REPORT@1 contract dict
+
+        Raises:
+            Exception: If parsing or analysis fails
+        """
+        if not self._bias_detection_enabled:
+            return None
+
+        # Parse text → SystemGraph
+        graph = self._text_parser.parse(content)
+
+        # Analyze graph → BiasReport
+        report = self._bias_calculator.analyze_text_graph(graph, enable_logging=False)
+
+        # Convert to BIAS_REPORT@1 contract format
+        bias_report = {
+            'bias_vector': report.bias_vector,
+            'collapse_score': report.collapse_score,
+            'usm_metrics': report.usm_metrics,
+            'metadata': {
+                **report.metadata,
+                'text_length': len(content),
+                'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+            },
+            'confidence': report.confidence
+        }
+
+        return bias_report

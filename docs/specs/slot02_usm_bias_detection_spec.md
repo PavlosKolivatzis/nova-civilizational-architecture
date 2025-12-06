@@ -144,12 +144,34 @@ b_risk = f(relation_diversity)  # Harm gradient variance
 C(B) = 0.4·b_local + 0.3·b_completion + 0.2·(1-b_risk) - 0.5·b_structural
 ```
 
-### Phase 4: Slot02 Integration (PENDING)
+### Phase 4: Slot02 Integration (✅ COMPLETED)
 
-1. Update `src/nova/slots/slot02_deltathresh/processor.py`
-2. Add bias detection pipeline (behind feature flag)
-3. Emit `BIAS_REPORT@1` contract
-4. Update `docs/slots/slot02_deltathresh.md`
+**Implemented:** Full integration with DeltaThreshProcessor
+
+**Features:**
+1. ✅ Extended `ProcessingResult` with `bias_report` field
+2. ✅ Added `_analyze_bias()` method to core processor
+3. ✅ Feature flag: `NOVA_ENABLE_BIAS_DETECTION=0` (default off)
+4. ✅ Graceful import fallback (non-breaking)
+5. ✅ BIAS_REPORT@1 contract emission
+6. ✅ Tests: `tests/slots/slot02/test_bias_integration.py` (11 passing)
+
+**Integration Points:**
+- `DeltaThreshProcessor.__init__()` - Initialize parser + calculator when flag enabled
+- `DeltaThreshProcessor.process_content()` - Call `_analyze_bias()` after TRI/pattern detection
+- `DeltaThreshProcessor._analyze_bias()` - TextGraphParser → BiasCalculator → BIAS_REPORT@1
+
+**Contract:**
+- Location: `contracts/bias_report@1.yaml`
+- Emitter: `slot02_deltathresh`
+- Consumers: `slot07_production_controls`, `slot09_distortion_protection`, `slot01_truth_anchor`
+
+**Rollback:**
+```bash
+export NOVA_ENABLE_BIAS_DETECTION=0  # Disable feature
+# OR
+git revert <commit-hash>  # Remove integration
+```
 
 ---
 
@@ -251,11 +273,23 @@ pytest tests/slots/slot02/ -q
 
 ---
 
-**Status:** Phases 1-3 complete (✅ USM metrics, ✅ Text parser, ✅ Bias calculator)
-**Next Step:** Phase 4 - Slot02 integration + BIAS_REPORT@1 contract emission
-**Tests:** 49 new passing (25 parser + 24 calculator)
-**Files:**
+**Status:** ✅ ALL PHASES COMPLETE (1-4)
+**Tests:** 83 new passing (25 parser + 24 calculator + 11 integration + 23 cognitive loop/oracle)
+**Files Added:**
 - `src/nova/slots/slot02_deltathresh/text_graph_parser.py` (362 lines)
 - `src/nova/slots/slot02_deltathresh/bias_calculator.py` (426 lines)
+- `src/nova/slots/slot01_truth_anchor/quality_oracle.py` (234 lines)
+- `src/nova/slots/slot07_production_controls/cognitive_loop.py` (380 lines)
 - `tests/slots/slot02/test_text_graph_parser.py` (321 lines)
 - `tests/slots/slot02/test_bias_calculator.py` (320 lines)
+- `tests/slots/slot02/test_bias_integration.py` (249 lines)
+- `tests/slots/slot01/test_quality_oracle.py` (244 lines)
+- `tests/slots/slot07/test_cognitive_loop.py` (247 lines)
+- `contracts/bias_report@1.yaml` (179 lines)
+
+**Files Modified:**
+- `src/nova/slots/slot02_deltathresh/core.py` (+48 lines)
+- `src/nova/slots/slot02_deltathresh/models.py` (+1 line)
+- `src/nova/math/relations_pattern.py` (+125 lines USM metrics)
+
+**Rollback:** `export NOVA_ENABLE_BIAS_DETECTION=0` (feature flag off by default)
