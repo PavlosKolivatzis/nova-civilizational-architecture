@@ -1,0 +1,105 @@
+schema: nova_contract/v1
+contract_id: temporal_usm@1
+title: Temporal USM Stream Snapshot
+description: >
+  Per-stream temporal USM snapshot emitted by Slot02 ëTHRESH when
+  NOVA_ENABLE_USM_TEMPORAL=1, capturing history-aware H_t, rho_t, and C_t
+  for a single cognitive stream.
+version: "1.0.0"
+
+slots:
+  - id: 2
+    name: Slot02 DeltaThresh
+    role: publisher
+    description: Emits temporal USM snapshots for cognitive streams
+  - id: 7
+    name: Slot07 Production Controls
+    role: consumer
+    description: Consumes temporal USM for stability-aware governance decisions
+  - id: 9
+    name: Slot09 Distortion Protection
+    role: consumer
+    description: Uses temporal collapse trends for distortion thresholding
+
+fields:
+  - name: stream_id
+    type: string
+    description: >
+      Cognitive stream identity (opaque correlation key), stable across
+      an interaction thread (conversation / request chain).
+
+  - name: timestamp
+    type: float
+    description: >
+      Event timestamp (epoch seconds, UTC) at which the temporal state
+      was computed for this stream.
+
+  - name: graph_state
+    type: string
+    description: >
+      Structural state of the latest analyzed input for this stream
+      (e.g., "normal", "void", or "unknown").
+
+  - name: H_temporal
+    type: float
+    description: >
+      Temporal spectral entropy H_t for this stream (structural complexity
+      smoothed over time via step_non_void / step_void).
+
+  - name: rho_temporal
+    type: float
+    range: [0.0, 1.0]
+    description: >
+      Temporal equilibrium ratio rho_t for this stream, representing
+      protective/extractive balance under temporal smoothing.
+
+  - name: C_temporal
+    type: float
+    range: [-0.5, 1.5]
+    description: >
+      Temporal collapse score C_t for this stream, i.e., time-evolved
+      version of instantaneous C(B) from bias_report@1.
+
+  - name: lambda_used
+    type: float
+    range: [0.0, 1.0]
+    description: >
+      Effective lambda (decay/smoothing constant) used for this update.
+      Must satisfy 0 < lambda_used < 1 at runtime.
+
+  - name: mode
+    type: string
+    description: >
+      Temporal mode applied during this update ("soft", "reset", "freeze").
+      Phase 14.5 uses "soft" as the only Nova-aligned default.
+
+  - name: rho_equilibrium
+    type: float
+    range: [0.0, 1.0]
+    description: >
+      Equilibrium ratio rho_eq toward which rho_t decays in VOID.
+      Phase 14.5 uses rho_eq ≈ 1.0 for homeostatic equilibrium.
+
+feature_flag:
+  name: NOVA_ENABLE_USM_TEMPORAL
+  default: 0
+  description: >
+    Enable temporal USM computation and emission of temporal_usm@1
+    snapshots from Slot02. When 0, no temporal_usm@1 payloads are
+    emitted and runtime behavior remains purely instantaneous.
+
+rollback:
+  command: "export NOVA_ENABLE_USM_TEMPORAL=0"
+  description: >
+    Disable temporal USM emission and ignore temporal_usm@1 in routing/
+    governance logic. For complete removal, git revert the commits that
+    added temporal_usm@1 integration.
+
+notes:
+  - Temporal USM augments, but does not replace, instantaneous USM metrics
+    (spectral_entropy, equilibrium_ratio, collapse_score) from bias_report@1.
+  - Consumers MUST treat absence of temporal_usm@1 (flag off) as "no temporal
+    state available", not as an error condition.
+  - VOID inputs (graph_state="void") use the soft decay law defined in
+    docs/specs/phase14_5_temporal_usm_spec.md for H_t, rho_t, and C_t.
+
