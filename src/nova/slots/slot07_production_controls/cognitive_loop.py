@@ -24,8 +24,24 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Callable, Any
 from datetime import datetime
+from prometheus_client import Counter
 
 logger = logging.getLogger(__name__)
+
+# Phase 14.4 metrics (RFC-014 observability)
+try:
+    from nova.metrics.registry import REGISTRY
+    _void_freeze_counter = Counter(
+        "slot07_regime_unchanged_on_void_total",
+        "Slot07 cognitive loop VOID freeze events (skip oracle/refinement)",
+        registry=REGISTRY
+    )
+except Exception:
+    # Graceful fallback if metrics registry unavailable
+    _void_freeze_counter = Counter(
+        "slot07_regime_unchanged_on_void_total",
+        "Slot07 cognitive loop VOID freeze events (skip oracle/refinement)"
+    )
 
 
 @dataclass
@@ -99,7 +115,7 @@ class CognitiveLoopController:
     def run_cognitive_loop(
         self,
         generator_fn: Callable[[Dict], str],
-        analyzer_fn: Callable[[str], Tuple[Dict, float]],  # Returns (bias_vector, collapse_score)
+        analyzer_fn: Callable[[str], Tuple[Dict, float, Optional[str]]],  # Returns (bias_vector, collapse_score, graph_state)
         oracle_fn: Callable[[str, Dict, float], Dict],  # Returns validation result
         attestor_fn: Callable[[Dict], None],  # Records to ledger
         input_context: Dict
@@ -124,11 +140,15 @@ class CognitiveLoopController:
         if not self.config.enabled:
             # Feature disabled - run single-pass without loop
             response = generator_fn(input_context)
-            bias_vector, collapse_score = analyzer_fn(response)
+            bias_vector, collapse_score, graph_state = analyzer_fn(response)
 
             return LoopResult(
                 response=response,
-                bias_report={'bias_vector': bias_vector, 'collapse_score': collapse_score},
+                bias_report={
+                    'bias_vector': bias_vector,
+                    'collapse_score': collapse_score,
+                    'graph_state': graph_state
+                },
                 iterations=1,
                 converged=True,  # Single-pass always "converged"
                 total_time_ms=0,
@@ -154,10 +174,28 @@ class CognitiveLoopController:
 
             # Step 2: Analyze structure (Slot02)
             try:
-                bias_vector, collapse_score = analyzer_fn(response)
+                bias_vector, collapse_score, graph_state = analyzer_fn(response)
             except Exception as e:
                 logger.error(f"Analyzer failed at iteration {iteration}: {e}")
                 raise
+
+            # Phase 14.4: VOID handling (RFC-014 Slot07 freeze policy)
+            if graph_state == 'void':
+                logger.debug(f"VOID state detected at iteration {iteration} - skipping oracle/refinement")
+                _void_freeze_counter.inc()
+                # VOID = epistemic null, accept immediately (no quality score)
+                return LoopResult(
+                    response=response,
+                    bias_report={
+                        'bias_vector': bias_vector,
+                        'collapse_score': collapse_score,
+                        'graph_state': 'void'
+                    },
+                    iterations=iteration + 1,
+                    converged=True,  # VOID always converges (nothing to refine)
+                    total_time_ms=int((datetime.now() - start_time).total_seconds() * 1000),
+                    audit_trail=audit_trail
+                )
 
             # Step 3: Oracle validation (Slot01)
             try:
@@ -202,6 +240,7 @@ class CognitiveLoopController:
                     bias_report={
                         'bias_vector': bias_vector,
                         'collapse_score': collapse_score,
+                        'graph_state': graph_state,
                         'oracle_validation': validation_result
                     },
                     iterations=iteration + 1,
@@ -241,6 +280,7 @@ class CognitiveLoopController:
             bias_report={
                 'bias_vector': bias_vector,
                 'collapse_score': collapse_score,
+                'graph_state': graph_state,
                 'converged': False
             },
             iterations=self.config.max_iterations,
