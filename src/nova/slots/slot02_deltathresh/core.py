@@ -20,6 +20,7 @@ from .metrics import PerformanceTracker
 from .models import ProcessingResult
 from .patterns import PatternDetector, _word_count_fast
 from .fidelity_weighting import FidelityWeightingService
+from nova.math.usm_temporal import TemporalUsmState, step_non_void, step_void
 
 # Phase 14.3: USM Bias Detection (feature-gated)
 try:
@@ -54,8 +55,8 @@ class DeltaThreshProcessor:
 
         # Phase 14.3: Bias detection (feature-gated)
         self._bias_detection_enabled = (
-            os.getenv('NOVA_ENABLE_BIAS_DETECTION', '0') == '1' and
-            _BIAS_DETECTION_AVAILABLE
+            os.getenv('NOVA_ENABLE_BIAS_DETECTION', '0') == '1'
+            and _BIAS_DETECTION_AVAILABLE
         )
         self._text_parser = None
         self._bias_calculator = None
@@ -65,6 +66,26 @@ class DeltaThreshProcessor:
             self.logger.info("USM Bias Detection: ENABLED")
         else:
             self.logger.info("USM Bias Detection: DISABLED")
+
+        # Phase 14.5: Temporal USM (feature-gated, depends on bias detection)
+        temporal_flag = os.getenv("NOVA_ENABLE_USM_TEMPORAL", "0") == "1"
+        self._temporal_usm_enabled = temporal_flag and self._bias_detection_enabled
+        # Soft mode is the Phase 14.5 default; other modes may be added later.
+        self._temporal_mode = os.getenv("NOVA_TEMPORAL_MODE", "soft")
+        # Decay/smoothing constant and equilibrium ratio (see Phase 14.5 spec).
+        self._temporal_lambda = 0.6
+        self._temporal_rho_eq = 1.0
+        self._temporal_state: Dict[str, TemporalUsmState] = {}
+
+        if self._temporal_usm_enabled:
+            self.logger.info(
+                "Temporal USM: ENABLED (mode=%s, lambda=%.2f, rho_eq=%.2f)",
+                self._temporal_mode,
+                self._temporal_lambda,
+                self._temporal_rho_eq,
+            )
+        else:
+            self.logger.info("Temporal USM: DISABLED")
 
         self.logger.info(f"ΔTHRESH Processor v{self.VERSION} initialized")
         self.logger.info(
@@ -156,6 +177,33 @@ class DeltaThreshProcessor:
                         exc_info=True,
                     )
 
+            # Phase 14.5: Temporal USM (if enabled and bias report available)
+            temporal_usm: Optional[Dict[str, Any]] = None
+            if self._temporal_usm_enabled and bias_report:
+                try:
+                    temporal_usm = self._update_temporal_usm(
+                        session_id=session_id,
+                        bias_report=bias_report,
+                    )
+                except Exception as exc:
+                    tb = exc.__traceback__
+                    line = tb.tb_lineno if tb else None
+                    self.logger.warning(
+                        "Temporal USM update failed",
+                        extra={
+                            "file": __file__,
+                            "function": "_update_temporal_usm",
+                            "line": line,
+                            "slot": "slot02",
+                            "phase": "14.5",
+                            "error_type": type(exc).__name__,
+                            "error_message": str(exc),
+                            "content_length": len(content),
+                            "step": "temporal_usm_update",
+                        },
+                        exc_info=True,
+                    )
+
             result = ProcessingResult(
                 content=processed_content,
                 action=action,
@@ -170,6 +218,7 @@ class DeltaThreshProcessor:
                 session_id=session_id,
                 anchor_integrity=anchor_integrity,
                 bias_report=bias_report,
+                temporal_usm=temporal_usm,
             )
 
             self.logger.debug(
@@ -453,6 +502,77 @@ class DeltaThreshProcessor:
                 "Processing time approaching budget limits - optimize patterns"
             )
         return recs
+
+    # ------------------------------------------------------------------
+    # Phase 14.5: Temporal USM Update
+    # ------------------------------------------------------------------
+    def _update_temporal_usm(
+        self,
+        session_id: str,
+        bias_report: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Update per-stream temporal USM state from a BIAS_REPORT@1 payload.
+
+        Emits a dict compatible with temporal_usm@1 when NOVA_ENABLE_USM_TEMPORAL=1.
+        """
+        state: Optional[TemporalUsmState] = self._temporal_state.get(session_id)
+
+        metadata = bias_report.get("metadata", {}) or {}
+        graph_state = metadata.get("graph_state", "unknown")
+
+        lambda_ = self._temporal_lambda
+        rho_eq = self._temporal_rho_eq
+        mode = self._temporal_mode
+
+        if graph_state == "void":
+            # VOID state - apply configured temporal mode
+            if mode == "soft":
+                state = step_void(prev=state, lambda_=lambda_, rho_eq=rho_eq)
+            elif mode == "reset":
+                state = TemporalUsmState(H=0.0, rho=rho_eq, C=0.0)
+            elif mode == "freeze":
+                # Preserve previous state; if no state exists yet, initialize to equilibrium.
+                if state is None:
+                    state = TemporalUsmState(H=0.0, rho=rho_eq, C=0.0)
+            else:
+                # Unknown mode - default to soft decay for safety.
+                state = step_void(prev=state, lambda_=lambda_, rho_eq=rho_eq)
+        else:
+            # Non-VOID input - exponential smoothing using instantaneous metrics
+            usm_metrics = bias_report.get("usm_metrics", {}) or {}
+            H_inst = usm_metrics.get("spectral_entropy")
+            rho_inst = usm_metrics.get("equilibrium_ratio")
+            C_inst = bias_report.get("collapse_score")
+
+            # If any instantaneous metric is missing, skip temporal update.
+            if H_inst is None or rho_inst is None or C_inst is None:
+                return None
+
+            state = step_non_void(
+                prev=state,
+                H_inst=float(H_inst),
+                rho_inst=float(rho_inst),
+                C_inst=float(C_inst),
+                lambda_=lambda_,
+            )
+
+        self._temporal_state[session_id] = state
+
+        # Build temporal_usm@1-compatible payload
+        temporal_payload = {
+            "stream_id": session_id,
+            "timestamp": time.time(),
+            "graph_state": graph_state,
+            "H_temporal": state.H,
+            "rho_temporal": state.rho,
+            "C_temporal": state.C,
+            "lambda_used": lambda_,
+            "mode": mode,
+            "rho_equilibrium": rho_eq,
+        }
+
+        return temporal_payload
 
     # ------------------------------------------------------------------
     # Phase 14.3: USM Bias Detection

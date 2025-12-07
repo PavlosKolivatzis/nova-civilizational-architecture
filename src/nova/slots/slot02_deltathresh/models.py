@@ -19,3 +19,4 @@ class ProcessingResult:
     anchor_integrity: float = 1.0
     version: str = "v1"
     bias_report: Optional[Dict[str, Any]] = None  # BIAS_REPORT@1 (Phase 14.3)
+    temporal_usm: Optional[Dict[str, Any]] = None  # temporal_usm@1 (Phase 14.5, flag-gated)
