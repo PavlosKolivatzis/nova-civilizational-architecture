@@ -189,6 +189,41 @@ Temporal USM updates occur **once per processed input** in Slot02, **after** sta
 
 The initial contract surface in Phase 14.5 is limited to Slot02 → Slot07/09 to keep the change minimal and reversible.
 
+### 3.4 Temporal Identity & Lifetime
+
+Temporal USM state is attached to a **cognitive stream**, not to individual requests and not to the global system.
+
+**Identity:**
+
+- Each temporal state instance is keyed by an opaque `stream_id`, representing a single ongoing interaction thread (conversation / request chain).  
+- `stream_id` is provided by the orchestrator as the existing correlation identifier; Slot02 treats it as opaque and does not infer semantics from it.
+
+**Ownership & Storage:**
+
+- Slot02 maintains an in-memory mapping `stream_id → TemporalUsmState` in its own process context.  
+- No temporal USM state is stored in ledgers; only derived metrics may be emitted in payloads/contracts.
+
+**Update Events (What Counts as “Time”):**
+
+- Temporal USM is advanced only when Slot02 **processes an input** for a given `stream_id`:
+  - Non-VOID inputs (`graph_state != "void"`) trigger `step_non_void`.  
+  - VOID inputs (`graph_state == "void"`) trigger `step_void`.  
+- There is no background clock; user silence between messages is simply “no update” until the next processed input, at which point VOID decay applies if that input is classified as VOID.
+
+**Lifecycle & Reset Rules:**
+
+- A new entry in `stream_id → TemporalUsmState` is created on the **first** processed input for that `stream_id`.  
+- Temporal state is reset when:
+  - A new `stream_id` is observed (new conversation / request chain).  
+  - An explicit end-of-stream / conversation-closed signal is received from the orchestrator.  
+  - An optional TTL or capacity limit in Slot02’s cache evicts old streams (implementation detail, to be documented at integration time).
+
+**Invariants:**
+
+- Temporal identity is **per-stream** and **local to Slot02**; it is not replicated per-slot and not globalized in Continuity/ORP during Phase 14.5.  
+- Temporal USM does not change the semantics of instantaneous USM or VOID; it augments them with history-aware metrics.  
+- Disabling temporal USM (via flag) must make the presence or absence of `stream_id` and temporal state **behaviorally irrelevant** to downstream slots.
+
 ---
 
 ## 4. Feature Flags & Configuration
