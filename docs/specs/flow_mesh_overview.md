@@ -66,8 +66,8 @@ flowchart LR
         S6[Slot06 Cultural Synthesis\nCultural Guardrails]
     end
 
-    S4 <-->|TRI_REPORT@1\nTRI scores, drift| S5
-    S5 -->|Spatial context\n(mesh signals)| S6
+    S4 <-->|TRI_REPORT@1 (TRI scores, drift)| S5
+    S5 -->|Spatial context (mesh signals)| S6
     S4 -->|Safe mode / TRI health| S6
 
     subgraph NonMesh["Non-Mesh Core"]
@@ -108,4 +108,3 @@ Mesh participants are required to:
 - Avoid pushing unstable signals into downstream consumers when flags indicate degraded or experimental operation.  
 
 This document does not introduce new flags—it summarizes the current pattern so operators and agents can see how flow mesh relates to the rest of Nova.
-

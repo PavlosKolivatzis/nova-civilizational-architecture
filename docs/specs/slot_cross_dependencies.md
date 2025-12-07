@@ -26,9 +26,9 @@ flowchart LR
     end
 
     %% Slot02 outputs
-    S2 -->|BIAS_REPORT@1\n(bias_vector, C_inst, graph_state)| S7
+    S2 -->|BIAS_REPORT@1 (bias_vector, C_inst, graph_state)| S7
     S2 -->|BIAS_REPORT@1 + VOID state| S9
-    S2 -. optional .->|temporal_usm@1\n(H_t, rho_t, C_t)| S7
+    S2 -. optional .->|temporal_usm@1 (H_t, rho_t, C_t)| S7
 
     %% Truth Anchor
     S1 -->|QualityOracle\n(ACCEPT/REJECT)| S7
@@ -113,4 +113,3 @@ This is a dependency-focused view (who depends on whom conceptually):
     - Governance posture (Slot07).  
 
 This document is descriptive only and reflects the current conceptual wiring. Runtime connections are always subject to feature flags and the invariants in `.claude/agent.md` and `docs/MISSION.md`.
-

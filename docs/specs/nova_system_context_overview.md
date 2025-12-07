@@ -65,7 +65,7 @@ flowchart LR
 
     IN --> G --> BIAS
     BIAS --> TEMP
-    TEMP -->|temporal_usm@1\n(optional, flags on)| S7
+    TEMP -->|temporal_usm@1 (optional, flags on)| S7
     BIAS -->|instantaneous| S7
 
     subgraph Slot07["Slot07 – Cognitive Loop"]
@@ -123,4 +123,3 @@ This shows how:
 - Runtime produces new observations and attestations, closing the loop.  
 
 These diagrams are intended as cognitive anchors for operators and agents, not as new behavior. They reflect the current implementation up through Phase 14.5, with Phase 14.6 temporal governance still in the design-only state.
-
