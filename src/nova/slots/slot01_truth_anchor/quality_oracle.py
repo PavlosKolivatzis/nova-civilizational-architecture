@@ -18,8 +18,25 @@ Invariant Compliance:
 from dataclasses import dataclass
 from typing import Dict, Optional
 import logging
+import os
+from prometheus_client import Counter
 
 logger = logging.getLogger(__name__)
+
+# Phase 14.4 metrics (RFC-014 observability)
+try:
+    from nova.metrics.registry import REGISTRY
+    _void_abstention_counter = Counter(
+        "slot01_void_abstention_total",
+        "Slot01 quality oracle VOID abstention events (null quality)",
+        registry=REGISTRY
+    )
+except Exception:
+    # Graceful fallback if metrics registry unavailable
+    _void_abstention_counter = Counter(
+        "slot01_void_abstention_total",
+        "Slot01 quality oracle VOID abstention events (null quality)"
+    )
 
 
 @dataclass
@@ -78,7 +95,8 @@ class QualityOracle:
         response: str,
         bias_vector: Dict[str, float],
         collapse_score: float,
-        context: Optional[Dict] = None
+        context: Optional[Dict] = None,
+        graph_state: Optional[str] = None
     ) -> ValidationResult:
         """
         Independent validation of response quality.
@@ -88,11 +106,30 @@ class QualityOracle:
             bias_vector: B(R) from Slot02 analysis
             collapse_score: C(B) from Slot02
             context: Optional context (user query, iteration number)
+            graph_state: BIAS_REPORT@1 graph_state (Phase 14.4 VOID handling)
 
         Returns:
             ValidationResult with ACCEPT/REJECT decision
         """
         self.validation_count += 1
+
+        # Phase 14.4: VOID handling (RFC-014 Slot01 policy)
+        void_mode_enabled = os.getenv("NOVA_ENABLE_VOID_MODE", "1") == "1"
+        if void_mode_enabled and graph_state == 'void':
+            logger.debug("VOID state detected - epistemic abstention (quality=None)")
+            _void_abstention_counter.inc()
+            # VOID = no evidence, NOT low quality evidence
+            # Return ACCEPT with null quality (don't penalize absence)
+            return ValidationResult(
+                decision="ACCEPT",
+                reason="VOID state - epistemic abstention (no parseable structure)",
+                confidence=1.0,  # VOID is fully defined, not uncertain
+                metadata={
+                    'void_abstention': True,
+                    'quality_score': None,  # Null, not 0.0
+                    'graph_state': 'void'
+                }
+            )
 
         # Primary check: Collapse score threshold
         if collapse_score >= self.collapse_threshold:
