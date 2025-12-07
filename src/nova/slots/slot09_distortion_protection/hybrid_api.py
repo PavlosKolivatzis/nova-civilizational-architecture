@@ -608,6 +608,13 @@ class HybridDistortionDetectionAPI:
     async def _process_with_nova_integration(self, request: DistortionDetectionRequest,
                                            trace_id: str) -> Dict[str, Any]:
         """Process request with full NOVA integration or fallback."""
+        # Phase 14.4: VOID bypass (RFC-014 Slot09 policy)
+        from .void_bypass import should_bypass_distortion_check, create_void_passthrough_response
+
+        graph_state = request.context.get('graph_state') if request.context else None
+        if should_bypass_distortion_check(graph_state=graph_state):
+            return create_void_passthrough_response(request.context or {}, trace_id)
+
         if NOVA_INTEGRATION_AVAILABLE and IDS_ENABLED:
             return await self._process_with_ids_policy(request, trace_id)
         else:
