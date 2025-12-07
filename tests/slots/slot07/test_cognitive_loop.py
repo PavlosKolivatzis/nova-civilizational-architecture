@@ -55,7 +55,8 @@ class TestCognitiveLoopController:
             return "Test response"
 
         def analyzer(response):
-            return ({'b_local': 0.2}, 0.15)
+            # Non-VOID, structurally normal state
+            return ({'b_local': 0.2}, 0.15, "normal")
 
         def oracle(response, bias, score):
             return {'decision': 'ACCEPT', 'reason': 'Good', 'confidence': 0.9}
@@ -82,7 +83,8 @@ class TestCognitiveLoopController:
             return "High quality response"
 
         def analyzer(response):
-            return ({'b_local': 0.2, 'b_global': 0.8}, 0.15)  # Good scores
+            # Good structural scores, non-VOID graph state
+            return ({'b_local': 0.2, 'b_global': 0.8}, 0.15, "normal")  # Good scores
 
         def oracle(response, bias, score):
             return {'decision': 'ACCEPT', 'reason': 'Validated', 'confidence': 0.9}
@@ -119,9 +121,9 @@ class TestCognitiveLoopController:
 
         def analyzer(response):
             if "Poor" in response:
-                return ({'b_local': 0.9, 'b_completion': 0.8}, 0.65)  # Bad scores
+                return ({'b_local': 0.9, 'b_completion': 0.8}, 0.65, "normal")  # Bad scores, non-VOID
             else:
-                return ({'b_local': 0.2, 'b_completion': 0.1}, 0.12)  # Good scores
+                return ({'b_local': 0.2, 'b_completion': 0.1}, 0.12, "normal")  # Good scores, non-VOID
 
         def oracle(response, bias, score):
             if score > 0.3:
@@ -154,7 +156,7 @@ class TestCognitiveLoopController:
             return "Always poor response"
 
         def analyzer(response):
-            return ({'b_local': 0.9}, 0.8)  # Always bad
+            return ({'b_local': 0.9}, 0.8, "normal")  # Always bad, non-VOID
 
         def oracle(response, bias, score):
             return {'decision': 'REJECT', 'reason': 'Always bad', 'confidence': 0.95}
@@ -200,7 +202,7 @@ class TestCognitiveLoopController:
             return "Response"
 
         def analyzer(response):
-            return ({'b_local': 0.2}, 0.15)
+            return ({'b_local': 0.2}, 0.15, "normal")
 
         def oracle(response, bias, score):
             return {'decision': 'ACCEPT', 'reason': 'Good', 'confidence': 0.9}
@@ -231,7 +233,7 @@ class TestCognitiveLoopController:
             return "Test"
 
         def analyzer(response):
-            return ({'b_local': 0.2}, 0.15)
+            return ({'b_local': 0.2}, 0.15, "normal")
 
         def oracle(response, bias, score):
             return {'decision': 'ACCEPT', 'reason': 'Good', 'confidence': 0.9}
@@ -280,9 +282,9 @@ class TestCognitiveLoopIntegration:
 
         def analyzer(response):
             if "Poor" in response:
-                return ({'b_local': 0.9, 'b_completion': 0.8, 'b_structural': 0.7}, 0.68)
+                return ({'b_local': 0.9, 'b_completion': 0.8, 'b_structural': 0.7}, 0.68, "normal")
             else:
-                return ({'b_local': 0.2, 'b_completion': 0.1, 'b_structural': 0.7}, 0.08)
+                return ({'b_local': 0.2, 'b_completion': 0.1, 'b_structural': 0.7}, 0.08, "normal")
 
         def oracle(response, bias, score):
             result = oracle_instance.validate_quality(response, bias, score)
