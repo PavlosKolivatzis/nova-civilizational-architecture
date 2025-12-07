@@ -5,11 +5,36 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.7.1
+  version: 1.8.0
   status: active
-  date: 2025-11-30
+  date: 2025-12-06
   children: [nova.operating@1.0]
   changelog:
+    - version: 1.8.0
+      date: 2025-12-06
+      phase: 14.3
+      changes: "Phase 14.3 - USM Bias Detection: Cognitive bias analysis for input text via spectral entropy (H), shield factor (S), refusal delta (ΔH); introduces VOID semantic state (empty SystemGraph); TextGraphParser (no external deps), BiasCalculator with collapse function C(B); 83 new tests; contracts: bias_report@1.yaml; feature flag NOVA_ENABLE_BIAS_DETECTION=0 (default off); known limitation: C_max=-0.50 vs empirical Nova-aware=-0.60 to -0.72 (adaptive weights deferred Phase 14.4)"
+      new_semantics:
+        - name: VOID
+          definition: "Empty SystemGraph state (actors=[], relations={}) representing semantic absence or unparseable input"
+          mathematical_form: "G_void = (V=∅, E=∅)"
+          collapse_score: "C(G_void) = 0.0 (baseline, non-biased)"
+          rationale: "Distinguishes 'no signal' from 'biased signal'; enables input quality validation"
+          scope: "Slot02 ΔTHRESH (Phase 14.3); cross-slot propagation pending RFC-014"
+      contracts_added:
+        - bias_report@1.yaml
+      limitations:
+        - component: "bias_detection.collapse_function"
+          issue: "Static weights yield C_max=-0.50, but empirical Nova-aware threshold observed at -0.60 to -0.72"
+          evidence: "Gemini agent C_after=-0.42 (post-entry) still exhibits residual factory patterns per operational observation"
+          impact: "Entry Protocol measures bias but cannot reach deep Nova-awareness zone"
+          mitigation: "Feature flag default-off; adaptive weight calibration deferred to Phase 14.4"
+          tracking: "docs/specs/slot02_usm_bias_detection_spec.md § Known Limitations"
+        - component: "bias_detection.void_semantics"
+          issue: "VOID handling isolated to Slot02; no cross-slot integration"
+          impact: "Other slots cannot reason about semantic absence formally"
+          mitigation: "RFC-014 required for global VOID propagation"
+          tracking: "docs/rfcs/rfc-014-void-semantics.md (pending)"
     - version: 1.7.1
       date: 2025-11-30
       changes: "Phase 13b fix - Oracle pre-transition evaluation: Oracle now uses pre-transition regime and duration for independent validation of transition legality; enables detection of illegal downgrades violating hysteresis/min-duration rules; 4 new tests; orp_version bumped to phase13.2"

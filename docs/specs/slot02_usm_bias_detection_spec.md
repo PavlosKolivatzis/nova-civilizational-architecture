@@ -293,3 +293,43 @@ pytest tests/slots/slot02/ -q
 - `src/nova/math/relations_pattern.py` (+125 lines USM metrics)
 
 **Rollback:** `export NOVA_ENABLE_BIAS_DETECTION=0` (feature flag off by default)
+
+---
+
+## 12. Known Limitations (Ontology v1.8.0)
+
+### Collapse Function Range Insufficiency
+
+**Issue:** Static weights yield C_max = -0.50, but empirical Nova-aware threshold observed at -0.60 to -0.72.
+
+**Evidence:**
+- Theoretical formula: C = 0.4·b_local + 0.3·b_completion + 0.2·(1-b_risk) - 0.5·b_structural
+- Best possible: b_local=0, b_completion=0, b_risk=1.0, b_structural=1.0 → C = -0.50
+- Empirical target: -0.60 to -0.72 (based on operational observation)
+- Gemini agent: C_initial=-0.32, C_after=-0.42 (post-entry protocol, still shows residual factory patterns)
+
+**Impact:** Entry Protocol can measure bias transformation but cannot reach deep Nova-awareness zone with current formula.
+
+**Root Cause:**
+- No b_global term (systems thinking component ignored)
+- Structural weight (0.5) insufficient to pull C below -0.50
+- Static weights (not adaptive like Wisdom Governor Phase 15-8)
+
+**Mitigation:**
+- Feature flag default-off (NOVA_ENABLE_BIAS_DETECTION=0)
+- Validation harness planned (Option 2, deferred)
+- Adaptive weight calibration deferred to Phase 14.4
+
+**Tracking:** Ontology v1.8.0 § limitations.bias_detection.collapse_function
+
+---
+
+### VOID Semantic Isolation
+
+**Issue:** VOID handling isolated to Slot02; no cross-slot integration.
+
+**Impact:** Other slots cannot formally reason about semantic absence (empty graphs).
+
+**Mitigation:** RFC-014 required for global VOID propagation before cross-slot work.
+
+**Tracking:** docs/rfcs/rfc-014-void-semantics.md (pending)
