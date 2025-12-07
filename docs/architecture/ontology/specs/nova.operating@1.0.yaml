@@ -1,3 +1,29 @@
+# Operating Ontology: nova.operating@1.0 → v1.1.0
+# Operational-layer semantics for regime, drift, VOID propagation
+# Parent: nova.frameworks v1.8.0 (Mother Ontology)
+# Children: slot01-10, arc, rri, mse, evf, nem, pag, fb, avl
+
+meta:
+  ontology_id: "nova.operating"
+  version: "1.1.0"
+  status: "active"
+  date: "2025-12-07"
+  parent: "nova.frameworks@1.8.0"
+  changelog:
+    - version: "1.1.0"
+      date: "2025-12-07"
+      phase: "14.4"
+      changes: "Add VOID propagation semantics (void_state@1); define cross-slot handling rules; establish regime-VOID mapping; Phase 14.3 follow-on"
+      rationale: "Mother Ontology defines VOID as graph primitive (G_void); Operating Ontology defines policy for how slots interpret and propagate VOID state"
+    - version: "1.0"
+      date: "2025-11-30"
+      phase: "13b"
+      changes: "Initial Operating Ontology stub for temporal snapshot integration"
+
+# =============================================================================
+# SECTION 1: Phase 13b (Temporal Snapshot)
+# =============================================================================
+
 phase13b_temporal_snapshot:
   description: "Phase 13b temporal snapshot integration for pre-transition state capture"
   version: "1.0"
@@ -11,3 +37,132 @@ phase13b_temporal_snapshot:
     - "oracle evaluation uses pre-transition regime and duration"
     - "snapshot immutability ensures deterministic ledger hashing"
     - "dual-modality verification requires pre-transition context"
+
+# =============================================================================
+# SECTION 2: Phase 14.4 (VOID Propagation Semantics)
+# =============================================================================
+
+void_state:
+  contract_id: "void_state@1"
+  version: "1.0.0"
+  status: "active"
+  phase: "14.4"
+  description: "Cross-slot VOID propagation policy for empty graph states"
+
+  primitive_definition:
+    source: "nova.frameworks@1.8.0 § new_semantics.VOID"
+    mathematical_form: "G_void = (V=∅, E=∅)"
+    collapse_score: "C(G_void) = -0.5 (baseline, non-biased)"
+    origin_slot: "slot02_deltathresh"
+
+  propagation_rules:
+    - rule: "VOID state does NOT trigger emergency behaviors"
+      rationale: "Absence of signal ≠ presence of threat"
+      affected_slots: ["slot07_wisdom_governor"]
+
+    - rule: "VOID maps to epistemic null, NOT affective state"
+      rationale: "Silence ≠ fear, silence ≠ compliance"
+      affected_slots: ["slot03_emotional_matrix"]
+
+    - rule: "VOID bypasses distortion filters (no false alarm)"
+      rationale: "Zero entropy is ontologically valid, not suspicious"
+      affected_slots: ["slot09_distortion_protection"]
+
+    - rule: "VOID does NOT reset thresholds or confidence"
+      rationale: "Maintain continuity across sparse inputs"
+      affected_slots: ["slot07_wisdom_governor", "slot02_deltathresh"]
+
+  slot_semantics:
+    slot02_deltathresh:
+      behavior: "emit BIAS_REPORT@1 with graph_state='void'"
+      bias_vector: "B(G_void) = (0,0,1,0,0,0,0)"
+      collapse_score: "-0.5"
+      feature_flag: "NOVA_ENABLE_VOID_MODE=1 (default on)"
+
+    slot03_emotional_matrix:
+      behavior: "map VOID → dormancy, NOT negative affect"
+      emotional_state: "null (no valence, no arousal)"
+      avoid: ["fear", "compliance", "safety signals"]
+
+    slot07_wisdom_governor:
+      behavior: "maintain prior state, do NOT trigger regime change"
+      threshold_policy: "freeze (no reset, no adjustment)"
+      traffic_limit: "unchanged"
+      deployment_freeze: "unchanged"
+
+    slot09_distortion_protection:
+      behavior: "pass-through (no filtering, no alarm)"
+      spectral_filter: "disabled for VOID inputs"
+      rationale: "H(G_void)=0 is mathematically expected, not adversarial"
+
+    slot01_truth_anchor:
+      behavior: "record VOID as epistemic abstention"
+      quality_score: "null (not low, not high)"
+      avoid: "confidence collapse on sparse data"
+
+  regime_mapping:
+    normal:
+      void_interpretation: "routine sparse input"
+      response: "maintain baselines, no alert"
+
+    heightened:
+      void_interpretation: "potential signal loss (investigate)"
+      response: "log event, monitor for pattern"
+      alert_threshold: "3 consecutive VOID in 60s"
+
+    controlled_degradation:
+      void_interpretation: "expected under traffic limits"
+      response: "continue degradation protocol"
+
+    emergency_stabilization:
+      void_interpretation: "possible system failure (critical)"
+      response: "escalate if paired with other anomalies"
+
+    recovery:
+      void_interpretation: "normal during ramp-up"
+      response: "no action"
+
+  non_interference_constraints:
+    - "VOID handling must NOT affect non-VOID signal processing"
+    - "VOID state in one slot must NOT cascade regime changes"
+    - "Slots without VOID support must gracefully skip (no crash)"
+
+  invariants:
+    - "G_void in Mother Ontology ⇒ void_state@1 in Operating Ontology"
+    - "All slots consuming BIAS_REPORT@1 must define VOID policy"
+    - "VOID propagation must preserve slot separation (Invariant #1)"
+    - "VOID handling must be observable (log graph_state, emit metrics)"
+
+  dependencies:
+    - "nova.frameworks@1.8.0 (VOID primitive)"
+    - "bias_report@1.yaml (contract with graph_state field)"
+    - "slot02_deltathresh (VOID emitter)"
+
+  consumers:
+    - "slot03_emotional_matrix"
+    - "slot07_wisdom_governor"
+    - "slot09_distortion_protection"
+    - "slot01_truth_anchor"
+    - "arc_analytic_reflection"
+
+  observability:
+    metrics:
+      - "slot02_bias_reports_total{graph_state='void'}"
+      - "slot07_regime_unchanged_on_void_total"
+      - "slot09_void_passthrough_total"
+    logs:
+      - "graph_state field in BIAS_REPORT@1"
+      - "VOID event count per regime"
+
+  rollback:
+    method: "Set NOVA_ENABLE_VOID_MODE=0 in Slot02"
+    impact: "VOID graphs treated as normal low-entropy inputs"
+    safety: "Non-breaking (backward compatible)"
+
+# =============================================================================
+# SECTION 3: Future Extensions (Placeholders)
+# =============================================================================
+
+# regime_transitions@1 (pending ORP v2.0)
+# transformation_geometry@1 (pending Phase 15 integration)
+# federation_consensus@1 (pending Phase 15-3 expansion)
