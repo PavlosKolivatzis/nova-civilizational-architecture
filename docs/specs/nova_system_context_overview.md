@@ -26,18 +26,18 @@ flowchart LR
         ORCH --> S9[Slot09 Distortion Protection]
         ORCH --> S10[Slot10 Civilizational Deployment]
 
-        S2 --> LEDGER[Three Ledgers\nFact / Claim / Attest]
+        S2 --> LEDGER[Three Ledgers<br/>Fact / Claim / Attest]
         S1 --> LEDGER
         S9 --> LEDGER
 
-        ORCH --> CONT[Continuity\nORP + AVL + Temporal Engine]
+        ORCH --> CONT[Continuity<br/>ORP + AVL + Temporal Engine]
         CONT --> ORCH
     end
 
     subgraph Knowledge
         DOCS[Docs / MISSION / Specs]
-        ONT[Ontology\nwdl_canonical, Mother Ontology]
-        CONTRACTS[Contracts\n*.yaml]
+        ONT[Ontology<br/>wdl_canonical, Mother Ontology]
+        CONTRACTS[Contracts<br/>*.yaml]
     end
 
     DOCS --> ONT
@@ -58,8 +58,8 @@ flowchart LR
     end
 
     subgraph Slot02_USM["Slot02 – USM + Temporal"]
-        G[SystemGraph\n(TextGraphParser)]
-        BIAS[BIAS_REPORT@1\n(bias_vector, C_inst, graph_state)]
+        G[SystemGraph<br/>(TextGraphParser)]
+        BIAS[BIAS_REPORT@1<br/>(bias_vector, C_inst, graph_state)]
         TEMP[TemporalUsmState(H_t, rho_t, C_t)]
     end
 
@@ -69,15 +69,15 @@ flowchart LR
     BIAS -->|instantaneous| S7
 
     subgraph Slot07["Slot07 – Cognitive Loop"]
-        LOOP[CognitiveLoopController\n(instantaneous only, 14.4)]
+        LOOP[CognitiveLoopController<br/>(instantaneous only, 14.4)]
     end
 
     subgraph Slot01
-        ORACLE[Quality Oracle\n(uses bias + VOID)]
+        ORACLE[Quality Oracle<br/>(uses bias + VOID)]
     end
 
     subgraph Slot09
-        DIST[Distortion Protection\nVOID bypass logic]
+        DIST[Distortion Protection<br/>VOID bypass logic]
     end
 
     BIAS --> ORACLE
@@ -105,12 +105,12 @@ The structural “Observe → Canonize → Attest → Publish” cycle.
 
 ```mermaid
 flowchart TB
-    OBS[Observations\n(files, incidents, metrics)] --> DOCS[Docs / ENTRY / MISSION]
-    DOCS --> ONT[Ontology\nwdl_canonical, Mother Ontology]
-    ONT --> CONTRACTS[Contracts\nslot*.yaml,\norp@1, temporal_usm@1, ...]
-    CONTRACTS --> IMPL[Implementation\nsrc/nova/*, orchestrator/*]
-    IMPL --> TESTS[Tests\npytest suite]
-    TESTS --> RUNTIME[Runtime Behavior\nSlots, Orchestrator]
+    OBS[Observations<br/>(files, incidents, metrics)] --> DOCS[Docs / ENTRY / MISSION]
+    DOCS --> ONT[Ontology<br/>wdl_canonical, Mother Ontology]
+    ONT --> CONTRACTS[Contracts<br/>slot*.yaml, orp@1, temporal_usm@1, ...]
+    CONTRACTS --> IMPL[Implementation<br/>src/nova/*, orchestrator/*]
+    IMPL --> TESTS[Tests<br/>pytest suite]
+    TESTS --> RUNTIME[Runtime Behavior<br/>Slots, Orchestrator]
     RUNTIME --> METRICS[Metrics / Logs / Attestations]
     METRICS --> OBS
 ```

@@ -61,9 +61,9 @@ Other slots (07–10) consume outputs that may be influenced by flow mesh partic
 ```mermaid
 flowchart LR
     subgraph FlowMesh["Flow Mesh Cluster"]
-        S4[Slot04 TRI\nTruth Resonance Index]
-        S5[Slot05 Constellation\nSpatial Navigation]
-        S6[Slot06 Cultural Synthesis\nCultural Guardrails]
+        S4[Slot04 TRI<br/>Truth Resonance Index]
+        S5[Slot05 Constellation<br/>Spatial Navigation]
+        S6[Slot06 Cultural Synthesis<br/>Cultural Guardrails]
     end
 
     S4 <-->|TRI_REPORT@1 (TRI scores, drift)| S5
@@ -71,8 +71,8 @@ flowchart LR
     S4 -->|Safe mode / TRI health| S6
 
     subgraph NonMesh["Non-Mesh Core"]
-        S1[Slot01 Truth Anchor\n(not in active mesh)]
-        S2[Slot02 DeltaThresh\n“Not connected to active flow mesh”]
+        S1[Slot01 Truth Anchor<br/>(not in active mesh)]
+        S2[Slot02 DeltaThresh<br/>Not connected to active flow mesh]
         S7[Slot07 Production Controls]
         S9[Slot09 Distortion Protection]
         S10[Slot10 Deployment]

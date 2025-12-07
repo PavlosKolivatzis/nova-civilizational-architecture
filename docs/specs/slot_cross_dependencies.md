@@ -31,7 +31,7 @@ flowchart LR
     S2 -. optional .->|temporal_usm@1 (H_t, rho_t, C_t)| S7
 
     %% Truth Anchor
-    S1 -->|QualityOracle\n(ACCEPT/REJECT)| S7
+    S1 -->|QualityOracle (ACCEPT/REJECT)| S7
     S1 -->|Truth anchors / attestations| S9
 
     %% TRI / Constellation / Flow Mesh
