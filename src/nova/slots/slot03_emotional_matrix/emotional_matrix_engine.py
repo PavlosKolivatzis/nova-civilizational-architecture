@@ -3,10 +3,31 @@ from __future__ import annotations
 import os
 import unicodedata
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .safety_policy import basic_safety_policy
 from .publish import publish_phase_lock_to_mirror
+
+# Phase 14.4: VOID dormancy metrics (RFC-014 § 3.2)
+try:
+    from prometheus_client import Counter
+    try:
+        from nova.metrics.registry import REGISTRY
+        _void_dormancy_counter = Counter(
+            "slot03_void_dormancy_total",
+            "Slot03 VOID dormancy events (semantic absence, not negative affect)",
+            registry=REGISTRY
+        )
+    except Exception:
+        _void_dormancy_counter = Counter(
+            "slot03_void_dormancy_total",
+            "Slot03 VOID dormancy events (semantic absence, not negative affect)"
+        )
+except Exception:
+    # Fallback if prometheus not available
+    class _DummyCounter:
+        def inc(self): pass
+    _void_dormancy_counter = _DummyCounter()
 
 # Phase 11.3 Step 3: ORP emotional posture integration (optional, flag-gated)
 try:
@@ -200,8 +221,14 @@ class EmotionalMatrixEngine:
         return score * damping_factor
 
     # ---------- public API ----------
-    def analyze(self, content: str, *, policy_hook: Optional[Callable[[Dict], None]] = None) -> Dict:
-        """Return {'emotional_tone','score','confidence', 'explain':{...}}"""
+    def analyze(self, content: str, *, policy_hook: Optional[Callable[[Dict], None]] = None, context: Optional[Dict[str, Any]] = None) -> Dict:
+        """Return {'emotional_tone','score','confidence', 'explain':{...}}
+
+        Args:
+            content: Text to analyze for emotional tone
+            policy_hook: Optional policy override
+            context: Optional context dict, may contain 'graph_state' for VOID detection
+        """
 
         if not isinstance(content, str):
             raise TypeError("content must be a string")
@@ -217,6 +244,28 @@ class EmotionalMatrixEngine:
 
         tokens = self._tokenize(lower)
         if not tokens:
+            # Phase 14.4: VOID dormancy (RFC-014 § 3.2)
+            # Check for VOID state from context (e.g., BIAS_REPORT@1 metadata)
+            void_mode_enabled = os.getenv("NOVA_ENABLE_VOID_MODE", "1") == "1"
+            graph_state = (context or {}).get("graph_state") if context else None
+
+            if void_mode_enabled and graph_state == "void":
+                _void_dormancy_counter.inc()
+                metrics = {
+                    "emotional_tone": "dormant",
+                    "score": None,  # Null, not 0.0 (epistemic absence, not neutral)
+                    "confidence": 1.0,  # VOID is fully defined, not uncertain
+                    "explain": {
+                        "matches": 0,
+                        "void_dormancy": True,
+                        "graph_state": "void",
+                        "rationale": "Empty content (VOID) - semantic absence, not negative affect"
+                    }
+                }
+                self._apply_policy_hooks(metrics, policy_hook)
+                return metrics
+
+            # Fallback: empty content without VOID context (legacy behavior)
             metrics = {"emotional_tone": "unknown", "score": 0.0, "confidence": 0.0, "explain": {"matches": 0}}
             self._apply_policy_hooks(metrics, policy_hook)
             return metrics

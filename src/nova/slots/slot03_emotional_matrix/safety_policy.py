@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-ALLOWED_TONES = {"positive", "negative", "neutral", "unknown", "joy", "sadness", "anger", "fear", "surprise", "disgust"}
+ALLOWED_TONES = {"positive", "negative", "neutral", "unknown", "joy", "sadness", "anger", "fear", "surprise", "disgust", "dormant"}
 
 def validate_metrics(metrics: dict) -> list[str]:
     """Validate metrics and return list of error codes."""
@@ -38,7 +38,7 @@ def validate_metrics(metrics: dict) -> list[str]:
             errors.append("score_out_of_bounds")
 
     return errors
-_ALLOWED_TONES = {"positive", "negative", "neutral", "unknown"}
+_ALLOWED_TONES = {"positive", "negative", "neutral", "unknown", "dormant"}
 
 
 def basic_safety_policy(metrics: Dict) -> None:
@@ -54,7 +54,10 @@ def basic_safety_policy(metrics: Dict) -> None:
         metrics["emotional_tone"] = "neutral"
 
     score = metrics.get("score", 0.0)
-    if not isinstance(score, (int, float)):
+    # Phase 14.4: Preserve None for VOID dormancy (epistemic null)
+    if score is None:
+        pass  # VOID dormancy: keep None (not 0.0)
+    elif not isinstance(score, (int, float)):
         metrics["score"] = 0.0
     else:
         metrics["score"] = float(max(-1.0, min(1.0, score)))
