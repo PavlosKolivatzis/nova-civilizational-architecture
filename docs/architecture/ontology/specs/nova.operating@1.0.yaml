@@ -1,15 +1,23 @@
-# Operating Ontology: nova.operating@1.0 → v1.1.0
-# Operational-layer semantics for regime, drift, VOID propagation
-# Parent: nova.frameworks v1.8.0 (Mother Ontology)
+# Operating Ontology: nova.operating@1.0 → v1.2.0
+# Operational-layer semantics for regime, drift, VOID propagation, temporal USM
+# Parent: nova.frameworks v1.8.1 (Mother Ontology)
 # Children: slot01-10, arc, rri, mse, evf, nem, pag, fb, avl
 
 meta:
   ontology_id: "nova.operating"
-  version: "1.1.0"
+  version: "1.2.0"
   status: "active"
-  date: "2025-12-07"
-  parent: "nova.frameworks@1.8.0"
+  date: "2025-12-09"
+  parent: "nova.frameworks@1.8.1"
   changelog:
+    - version: "1.2.0"
+      date: "2025-12-09"
+      phase: "14.5"
+      changes: "Add temporal USM semantics (temporal_usm@1); document temporal decay vs governance freeze separation; Phase 14.5 closeout alignment"
+      rationale: "Phase 14.5 added temporal state (H_t, ρ_t, C_t) with per-stream memory in Slot02; Operating Ontology now documents temporal layer distinct from instantaneous VOID handling"
+      contracts_referenced:
+        - "temporal_usm@1.yaml (per-stream temporal metrics)"
+        - "bias_report@1.yaml (instantaneous metrics)"
     - version: "1.1.0"
       date: "2025-12-07"
       phase: "14.4"
@@ -160,7 +168,110 @@ void_state:
     safety: "Non-breaking (backward compatible)"
 
 # =============================================================================
-# SECTION 3: Future Extensions (Placeholders)
+# SECTION 3: Phase 14.5 (Temporal USM)
+# =============================================================================
+
+temporal_usm_state:
+  contract_id: "temporal_usm@1"
+  version: "1.0.0"
+  status: "active"
+  phase: "14.5"
+  description: "Per-stream temporal USM state for history-aware cognitive metrics"
+
+  primitive_definition:
+    source: "nova.frameworks@1.8.1 § VOID primitive (instantaneous)"
+    temporal_extension: "Time-smoothed H_t, ρ_t, C_t via exponential smoothing"
+    owner_slot: "slot02_deltathresh"
+    scope: "Per-stream memory (session_id keyed)"
+
+  update_laws:
+    non_void:
+      method: "Exponential smoothing (step_non_void)"
+      formula_H: "H_t = (1-λ)·H_{t-1} + λ·H_inst"
+      formula_rho: "ρ_t = (1-λ)·ρ_{t-1} + λ·ρ_inst"
+      formula_C: "C_t = (1-λ)·C_{t-1} + λ·C_inst"
+      constraint: "0 < λ < 1"
+
+    void_soft_decay:
+      method: "Soft reset toward equilibrium (step_void)"
+      formula_H: "H_t = H_{t-1}·λ"
+      formula_rho: "ρ_t = ρ_{t-1}·λ + (1-λ)·ρ_eq"
+      formula_C: "C_t = C_{t-1}·λ"
+      default_mode: "soft (Phase 14.5 canonical)"
+
+  separation_from_instantaneous:
+    instantaneous_void:
+      contract: "bias_report@1"
+      behavior: "C(G_void) = -0.5, emitted once per input"
+      scope: "Slot02 analysis output, consumed by Slot07/Slot09/Slot01"
+      governance_impact: "Slot07 freezes (no oracle, no refinement)"
+
+    temporal_void:
+      contract: "temporal_usm@1"
+      behavior: "C_t decays via C_t *= λ (soft mode)"
+      scope: "Slot02 internal per-stream memory"
+      governance_impact: "None (Phase 14.5); Slot07 ignores temporal_usm@1"
+
+    layer_independence:
+      - "Slot07 governance freeze (Phase 14.4) ≠ Slot02 temporal decay (Phase 14.5)"
+      - "Instantaneous VOID triggers control decision (skip refinement)"
+      - "Temporal VOID triggers state evolution (decay toward equilibrium)"
+      - "No conflict: different data structures, different purposes"
+
+  feature_flags:
+    temporal_enable:
+      flag: "NOVA_ENABLE_USM_TEMPORAL"
+      default: "0 (off)"
+      effect: "Enable temporal state updates and temporal_usm@1 emission"
+
+    temporal_mode:
+      flag: "NOVA_TEMPORAL_MODE"
+      default: "soft"
+      options: ["soft", "reset", "freeze"]
+      effect: "VOID decay behavior (soft = homeostasis, reset = zero, freeze = preserve)"
+
+  slot_semantics:
+    slot02_deltathresh:
+      behavior: "Maintain per-stream temporal state; emit temporal_usm@1 when enabled"
+      void_handling: "Apply soft decay (default) or configured mode"
+      storage: "In-memory dict keyed by session_id"
+
+    slot07_wisdom_governor:
+      behavior: "Ignores temporal_usm@1 (Phase 14.5); uses instantaneous metrics only"
+      void_handling: "Freeze policy unchanged (no oracle, no refinement)"
+      future: "Phase 14.6 may read temporal_usm@1 for trend-aware governance"
+
+    slot09_distortion_protection:
+      behavior: "Ignores temporal_usm@1 (Phase 14.5); uses instantaneous VOID bypass"
+      void_handling: "Passthrough unchanged (H=0 expected, not adversarial)"
+      future: "Phase 14.6+ may use temporal trends for distortion thresholding"
+
+  invariants:
+    - "Temporal state owned exclusively by Slot02 (no cross-slot duplication)"
+    - "Temporal USM augments, never overrides, instantaneous metrics"
+    - "Disabling NOVA_ENABLE_USM_TEMPORAL reverts to pure Phase 14.4 behavior"
+    - "VOID governance freeze (Slot07) operates independently of temporal decay (Slot02)"
+
+  dependencies:
+    - "nova.frameworks@1.8.1 (VOID primitive)"
+    - "temporal_usm@1.yaml (contract for per-stream snapshots)"
+    - "bias_report@1.yaml (instantaneous USM metrics)"
+    - "src/nova/math/usm_temporal.py (TemporalUsmState, step_non_void, step_void)"
+
+  observability:
+    metrics:
+      - "slot02_temporal_updates_total (increments on state update)"
+      - "slot02_temporal_void_decay_total (VOID decay events)"
+    logs:
+      - "temporal_usm@1 payload with H_t, ρ_t, C_t, graph_state, lambda_used, mode"
+
+  rollback:
+    method: "Set NOVA_ENABLE_USM_TEMPORAL=0"
+    impact: "Temporal state stops updating; no temporal_usm@1 emitted; pure instantaneous behavior"
+    safety: "Non-breaking (graceful degradation to Phase 14.4)"
+
+# =============================================================================
+# SECTION 4: Future Extensions (Placeholders)
 # =============================================================================
 
 # regime_transitions@1 (pending ORP v2.0)

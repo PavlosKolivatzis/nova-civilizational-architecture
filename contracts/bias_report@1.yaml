@@ -1,11 +1,12 @@
 contract: bias_report@1
 version: 1.0.0
-status: draft
-phase: 14.3
+status: active
+phase: 14.4
 
 description: >
   USM-based cognitive bias detection report for input text analysis.
   Emitted by Slot02 ΔTHRESH when NOVA_ENABLE_BIAS_DETECTION=1.
+  Includes VOID state detection (graph_state='void') for semantic absence handling.
 
 emitter: slot02_deltathresh
 consumers:
@@ -99,6 +100,16 @@ schema:
         type: string
         format: iso8601
         description: Analysis timestamp
+      graph_state:
+        type: string
+        required: true
+        enum: ["normal", "void", "unknown"]
+        description: >
+          Structural state of analyzed input:
+            - "void": Empty graph (actors=[], relations={}), semantic absence
+            - "normal": Parseable structure with actors/relations
+            - "unknown": Indeterminate state (fallback)
+          Phase 14.4 VOID propagation uses this field for cross-slot coordination.
 
   confidence:
     type: float

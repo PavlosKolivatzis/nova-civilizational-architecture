@@ -5,11 +5,16 @@
 meta:
   name: Nova Framework Ontology
   id: nova.frameworks
-  version: 1.8.0
+  version: 1.8.1
   status: active
-  date: 2025-12-06
+  date: 2025-12-09
   children: [nova.operating@1.0]
   changelog:
+    - version: 1.8.1
+      date: 2025-12-09
+      phase: 14.4
+      changes: "Fix VOID collapse score primitive: C(G_void) = -0.5 (zero-energy anchor), not 0.0; aligns Mother Ontology with implementation reality and Operating Ontology v1.1.0"
+      rationale: "Implementation uses -0.5 as VOID baseline (bias_calculator.py:228); value represents zero structural dynamics with risk awareness (b_risk=1.0), not absolute zero; corrects documentation lag from Phase 14.3"
     - version: 1.8.0
       date: 2025-12-06
       phase: 14.3
@@ -18,8 +23,8 @@ meta:
         - name: VOID
           definition: "Empty SystemGraph state (actors=[], relations={}) representing semantic absence or unparseable input"
           mathematical_form: "G_void = (V=∅, E=∅)"
-          collapse_score: "C(G_void) = 0.0 (baseline, non-biased)"
-          rationale: "Distinguishes 'no signal' from 'biased signal'; enables input quality validation"
+          collapse_score: "C(G_void) = -0.5 (zero-energy anchor with risk awareness)"
+          rationale: "Distinguishes 'no signal' from 'biased signal'; enables input quality validation; -0.5 baseline reflects b_risk=1.0 (no extraction risk) in empty graph"
           scope: "Slot02 ΔTHRESH (Phase 14.3); cross-slot propagation pending RFC-014"
       contracts_added:
         - bias_report@1.yaml
