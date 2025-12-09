@@ -1,10 +1,49 @@
 # Phase 14.5 Temporal USM Observation Protocol
 
-**Status:** ✅ UNBLOCKED (2025-12-09 criteria reframed)
-**Key Finding:** Conversational text is structurally sparse by nature (H~0 is data, not bug)
-**Primary Observable:** C_t (collapse score) — validated by oracle, sufficient for manipulation detection
+**Status:** ✅ READY FOR OBSERVATION (2025-12-09 provisional thresholds set)
+**Key Finding:** ρ_t (equilibrium ratio), not C_t, is primary extraction indicator
+**Primary Observable:** ρ_t temporal trajectory + C_t for consensus/extraction distinction
 **Original Plan:** 7-14 days production traffic or 1000+ diverse sessions
 **Flag:** `NOVA_ENABLE_USM_TEMPORAL=1` (metrics-only, no control decisions)
+
+---
+
+## Provisional Threshold Calibration (2025-12-09)
+
+**Status:** PROVISIONAL — requires empirical validation after 100-200 sessions
+
+| Metric | Threshold | Basis |
+|--------|-----------|-------|
+| **C_t extractive** | 0.18 | Pilot data + 60% scaling from instantaneous (0.3) |
+| **C_t protective** | -0.12 | Pilot benign conversation baseline (-0.2) |
+| **ρ_t extractive** | 0.25 | Extractive scenario (ρ=0.0 flat) + safety margin |
+| **ρ_t protective** | 0.6 | Benign reciprocity spike (pilot observed 0.6-0.95) |
+| **Min turns** | 3 | Warm-up period before classification |
+
+### Combined State Classification
+
+| State | C_t Condition | ρ_t Condition | Interpretation |
+|-------|---------------|---------------|----------------|
+| **Extractive** | > 0.18 | < 0.25 | Hierarchical control + one-way flow |
+| **Consensus** | < -0.12 | < 0.25 | Protective alignment (low reciprocity ≠ extraction) |
+| **Collaborative** | < -0.12 | > 0.6 | Active negotiation + balanced exchange |
+| **Neutral** | [-0.12, 0.18] | [0.25, 0.6] | Normal operational range |
+| **Warming up** | any | any | turn_count < 3 (insufficient data) |
+
+### Validation Criteria
+
+**Rollback trigger:** Misclassification rate > 50% in first 100 sessions
+- If exceeded: STOP observation, run full calibration with diverse conversations
+- Expected refinement: After 100-200 sessions with ground truth labels
+
+**Known uncertainties:**
+1. Turn-count dependency (early vs. late conversation baseline shift)
+2. Domain variation (technical vs. casual vs. investigative dialogue)
+3. ρ_t velocity thresholds (sudden shifts vs. gradual drift detection)
+
+### Implementation
+
+See: `src/nova/math/usm_temporal_thresholds.py`
 
 ---
 
