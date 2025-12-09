@@ -73,6 +73,10 @@ orchestrator/__pycache__/app.cpython-313.pyc
 orchestrator/adapters/__pycache__/slot5_constellation.cpython-313.pyc
 README.md.bak
 
+# Local archives and interaction data (personal)
+archive/
+data/
+
 # Audit tool cache
 tools/audit/cosign.exe
 tools/audit/cosign

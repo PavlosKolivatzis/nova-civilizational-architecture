@@ -37,7 +37,8 @@
       "Bash(pip show:*)",
       "Bash(git describe:*)",
       "Bash(git restore:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(set PYTHONIOENCODING=utf-8)"
     ],
     "deny": [],
     "ask": []
