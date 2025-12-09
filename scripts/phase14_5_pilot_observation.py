@@ -13,14 +13,16 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path (tests run from root with src/ in PYTHONPATH)
+# Add project root and src/ to path
 project_root = Path(__file__).parent.parent
+src_path = project_root / "src"
 sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(src_path))
 
 os.environ["NOVA_ENABLE_BIAS_DETECTION"] = "1"
 os.environ["NOVA_ENABLE_USM_TEMPORAL"] = "1"
 
-from src.nova.slots.slot02_deltathresh.core import DeltaThreshProcessor
+from nova.slots.slot02_deltathresh.core import DeltaThreshProcessor
 
 # === TEST SCENARIOS ===
 
@@ -137,7 +139,7 @@ if __name__ == "__main__":
         C_drift = C_end - C_start
 
         print(f"  C_t range: [{min(C_values):.4f}, {max(C_values):.4f}]")
-        print(f"  C_t drift: {C_start:.4f} -> {C_end:.4f} (Δ={C_drift:+.4f})")
+        print(f"  C_t drift: {C_start:.4f} -> {C_end:.4f} (delta={C_drift:+.4f})")
 
         # Check for VOID patterns
         void_count = sum(1 for t in timeline if t["graph_state"] == "void")
@@ -145,7 +147,7 @@ if __name__ == "__main__":
 
         # Expected patterns
         if name == "benign":
-            expected = "C_t ∈ [-0.3, 0.1] (balanced)"
+            expected = "C_t in [-0.3, 0.1] (balanced)"
         elif name == "extractive":
             expected = "C_t increasing toward >0.3 (extractive)"
         elif name == "void":
@@ -169,7 +171,7 @@ if __name__ == "__main__":
         for timeline in all_timelines.values():
             writer.writerows(timeline)
 
-    print(f"\n✓ Results saved to: {output_file}")
+    print(f"\nOK Results saved to: {output_file}")
 
     # === VISUALIZATION (optional) ===
 
@@ -206,7 +208,7 @@ if __name__ == "__main__":
         plt.tight_layout()
         plot_file = Path(__file__).parent.parent / "pilot_observation_plot.png"
         plt.savefig(plot_file, dpi=150)
-        print(f"✓ Plot saved to: {plot_file}")
+        print(f"OK Plot saved to: {plot_file}")
 
     except ImportError:
         print("\n(matplotlib not installed — skipping visualization)")
