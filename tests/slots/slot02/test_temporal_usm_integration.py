@@ -167,4 +167,3 @@ def test_temporal_usm_per_stream_isolated(monkeypatch: Any):
     assert "A" in processor._temporal_state
     assert "B" in processor._temporal_state
     assert processor._temporal_state["A"] is not processor._temporal_state["B"]
-
