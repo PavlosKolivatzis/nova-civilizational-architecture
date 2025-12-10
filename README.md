@@ -114,9 +114,16 @@ export JWT_SECRET="test-secret-minimum-32-characters-long-for-security"
 # Run full test suite (2100+ tests)
 python -m pytest tests/ -q
 
-# Start Nova with monitoring
+# Start Nova with monitoring (Phase 14.6+)
+# Option 1: Use development launcher script (recommended)
+./scripts/run_orchestrator_dev.sh  # Linux/Mac/Git Bash
+# or
+.\scripts\run_orchestrator_dev.ps1  # Windows PowerShell
+
+# Option 2: Manual start (requires PYTHONPATH)
+export PYTHONPATH="$PWD/src"
 export NOVA_ENABLE_PROMETHEUS=1
-python -m uvicorn orchestrator.app:app --host 0.0.0.0 --port 8000
+python -m uvicorn nova.orchestrator.app:app --host 127.0.0.1 --port 8000
 ```
 
 **✅ Success**: Nova is running at `http://localhost:8000` with full observability.
