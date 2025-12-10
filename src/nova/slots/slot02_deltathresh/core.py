@@ -22,6 +22,13 @@ from .patterns import PatternDetector, _word_count_fast
 from .fidelity_weighting import FidelityWeightingService
 from nova.math.usm_temporal import TemporalUsmState, step_non_void, step_void
 
+# Phase 14.6: Prometheus metrics for temporal governance
+try:
+    from prometheus_client import Counter
+    _PROMETHEUS_AVAILABLE = True
+except ImportError:
+    _PROMETHEUS_AVAILABLE = False
+
 # Phase 14.3: USM Bias Detection (feature-gated)
 try:
     from .text_graph_parser import TextGraphParser
@@ -29,6 +36,20 @@ try:
     _BIAS_DETECTION_AVAILABLE = True
 except ImportError:
     _BIAS_DETECTION_AVAILABLE = False
+
+# Phase 14.6: Prometheus metrics
+if _PROMETHEUS_AVAILABLE:
+    temporal_classification_total = Counter(
+        "slot02_temporal_classification_total",
+        "Count of temporal USM state classifications",
+        ["classification", "session_regime"],
+    )
+
+    temporal_governance_override_total = Counter(
+        "slot02_temporal_governance_override_total",
+        "Count of action overrides from temporal governance",
+        ["from_action", "to_action", "reason"],
+    )
 
 
 class DeltaThreshProcessor:
@@ -86,6 +107,16 @@ class DeltaThreshProcessor:
             )
         else:
             self.logger.info("Temporal USM: DISABLED")
+
+        # Phase 14.6: Temporal governance (feature-gated, depends on temporal USM)
+        governance_flag = os.getenv("NOVA_ENABLE_TEMPORAL_GOVERNANCE", "0") == "1"
+        self._temporal_governance_enabled = governance_flag and self._temporal_usm_enabled
+        self._classification_history: Dict[str, List[str]] = {}
+
+        if self._temporal_governance_enabled:
+            self.logger.info("Temporal Governance: ENABLED")
+        else:
+            self.logger.info("Temporal Governance: DISABLED")
 
         self.logger.info(f"ΔTHRESH Processor v{self.VERSION} initialized")
         self.logger.info(
@@ -200,6 +231,51 @@ class DeltaThreshProcessor:
                             "error_message": str(exc),
                             "content_length": len(content),
                             "step": "temporal_usm_update",
+                        },
+                        exc_info=True,
+                    )
+
+            # Phase 14.6: Temporal governance (if enabled and temporal USM available)
+            if self._temporal_governance_enabled and temporal_usm:
+                try:
+                    from nova.math.usm_temporal_thresholds import classify_temporal_state
+
+                    # Classify temporal state
+                    C_t = temporal_usm.get("C_temporal")
+                    rho_t = temporal_usm.get("rho_temporal")
+                    turn_count = len(self._classification_history.get(session_id, []))
+
+                    if C_t is not None and rho_t is not None:
+                        classification = classify_temporal_state(C_t, rho_t, turn_count)
+
+                        # Apply governance
+                        action, regime_rec, gov_reason = self._apply_temporal_governance(
+                            session_id=session_id,
+                            classification=classification,
+                            instantaneous_action=action,
+                        )
+
+                        # Add regime recommendation to bias report
+                        if regime_rec and bias_report:
+                            bias_report["temporal_governance_triggered"] = True
+                            bias_report["regime_recommendation"] = regime_rec
+                            bias_report["governance_reason"] = gov_reason
+
+                except Exception as exc:
+                    tb = exc.__traceback__
+                    line = tb.tb_lineno if tb else None
+                    self.logger.warning(
+                        "Temporal governance failed",
+                        extra={
+                            "file": __file__,
+                            "function": "process_content",
+                            "line": line,
+                            "slot": "slot02",
+                            "phase": "14.6",
+                            "error_type": type(exc).__name__,
+                            "error_message": str(exc),
+                            "content_length": len(content),
+                            "step": "temporal_governance",
                         },
                         exc_info=True,
                     )
@@ -629,6 +705,65 @@ class DeltaThreshProcessor:
         }
 
         return bias_report
+
+    # ------------------------------------------------------------------
+    # Phase 14.6: Temporal Governance
+    # ------------------------------------------------------------------
+    def _apply_temporal_governance(
+        self,
+        session_id: str,
+        classification: str,
+        instantaneous_action: str,
+    ) -> Tuple[str, Optional[str], Optional[str]]:
+        """
+        Apply temporal governance based on sustained patterns.
+
+        Phase 14.6: Detects sustained extraction (5+ consecutive turns)
+        and escalates to heightened regime.
+
+        Args:
+            session_id: Conversation session identifier
+            classification: Current temporal state (extractive/collaborative/etc)
+            instantaneous_action: Action from instantaneous bias detection
+
+        Returns:
+            (action, regime_recommendation, governance_reason)
+            - action: Final action decision
+            - regime_recommendation: Regime escalation signal (or None)
+            - governance_reason: Why governance overrode (or None)
+        """
+        # Track classification history
+        history = self._classification_history.get(session_id, [])
+        history.append(classification)
+        self._classification_history[session_id] = history[-10:]  # Keep last 10
+
+        # Emit classification metric
+        if _PROMETHEUS_AVAILABLE:
+            regime = "unknown"  # TODO: get from session context if available
+            temporal_classification_total.labels(
+                classification=classification,
+                session_regime=regime,
+            ).inc()
+
+        # Check for sustained extraction (5+ consecutive)
+        if len(history) >= 5:
+            if all(c == "extractive" for c in history[-5:]):
+                # Emit override metric
+                if _PROMETHEUS_AVAILABLE:
+                    temporal_governance_override_total.labels(
+                        from_action=instantaneous_action,
+                        to_action="quarantine",
+                        reason="sustained_temporal_extraction",
+                    ).inc()
+
+                return (
+                    "quarantine",
+                    "heightened",
+                    "sustained_temporal_extraction"
+                )
+
+        # No override - use instantaneous action
+        return (instantaneous_action, None, None)
 
     @staticmethod
     def _clamp(value: Any, lower: float, upper: float) -> Any:
