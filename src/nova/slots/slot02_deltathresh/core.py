@@ -39,17 +39,31 @@ except ImportError:
 
 # Phase 14.6: Prometheus metrics
 if _PROMETHEUS_AVAILABLE:
-    temporal_classification_total = Counter(
-        "slot02_temporal_classification_total",
-        "Count of temporal USM state classifications",
-        ["classification", "session_regime"],
-    )
+    try:
+        temporal_classification_total = Counter(
+            "slot02_temporal_classification_total",
+            "Count of temporal USM state classifications",
+            ["classification", "session_regime"],
+        )
+    except ValueError:
+        # Metric already registered (multi-import in tests)
+        from prometheus_client import REGISTRY
+        temporal_classification_total = REGISTRY._names_to_collectors.get(
+            "slot02_temporal_classification_total"
+        )
 
-    temporal_governance_override_total = Counter(
-        "slot02_temporal_governance_override_total",
-        "Count of action overrides from temporal governance",
-        ["from_action", "to_action", "reason"],
-    )
+    try:
+        temporal_governance_override_total = Counter(
+            "slot02_temporal_governance_override_total",
+            "Count of action overrides from temporal governance",
+            ["from_action", "to_action", "reason"],
+        )
+    except ValueError:
+        # Metric already registered (multi-import in tests)
+        from prometheus_client import REGISTRY
+        temporal_governance_override_total = REGISTRY._names_to_collectors.get(
+            "slot02_temporal_governance_override_total"
+        )
 
 
 class DeltaThreshProcessor:

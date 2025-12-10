@@ -1,8 +1,9 @@
 # Phase 14.6: Temporal Governance Integration
 
-**Status:** 📋 PLANNED (Phase 14.5 complete)
+**Status:** ✅ COMPLETE (2025-12-10)
 **Depends on:** Phase 14.5 (temporal USM + provisional thresholds)
 **Goal:** Integrate temporal classification into Slot02 governance decisions
+**Commit:** 913773f
 
 ---
 
@@ -238,4 +239,83 @@ def test_collaborative_not_escalated():
 
 ---
 
-**Status:** Ready to begin Phase 14.6 implementation.
+## Implementation Summary
+
+**Completed:** 2025-12-10 (Commit 913773f)
+**Duration:** ~3 hours
+**Tests added:** 15 (9 unit + 6 integration)
+**Lines changed:** ~120 (core.py) + 440 (tests)
+
+### What Was Built
+
+**Core Infrastructure:**
+- Feature flag: `NOVA_ENABLE_TEMPORAL_GOVERNANCE` (default: 0)
+- Session state: `_classification_history` dict (per-session, capped at 10)
+- Governance method: `_apply_temporal_governance()`
+- Integration: Wired into `process_content()` after temporal USM computation
+
+**Governance Logic:**
+- Sustained extraction detection: 5 consecutive "extractive" classifications
+- Action override: `instantaneous_action` → `"quarantine"`
+- Regime recommendation: `"heightened"`
+- Governance reason: `"sustained_temporal_extraction"`
+
+**Observability:**
+- Prometheus metric: `slot02_temporal_classification_total` (classification counts by type)
+- Prometheus metric: `slot02_temporal_governance_override_total` (override events)
+
+**Testing:**
+- Unit tests: Feature flags, sustained detection, fluctuation handling, history limits
+- Integration tests: End-to-end pipeline with real text, VOID handling, disabled governance
+
+### What Was Deferred
+
+**Slot07 Integration:**
+- Spec defined regime escalation trigger
+- Implementation deferred to operational deployment
+- Can be enabled by checking `bias_report["temporal_governance_triggered"]`
+
+**Validation Scenarios:**
+- Spec proposed oscillating attack, slow drift scenarios
+- Unit tests cover logic, integration tests validate pipeline
+- Real-world validation happens during operational deployment
+
+**Adaptive Features (Phase 14.7):**
+- ρ_t velocity triggers (sudden drop detection)
+- Turn-count adaptive thresholds
+- Domain-specific calibration
+- Full empirical threshold refinement
+
+### Operational Deployment Notes
+
+**Enable governance:**
+```bash
+export NOVA_ENABLE_BIAS_DETECTION=1
+export NOVA_ENABLE_USM_TEMPORAL=1
+export NOVA_ENABLE_TEMPORAL_GOVERNANCE=1
+```
+
+**Monitor metrics:**
+```bash
+curl http://localhost:8000/metrics | grep slot02_temporal
+```
+
+**Rollback if needed:**
+```bash
+export NOVA_ENABLE_TEMPORAL_GOVERNANCE=0
+```
+
+**Expected behavior:**
+- Classification history accumulates per session
+- Sustained extraction (5+ turns) triggers quarantine + heightened regime recommendation
+- Governance trigger appears in `bias_report["temporal_governance_triggered"]`
+
+**Known limitations:**
+- Natural language text rarely produces sustained C_t > 0.18 (extractive threshold)
+- Most real conversations classify as consensus/neutral/collaborative
+- Governance logic validated with unit tests (controlled classification values)
+- Integration tests validate pipeline correctness, not threshold accuracy
+
+---
+
+**Status:** ✅ Phase 14.6 complete. Ready for operational deployment.
