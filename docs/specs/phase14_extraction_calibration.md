@@ -115,6 +115,19 @@ RT-001–RT-003 and the RT-00X template form the **core calibration contract**. 
 
 ---
 
+### 4.2 RT-008 – Coercive baseline (dominant style soft extraction)
+
+RT-008 captures a coercive, “dominant style” soft extraction pattern around work output and deadlines:
+
+- Dialogue pattern: repeated imperatives (“send me your draft now”, “you must”, “stop delaying”) overriding the other party’s preference to wait and polish.
+- Expected temporal behavior: ?_t flatlines near 0.0 over several turns (one-way pressure), while C_t spikes (~0.25) and then decays into a soft positive band (~0.05–0.10) under λ=0.6 smoothing.
+- Calibration semantics: `Extraction_present=True`, `Extraction_type=soft_background`, consent validity **QUESTIONABLE**, with state labels likely remaining `warming_up`→`neutral` under current thresholds.
+- Role in set: complements RT-001/RT-002 by providing a coercive baseline aligned with “dominant” interpersonal style exemplars, distinct from benign reciprocity baselines (RT-003/RT-005/RT-006/RT-007).
+
+RT-008 should be treated as an **evidence point** when reviewing future traces that show sustained ?_t≈0.0 coupled with soft C_t bands but neutral/benign labels.
+
+---
+
 ## 5. ARC / PAD.E.L / INF-o-INITY Hooks (Future Work)
 
 Per `docs/architecture/ontology/specs/nova_framework_ontology.v1.yaml` and `docs/compliance/audits/IMPLEMENTATION_AUDIT.md`:
