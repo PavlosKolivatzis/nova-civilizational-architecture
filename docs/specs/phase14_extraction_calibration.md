@@ -102,7 +102,9 @@ In addition to S1–S3 and R1–R3, operator-reviewed RT-00X instances are used 
 - **RT-006 – Benign conceptual baseline (ëTHRESH article, real trace):** long conceptual reframing of the ëTHRESH article under “technofeudalism / threshold freedom”; ρ_t stays in mid band, C_t non-collapsing; `Extraction_present=False`.
 - **RT-007 – Friendly social baseline:** symmetric “coffee later” invitation and acceptance; ρ_t mid-band, C_t very low; `Extraction_present=False`, used as a friendly-control archetype.
 
-RT-001–RT-003 and the RT-00X template form the **core calibration contract**. RT-004–RT-007 are operator-grounded examples (mix of live traces and synthetic baselines) that should be treated as **evidence points**, not hard thresholds, when revisiting the weakest assumption after 20–50 sessions.
+- **RT-009 - Awkward social baseline:** hesitant, low-reciprocity small talk with "um/uh" patterns; ?_t uneven with occasional dips toward 0.0 but not sustained, C_t low/slightly negative; `Extraction_present=False`, aligned with an "awkward" but benign interpersonal style.
+
+RT-001-RT-003 and the RT-00X template form the **core calibration contract**. RT-004-RT-009 are operator-grounded examples (mix of live traces and synthetic baselines) that should be treated as **evidence points**, not hard thresholds, when revisiting the weakest assumption after 20-50 sessions.
 - Ideal ?_t pattern and C_t band.
 - `Extraction_present (desired)` and `Extraction_type (desired)`:
   - S1, S2, S3, R1, R3 → `soft_background`.
