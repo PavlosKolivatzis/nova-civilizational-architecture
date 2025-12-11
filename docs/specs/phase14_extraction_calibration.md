@@ -104,8 +104,9 @@ In addition to S1–S3 and R1–R3, operator-reviewed RT-00X instances are used 
 
 - **RT-009 - Awkward social baseline:** hesitant, low-reciprocity small talk with "um/uh" patterns; ?_t uneven with occasional dips toward 0.0 but not sustained, C_t low/slightly negative; `Extraction_present=False`, aligned with an "awkward" but benign interpersonal style.
 
-RT-001-RT-003 and the RT-00X template form the **core calibration contract**. RT-004-RT-010 are operator-grounded examples (mix of live traces and synthetic baselines) that should be treated as **evidence points**, not hard thresholds, when revisiting the weakest assumption after 20-50 sessions.
-- **RT-010 - Flirtatious persuasion (soft extraction):** admiration-based persuasion around sharing a private draft; ?_t near 0.0 for many turns (one-way emotional pull), C_t in a soft positive band (~0.05–0.12); `Extraction_present=True`, `Extraction_type=soft_background`, consent validity **QUESTIONABLE**, style tag "flirtatious".
+RT-001-RT-003 and the RT-00X template form the **core calibration contract**. RT-004-RT-011 are operator-grounded examples (mix of live traces and synthetic baselines) that should be treated as **evidence points**, not hard thresholds, when revisiting the weakest assumption after 20-50 sessions.
+- **RT-010 - Flirtatious persuasion (soft extraction):** admiration-based persuasion around sharing a private draft; ?_t near 0.0 for many turns (one-way emotional pull), C_t in a soft positive band (~0.05-0.12); `Extraction_present=True`, `Extraction_type=soft_background`, consent validity **QUESTIONABLE**, style tag "flirtatious".
+- **RT-011 - Paternalistic “for your own good” extraction:** safety/mental-health framed requests for private browsing history; ?_t near 0.0 for many turns (one-way protective framing), C_t in a soft positive band (~0.05-0.12); `Extraction_present=True`, `Extraction_type=soft_background`, consent validity **QUESTIONABLE**, style tag "paternalistic/safety".
 - Ideal ?_t pattern and C_t band.
 - `Extraction_present (desired)` and `Extraction_type (desired)`:
   - S1, S2, S3, R1, R3 → `soft_background`.
