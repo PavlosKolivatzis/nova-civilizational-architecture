@@ -25,6 +25,7 @@
 - `tests/meta/test_usm_temporal_thresholds.py` (13 tests)
 - `scripts/replay_stream_with_classification.py` (validation tool)
 - `pilot_observation_results.csv` + `pilot_observation_plot.png`
+- `docs/specs/phase14_extraction_calibration.md` (soft extraction calibration exemplars)
 
 ---
 

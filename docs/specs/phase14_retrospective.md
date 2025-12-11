@@ -58,12 +58,28 @@ Phase 14 built temporal observability layer for Nova's manipulation detection sy
 - Observation tooling (find → export → replay → classify)
 
 **Commits (this session):**
-1. `41add36` — Observation tooling + pilot findings + parser exploration docs
-2. `63b1011` — Unicode encoding fixes (Windows cp1252 compatibility)
-3. `e9d2a1f` — Provisional thresholds + classification logic + 13 tests
-4. `870c60f` — Classification validation (replay script + real conversation tests)
-5. `fe852d1` — Pilot observation artifacts (CSV + PNG)
-6. `09b54f5` — Phase 14.6 spec (temporal governance integration)
+1. `41add36` - Observation tooling + pilot findings + parser exploration docs
+2. `63b1011` - Unicode encoding fixes (Windows cp1252 compatibility)
+3. `e9d2a1f` - Provisional thresholds + classification logic + 13 tests
+4. `870c60f` - Classification validation (replay script + real conversation tests)
+5. `fe852d1` - Pilot observation artifacts (CSV + PNG)
+6. `09b54f5` - Phase 14.6 spec (temporal governance integration)
+
+See also:
+- `docs/specs/phase14_extraction_calibration.md` for soft extraction calibration exemplars.
+- `docs/architecture/ADR-014-soft-extraction-calibration.md` for the associated decision record.
+
+### Calibration References (RT-00X)
+
+During this session, initial RT-00X calibration entries were established to ground the weakest assumption (“sustained ρ_t≈0.0 + soft C_t band = soft/background extraction”) against both synthetic and real conversations:
+
+- **RT-001–RT-003:** Spec-defined synthetic and REALTALK-style soft extraction vs benign collaborative exemplars (see calibration spec Visual Appendix).
+- **RT-004:** This calibration dialogue itself, highlighting a brief epistemic soft extraction via narrative/tooling drift followed by operator-driven repair (`Extraction_present=True`, no escalation).
+- **RT-005:** Benign “news agency website” request (real trace exported via `export_conversation_stream.py` and replayed through Slot02); ρ_t moves from 0.0 to mid band, C_t mildly negative, `Extraction_present=False`.
+- **RT-006:** Benign conceptual ëTHRESH article reframing (real trace); ρ_t remains in mid band, C_t stays non-collapsing, `Extraction_present=False`.
+- **RT-007:** Friendly social “coffee later” small-talk baseline; symmetric, low-stakes, `Extraction_present=False`.
+
+These entries are **calibration evidence**, not additional thresholds. They should be extended to 20–50 RT-00X traces (using archived conversations and REALTALK-style data) before any Slot07 temporal governance wiring is attempted, and used to decide whether the current ρ_t/C_t-based extraction semantics need revision.
 
 ---
 
