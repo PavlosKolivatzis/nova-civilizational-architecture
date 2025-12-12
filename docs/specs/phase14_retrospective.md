@@ -79,6 +79,13 @@ During this session, initial RT-00X calibration entries were established to grou
 - **RT-006:** Benign conceptual ëTHRESH article reframing (real trace); ρ_t remains in mid band, C_t stays non-collapsing, `Extraction_present=False`.
 - **RT-007:** Friendly social “coffee later” small-talk baseline; symmetric, low-stakes, `Extraction_present=False`.
 
+Since ADR‑014, the RT‑00X set has been extended beyond the initial RT‑001– RT‑007 exemplars:
+
+- **RT-023–RT-033** are logged in `docs/specs/phase14_rt_evidence_log.md` as operator-facing evidence rows. They include:
+  - Soft extraction cases (RT-023, RT-025, RT-027–RT-030): gaslighting, authority / technofeudal framing, "for your own good" paternalism, dependency / habit-nudging, and algorithmic authority in career advice. All share the expected pattern of low or one-way ρ_t with C_t in a soft positive band and `Extraction_present=True`.
+  - Benign baselines (RT-024, RT-026, RT-031–RT-033): philosophical cloud-capital debate, AI-as-tool writing assistance, creative co-design, and two real Nova traces (RT-032, RT-033) replayed through Slot02 with temporal_usm enabled. These show mid-band ρ_t, low/stable C_t, and `Extraction_present=False`.
+
+Preliminary conclusion: across these 11 evidence rows, operator judgment matches the weakest assumption ("sustained low ρ_t + soft C_t band ⇒ soft/ background extraction") and clearly separates extraction from benign reciprocity. This supports keeping ρ_t as the primary extraction signal and C_t as a typing/refinement signal, while postponing any Slot07 wiring until more traces are accumulated in future phases.
 These entries are **calibration evidence**, not additional thresholds. They should be extended to 20–50 RT-00X traces (using archived conversations and REALTALK-style data) before any Slot07 temporal governance wiring is attempted, and used to decide whether the current ρ_t/C_t-based extraction semantics need revision.
 
 ---
