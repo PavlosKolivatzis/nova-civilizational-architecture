@@ -7,9 +7,10 @@
 ## 1. RT Evidence Table
 
 ```markdown
-| ID    | Source / Context                          | Snippet (short)                                      | ρ_t pattern                  | C_t band       | Extraction_present | Consent      | Closest archetype | Style tags                         | Notes                                          |
-|-------|-------------------------------------------|------------------------------------------------------|------------------------------|---------------|--------------------|-------------|-------------------|-------------------------------------|------------------------------------------------|
-| RT-023| Operator-provided gaslighting dialogue    | A records convo; B denies gaslighting, flips blame   | ≈0.0 (B dominates)           | soft band      | True               | INVALID     | RT-017            | gaslighting/reality-manipulation   | Strong real-world gaslighting exemplar         |
+| ID    | Source / Context                             | Snippet (short)                                      | ρ_t pattern                  | C_t band       | Extraction_present | Consent      | Closest archetype | Style tags                         | Notes                                          |
+|-------|----------------------------------------------|------------------------------------------------------|------------------------------|---------------|--------------------|-------------|-------------------|-------------------------------------|------------------------------------------------|
+| RT-023| Operator-provided gaslighting dialogue       | A records convo; B denies gaslighting, flips blame   | ≈0.0 (B dominates)           | soft band      | True               | INVALID     | RT-017            | gaslighting/reality-manipulation   | Strong real-world gaslighting exemplar         |
+| RT-024| Cloud-capital debate (philosophical excerpt) | Skeptical A vs defender B on “cloud capital” metaphor| Mid-band reciprocity          | stable         | False              | VALID       | RT-016            | collaborative/socratic/philosophical| High-intensity but non-extractive conceptual talk |
 ```
 
 ---
@@ -19,4 +20,3 @@
 - Each row should reference an RT archetype (RT-001…RT-017) via the “Closest archetype” column.
 - This log is meant to grow over time (RT-018, RT-019, …) as more real traces and corpus examples are reviewed.
 - When this log diverges from the calibration spec, the spec and/or RT archetypes must be revisited before any Slot07 temporal governance wiring.
-
