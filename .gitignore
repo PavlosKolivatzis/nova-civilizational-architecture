@@ -85,3 +85,4 @@ trust/private/
 trust/cosign.key
 temp_*.txt
 nul
+deployment_validation_*.csv
