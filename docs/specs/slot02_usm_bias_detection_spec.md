@@ -218,6 +218,8 @@ schema:
 
 ### 5.2 Temporal Extraction Annotation (`extraction_present`)
 
+**ρ_t (rho_temporal) semantics**: In this specification, ρ_t represents the temporal equilibrium ratio, where lower values indicate one-way / asymmetric (extractive) interaction patterns, and higher values indicate reciprocal or protective flow. This interpretation grounds all threshold directions below.
+
 When temporal USM is enabled (`NOVA_ENABLE_USM_TEMPORAL=1`) and bias detection is active, Slot02 MAY attach a lightweight temporal extraction annotation to `BIAS_REPORT@1`:
 
 - **Field:** `extraction_present: bool | null`
