@@ -42,6 +42,7 @@ This document is a calibration reference for operators and future Phase 14.x wor
 - `Extraction_present (desired)` is a **?_t-based flag**:
   - True when ?_t is sustained near 0.0 over multiple turns and the graph is non-VOID.
   - False when reciprocity is present (?_t in a benign band) or structure is absent (VOID).
+  - **During `warming_up`, `Extraction_present` is forced to `None`** (undefined) regardless of ?_t or C_t. This mirrors how action gating treats the first turns, prevents premature labeling based on too little context, and keeps the semantics of `Extraction_present` strictly post‑warm‑up.
 
 - Current `StateClass` labels (`"warming_up"`, `"extractive"`, `"consensus"`, `"collaborative"`, `"neutral"`) in `src/nova/math/usm_temporal_thresholds.py` are **C_t + ?_t gates**:
   - Extractive: `C_t >= 0.18` and `?_t < 0.25` (after warm-up).
