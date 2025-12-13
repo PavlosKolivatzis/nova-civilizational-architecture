@@ -95,7 +95,7 @@ nova-run = "src.nova.main:main"
 nova-validate = "src.nova.validation:main"
 
 [tool.setuptools]
-packages = ["src.nova"]
+packages = ["nova"]
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
