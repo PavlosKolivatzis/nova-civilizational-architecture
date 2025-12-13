@@ -1,18 +1,23 @@
 """
-Provisional Temporal USM Thresholds (Phase 14.5 Observation)
+Temporal USM Thresholds (Phase 14.5 Observation + Phase 14 min_turns Calibration)
 
 Classification logic for temporal USM state based on C_t and rho_t values.
 
-IMPORTANT: These thresholds are PROVISIONAL estimates derived from:
-- Phase 14.5 pilot observation (3 scenarios: benign, extractive, VOID)
-- Theoretical scaling from instantaneous thresholds (~60% tighter for lambda=0.6)
-- Expected to require empirical refinement after 100-200 observation sessions
+IMPORTANT:
+- The C_t and rho_t band thresholds (extractive_C, protective_C, extractive_rho,
+  protective_rho) remain derived from Phase 14.5 pilot observation and may be
+  refined with additional evidence.
+- The warm-up length `min_turns=3` has been validated and frozen via Phase 14
+  K-sweep calibration on RT-027/RT-028/RT-030 (extraction) and RT-032/RT-033
+  (benign); see docs/specs/phase14_min_turns_calibration.md.
 
-Validation Criteria:
+Validation Criteria (bands):
 - Misclassification rate < 50% in first 100 sessions
 - If exceeded: STOP and run full calibration with diverse conversations
 
-See: docs/specs/phase14_5_observation_protocol.md
+See also:
+- docs/specs/phase14_5_observation_protocol.md
+- docs/specs/phase14_min_turns_calibration.md
 """
 
 from __future__ import annotations
@@ -26,7 +31,7 @@ StateClass = Literal["warming_up", "extractive", "consensus", "collaborative", "
 @dataclass(frozen=True)
 class TemporalThresholds:
     """
-    Provisional thresholds for temporal USM classification.
+    Thresholds for temporal USM classification.
 
     Attributes:
         extractive_C: C_t threshold for extractive collapse (high collapse)
@@ -40,10 +45,10 @@ class TemporalThresholds:
     protective_C: float = -0.12     # ~60% of instantaneous (-0.2)
     extractive_rho: float = 0.25    # Low reciprocity cutoff
     protective_rho: float = 0.6     # High reciprocity baseline
-    min_turns: int = 3              # Warm-up period before classification
+    min_turns: int = 3              # Warm-up period before classification (validated in Phase 14 min_turns calibration)
 
 
-# Default thresholds (Phase 14.5 provisional)
+# Default thresholds (Phase 14.5 bands + Phase 14 min_turns calibration)
 DEFAULT_THRESHOLDS = TemporalThresholds()
 
 
