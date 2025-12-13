@@ -203,11 +203,44 @@ schema:
     refusal_delta: float
     equilibrium_ratio: float
 
+  extraction_present:  # bool | null (None during warming_up; ρ_t-based after warm-up)
+    type: [boolean, "null"]
+    description: >
+      Optional temporal extraction annotation derived from temporal USM.
+      See Section 5.2 for semantics.
+
   metadata:
     text_length: int
     actor_count: int
     relation_count: int
     timestamp: str
+```
+
+### 5.2 Temporal Extraction Annotation (`extraction_present`)
+
+When temporal USM is enabled (`NOVA_ENABLE_USM_TEMPORAL=1`) and bias detection is active, Slot02 MAY attach a lightweight temporal extraction annotation to `BIAS_REPORT@1`:
+
+- **Field:** `extraction_present: bool | null`
+- **Phase coupling (warming_up):**
+  - While the temporal classifier reports `StateClass.warming_up` (see `usm_temporal_thresholds`), `extraction_present` MUST be set to `null` (or omitted). This follows the calibration rule in `phase14_extraction_calibration.md`: during `warming_up`, Nova does not claim to know whether extraction exists.
+- **ρ_t-gated semantics (post–warm-up):**
+  - After `warming_up`, `extraction_present` is determined from the temporal equilibrium ratio `ρ_t` only; `C_t` is used later for typing, not gating.
+  - Let:
+    - `θ_extract` = upper bound of the calibrated low-ρ_t extraction band (initially aligned with `extractive_rho` in `usm_temporal_thresholds` / Phase 14 calibration).
+    - `θ_clear` = lower bound of the calibrated benign reciprocity band (initially aligned with `protective_rho` or its successor).
+  - Then, for non-VOID graphs:
+    - If `ρ_t <= θ_extract`  `extraction_present = True`.
+    - Else if `ρ_t >= θ_clear`  `extraction_present = False`.
+    - Else  `extraction_present = None` (ambiguous band).
+  - Note: In the temporal USM model, lower values of `ρ_t` correspond to persistent asymmetric (extractive) interaction patterns, while higher values correspond to reciprocal / stabilizing dynamics; the thresholds above assume this ordering.
+  - `min_turns` (from `TemporalThresholds.min_turns`, currently 3) is a conservative heuristic to avoid single-turn / two-turn noise; it has not yet been optimized against RT-00X evidence and is explicitly marked as Phase 14 calibration debt for Phase 15 validation.
+- **C_t role:**
+  - `C_t` MUST NOT gate `extraction_present` in this contract. It is reserved for downstream typing (`Extraction_type`, e.g. `soft_background` vs `hard_collapse`) as per `phase14_extraction_calibration.md` and ADR-014.
+- **Action neutrality (Phase 14/15 scope):**
+  - In this phase, `extraction_present` is **annotation only**:
+    - Slot02 MUST NOT change `action` based on this field.
+    - Slot07 and other consumers MUST treat it as informational/experimental and MUST NOT use it for regime escalation or hard gating until a dedicated temporal governance phase explicitly authorizes that use.
+  - The field MUST be deterministic under replay given the same temporal USM inputs.
 ```
 
 ---

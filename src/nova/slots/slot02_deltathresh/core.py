@@ -126,6 +126,8 @@ class DeltaThreshProcessor:
         governance_flag = os.getenv("NOVA_ENABLE_TEMPORAL_GOVERNANCE", "0") == "1"
         self._temporal_governance_enabled = governance_flag and self._temporal_usm_enabled
         self._classification_history: Dict[str, List[str]] = {}
+        # Turn counters for temporal annotation (independent of governance history)
+        self._temporal_turn_counts: Dict[str, int] = {}
 
         if self._temporal_governance_enabled:
             self.logger.info("Temporal Governance: ENABLED")
@@ -290,6 +292,63 @@ class DeltaThreshProcessor:
                             "error_message": str(exc),
                             "content_length": len(content),
                             "step": "temporal_governance",
+                        },
+                        exc_info=True,
+                    )
+
+            # Phase 15 (design): Temporal extraction annotation (action-neutral)
+            # Attach extraction_present to bias_report when temporal USM is available.
+            if self._temporal_usm_enabled and bias_report and temporal_usm:
+                try:
+                    from nova.math.usm_temporal_thresholds import DEFAULT_THRESHOLDS
+
+                    graph_state = temporal_usm.get("graph_state", "unknown")
+                    rho_t = temporal_usm.get("rho_temporal")
+
+                    extraction_present = None
+
+                    # Only apply on non-VOID graphs with a valid rho_t
+                    if graph_state != "void" and rho_t is not None:
+                        # Turn counting is independent from governance history
+                        turn_count = self._temporal_turn_counts.get(session_id, 0) + 1
+                        self._temporal_turn_counts[session_id] = turn_count
+
+                        thresholds = DEFAULT_THRESHOLDS
+
+                        # Warm-up: do not claim to know yet
+                        if turn_count < thresholds.min_turns:
+                            extraction_present = None
+                        else:
+                            theta_extract = thresholds.extractive_rho
+                            theta_clear = thresholds.protective_rho
+
+                            # Low rho_t band: sustained asymmetry / extraction
+                            if rho_t <= theta_extract:
+                                extraction_present = True
+                            # High rho_t band: reciprocal / stabilizing dynamics
+                            elif rho_t >= theta_clear:
+                                extraction_present = False
+                            # Mid band: ambiguous
+                            else:
+                                extraction_present = None
+
+                    bias_report["extraction_present"] = extraction_present
+
+                except Exception as exc:
+                    tb = exc.__traceback__
+                    line = tb.tb_lineno if tb else None
+                    self.logger.warning(
+                        "Temporal extraction annotation failed",
+                        extra={
+                            "file": __file__,
+                            "function": "process_content",
+                            "line": line,
+                            "slot": "slot02",
+                            "phase": "15.0",
+                            "error_type": type(exc).__name__,
+                            "error_message": str(exc),
+                            "content_length": len(content),
+                            "step": "temporal_extraction_annotation",
                         },
                         exc_info=True,
                     )

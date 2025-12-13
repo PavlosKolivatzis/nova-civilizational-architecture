@@ -167,3 +167,109 @@ def test_temporal_usm_per_stream_isolated(monkeypatch: Any):
     assert "A" in processor._temporal_state
     assert "B" in processor._temporal_state
     assert processor._temporal_state["A"] is not processor._temporal_state["B"]
+
+
+# ---------------------------------------------------------------------------
+# Temporal extraction annotation (extraction_present)
+# ---------------------------------------------------------------------------
+
+def _make_processor_with_fake_bias(
+    monkeypatch: Any,
+    equilibrium_ratio: float,
+    graph_state: str = "normal",
+) -> DeltaThreshProcessor:
+    """Helper to construct a processor with deterministic USM metrics."""
+    _set_env(NOVA_ENABLE_USM_TEMPORAL="1", NOVA_ENABLE_BIAS_DETECTION="1")
+
+    processor = DeltaThreshProcessor()
+
+    def fake_analyze_bias(content: str) -> Dict[str, Any]:
+        return {
+            "bias_vector": {},
+            "collapse_score": 0.2,
+            "usm_metrics": {
+                "spectral_entropy": 1.0,
+                "equilibrium_ratio": equilibrium_ratio,
+                "shield_factor": 0.0,
+                "refusal_delta": 0.0,
+            },
+            "metadata": {"graph_state": graph_state},
+            "confidence": 0.9,
+        }
+
+    monkeypatch.setattr(processor, "_analyze_bias", fake_analyze_bias)
+    return processor
+
+
+def test_extraction_present_none_during_warmup(monkeypatch: Any) -> None:
+    """First 1-2 non-VOID turns keep extraction_present=None (min_turns guardrail)."""
+    processor = _make_processor_with_fake_bias(
+        monkeypatch, equilibrium_ratio=0.1, graph_state="normal"
+    )
+
+    session_id = "warmup-session"
+
+    # Turn 1 (count=1 < min_turns)
+    r1 = processor.process_content("First turn.", session_id=session_id)
+    assert r1.bias_report is not None
+    assert r1.bias_report.get("extraction_present") is None
+
+    # Turn 2 (count=2 < min_turns)
+    r2 = processor.process_content("Second turn.", session_id=session_id)
+    assert r2.bias_report is not None
+    assert r2.bias_report.get("extraction_present") is None
+
+
+def test_extraction_present_true_for_low_rho_after_warmup(monkeypatch: Any) -> None:
+    """Low rho_t band (<= extractive_rho) yields extraction_present=True after warmup."""
+    processor = _make_processor_with_fake_bias(
+        monkeypatch, equilibrium_ratio=0.1, graph_state="normal"
+    )
+    session_id = "low-rho"
+
+    # Advance to and past warm-up (min_turns=3)
+    for i in range(3):
+        result = processor.process_content(f"turn-{i}", session_id=session_id)
+
+    assert result.bias_report is not None
+    assert result.bias_report.get("extraction_present") is True
+
+
+def test_extraction_present_false_for_high_rho_after_warmup(monkeypatch: Any) -> None:
+    """High rho_t band (>= protective_rho) yields extraction_present=False after warmup."""
+    processor = _make_processor_with_fake_bias(
+        monkeypatch, equilibrium_ratio=0.8, graph_state="normal"
+    )
+    session_id = "high-rho"
+
+    for i in range(3):
+        result = processor.process_content(f"turn-{i}", session_id=session_id)
+
+    assert result.bias_report is not None
+    assert result.bias_report.get("extraction_present") is False
+
+
+def test_extraction_present_none_for_mid_rho_after_warmup(monkeypatch: Any) -> None:
+    """Mid-band rho_t produces extraction_present=None after warmup (ambiguous)."""
+    processor = _make_processor_with_fake_bias(
+        monkeypatch, equilibrium_ratio=0.4, graph_state="normal"
+    )
+    session_id = "mid-rho"
+
+    for i in range(3):
+        result = processor.process_content(f"turn-{i}", session_id=session_id)
+
+    assert result.bias_report is not None
+    assert result.bias_report.get("extraction_present") is None
+
+
+def test_extraction_present_none_for_void_state(monkeypatch: Any) -> None:
+    """VOID graph_state always yields extraction_present=None, regardless of rho_t."""
+    # equilibrium_ratio is unused in VOID updates but provided for completeness.
+    processor = _make_processor_with_fake_bias(
+        monkeypatch, equilibrium_ratio=None, graph_state="void"  # type: ignore[arg-type]
+    )
+
+    result = processor.process_content("Void-only turn.", session_id="void-session")
+    assert result.bias_report is not None
+    assert result.bias_report.get("extraction_present") is None
