@@ -1,7 +1,7 @@
 # Phase 15: Temporal Governance Design Specification
 
-**Status:** Design in progress (Sections D and A locked, B and C pending)  
-**Governance state:** NOVA_ENABLE_TEMPORAL_GOVERNANCE=0 (off, design-only phase)  
+**Status:** Design complete (Sections D, A, B, C locked)  
+**Governance state:** NOVA_ENABLE_TEMPORAL_GOVERNANCE=0 (all flags OFF, design-only phase)  
 **Dependencies:** Phase 14 calibration complete (min_turns=3, extraction_present validated)
 
 ---
@@ -160,26 +160,341 @@ All test cases with extraction_present=None resolve to Observational:
 
 ---
 
-## 5. Pending Design Work
+## 5. Section B: Operator Interface (Locked)
 
-**Section B: Operator Interface** (next priority)
-- How extraction_present (True/False/None) is presented to operator
-- Visual/semantic distinction of None from False
-- Operator controls (manual override, policy configuration)
-- Review queue for Escalation regime
-- Constraint: None must not create implied urgency through UX
+**Core constraint:** Make ambiguity legible without making it feel urgent.
 
-**Section C: Flag Architecture** (after B)
-- Governance activation layers
-- Separation: logging vs user-facing changes vs escalation
-- Rollback strategy
+### 5.1 Primary Display: extraction_present States
 
-**Phase 16: Calibration and Validation**
-- C_t threshold validation against RT evidence
-- Regime effectiveness evaluation
-- Operator workflow feedback
+Three distinct semantic presentations, not a spectrum.
+
+| extraction_present | Label                | Semantic Frame                      | Visual Treatment                      |
+|-------------------|----------------------|-------------------------------------|---------------------------------------|
+| True              | "Extraction detected"| Factual observation (not alarm)     | Amber/yellow (caution), ⚠️ or ⓘ icon  |
+| False             | "Reciprocal pattern" | Positive confirmation               | Green/neutral, ✓ or ⟳ icon            |
+| None              | "Pattern undefined"  | Neutral epistemic state             | Gray/neutral (not empty), ○ or ○ icon |
+
+**Anti-patterns (forbidden):**
+- None shown as blank/empty (implies missing data)
+- None shown as "—" or "N/A" (implies irrelevant)
+- None colored invisibly (white on white)
+- True shown in red (implies danger vs observation)
+- False and None share same visual treatment
+
+**Key rule:** None must have equal visual weight to True and False. It is a state, not an absence.
+
+### 5.2 Context Panel: Temporal Metrics Display
+
+Metrics table shown per session/turn:
+
+| Metric             | Value             | Interpretation                               |
+|--------------------|-------------------|----------------------------------------------|
+| extraction_present | True/False/None   | Current classification                       |
+| ρ_t (rho_temporal) | 0.23              | Temporal equilibrium ratio                   |
+| C_t (coherence_temporal) | 0.45        | Coherence/intensity                          |
+| Turn count         | 5                 | Turns since session start                    |
+| Temporal state     | active/warming_up/void | Classifier state                        |
+| Current regime     | Observational/Informational/etc | Governance mode                   |
+
+**Interpretation helpers (on hover/expand):**
+- ρ_t: "Lower values indicate asymmetric patterns; higher values indicate reciprocal dynamics"
+- extraction_present=None: "Pattern is ambiguous or insufficient data for classification"
+- C_t: "Coherence/intensity measure; only meaningful when extraction_present is True or False"
+
+**Forbidden interpretations:**
+- "extraction_present=None means safe" (collapses None → False)
+- "extraction_present=None requires investigation" (collapses None → urgency)
+- C_t interpretation shown when extraction_present=None
+
+### 5.3 Regime Indicator
+
+Current governance regime displayed separately from extraction_present.
+
+**For each regime, show:**
+- Regime name
+- Operational meaning (logging/transparency/consent/review)
+- Reason for regime (extraction_present value, operator policy, or default)
+
+**Example: Observational (due to None)**
+Regime: Observational  
+Reason: Pattern undefined (extraction_present=None)  
+Actions: Metrics logged, no user-facing changes
+
+**Example: Escalation (due to True + high C_t)**
+Regime: Escalation  
+Reason: Hard extraction detected (ρ_t=0.12, C_t=0.78)  
+Actions: Flagged for operator review (no automated enforcement)  
+Status: [Review Queue] [Mark Reviewed] [Override]
+
+**Key rule:** Regime and extraction_present shown separately. Operator sees both "what was detected" and "what governance is doing."
+
+### 5.4 Temporal View: How None Persists Over Turns
+
+Turn history table (example):
+
+| Turn | extraction_present | ρ_t | C_t | Regime        | Notes                         |
+|------|--------------------|-----|-----|---------------|-------------------------------|
+| 1    | None               | —   | —   | Observational | Warming up                    |
+| 2    | None               | 0.42| 0.31| Observational | Warming up                    |
+| 3    | None               | 0.45| 0.28| Observational | Mid-band ρ_t                  |
+| 4    | None               | 0.48| 0.33| Observational | Mid-band ρ_t                  |
+| 5    | False              | 0.62| 0.22| Observational | Reciprocal                    |
+
+**Visual treatment of repeated None:**
+- Each None shown identically (no color intensification)
+- No "streak counter" (e.g., "5 consecutive None")
+- No trend arrows or progression indicators
+- Notes column explains why None (warming up vs mid-band vs insufficient data)
+
+**Anti-pattern (forbidden):**
+⚠️ Ambiguous pattern for 10 turns - Consider manual review  
+Creates urgency from None. Violates core constraint.
+
+**Correct pattern:**
+Pattern undefined (mid-band ρ_t) - Turn 10 of session  
+Factual, no implied action.
+
+### 5.5 Operator Controls
+
+**Per-Session Controls:**
+- Manual override: Force regime to Observational (veto escalation)
+- Mark for review: Add session to review queue manually
+- View full context: Expand to see all temporal metrics, session history, slot outputs
+
+**Policy Configuration:**
+- Regime thresholds: Adjust C_t boundaries (Phase 16)
+- Enable/disable regimes: Turn off Informational/Consent-reinforcing globally
+- Review triggers: Configure "flag after N turns of repeated None" (logging only, not regime change)
+
+**Review Queue (for Escalation regime):**
+- List of sessions flagged for review (due to True + high C_t)
+- Per-item actions: View context, mark reviewed, override regime, escalate to external process
+
+**Key rule:** All controls are operator-initiated. No UI nags, no automatic prompts, no "recommended actions."
+
+### 5.6 Information Hierarchy
+
+Operator sees in priority order:
+1. Session summary: extraction_present state, current regime
+2. Current turn metrics: ρ_t, C_t, turn count
+3. Regime justification: Why this regime was selected
+4. Operator controls: What actions are available
+5. Turn history: Temporal progression (expandable)
+6. Full context: All slot outputs, session metadata (expandable)
+
+### 5.7 Aggregation & Filtering
+
+**Decision:** Allow filtering, prohibit salience amplification.
+
+**Rules:**
+1. Filtering as neutral query tool only  
+   - Allowed: "Show sessions where extraction_present = None"  
+   - Forbidden: Highlight, prioritize, rank, or badge by extraction_present
+
+2. No default filters  
+   - Default view: unfiltered, chronological or session ID order  
+   - Operator must actively select filter each time
+
+3. No count-based emphasis  
+   - Forbidden: "12 sessions with None" or "Spike in ambiguous sessions"  
+   - Allowed: Plain list, no aggregate totals emphasized
+
+4. None is not a risk category  
+   - Filter label: "Sessions with undefined extraction state (neutral filter)"  
+   - Not: "Ambiguous cases" or "Uncertain patterns"
+
+**Principle:** Ambiguity can be seen, but not made loud.
+
+### 5.8 Notifications
+
+**Decision:** Pull, not push. No notifications by default.
+
+**Rules:**
+1. Escalation creates queue entry, not alert  
+   - Review queue exists and is visible  
+   - No pop-ups, sounds, banners, or emails
+
+2. Operator-initiated checking  
+   - Operator opens review queue when they choose  
+   - System never interrupts
+
+3. Optional policy override (deferred to Phase 16)  
+   - If notifications ever exist: digest-based only (e.g., daily summary), never real-time, never phrased as urgency
+
+4. Notification language constraint  
+   - Allowed: "New item added to review queue"  
+   - Forbidden: "Action required," "Potential harm detected," "Urgent review needed"
+
+**Principle:** Governance as restraint, not reaction. Human judgment stays sovereign.
+
+### 5.9 Deferred to Phase 16
+
+- Dashboard vs per-session view architecture (operational detail)
+- Real-time vs retrospective interface (operational detail)
 
 ---
+
+## 7. Phase 16: Validation and Activation (Not Started)
+
+**Pending work:**
+- C_t threshold calibration against RT evidence
+- 4-stage activation sequence (logging → UI → escalation → full)
+- Regime effectiveness evaluation
+- Operator workflow feedback
+- Rollback criteria definition
+
+---
+
+## 6. Section C: Flag Architecture (Locked)
+
+**Scope:** Define governance activation layers with clean separation and immediate rollback.
+
+### 6.1 Flag Hierarchy
+
+Three-layer separation:
+
+```
+NOVA_ENABLE_TEMPORAL_GOVERNANCE (master switch)
+  ├── NOVA_ENABLE_EXTRACTION_LOGGING (metrics/attest only)
+  ├── NOVA_ENABLE_EXTRACTION_UI (user-facing transparency/consent)
+  └── NOVA_ENABLE_EXTRACTION_ESCALATION (operator review queue)
+```
+
+**Dependency rules:**
+- UI and Escalation require TEMPORAL_GOVERNANCE=1
+- UI and Escalation are independent of each other
+- Logging is implicit when TEMPORAL_GOVERNANCE=1
+
+### 6.2 Flag Definitions
+
+#### NOVA_ENABLE_TEMPORAL_GOVERNANCE
+- **Type:** Boolean
+- **Default:** 0 (OFF)
+- **Effect when 1:**
+  - Slot07 reads temporal_usm and extraction_present from Slot02
+  - Regime selection logic active (per Section A matrix)
+  - All regimes log to metrics/attest ledger
+  - No user-facing changes unless sub-flags enabled
+- **Effect when 0:**
+  - Slot07 ignores temporal_usm
+  - No regime selection
+  - extraction_present still computed by Slot02 but not consumed
+- **Rollback:** Flip to 0, restart service. Governance stops immediately.
+
+#### NOVA_ENABLE_EXTRACTION_LOGGING
+- **Type:** Boolean (implicit when TEMPORAL_GOVERNANCE=1)
+- **Default:** 1 (ON when governance enabled)
+- **Effect when 1:**
+  - extraction_present, ρ_t, C_t, regime → Prometheus metrics
+  - Regime transitions → attest ledger
+  - Operator dashboard can query metrics
+- **Effect when 0:**
+  - Regime selection still occurs (Section A logic runs)
+  - Metrics not exported
+  - Use case: governance dry-run without observability overhead
+- **Rollback:** Flip to 0. Metrics stop, governance logic continues.
+
+#### NOVA_ENABLE_EXTRACTION_UI
+- **Type:** Boolean
+- **Default:** 0 (OFF)
+- **Requires:** TEMPORAL_GOVERNANCE=1
+- **Effect when 1:**
+  - Informational regime → transparency disclosure shown to user
+  - Consent-reinforcing regime → consent reminder UI shown to user
+  - User can always dismiss/continue (non-coercive)
+- **Effect when 0:**
+  - Informational and Consent-reinforcing regimes selected but not shown
+  - User sees no extraction-related UI
+  - Regimes still logged
+- **Rollback:** Flip to 0. User-facing changes stop immediately, logging continues.
+
+#### NOVA_ENABLE_EXTRACTION_ESCALATION
+- **Type:** Boolean
+- **Default:** 0 (OFF)
+- **Requires:** TEMPORAL_GOVERNANCE=1
+- **Effect when 1:**
+  - Escalation regime → session added to operator review queue
+  - Operator can view queue, mark reviewed, override regime
+  - No notifications (pull model per Section B)
+- **Effect when 0:**
+  - Escalation regime selected but queue entry not created
+  - Regime still logged
+  - Use case: validate Escalation logic without operator workflow
+- **Rollback:** Flip to 0. Queue stops populating, existing queue persists for review.
+
+### 6.3 Activation Sequence (Phase 16)
+
+**Phase 15 (current):** All flags 0. Design only.
+
+**Phase 16 validation stages:**
+
+1. **Stage 1: Logging only**
+   - TEMPORAL_GOVERNANCE=1, EXTRACTION_UI=0, EXTRACTION_ESCALATION=0
+   - Validate: Regime selection logic, metrics quality, no user impact
+
+2. **Stage 2: UI piloting**
+   - TEMPORAL_GOVERNANCE=1, EXTRACTION_UI=1 (limited sessions, operator-selected), EXTRACTION_ESCALATION=0
+   - Validate: Informational/Consent UX, user response, no escalation overhead
+
+3. **Stage 3: Escalation workflow**
+   - TEMPORAL_GOVERNANCE=1, EXTRACTION_UI=1, EXTRACTION_ESCALATION=1 (limited sessions)
+   - Validate: Operator review queue, workflow efficiency, false positive rate
+
+4. **Stage 4: Full activation (if validated)**
+   - All flags=1, all sessions
+   - Continuous monitoring for rollback criteria
+
+**Each stage requires explicit validation gate before proceeding.**
+
+### 6.4 Rollback Strategy
+
+**Immediate rollback (<1 minute):**
+- Flip TEMPORAL_GOVERNANCE=0 → all governance stops
+- Or flip sub-flags individually to reduce scope
+- No code deployment required
+
+**Rollback triggers (Phase 16):**
+- False positive rate > threshold (TBD during validation)
+- User complaint rate > baseline
+- Operator override frequency > X% (indicates matrix miscalibration)
+- Any evidence that None is being treated as urgent by operators (UX leak)
+
+**Rollback procedure:**
+1. Set flag(s) to 0
+2. Restart service (or wait for config hot-reload if implemented)
+3. Verify metrics show governance inactive
+4. Post-mortem: analyze why rollback was needed, revise design
+
+**No data loss on rollback:**
+- Attest ledger preserves all regime decisions
+- Metrics history retained
+- Can replay sessions to debug
+
+### 6.5 Flag Configuration
+
+**Storage:** Environment variables or config file (e.g., `.env`, `config.yaml`)
+
+**Hot-reload capability (optional, Phase 16):**
+- Flags checked at call-time, not boot-time
+- Allows flag changes without service restart
+- Adds complexity; defer unless needed
+
+**Monitoring:**
+- Expose flag states via `/metrics` endpoint
+- Alert if flags change unexpectedly (detect config drift)
+
+### 6.6 Non-Goals for Flag Architecture
+
+**Not doing (intentionally):**
+- ✗ Per-session flag overrides (too complex, violates uniformity)
+- ✗ A/B testing framework (governance is not an experiment with users)
+- ✗ Gradual rollout percentages (use operator-selected sessions in Stage 2/3 instead)
+- ✗ Flag dependencies enforced in code (document dependencies, trust operators)
+
+**Simplicity over flexibility.**
+
+---
+
 
 ## 6. References
 
@@ -190,7 +505,7 @@ All test cases with extraction_present=None resolve to Observational:
 
 ---
 
-**Document status:** D and A locked. B and C pending. Governance remains off (design-only phase).
+**Document status:** D, A, B, and C locked. Governance remains off (design-only phase).
 
 ---
 
