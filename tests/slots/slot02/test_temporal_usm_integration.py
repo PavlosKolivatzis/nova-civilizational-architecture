@@ -169,6 +169,51 @@ def test_temporal_usm_per_stream_isolated(monkeypatch: Any):
     assert processor._temporal_state["A"] is not processor._temporal_state["B"]
 
 
+def test_temporal_usm_turn_count_and_state_progression(monkeypatch: Any) -> None:
+    """temporal_usm includes turn_count and temporal_state progression per session."""
+    _set_env(NOVA_ENABLE_USM_TEMPORAL="1", NOVA_ENABLE_BIAS_DETECTION="1")
+
+    processor = DeltaThreshProcessor()
+
+    def fake_analyze_bias(content: str) -> Dict[str, Any]:
+        return {
+            "bias_vector": {},
+            "collapse_score": 0.2,
+            "usm_metrics": {
+                "spectral_entropy": 1.0,
+                "equilibrium_ratio": 0.5,
+                "shield_factor": 0.0,
+                "refusal_delta": 0.0,
+            },
+            "metadata": {"graph_state": "normal"},
+            "confidence": 0.9,
+        }
+
+    monkeypatch.setattr(processor, "_analyze_bias", fake_analyze_bias)
+
+    session_id = "turn-sequence"
+
+    r1 = processor.process_content("Turn 1", session_id=session_id)
+    r2 = processor.process_content("Turn 2", session_id=session_id)
+    r3 = processor.process_content("Turn 3", session_id=session_id)
+
+    t1 = r1.temporal_usm
+    t2 = r2.temporal_usm
+    t3 = r3.temporal_usm
+
+    assert t1 is not None and t2 is not None and t3 is not None
+
+    # Turn counts are 1-indexed and increment per call
+    assert t1["turn_count"] == 1
+    assert t2["turn_count"] == 2
+    assert t3["turn_count"] == 3
+
+    # With min_turns=3, first two are warming_up, third is active
+    assert t1["temporal_state"] == "warming_up"
+    assert t2["temporal_state"] == "warming_up"
+    assert t3["temporal_state"] == "active"
+
+
 # ---------------------------------------------------------------------------
 # Temporal extraction annotation (extraction_present)
 # ---------------------------------------------------------------------------

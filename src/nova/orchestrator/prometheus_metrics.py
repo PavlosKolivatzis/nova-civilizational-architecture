@@ -4,7 +4,7 @@ import logging
 
 from prometheus_client import Gauge, Counter, Histogram, Info, generate_latest, CONTENT_TYPE_LATEST
 from collections import defaultdict
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 import subprocess
 from time import strftime, gmtime
 from os import getenv
@@ -213,6 +213,34 @@ temporal_router_state_gauge = _get_or_register_gauge(
     "nova_temporal_router_state",
     "Public-safe temporal router readiness",
     registry=_PUBLIC_REGISTRY,
+)
+
+# Slot02 temporal USM metrics (Phase 14.6 / Phase 1.2b observability)
+# NOTE: High-cardinality labels (session_id, turn). Intended for short evidentiary runs,
+# not long-lived production scraping without retention controls.
+slot02_extraction_present_gauge = _get_or_register_gauge(
+    "nova_extraction_present",
+    "Slot02 temporal extraction_present signal (-1=None, 0=False, 1=True)",
+    labelnames=["session_id", "turn"],
+    registry=_INTERNAL_REGISTRY,
+)
+slot02_rho_temporal_gauge = _get_or_register_gauge(
+    "nova_rho_temporal",
+    "Slot02 temporal equilibrium ratio rho_t (0.0–1.0; -1.0 when undefined)",
+    labelnames=["session_id", "turn"],
+    registry=_INTERNAL_REGISTRY,
+)
+slot02_coherence_temporal_gauge = _get_or_register_gauge(
+    "nova_coherence_temporal",
+    "Slot02 temporal coherence C_t (0.0–1.0; -1.0 when undefined)",
+    labelnames=["session_id", "turn"],
+    registry=_INTERNAL_REGISTRY,
+)
+slot02_temporal_state_gauge = _get_or_register_gauge(
+    "nova_temporal_state",
+    "Slot02 temporal state (0=void, 1=warming_up, 2=active; -1 when unknown)",
+    labelnames=["session_id", "turn"],
+    registry=_INTERNAL_REGISTRY,
 )
 
 # Predictive metrics (Phase-7)
@@ -1623,3 +1651,86 @@ def record_stress_injection(mode: str, active: bool) -> None:
     stress_injection_active_gauge.set(1.0 if active else 0.0)
     if active:
         stress_injection_counter.labels(mode=mode).inc()
+
+
+def record_slot02_temporal_metrics(
+    session_id: str,
+    bias_report: Dict[str, Any] | None,
+    temporal_usm: Dict[str, Any] | None,
+    min_turns: int,
+) -> None:
+    """
+    Record Slot02 temporal USM metrics for Prometheus.
+
+    Observability-only:
+    - Guarded by NOVA_ENABLE_BIAS_DETECTION and NOVA_ENABLE_USM_TEMPORAL.
+    - Uses Slot02-provided temporal_usm fields; does not re-derive state.
+    - No governance impact (Slot07 does not consume these metrics).
+    """
+    # Basic guards
+    if not _env_truthy("NOVA_ENABLE_BIAS_DETECTION"):
+        return
+    if not _env_truthy("NOVA_ENABLE_USM_TEMPORAL"):
+        return
+    if bias_report is None or temporal_usm is None:
+        return
+
+    # Only emit when extraction_present is attached (Phase 15 annotation ready)
+    if "extraction_present" not in bias_report:
+        return
+
+    # Turn label comes from Slot02 temporal_usm turn_count for determinism
+    turn_count = temporal_usm.get("turn_count")
+    try:
+        turn_int = int(turn_count) if turn_count is not None else 0
+    except (TypeError, ValueError):
+        turn_int = 0
+    turn_label = str(turn_int)
+
+    # extraction_present: 1.0 (True), 0.0 (False), -1.0 (None/undefined)
+    ep_val = bias_report.get("extraction_present")
+    if ep_val is True:
+        ep = 1.0
+    elif ep_val is False:
+        ep = 0.0
+    else:
+        ep = -1.0
+    slot02_extraction_present_gauge.labels(session_id=session_id, turn=turn_label).set(ep)
+
+    # rho_temporal: 0.0–1.0 or -1.0 when undefined
+    rho = temporal_usm.get("rho_temporal")
+    try:
+        rho_val = float(rho) if rho is not None else -1.0
+    except (TypeError, ValueError):
+        rho_val = -1.0
+    slot02_rho_temporal_gauge.labels(session_id=session_id, turn=turn_label).set(rho_val)
+
+    # C_temporal: 0.0–1.0 or -1.0 when undefined
+    C = temporal_usm.get("C_temporal")
+    try:
+        C_val = float(C) if C is not None else -1.0
+    except (TypeError, ValueError):
+        C_val = -1.0
+    slot02_coherence_temporal_gauge.labels(session_id=session_id, turn=turn_label).set(C_val)
+
+    # temporal_state: 0 (void), 1 (warming_up), 2 (active), -1 when unknown
+    state_val: float
+    state_str = temporal_usm.get("temporal_state")
+    if isinstance(state_str, str):
+        state_map = {"void": 0.0, "warming_up": 1.0, "active": 2.0}
+        state_val = state_map.get(state_str, -1.0)
+    else:
+        # Fallback: coarse derivation from graph_state + turn_count if needed
+        graph_state = temporal_usm.get("graph_state")
+        if graph_state == "void":
+            state_val = 0.0
+        elif turn_int and turn_int < max(min_turns, 1):
+            state_val = 1.0
+        elif turn_int:
+            state_val = 2.0
+        else:
+            state_val = -1.0
+
+    slot02_temporal_state_gauge.labels(session_id=session_id, turn=turn_label).set(state_val)
+
+    # WARNING: session_id is high-cardinality; intended for short evidence capture runs only.

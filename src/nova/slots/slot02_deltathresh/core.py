@@ -126,7 +126,7 @@ class DeltaThreshProcessor:
         governance_flag = os.getenv("NOVA_ENABLE_TEMPORAL_GOVERNANCE", "0") == "1"
         self._temporal_governance_enabled = governance_flag and self._temporal_usm_enabled
         self._classification_history: Dict[str, List[str]] = {}
-        # Turn counters for temporal annotation (independent of governance history)
+        # Turn counters for temporal USM / annotation (per session_id, 1-indexed)
         self._temporal_turn_counts: Dict[str, int] = {}
 
         if self._temporal_governance_enabled:
@@ -309,14 +309,13 @@ class DeltaThreshProcessor:
 
                     # Only apply on non-VOID graphs with a valid rho_t
                     if graph_state != "void" and rho_t is not None:
-                        # Turn counting is independent from governance history
-                        turn_count = self._temporal_turn_counts.get(session_id, 0) + 1
-                        self._temporal_turn_counts[session_id] = turn_count
-
                         thresholds = DEFAULT_THRESHOLDS
 
+                        # Prefer turn_count from temporal_usm if present; otherwise do not re-derive.
+                        turn_count = temporal_usm.get("turn_count")
+
                         # Warm-up: do not claim to know yet
-                        if turn_count < thresholds.min_turns:
+                        if isinstance(turn_count, int) and turn_count < thresholds.min_turns:
                             extraction_present = None
                         else:
                             theta_extract = thresholds.extractive_rho
@@ -674,6 +673,10 @@ class DeltaThreshProcessor:
         rho_eq = self._temporal_rho_eq
         mode = self._temporal_mode
 
+        # Increment per-session turn counter for temporal updates (1-indexed)
+        turn_count = self._temporal_turn_counts.get(session_id, 0) + 1
+        self._temporal_turn_counts[session_id] = turn_count
+
         if graph_state == "void":
             # VOID state - apply configured temporal mode
             if mode == "soft":
@@ -708,7 +711,28 @@ class DeltaThreshProcessor:
 
         self._temporal_state[session_id] = state
 
-        # Build temporal_usm@1-compatible payload
+        # Derive temporal_state (void / warming_up / active) for observability
+        # Warm-up boundary uses TemporalThresholds.min_turns (Phase 14 calibration)
+        try:
+            from nova.math.usm_temporal_thresholds import DEFAULT_THRESHOLDS
+
+            thresholds = DEFAULT_THRESHOLDS
+            if graph_state == "void":
+                temporal_state = "void"
+            elif turn_count < thresholds.min_turns:
+                temporal_state = "warming_up"
+            else:
+                temporal_state = "active"
+        except Exception:
+            # Fallback: coarse classification with no external dependency
+            if graph_state == "void":
+                temporal_state = "void"
+            elif turn_count <= 1:
+                temporal_state = "warming_up"
+            else:
+                temporal_state = "active"
+
+        # Build temporal_usm@1-compatible payload (extended with observability fields)
         temporal_payload = {
             "stream_id": session_id,
             "timestamp": time.time(),
@@ -719,6 +743,8 @@ class DeltaThreshProcessor:
             "lambda_used": lambda_,
             "mode": mode,
             "rho_equilibrium": rho_eq,
+            "turn_count": turn_count,
+            "temporal_state": temporal_state,
         }
 
         return temporal_payload
