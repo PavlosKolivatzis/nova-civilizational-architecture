@@ -505,6 +505,19 @@ NOVA_ENABLE_TEMPORAL_GOVERNANCE (master switch)
 
 ---
 
+## Phase 16 – Open Calibration Questions
+
+**Q16-01 – Short, low-semantic sessions with low rho_t**
+
+For short, low-semantic sessions where rho_t is low and C_t is null,
+should `extraction_present=True` require additional conditions (e.g.
+minimum semantic mass, longer duration, or non-null C_t), or is asymmetry
+alone sufficient?
+
+**Status:** Open (answer required before Phase 16 activation).
+
+---
+
 **Document status:** D, A, B, and C locked. Governance remains off (design-only phase).
 
 ---

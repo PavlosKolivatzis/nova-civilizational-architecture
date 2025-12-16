@@ -757,6 +757,36 @@ if FastAPI is not None:
             last = governance_engine.evaluate({}, record=False)
         return last.to_dict()
 
+    @app.post("/dev/slot02")
+    async def dev_slot02(payload: Optional[dict] = None):
+        """
+        Development-only endpoint to exercise Slot02 ΔTHRESH directly.
+
+        Observability-only:
+        - Invokes Slot02 via Slot2DeltaThreshAdapter.
+        - Returns bias_report and temporal_usm for the given content/session_id.
+        - No governance integration; NOVA_ENABLE_TEMPORAL_GOVERNANCE must remain 0.
+        """
+        payload = payload or {}
+        content = str(payload.get("content", ""))
+        session_id = str(payload.get("session_id", "dev-session"))
+
+        adapter = Slot2DeltaThreshAdapter()
+        if not adapter.available:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="slot02_deltathresh unavailable",
+            )
+
+        # Synchronous call into Slot02; adapter handles exceptions internally.
+        result = adapter.process(content=content, session_id=session_id)
+
+        return {
+            "session_id": session_id,
+            "bias_report": getattr(result, "bias_report", None),
+            "temporal_usm": getattr(result, "temporal_usm", None),
+        }
+
     # Phase 10: FEP (Federated Ethical Protocol) endpoints
     @app.post("/phase10/fep/proposal")
     @limiter.limit("10/minute") if limiter else lambda f: f  # CR-3: DoS protection
