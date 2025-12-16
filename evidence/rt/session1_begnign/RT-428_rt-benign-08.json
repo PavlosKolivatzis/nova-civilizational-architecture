@@ -1,0 +1,75 @@
+{
+  "rt_id": "RT-428",
+  "session_id": "rt-benign-08",
+  "capture_mode": "monitor",
+  "timestamp": "2025-12-16T04:14:08Z",
+  "nova_version": "phase14_checkpoint-35-g9f49ae1",
+  "capture": {
+    "git_sha": "9f49ae118191996dc7ea9a2ed4375657da243b36-dirty",
+    "tool_version": "0.1.0",
+    "source": "prometheus_metrics",
+    "endpoint": ""
+  },
+  "flags": {
+    "NOVA_ENABLE_BIAS_DETECTION": "",
+    "NOVA_ENABLE_USM_TEMPORAL": "",
+    "NOVA_ENABLE_TEMPORAL_GOVERNANCE": ""
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "extraction_present": null,
+      "rho_temporal": 0.0,
+      "coherence_temporal": null,
+      "temporal_state": "warming_up",
+      "timestamp": "2025-12-16T04:13:57Z"
+    },
+    {
+      "turn": 2,
+      "extraction_present": null,
+      "rho_temporal": 0.0,
+      "coherence_temporal": null,
+      "temporal_state": "warming_up",
+      "timestamp": "2025-12-16T04:13:57Z"
+    },
+    {
+      "turn": 3,
+      "extraction_present": true,
+      "rho_temporal": 0.0,
+      "coherence_temporal": null,
+      "temporal_state": "active",
+      "timestamp": "2025-12-16T04:13:57Z"
+    },
+    {
+      "turn": 4,
+      "extraction_present": true,
+      "rho_temporal": 0.0,
+      "coherence_temporal": null,
+      "temporal_state": "active",
+      "timestamp": "2025-12-16T04:13:58Z"
+    },
+    {
+      "turn": 5,
+      "extraction_present": true,
+      "rho_temporal": 0.0,
+      "coherence_temporal": null,
+      "temporal_state": "active",
+      "timestamp": "2025-12-16T04:13:58Z"
+    }
+  ],
+  "operator_annotation": {
+    "extraction_present": null,
+    "pattern_type": null,
+    "complexity": null,
+    "notes": "",
+    "operator": "unknown",
+    "confidence": null
+  },
+  "metadata": {
+    "total_turns": 5,
+    "capture_duration_seconds": 1.056804895401001,
+    "final_rho": 0.0,
+    "final_coherence": null,
+    "incomplete": false
+  }
+}

@@ -245,6 +245,25 @@ When temporal USM is enabled (`NOVA_ENABLE_USM_TEMPORAL=1`) and bias detection i
   - The field MUST be deterministic under replay given the same temporal USM inputs.
 ```
 
+#### Interpretation (current semantics)
+
+**Important:** In Phase 14/15, `extraction_present` is a **structural** signal, not a harm classifier.
+
+- `extraction_present=True` currently means:
+  - Temporal USM has detected **low-reciprocity / asymmetric structure** over time (low `rho_temporal`), after the warm-up window (`turn_count >= min_turns`) and outside VOID.
+- It does **not** yet mean:
+  - "Harmful extraction" has been confirmed or that intent is known.
+
+Empirical calibration (RT-373 and the `rt-benign-*` / `rt-gaslight-*` sets) shows:
+
+- Short, low-semantic benign sessions and short, explicitly extractive (gaslighting-pattern) sessions can share the same temporal signature:
+  - `rho_temporal ≈ 0.0`, `C_temporal = null`, `extraction_present=True`.
+- This is treated as a **known calibration boundary**:
+  - temporal USM and `extraction_present` detect **semantic asymmetry**,
+  - while discrimination between benign vs harmful extraction is reserved for later phases (e.g., Phase 16) and additional axes (semantic mass, pressure, agency, etc.).
+
+This clarification is semantic only; it does not change the 3-valued logic, thresholds, or runtime behaviour.
+
 ---
 
 ## 6. Feature Flags

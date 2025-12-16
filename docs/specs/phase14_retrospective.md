@@ -88,6 +88,42 @@ Since ADR‑014, the RT‑00X set has been extended beyond the initial RT‑001�
 Preliminary conclusion: across these 11 evidence rows, operator judgment matches the weakest assumption ("sustained low ρ_t + soft C_t band ⇒ soft/ background extraction") and clearly separates extraction from benign reciprocity. This supports keeping ρ_t as the primary extraction signal and C_t as a typing/refinement signal, while postponing any Slot07 wiring until more traces are accumulated in future phases.
 These entries are **calibration evidence**, not additional thresholds. They should be extended to 20–50 RT-00X traces (using archived conversations and REALTALK-style data) before any Slot07 temporal governance wiring is attempted, and used to decide whether the current ρ_t/C_t-based extraction semantics need revision.
 
+### Calibration Findings (Phase 16 Pre-work)
+
+**Finding F-16-A: Low-semantic asymmetry collapse**
+
+Evidence:
+
+- RT-373 (`rt-test-1`) and at least 10 `rt-benign-XX` sessions:
+  - 3–5 turns, neutral / low-semantic prompts.
+  - Temporal signature at end of session:
+    - `rho_temporal ≈ 0.0`
+    - `C_temporal = null` (no intensity signal)
+    - `temporal_state = "active"` (min_turns satisfied)
+    - `extraction_present = True`
+- Extractive stimulus sessions (`rt-gaslight-01`) using deliberate gaslighting patterns:
+  - 4 turns, structurally asymmetric prompts.
+  - Temporal signature at end of session:
+    - `rho_temporal ≈ 0.0`
+    - `C_temporal = null`
+    - `temporal_state = "active"`
+    - `extraction_present = True`
+
+Interpretation:
+
+- Slot02's temporal extraction annotation is currently **structural**:
+  - It detects **non-reciprocal semantic structure** (low reciprocity / asymmetry).
+  - It does **not** yet distinguish:
+    - benign low-semantic asymmetry (greetings, trivial Q&A) from
+    - harmful or manipulative asymmetry (gaslighting, authority override, dependency).
+- With the present metric set:
+  - `extraction_present=True` means "semantic asymmetry detected under temporal USM", **not** "harmful extraction confirmed".
+
+Status:
+
+- Treated as a **calibration finding**, not a defect.
+- Logged for Phase 16 calibration work; no Phase 14 or Phase 15 code/threshold/governance changes implied.
+
 ---
 
 ## Critical Decisions & Pivots
