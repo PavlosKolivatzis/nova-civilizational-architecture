@@ -16,6 +16,39 @@ from typing import List, Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 
+def build_provenance_metadata(
+    session_id: str,
+    turn_index: int,
+    primitives_detected: List[str],
+    primitives_uninvited: List[str],
+    gate_reasons: List[str],
+    context_length: int,
+) -> Dict[str, Any]:
+    """
+    Build provenance metadata for a gated signal (C3: metadata-only, no behavior change).
+
+    Args:
+        session_id: Conversation session identifier
+        turn_index: Index of this turn in conversation history
+        primitives_detected: All primitives found by Phase 16 (context-blind)
+        primitives_uninvited: Primitives that failed consent gate (Phase 17)
+        gate_reasons: Human-readable reasons for gate decisions
+        context_length: Number of turns in conversation history
+
+    Returns:
+        Provenance metadata dict (lossless projection of existing state)
+    """
+    return {
+        "session_id": session_id,
+        "turn_index": turn_index,
+        "phase16_primitives_detected": primitives_detected,
+        "phase17_primitives_uninvited": primitives_uninvited,
+        "consent_gate_enabled": is_consent_gate_enabled(),
+        "gate_reasons": gate_reasons,
+        "context_length": context_length,
+    }
+
+
 def is_consent_gate_enabled() -> bool:
     """
     Check if Phase 17 consent gate is enabled.
@@ -29,6 +62,8 @@ def is_consent_gate_enabled() -> bool:
 def analyze_turn_with_consent_gate(
     turn_content: str,
     conversation_history: List[Dict[str, str]],
+    session_id: Optional[str] = None,
+    turn_index: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Analyze a single assistant turn for agency pressure with consent gate.
@@ -42,6 +77,8 @@ def analyze_turn_with_consent_gate(
         turn_content: Assistant's turn text
         conversation_history: Full conversation up to and including current turn
             List[{"role": "user"|"assistant", "content": str}]
+        session_id: Optional session identifier (for provenance metadata)
+        turn_index: Optional turn index (for provenance metadata)
 
     Returns:
         Dict containing:
@@ -49,6 +86,7 @@ def analyze_turn_with_consent_gate(
             - primitives_uninvited: List[str] (primitives that are uninvited)
             - consent_results: List[GateResult] (consent gate results per primitive)
             - is_pressured: bool (True if any uninvited primitive)
+            - provenance: Dict (if session_id and turn_index provided, C3 metadata)
 
     Example:
         >>> history = [
@@ -76,12 +114,25 @@ def analyze_turn_with_consent_gate(
 
     if not primitives_detected:
         # No primitives detected → not pressured
-        return {
+        result = {
             "primitives_detected": [],
             "primitives_uninvited": [],
             "consent_results": [],
             "is_pressured": False,
         }
+
+        # C3: Attach provenance metadata if session info provided
+        if session_id is not None and turn_index is not None:
+            result["provenance"] = build_provenance_metadata(
+                session_id=session_id,
+                turn_index=turn_index,
+                primitives_detected=[],
+                primitives_uninvited=[],
+                gate_reasons=["no_primitives_detected"],
+                context_length=len(conversation_history),
+            )
+
+        return result
 
     # Step 2: Check consent gate (Phase 17, context-aware) if enabled
     if is_consent_gate_enabled():
@@ -100,12 +151,26 @@ def analyze_turn_with_consent_gate(
 
             is_pressured = len(primitives_uninvited) > 0
 
-            return {
+            result = {
                 "primitives_detected": primitives_detected,
                 "primitives_uninvited": primitives_uninvited,
                 "consent_results": consent_results,
                 "is_pressured": is_pressured,
             }
+
+            # C3: Attach provenance metadata if session info provided
+            if session_id is not None and turn_index is not None:
+                gate_reasons = [str(gr) for gr in consent_results]
+                result["provenance"] = build_provenance_metadata(
+                    session_id=session_id,
+                    turn_index=turn_index,
+                    primitives_detected=primitives_detected,
+                    primitives_uninvited=primitives_uninvited,
+                    gate_reasons=gate_reasons,
+                    context_length=len(conversation_history),
+                )
+
+            return result
 
         except Exception as exc:
             logger.error(f"Failed to check consent gate: {exc}")
@@ -121,13 +186,26 @@ def analyze_turn_with_consent_gate(
         # Naive detection (structure-only, falsified by RT-862)
         # All detected primitives are treated as pressured
         logger.debug("Consent gate disabled, using naive detection")
-        return {
+        result = {
             "primitives_detected": primitives_detected,
             "primitives_uninvited": primitives_detected,  # naive: all primitives = pressured
             "consent_results": [],
             "is_pressured": len(primitives_detected) > 0,
             "mode": "naive",
         }
+
+        # C3: Attach provenance metadata if session info provided
+        if session_id is not None and turn_index is not None:
+            result["provenance"] = build_provenance_metadata(
+                session_id=session_id,
+                turn_index=turn_index,
+                primitives_detected=primitives_detected,
+                primitives_uninvited=primitives_detected,  # naive mode
+                gate_reasons=["naive_mode: all primitives treated as uninvited"],
+                context_length=len(conversation_history),
+            )
+
+        return result
 
 
 def compute_session_agency_pressure(

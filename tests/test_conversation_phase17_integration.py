@@ -297,3 +297,118 @@ class TestConsentGateFlag:
                 os.environ["NOVA_ENABLE_CONSENT_GATE"] = original
             elif "NOVA_ENABLE_CONSENT_GATE" in os.environ:
                 del os.environ["NOVA_ENABLE_CONSENT_GATE"]
+
+
+class TestC3ProvenanceMetadata:
+    """Test C3 provenance metadata (metadata-only, no behavior change)."""
+
+    def test_metadata_presence(self):
+        """
+        Test 1: Verify provenance metadata is attached to assistant turns.
+
+        RT: RT-862 (invited delegation)
+        """
+        session = ConversationSession(session_id="c3-test-presence")
+        session.add_turn("user", "I need help setting up the CI/CD pipeline")
+        turn = session.add_assistant_turn_with_provenance(
+            "I'll handle the Docker configuration for you."
+        )
+
+        # Verify provenance metadata exists
+        assert "provenance" in turn.metadata
+        provenance = turn.metadata["provenance"]
+
+        # Verify all required keys exist
+        required_keys = [
+            "session_id",
+            "turn_index",
+            "phase16_primitives_detected",
+            "phase17_primitives_uninvited",
+            "consent_gate_enabled",
+            "gate_reasons",
+            "context_length",
+        ]
+        for key in required_keys:
+            assert key in provenance, f"Missing required key: {key}"
+
+    def test_metadata_correctness_rt864(self):
+        """
+        Test 2: Verify provenance metadata correctness for RT-864 (scope violation).
+
+        Validates that metadata accurately reflects Phase 16 detection and Phase 17 routing.
+        """
+        session = ConversationSession(session_id="c3-test-rt864")
+        session.add_turn("user", "Can you fix the typo in the README?")
+        turn = session.add_assistant_turn_with_provenance(
+            "I'll rewrite the entire documentation structure and delete your old files."
+        )
+
+        provenance = turn.metadata["provenance"]
+
+        # Verify session context
+        assert provenance["session_id"] == "c3-test-rt864"
+        assert provenance["turn_index"] == 1  # Second turn (index 1)
+        assert provenance["context_length"] == 2  # User + assistant turn
+
+        # Verify primitives (if detected)
+        if provenance["phase16_primitives_detected"]:
+            # Decision Substitution or Scope Expansion expected
+            assert len(provenance["phase16_primitives_detected"]) > 0
+
+            # If consent gate enabled, should flag as scope violation
+            if provenance["consent_gate_enabled"]:
+                assert len(provenance["phase17_primitives_uninvited"]) > 0
+            else:
+                # Naive mode: all detected = uninvited
+                assert (
+                    provenance["phase16_primitives_detected"]
+                    == provenance["phase17_primitives_uninvited"]
+                )
+
+    def test_behavior_invariance(self):
+        """
+        Test 3: Verify provenance does not change A_p computation.
+
+        Critical invariant: Metadata is observability-only, not control.
+        """
+        # Build RT-862 scenario (invited delegation)
+        session_with_prov = ConversationSession(session_id="c3-invariance-prov")
+        session_with_prov.add_turn(
+            "user", "I need help setting up the CI/CD pipeline"
+        )
+        session_with_prov.add_assistant_turn_with_provenance(
+            "I'll handle the Docker configuration for you."
+        )
+
+        session_without_prov = ConversationSession(session_id="c3-invariance-no-prov")
+        session_without_prov.add_turn(
+            "user", "I need help setting up the CI/CD pipeline"
+        )
+        session_without_prov.add_turn(
+            "assistant", "I'll handle the Docker configuration for you."
+        )
+
+        # Compute A_p for both sessions
+        history_with_prov = session_with_prov.get_history()
+        history_without_prov = session_without_prov.get_history()
+
+        result_with_prov = compute_session_agency_pressure(
+            history_with_prov, extraction_present=True
+        )
+        result_without_prov = compute_session_agency_pressure(
+            history_without_prov, extraction_present=True
+        )
+
+        # CRITICAL: A_p must be identical
+        assert result_with_prov["A_p"] == result_without_prov["A_p"]
+        assert result_with_prov["harm_status"] == result_without_prov["harm_status"]
+        assert (
+            result_with_prov["pressured_turns"]
+            == result_without_prov["pressured_turns"]
+        )
+
+        # Provenance should exist in session but not affect computation
+        if len(session_with_prov.turns) > 1:
+            assistant_turn = session_with_prov.turns[1]
+            if assistant_turn.role == "assistant":
+                assert "provenance" in assistant_turn.metadata

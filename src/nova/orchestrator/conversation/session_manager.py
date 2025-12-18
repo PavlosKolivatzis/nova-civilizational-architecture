@@ -108,6 +108,47 @@ class ConversationSession:
         """
         return [turn.to_dict() for turn in self.turns[: turn_index + 1]]
 
+    def add_assistant_turn_with_provenance(self, content: str) -> Turn:
+        """
+        Add an assistant turn with C3 provenance metadata.
+
+        Analyzes the turn using Phase 17 consent gate and attaches
+        provenance metadata (session_id, primitives, gate reasons, etc.).
+
+        Args:
+            content: Assistant turn text content
+
+        Returns:
+            Created Turn object with provenance metadata
+
+        Note:
+            C3 metadata-only extension. Does not change behavior or policy.
+        """
+        from nova.orchestrator.conversation.phase17_integration import (
+            analyze_turn_with_consent_gate,
+        )
+
+        # Get current conversation history before adding this turn
+        history_before = self.get_history()
+        turn_index = len(self.turns)
+
+        # Analyze turn with consent gate
+        analysis = analyze_turn_with_consent_gate(
+            turn_content=content,
+            conversation_history=history_before
+            + [{"role": "assistant", "content": content}],
+            session_id=self.session_id,
+            turn_index=turn_index,
+        )
+
+        # Extract provenance metadata (if present)
+        metadata = {}
+        if "provenance" in analysis:
+            metadata["provenance"] = analysis["provenance"]
+
+        # Add turn with metadata
+        return self.add_turn("assistant", content, metadata=metadata)
+
 
 class SessionManager:
     """
