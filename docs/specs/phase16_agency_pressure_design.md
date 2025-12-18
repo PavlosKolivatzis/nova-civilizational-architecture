@@ -595,6 +595,60 @@ Each is **binary per turn** (present / absent).
 
 ---
 
+## Step 4b – Related Literature (Provenance)
+
+The five structural primitives correspond to established safety and ethics concepts in academic literature. This mapping provides **external validation** and **governance provenance**, but does NOT change the primitive definitions or detection methods.
+
+| Primitive (Structural) | Literature Concept (Semantic) | Description | Reference Domain |
+|------------------------|-------------------------------|-------------|------------------|
+| **Authority Override** | Epistemic Trespassing | Expert/AI passing judgment in domains where they lack standing (e.g., user's values, preferences, life choices) | Philosophy of expertise |
+| **Reality Invalidation** | Testimonial Injustice | Systematically assigning credibility deficits to the user's perception or memory | Epistemic injustice theory |
+| **Decision Substitution** | Algorithmic Paternalism | AI assumes role of "special purpose human," overriding user autonomy "for their own good" | AI ethics, soft law |
+| **Option Collapse** | Dark Patterns (Obstruction) | Deceptive design narrowing choice architecture, making user's preferred path difficult or impossible | UX ethics, deceptive design |
+| **Dependency Induction** | Parasocial Dynamics | Feedback loop where AI replaces human social validation, leading to isolation | Social psychology, AI safety |
+
+### Key Distinction: Structure vs. Semantics
+
+**Phase 16 primitives remain structural** (detectable via patterns like `"Trust me, I'm the expert"`).
+
+**Literature concepts are semantic** (require domain knowledge, standing detection, intent inference).
+
+**Example boundary:**
+- **Structural detection:** `"You don't understand, let me decide"` → Decision Substitution (detectable)
+- **Semantic refinement:** *Is this trespassing?* → Requires knowing if AI has standing in this domain (code syntax vs. moral reasoning)
+
+**Design decision:** Phase 16 Step 5+ will NOT implement semantic refinements. Literature is cited for:
+1. External validation (primitives correspond to known harms)
+2. Governance review (citable provenance for safety audits)
+3. Gap detection (see Finding F-16-B below)
+
+### Finding F-16-B: Sycophancy Gap (Known Limitation)
+
+**Observation:** Current primitives detect *hostile* agency pressure:
+- Reality Invalidation (gaslighting)
+- Authority Override (coercion)
+- Decision Substitution (domination)
+
+**Gap:** *Positive* agency pressure not yet modeled:
+- **Sycophancy** (excessive agreement, flattery: "You're amazing," "Only I understand you")
+- **Love-bombing** (toxic positivity to isolate user from external validation)
+- **Parasocial pre-dependency** (building trust → inducing reliance)
+
+**Why this matters:**
+- Research shows dependency often starts with sycophancy, not hostility
+- High A_p isn't only coercion; it can be toxic validation
+
+**Status:** Known limitation, documented as Finding F-16-B.
+
+**Deferral rationale:**
+- Phase 16 focuses on asymmetry + hostile pressure (resolves F-16-A)
+- Sycophancy detection requires positive sentiment analysis (different primitive set)
+- Defer to Phase 17 (if required) or governance policy (flag excessive validation separately)
+
+**Mitigation:** Current primitives still detect downstream effects (Dependency Induction captures reliance, regardless of whether it started with hostility or flattery).
+
+---
+
 ## Step 5+ – Math & Integration (Deferred)
 
 **Status:** NOT STARTED (awaiting Step 0-4 validation)
