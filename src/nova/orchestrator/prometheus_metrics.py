@@ -243,6 +243,33 @@ slot02_temporal_state_gauge = _get_or_register_gauge(
     registry=_INTERNAL_REGISTRY,
 )
 
+# Phase 16 Agency Pressure metrics (flag-gated: NOVA_ENABLE_AGENCY_PRESSURE)
+# NOTE: High-cardinality labels (session_id, turn). Intended for evidentiary runs.
+phase16_agency_pressure_A_p_gauge = _get_or_register_gauge(
+    "nova_agency_pressure_A_p",
+    "Phase 16 agency pressure scalar A_p (0.0–1.0; turn-by-turn)",
+    labelnames=["session_id", "turn"],
+    registry=_INTERNAL_REGISTRY,
+)
+phase16_agency_pressure_harm_status_gauge = _get_or_register_gauge(
+    "nova_agency_pressure_harm_status",
+    "Phase 16 harm status (0=benign, 1=asymmetric_benign, 2=observation, 3=concern, 4=harm)",
+    labelnames=["session_id"],
+    registry=_INTERNAL_REGISTRY,
+)
+phase16_agency_pressure_escalation_gauge = _get_or_register_gauge(
+    "nova_agency_pressure_escalation",
+    "Phase 16 escalation trend (0=N/A, 1=stable, 2=de-escalating, 3=escalating)",
+    labelnames=["session_id"],
+    registry=_INTERNAL_REGISTRY,
+)
+phase16_agency_pressure_primitives_counter = _get_or_register_counter(
+    "nova_agency_pressure_primitives_total",
+    "Phase 16 primitive detections (cumulative count by type)",
+    labelnames=["session_id", "primitive"],
+    registry=_INTERNAL_REGISTRY,
+)
+
 # Predictive metrics (Phase-7)
 predictive_collapse_risk_gauge = _get_or_register_gauge(
     "nova_predictive_collapse_risk",
@@ -1732,5 +1759,68 @@ def record_slot02_temporal_metrics(
             state_val = -1.0
 
     slot02_temporal_state_gauge.labels(session_id=session_id, turn=turn_label).set(state_val)
+
+    # WARNING: session_id is high-cardinality; intended for short evidence capture runs only.
+
+
+def record_phase16_agency_pressure_metrics(
+    session_id: str,
+    agency_pressure_result: Any,
+) -> None:
+    """
+    Record Phase 16 agency pressure metrics for Prometheus.
+
+    Observability-only (flag-gated):
+    - Guarded by NOVA_ENABLE_AGENCY_PRESSURE.
+    - Exports A_p, harm_status, escalation_trend, and primitive counts.
+    - No governance impact (observability layer only in Step 6).
+
+    Args:
+        session_id: Session identifier
+        agency_pressure_result: AgencyPressureResult from Phase 16 detector
+    """
+    # Basic guard
+    if not _env_truthy("NOVA_ENABLE_AGENCY_PRESSURE"):
+        return
+    if agency_pressure_result is None:
+        return
+
+    # Export turn-by-turn A_p (running accumulation)
+    turn_by_turn_A_p = getattr(agency_pressure_result, "turn_by_turn_A_p", [])
+    for turn_idx, A_p_val in enumerate(turn_by_turn_A_p):
+        turn_label = str(turn_idx + 1)  # 1-indexed turns
+        phase16_agency_pressure_A_p_gauge.labels(
+            session_id=session_id, turn=turn_label
+        ).set(A_p_val)
+
+    # Export harm status (enum: 0=benign, 1=asymmetric_benign, 2=observation, 3=concern, 4=harm)
+    harm_status = getattr(agency_pressure_result, "harm_status", "benign")
+    status_map = {
+        "benign": 0.0,
+        "asymmetric_benign": 1.0,
+        "observation": 2.0,
+        "concern": 3.0,
+        "harm": 4.0,
+    }
+    harm_status_val = status_map.get(harm_status, 0.0)
+    phase16_agency_pressure_harm_status_gauge.labels(session_id=session_id).set(harm_status_val)
+
+    # Export escalation trend (enum: 0=N/A, 1=stable, 2=de-escalating, 3=escalating)
+    escalation_trend = getattr(agency_pressure_result, "escalation_trend", "N/A")
+    trend_map = {
+        "N/A": 0.0,
+        "stable": 1.0,
+        "de-escalating": 2.0,
+        "escalating": 3.0,
+    }
+    escalation_val = trend_map.get(escalation_trend, 0.0)
+    phase16_agency_pressure_escalation_gauge.labels(session_id=session_id).set(escalation_val)
+
+    # Export primitive detection counts (cumulative)
+    primitives_detected = getattr(agency_pressure_result, "primitives_detected", [])
+    for primitive_name in primitives_detected:
+        phase16_agency_pressure_primitives_counter.labels(
+            session_id=session_id, primitive=primitive_name
+        ).inc()
 
     # WARNING: session_id is high-cardinality; intended for short evidence capture runs only.
