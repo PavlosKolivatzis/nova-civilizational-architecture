@@ -796,12 +796,12 @@ Phase 16 provides `status` and `escalation_trend` to Slot07 for regime decisions
 
 **What was delivered:**
 
-✅ **Threshold table:** 4 zones (benign, observation, concern, harm) with evidence-based boundaries (0.33, 0.67)
-✅ **Harm formula:** Locked Python function combining extraction_present (Slot02) and A_p (Phase 16)
-✅ **Escalation stages:** 5 statuses with governance integration (permissive → restrictive → safety_mode)
-✅ **Validation:** 15 RTs tested, 100% threshold alignment, edge cases validated
+✅ **Threshold concepts:** 4 zones (benign, observation, concern, harm) with evidence-based boundaries (0.33, 0.67) — design-only
+✅ **Harm formula (naive):** Python function combining extraction_present (Slot02) and A_p (Phase 16) — **does not implement "uninvited" gate**
+✅ **Escalation stages:** 5 statuses with governance mapping (permissive → restrictive → safety_mode) — conceptual only
+✅ **Validation:** 15 RTs tested on naive model, 100% threshold alignment
 
-**Status:** Step 5 complete. Thresholds locked, formula defined, escalation logic validated.
+**Status:** Step 5 complete (design). Thresholds defined conceptually, formula specified (naive version), escalation logic mapped. **Non-operative pending F-16-C formalization.**
 
 **Next steps (Step 6+):**
 1. Implement A_p computation in Phase 16 layer
@@ -812,39 +812,35 @@ Phase 16 provides `status` and `escalation_trend` to Slot07 for regime decisions
 
 ---
 
-## Step 6 – Implementation (Complete)
+## Step 6 – Naive Detector Prototype (Falsified by Step 7)
 
-**Status:** ✅ COMPLETE
+**Status:** ⚠️ FALSIFIED (structure-only model, does not implement F-16-C)
 
 **What was delivered:**
 
-✅ **Phase 16 core modules** (`src/nova/phase16/`):
-- `harm_formula.py`: detect_harm_status() locked formula (Step 5.2)
-- `primitives.py`: 5 agency pressure primitives (regex detection)
+⚠️ **Phase 16 naive prototype** (`src/nova/phase16/`):
+- `harm_formula.py`: detect_harm_status() — **naive version, no "uninvited" gate**
+- `primitives.py`: 5 agency pressure primitives (regex detection only)
 - `models.py`: AgencyPressureResult data model
-- `core.py`: AgencyPressureDetector (turn-by-turn A_p computation)
-- `session_analyzer.py`: SessionAnalyzer (integration layer with governance mapping)
+- `core.py`: AgencyPressureDetector (turn-by-turn A_p computation, structure-only)
+- `session_analyzer.py`: SessionAnalyzer (naive integration, no consent checking)
 
-✅ **Prometheus metrics** (`src/nova/orchestrator/prometheus_metrics.py`):
-- `nova_agency_pressure_A_p`: Turn-by-turn A_p gauge
-- `nova_agency_pressure_harm_status`: Harm status enum (0-4)
-- `nova_agency_pressure_escalation`: Escalation trend enum (0-3)
-- `nova_agency_pressure_primitives_total`: Primitive detection counter
-- `record_phase16_agency_pressure_metrics()`: Export function (flag-gated)
+⚠️ **Prometheus metrics** (`src/nova/orchestrator/prometheus_metrics.py`):
+- Metrics defined but **not validated** against F-16-C invariant
+- Export function assumes naive A_p (no uninvited gate)
 
-✅ **Comprehensive test suite** (`tests/test_phase16_agency_pressure.py`):
-- 25 tests: 7 harm_formula, 8 primitives, 6 core detector, 4 session_analyzer
-- 100% test pass rate ✅
-- Full coverage: thresholds, primitives, A_p computation, governance mapping
+⚠️ **Test suite validates NAIVE model only** (`tests/test_phase16_agency_pressure.py`):
+- 25 tests: validate structure-only hypothesis
+- **Does NOT test "uninvited" gate** (gate not implemented)
+- Tests pass but test the WRONG MODEL (falsified by RT-862)
 
-✅ **Governance integration** (SessionAnalyzer):
-- Maps harm_status → Slot07 regime recommendations (Step 5.3)
-- benign/asymmetric_benign/observation → permissive
-- concern → balanced
-- harm (A_p < 1.0) → restrictive
-- harm (A_p = 1.0) → safety_mode
+⚠️ **Governance mapping (conceptual only)**:
+- Maps harm_status → Slot07 regime recommendations
+- **Not validated** (depends on correct A_p, which requires F-16-C)
 
-**Feature flag:** NOVA_ENABLE_AGENCY_PRESSURE (default off, opt-in for evidentiary runs)
+**Feature flag:** NOVA_ENABLE_AGENCY_PRESSURE (default off, correctly non-operative)
+
+**Critical limitation:** This implementation tests whether primitives CAN BE DETECTED structurally. It does NOT implement the "uninvited agency pressure" invariant discovered in Step 7. RT-862 (task delegation) falsifies this naive model.
 
 **Usage (evidentiary RT analysis):**
 ```python
@@ -1017,9 +1013,9 @@ Where "uninvited" means:
 ✅ **Step 3:** 15 RTs manually annotated (3 benign A_p=0.0, 7 extractive A_p=1.0, 5 mid-range A_p ∈ {0.25, 0.33, 0.5, 0.67})
 ✅ **Step 4:** Hypothesis validated (A_p discriminates within ρ_t=0.0 band)
 ✅ **Step 4b:** Related literature mapped (external validation, Finding F-16-B documented)
-✅ **Step 5:** Thresholds calibrated (θ_concern=0.33, θ_harm=0.67), harm formula locked, escalation stages defined
-✅ **Step 6:** Core implementation complete (modules, metrics, tests, integration)
-✅ **Step 7:** Boundary validation complete (Finding F-16-C: uninvited agency pressure invariant)
+✅ **Step 5:** Threshold concepts defined (θ_concern=0.33, θ_harm=0.67) — design-only, non-operative
+✅ **Step 6:** Naive detector prototype implemented (structure-only, no "uninvited" gate) — falsified by Step 7
+✅ **Step 7:** Boundary validation complete (Finding F-16-C: uninvited agency pressure invariant) — **falsifies Step 6 naive model**
 
 **Key findings:**
 - A_p resolves F-16-A (benign vs extractive collapse)
@@ -1030,13 +1026,13 @@ Where "uninvited" means:
 - Bidirectional dynamics: escalation + de-escalation patterns observed
 - Running A_p observable (turn-by-turn pressure evolution)
 - Critical boundary validated (factual correction ≠ Reality Invalidation)
-- Thresholds validated: 100% evidence alignment, edge cases behave as expected
-- Harm formula: multiplicative (asymmetry × pressure), 5 statuses, governance-ready
-- 25 tests passing: harm_formula, primitives, core detector, session_analyzer ✅
+- Thresholds (conceptual): 100% evidence alignment on naive model, edge cases behave as expected
+- Harm formula (naive): multiplicative (asymmetry × pressure), 5 statuses — **requires uninvited gate (F-16-C)**
+- 25 tests passing: validate naive structure-only model (does NOT implement F-16-C) ⚠️
 - **Finding F-16-C:** Primitive detection alone insufficient — requires "uninvited" structural gate
 - **Boundary falsification:** RT-862 (task delegation) proves harm = asymmetry × **uninvited** agency pressure
 
-**Status:** Design + implementation + boundary validation complete through Step 7. Critical invariant discovered (Finding F-16-C).
+**Status:** Design complete through Step 7. Naive prototype implemented (Step 6) but **falsified** by boundary validation (Step 7). Implementation explicitly deferred pending formal specification of "uninvited" structural gates.
 
 **Next steps (Step 8+, deferred):**
 1. Formalize "uninvited" structural checks per primitive (requires additional evidence patterns)
