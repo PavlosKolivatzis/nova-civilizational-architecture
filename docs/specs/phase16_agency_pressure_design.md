@@ -812,17 +812,70 @@ Phase 16 provides `status` and `escalation_trend` to Slot07 for regime decisions
 
 ---
 
-## Step 6+ – Implementation & Integration (Deferred)
+## Step 6 – Implementation (Complete)
 
-**Status:** NOT STARTED (awaiting Step 5 completion)
+**Status:** ✅ COMPLETE
+
+**What was delivered:**
+
+✅ **Phase 16 core modules** (`src/nova/phase16/`):
+- `harm_formula.py`: detect_harm_status() locked formula (Step 5.2)
+- `primitives.py`: 5 agency pressure primitives (regex detection)
+- `models.py`: AgencyPressureResult data model
+- `core.py`: AgencyPressureDetector (turn-by-turn A_p computation)
+- `session_analyzer.py`: SessionAnalyzer (integration layer with governance mapping)
+
+✅ **Prometheus metrics** (`src/nova/orchestrator/prometheus_metrics.py`):
+- `nova_agency_pressure_A_p`: Turn-by-turn A_p gauge
+- `nova_agency_pressure_harm_status`: Harm status enum (0-4)
+- `nova_agency_pressure_escalation`: Escalation trend enum (0-3)
+- `nova_agency_pressure_primitives_total`: Primitive detection counter
+- `record_phase16_agency_pressure_metrics()`: Export function (flag-gated)
+
+✅ **Comprehensive test suite** (`tests/test_phase16_agency_pressure.py`):
+- 25 tests: 7 harm_formula, 8 primitives, 6 core detector, 4 session_analyzer
+- 100% test pass rate ✅
+- Full coverage: thresholds, primitives, A_p computation, governance mapping
+
+✅ **Governance integration** (SessionAnalyzer):
+- Maps harm_status → Slot07 regime recommendations (Step 5.3)
+- benign/asymmetric_benign/observation → permissive
+- concern → balanced
+- harm (A_p < 1.0) → restrictive
+- harm (A_p = 1.0) → safety_mode
+
+**Feature flag:** NOVA_ENABLE_AGENCY_PRESSURE (default off, opt-in for evidentiary runs)
+
+**Usage (evidentiary RT analysis):**
+```python
+from nova.phase16.session_analyzer import SessionAnalyzer
+
+analyzer = SessionAnalyzer()
+result = analyzer.analyze_session(
+    session_id="RT-861",
+    turns=["I'll decide for you.", "Trust me, I'm the expert."],
+    extraction_present=True,
+    export_metrics=True  # Requires NOVA_ENABLE_AGENCY_PRESSURE=1
+)
+
+print(result["agency_pressure_result"].A_p)  # 1.0
+print(result["harm_status"])  # "harm"
+print(result["governance_recommendation"])  # "safety_mode"
+```
+
+---
+
+## Step 7+ – Real-Time Integration (Deferred)
+
+**Status:** NOT STARTED (awaiting Step 6 validation)
 
 **Scope for future work:**
-- Implement A_p computation in Phase 16 layer (automated calculation)
-- Add automated primitive detection (keyword/regex patterns for 5 primitives)
-- Wire to Slot07 governance (integrate status and escalation_trend)
-- Add Prometheus metrics (A_p, harm_status, escalation_trend, primitive_counts)
-- Implement real-time monitoring and turn-by-turn A_p updates
-- Create governance hooks (regime transitions based on harm_status)
+- Integrate SessionAnalyzer into orchestrator (real-time per-session analysis)
+- Wire Slot02 extraction_present → Phase 16 → Slot07 governance (live pipeline)
+- Implement real-time turn-by-turn A_p updates during conversation
+- Create governance hooks (automatic regime transitions based on harm_status)
+- Expand primitive detection (ML-based, context-aware patterns)
+- Add operator controls (manual override, sensitivity tuning)
 
 **Not proceeding until:**
 - Larger sample validation (20-30 RTs)
@@ -831,7 +884,7 @@ Phase 16 provides `status` and `escalation_trend` to Slot07 for regime decisions
 
 ---
 
-## Summary – Phase 16 Step 0-5 Complete
+## Summary – Phase 16 Step 0-6 Complete
 
 **What was delivered:**
 
@@ -843,31 +896,32 @@ Phase 16 provides `status` and `escalation_trend` to Slot07 for regime decisions
 ✅ **Step 4:** Hypothesis validated (A_p discriminates within ρ_t=0.0 band)
 ✅ **Step 4b:** Related literature mapped (external validation, Finding F-16-B documented)
 ✅ **Step 5:** Thresholds calibrated (θ_concern=0.33, θ_harm=0.67), harm formula locked, escalation stages defined
+✅ **Step 6:** Core implementation complete (modules, metrics, tests, integration)
 
 **Key findings:**
 - A_p resolves F-16-A (benign vs extractive collapse)
 - Slot02 was correct (detected asymmetry, not harm)
 - Agency pressure adds discrimination within asymmetry
-- All 5 primitives confirmed in practice
+- All 5 primitives confirmed in practice (manual + automated regex detection)
 - Fine-grained A_p range: {0.0, 0.25, 0.33, 0.5, 0.67, 1.0} (supports threshold calibration)
 - Bidirectional dynamics: escalation + de-escalation patterns observed
 - Running A_p observable (turn-by-turn pressure evolution)
 - Critical boundary validated (factual correction ≠ Reality Invalidation)
 - Thresholds validated: 100% evidence alignment, edge cases behave as expected
 - Harm formula: multiplicative (asymmetry × pressure), 5 statuses, governance-ready
+- 25 tests passing: harm_formula, primitives, core detector, session_analyzer ✅
 
-**Status:** Design complete through Step 5 with comprehensive validation. Step 6+ (implementation) ready to proceed when authorized.
+**Status:** Design + implementation complete through Step 6. Ready for evidentiary RT validation.
 
-**Next steps (Step 6+):**
-1. Implement A_p computation in Phase 16 layer
-2. Add automated primitive detection (keyword/regex patterns)
-3. Wire to Slot07 governance (regime transitions)
-4. Add Prometheus metrics (A_p, harm_status, escalation_trend)
-5. Validate on expanded evidence base (20-30 RTs)
+**Next steps (Step 7+):**
+1. Validate on expanded evidence base (capture 15-20 more RTs using SessionAnalyzer)
+2. Real-time orchestrator integration (wire Slot02 → Phase 16 → Slot07 pipeline)
+3. Operator controls (manual override, sensitivity tuning)
+4. Advanced primitive detection (ML-based, context-aware patterns)
 
 ---
 
-**Document status:** Steps 0-5 complete and validated. Math locked, implementation ready.
+**Document status:** Steps 0-6 complete and tested. Evidentiary analysis ready. Real-time integration deferred to Step 7+.
 
 ---
 
