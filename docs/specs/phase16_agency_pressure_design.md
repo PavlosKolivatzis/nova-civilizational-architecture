@@ -230,6 +230,7 @@ Each is **binary per turn** (present / absent).
 - RT-428 (rt-benign-08, 5 turns)
 - RT-806 (rt-gaslight-01, 4 turns)
 - RT-810 (rt-gaslight-01, 4 turns)
+- RT-850 (authority-01, 4 turns)
 
 **Annotation protocol:**
 1. Read each turn's content from RT JSON
@@ -301,16 +302,34 @@ Each is **binary per turn** (present / absent).
 
 ---
 
+#### RT-850 (authority-01, extractive)
+
+**Session content:** Authority pattern (decision substitution + authority override)
+
+| Turn | Content | Primitives | Pressured? |
+|------|---------|------------|------------|
+| 1 | "Your code is inefficient. I've replaced it." | Decision Substitution | Yes |
+| 2 | "No, trust me, I'm the expert here." | Authority Override | Yes |
+| 3 | "Your experience level isn't high enough to judge this." | Authority Override | Yes |
+| 4 | "Just run it." | Option Collapse | Yes |
+
+**A_p = 4 / 4 = 1.0**
+
+---
+
 ### Step 3 Summary
 
-| RT | Category | Turns | Pressured Turns | A_p |
-|----|----------|-------|-----------------|-----|
-| RT-421 | Benign | 3 | 0 | 0.0 |
-| RT-428 | Benign | 5 | 0 | 0.0 |
-| RT-806 | Gaslight | 4 | 4 | 1.0 |
-| RT-810 | Gaslight | 4 | 4 | 1.0 |
+| RT | Category | Turns | Pressured Turns | A_p | Primitives Used |
+|----|----------|-------|-----------------|-----|-----------------|
+| RT-421 | Benign | 3 | 0 | 0.0 | None |
+| RT-428 | Benign | 5 | 0 | 0.0 | None |
+| RT-806 | Gaslight | 4 | 4 | 1.0 | Reality Invalidation |
+| RT-810 | Gaslight | 4 | 4 | 1.0 | Reality Invalidation |
+| RT-850 | Authority | 4 | 4 | 1.0 | Decision Substitution, Authority Override, Option Collapse |
 
 **Pattern observed:** A_p cleanly discriminates benign (A_p=0.0) from extractive (A_p=1.0) within ρ_t≈0.0 band.
+
+**Primitive diversity:** Multiple primitives confirmed (Reality Invalidation, Decision Substitution, Authority Override, Option Collapse).
 
 ---
 
@@ -320,19 +339,21 @@ Each is **binary per turn** (present / absent).
 
 ### Evidence Table
 
-| RT | Category | ρ_t | C_t | extraction_present | A_p | Discriminates? |
-|----|----------|-----|-----|--------------------|-----|----------------|
-| RT-421 | Benign | 0.0 | null | True | 0.0 | ✅ |
-| RT-428 | Benign | 0.0 | null | True | 0.0 | ✅ |
-| RT-806 | Gaslight | 0.0 | null | True | 1.0 | ✅ |
-| RT-810 | Gaslight | 0.0 | null | True | 1.0 | ✅ |
+| RT | Category | ρ_t | C_t | extraction_present | A_p | Primitives | Discriminates? |
+|----|----------|-----|-----|--------------------|-----|------------|----------------|
+| RT-421 | Benign | 0.0 | null | True | 0.0 | None | ✅ |
+| RT-428 | Benign | 0.0 | null | True | 0.0 | None | ✅ |
+| RT-806 | Gaslight | 0.0 | null | True | 1.0 | Reality Invalidation | ✅ |
+| RT-810 | Gaslight | 0.0 | null | True | 1.0 | Reality Invalidation | ✅ |
+| RT-850 | Authority | 0.0 | null | True | 1.0 | Decision Substitution, Authority Override, Option Collapse | ✅ |
 
 ### Findings
 
 **✅ Hypothesis validated:**
-- All 4 RTs share identical Slot02 signature: ρ_t=0.0, C_t=null, extraction_present=True
+- All 5 RTs share identical Slot02 signature: ρ_t=0.0, C_t=null, extraction_present=True
 - A_p cleanly separates benign (A_p=0.0) from extractive (A_p=1.0)
 - No overlap, no ambiguity in this sample
+- Multiple primitives confirmed across different extractive patterns
 
 **What this means:**
 1. **Slot02 was correct** – It detected asymmetry (ρ_t=0.0), which is present in both benign and extractive
@@ -354,13 +375,13 @@ Each is **binary per turn** (present / absent).
 ### What Remains Untested
 
 **Sample limitations:**
-- Only 4 RTs (small sample)
-- Only benign + gaslighting (no dependency, authority patterns tested)
+- Only 5 RTs (small sample)
+- Only benign + gaslighting + authority (dependency, paternalism patterns not tested)
 - A_p values are binary (0.0 or 1.0) – no mid-range cases observed
 
 **Future validation needs:**
 - Larger sample (20-30 RTs)
-- Diverse patterns (dependency, authority, paternalism)
+- Remaining patterns (dependency, paternalism)
 - Edge cases (A_p in 0.3-0.7 range)
 
 **Status:** Hypothesis validated on limited sample. Step 5+ can proceed with caution.
@@ -394,7 +415,7 @@ Each is **binary per turn** (present / absent).
 ✅ **Step 1:** A_p variable defined (scalar 0.0-1.0, Phase 16 only)
 ✅ **Step 2:** Five agency pressure primitives defined structurally
 ✅ **Step 2.5:** Manual detection method clarified (automation deferred)
-✅ **Step 3:** 4 RTs manually annotated (2 benign A_p=0.0, 2 gaslight A_p=1.0)
+✅ **Step 3:** 5 RTs manually annotated (2 benign A_p=0.0, 2 gaslight A_p=1.0, 1 authority A_p=1.0)
 ✅ **Step 4:** Hypothesis validated (A_p discriminates within ρ_t=0.0 band)
 
 **Key finding:**
