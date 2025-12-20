@@ -76,6 +76,59 @@
 
 ---
 
+## docs/phase11_step_c_audits/
+
+```markdown
+| Path                                                | Class | Rationale                                                     |
+|-----------------------------------------------------|-------|---------------------------------------------------------------|
+| docs/phase11_step_c_audits/README.md               | B     | Phase 11 audit README (context/reference).                    |
+| docs/phase11_step_c_audits/phase11_system_invariants.md | B | Phase 11 system invariants (reference).                      |
+| docs/phase11_step_c_audits/nova_framework_ontology.v1.yaml | B | Phase 11 snapshot of framework ontology (archival copy).     |
+| docs/phase11_step_c_audits/nova.operating@1.0.yaml | B     | Phase 11 snapshot of operating ontology (archival copy).      |
+| docs/phase11_step_c_audits/hysteresis_decision@1.yaml | B   | Hysteresis decision spec (Phase 11 audit artifact).          |
+| docs/phase11_step_c_audits/orp_stabilization@1.yaml | B     | ORP stabilization spec (Phase 11 audit artifact).            |
+| docs/phase11_step_c_audits/regime@1.yaml           | B     | Regime spec (Phase 11 audit artifact).                       |
+| docs/phase11_step_c_audits/transformation_geometry@1.yaml | B | Transformation geometry spec (Phase 11 audit artifact). |
+| docs/phase11_step_c_audits/claude_cli_phase11/**   | B     | Phase 11 audit logs/artifacts for Claude CLI (evidence).     |
+| docs/phase11_step_c_audits/codex_cli_phase11/**    | B     | Phase 11 audit logs/artifacts for Codex CLI (evidence).      |
+| docs/phase11_step_c_audits/copilot_app_phase11/**  | B     | Phase 11 audit logs/artifacts for Copilot app (evidence).    |
+| docs/phase11_step_c_audits/deepseek app_phase11/** | B     | Phase 11 audit logs/artifacts for DeepSeek app (evidence).   |
+| docs/phase11_step_c_audits/gemini_cli_phase11/**   | B     | Phase 11 audit logs/artifacts for Gemini CLI (evidence).     |
+| docs/phase11_step_c_audits/grok_app_phase11/**     | B     | Phase 11 audit logs/artifacts for Grok app (evidence).       |
+| docs/phase11_step_c_audits/kilo_code_vs_phase11/** | B     | Phase 11 audit logs/artifacts for Kilo Code (evidence).      |
+| docs/phase11_step_c_audits/qwen_app_phase11/**     | B     | Phase 11 audit logs/artifacts for Qwen app (evidence).       |
+```
+
+---
+
+## archive/
+
+```markdown
+| Path                                            | Class | Rationale                                                   |
+|-------------------------------------------------|-------|-------------------------------------------------------------|
+| archive/Enhanced PAD.E.L.-INF-o-INITY Unified Framework_## Advanced Cognitive Diagnostic Architecture_.txt | B | Archived design/analysis text (reference). |
+| archive/klein-et-al-2025-a-theoretical-framework-for-studying-the-phenomenon-of-gaslighting.pdf | B | External research paper (reference).          |
+| archive/realtalk_dataset.pdf                    | B     | REALTALK dataset paper (reference).                        |
+| archive/AI data history/**                      | B     | Archived AI-human interaction logs (evidence).             |
+| archive/ai_biases/**                            | B     | Archived bias-related notes/artifacts (evidence).          |
+| archive/docs/**                                 | B     | Archived documentation snapshots (reference).              |
+| archive/legacy-slot-migration/**                | C     | Legacy slot migration artifacts (historical/experimental). |
+```
+
+---
+
+## evidence/
+
+```markdown
+| Path                         | Class | Rationale                                         |
+|------------------------------|-------|---------------------------------------------------|
+| evidence/README.md           | B     | Evidence directory README (context).              |
+| evidence/index/**            | B     | Evidence index files (e.g., RT index CSVs).       |
+| evidence/rt/**               | B     | Captured RT JSON evidence from reality capture.   |
+```
+
+---
+
 ## src/nova/ (overview level)
 
 ```markdown
@@ -164,4 +217,3 @@
   - `docs/specs/nova_jurisdiction_map.md`
   - `docs/specs/refusal_event_contract.md`
   - `docs/CONTRIBUTING_CONSTITUTIONAL_CHECK.md`
-
