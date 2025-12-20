@@ -1,5 +1,7 @@
 # Nova Civilizational Architecture
 
+Nova exists to observe, stabilize, and coordinate complex intelligent systems without assuming authority over human values, identity, or moral judgment. It is designed to compute structure, detect patterns, preserve continuity, and route governance signals within explicitly defined jurisdictions. Nova must refuse to act when resolution would require moral interpretation, value imposition, or optimization over domains reserved for human agency. Its refusal is a constitutional invariant, not a failure state. Contributors may extend Nova’s capabilities only within these declared boundaries; redefining them requires an explicit constitutional rupture, not incremental change.
+
 **Phase 14.2 Ready** | **Multi-AI Collaborative** | **10-Slot Autonomous System**
 
 Nova is an autonomous temporal-intelligence system built through multi-AI collaboration and deployed across a 10-slot cognitive architecture.
