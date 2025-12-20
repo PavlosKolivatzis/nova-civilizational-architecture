@@ -18,6 +18,7 @@
 | Path                                         | Class | Rationale                                                |
 |----------------------------------------------|-------|----------------------------------------------------------|
 | docs/specs/flow_mesh_overview.md            | B     | High-level flow/mesh overview (reference architecture). |
+| docs/CONTRIBUTING_CONSTITUTIONAL_CHECK.md   | A     | Constitutional review checklist (enforces O/R/F jurisdiction and refusal invariants at design time). |
 | docs/specs/nova_constitutional_freeze.md    | A     | Constitutional freeze declaration for core domains.     |
 | docs/specs/nova_jurisdiction_map.md         | A     | Defines O/R/F jurisdictions and negative space.         |
 | docs/specs/nova_system_context_overview.md  | B     | System context overview (reference, non-constitutional).|
@@ -37,7 +38,7 @@
 | docs/specs/phase15_governance_design.md     | B     | Slot07 governance design (design-only, reference).      |
 | docs/specs/phase15_temporal_governance_readiness.md | B | Phase 15 readiness checklist (reference).          |
 | docs/specs/phase16_agency_pressure_design.md| B     | Phase 16 A_p design (design-only, non-operational).     |
-| docs/specs/phase16_agency_pressure_evidence.md| B    | Phase 16 agency pressure evidence slice (calibration).  |
+| docs/specs/phase16_agency_pressure_evidence.md| B    | Phase 16 agency pressure evidence slice (calibration); constitutionally referenced for Phase 16.α boundary regions. |
 | docs/specs/phase16_alpha_calibration_protocol.md| A  | Phase 16.α calibration protocol (constitutional).       |
 | docs/specs/phase16_alpha_calibration_workbook.md | A | Phase 16.α human workbook template (constitutional tool).|
 | docs/specs/phase17_consent_gate_design.md   | B     | Phase 17 consent gate design (design-only reference).   |
