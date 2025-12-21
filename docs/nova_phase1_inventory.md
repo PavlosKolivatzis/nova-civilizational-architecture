@@ -130,6 +130,16 @@
 
 ---
 
+## docs/calibration/
+
+```markdown
+| Path                                                | Class | Rationale                                                     |
+|-----------------------------------------------------|-------|---------------------------------------------------------------|
+| docs/calibration/phase16_alpha/drafts/**           | B     | Human calibration drafts (Phase 16.α) – non-evidence, non-constitutional. |
+```
+
+---
+
 ## src/nova/ (overview level)
 
 ```markdown
