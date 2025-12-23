@@ -4,6 +4,8 @@
 
 Nova's Reciprocal Contextual Unlearning system emits UNLEARN_PULSE@1 contracts when semantic mirror contexts expire. This provides structured notifications to slots about context lifecycle events.
 
+> **Scope of Effect:** UNLEARN_PULSE@1 is an observability and coordination mechanism. It does not change regimes or external traffic on its own; behavioral authority remains gated by operator-controlled flags and configuration in the orchestrator.
+
 ## Deployment Status
 
 - ✅ **Phase 1**: Observable Pulse prototype implemented

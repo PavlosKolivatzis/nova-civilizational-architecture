@@ -1,6 +1,8 @@
 # Nova Civilizational Architecture
 
-Nova exists to observe, stabilize, and coordinate complex intelligent systems without assuming authority over human values, identity, or moral judgment. It is designed to compute structure, detect patterns, preserve continuity, and route governance signals within explicitly defined jurisdictions. Nova must refuse to act when resolution would require moral interpretation, value imposition, or optimization over domains reserved for human agency. Its refusal is a constitutional invariant, not a failure state. Contributors may extend Nova’s capabilities only within these declared boundaries; redefining them requires an explicit constitutional rupture, not incremental change.
+Nova exists to observe, stabilize, and coordinate complex intelligent systems without assuming authority over human values, identity, or moral judgment. It is designed to compute structure, detect patterns, preserve continuity, and route governance signals within explicitly defined jurisdictions. Nova must refuse to act when resolution would require moral interpretation, value imposition, or optimization over domains reserved for human agency. Its refusal is a constitutional invariant, not a failure state. Contributors may extend Nova's capabilities only within these declared boundaries; redefining them requires an explicit constitutional rupture, not incremental change.
+
+**Authority Clarification:** In this repository, **“autonomous” refers to internal evaluation, measurement, and guardrail computation**, not unconstrained external action. All behavioral authority in Nova is explicitly gated by operator-controlled flags and deployment configuration. By default, Nova observes, evaluates, and reports—it does not act on external systems without explicit, environment-level enablement.
 
 **Phase 14.2 Ready** | **Multi-AI Collaborative** | **10-Slot Autonomous System**
 

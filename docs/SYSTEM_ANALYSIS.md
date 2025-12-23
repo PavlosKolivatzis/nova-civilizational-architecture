@@ -292,3 +292,7 @@
 - **SLO Compliance**: >99.9% uptime for critical services
 - **Security Posture**: Zero critical vulnerabilities
 - **Performance**: <100ms p95 latency for health endpoints
+
+## Observability-Only Metrics Constraint
+
+**Constraint:** Cultural, RIS, and ethical metrics are observability inputs only and SHALL NOT influence regimes, thresholds, or traffic unless a named governance phase explicitly authorizes it in configuration and contracts.

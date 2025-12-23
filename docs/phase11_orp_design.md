@@ -10,6 +10,9 @@
 
 ## Executive Summary
 
+> **Observability-Only Metrics Constraint**  
+> In this design, cultural, RIS, and ethical metrics remain observability inputs only and SHALL NOT influence regimes, thresholds, or traffic unless ORP is explicitly enabled (for example, `NOVA_ENABLE_ORP=1`) and corresponding contracts and configuration are updated to authorize that behavior.
+
 Phase 11 introduces **Operational Regime Policy (ORP)**, a governance policy layer that translates multi-signal continuity metrics into actionable operational regimes with slot behavior adjustments.
 
 **Core Innovation:**

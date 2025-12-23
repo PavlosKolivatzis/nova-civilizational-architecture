@@ -8,6 +8,9 @@
 
 ## Executive Summary
 
+> **Authority Clarification (Scope of “Autonomous”)**  
+> In this presentation, “autonomous” refers to Nova’s internal evaluation, measurement, and calibration behavior. All externally visible actions are explicitly gated by operator-controlled environment flags and deployment configuration. By default, Nova observes, evaluates, and reports; it does not act on external systems without explicit enablement.
+
 Nova is a **production-grade cognitive architecture** implementing Universal Structure Mathematics (USM) for detecting extraction patterns across complex systems. Built through multi-AI collaboration, it achieves **99.7% accuracy** across 1082 validation cases and demonstrates **autonomous self-improvement** through the Autonomous Reflection Cycle (ARC).
 
 **Key Technical Achievements:**

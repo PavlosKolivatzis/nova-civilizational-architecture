@@ -2,6 +2,8 @@
 
 ## Contract Schema Validation
 
+> **Perimeter + Flags:** Operational runbooks assume that access to Nova’s HTTP endpoints is controlled by deployment perimeter (network policy, proxy, or API gateway). Behavioral authority is always gated by NOVA_* environment flags and configuration, not by defaults or unauthenticated access.
+
 ### If contract CI fails (schema drift)
 
 1. **Read CI log** → identify which schema failed validation

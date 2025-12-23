@@ -1,8 +1,10 @@
-# Observability — Nova Processual System
+# Observability - Nova Processual System
 
 ## Overview
 
 The Nova Civilizational Architecture provides comprehensive observability for all 10 Processual slots through multiple monitoring systems, metrics export, audit trails, and health checking.
+
+> **Perimeter Assumption:** FastAPI and related observability/control endpoints assume perimeter enforcement (network policy, proxy, or API gateway). Nova does not perform role-based access control internally by design; operator deployments are responsible for access control and exposure scope.
 
 ## 📊 Health Monitoring
 

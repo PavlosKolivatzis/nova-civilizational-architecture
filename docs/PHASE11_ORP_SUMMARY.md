@@ -4,6 +4,9 @@
 
 **Phase 11 transformed Nova from a reactive modular system into a temporally coherent, amplitude-regulated, hysteresis-stabilized transformation space.**
 
+> **Scope of Regime Authority**  
+> ORP is a flag-gated module. Cultural, RIS, and ethical metrics remain observability inputs only and SHALL NOT influence regimes, thresholds, or traffic unless ORP is explicitly enabled (for example, `NOVA_ENABLE_ORP=1`) and the corresponding contracts and configuration are updated to authorize that behavior.
+
 Nova now possesses:
 - **Temporal continuity** through regime transition tracking
 - **Stability preference** via amplitude damping under instability

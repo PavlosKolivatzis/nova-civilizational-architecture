@@ -4,8 +4,11 @@
 
 **Nova Civilizational Architecture** is a sophisticated 48,000+ line cognitive system achieving **Processual 4.0 maturity** across all 10 cognitive slots. The system provides comprehensive truth processing, cultural synthesis, emotional safety, memory protection, distortion detection, and civilizational deployment capabilities through a multi-layered architecture with advanced integration patterns.
 
+> **Authority Clarification (Scope of “Autonomous”)**  
+> In this system architecture, “autonomous” refers to Nova’s internal evaluation, measurement, guardrail computation, and calibration behavior. All externally visible actions are explicitly gated by operator-controlled environment flags and deployment configuration. By default, Nova observes, evaluates, and reports; it does not act on external systems without explicit enablement.
+
 **System Scale**: 50,000+ lines across 10 slots + orchestrator + supporting infrastructure
-**Maturity Level**: 4.0/4.0 (Full Autonomous Operation)
+**Maturity Level**: 4.0/4.0 (Full autonomous internal operation; externally gated by configuration)
 **Phase Status**: Phase 14.3 (USM Bias Detection + Persistent Checkpoints)
 **Test Coverage**: 2180 tests passing (2200 collected) with comprehensive integration validation
 **⚡ Coherence Proof**: ΔC-LIGHTCLOCK temporal synchronization system demonstrates autonomous coherence enforcement across 8/10 slots
@@ -365,4 +368,3 @@ Prometheus Metrics → Governance Tracking → Response Assembly
 11. **⚡ Temporal Coherence**: Autonomous phase-lock synchronization with 8/10 slot coverage
 
 **Architecture Status**: Production-ready with 4.0/4.0 processual maturity across complete 48,000+ line implementation achieving autonomous civilizational-scale operations.
-
