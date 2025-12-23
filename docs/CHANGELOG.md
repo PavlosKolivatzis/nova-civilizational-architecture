@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Civilizational parameters for digital trust systems
   - Key insight: "Integrity that never meets another remains sterile; only through federation does truth become civilization."
 
+### Governance
+- **Tag `governance-topology-seal`** – Authorization topology sealed: "autonomous" scope clarified as internal evaluation only, perimeter enforcement made explicit for operator endpoints, default-inversion invariant documented, and observability-only metrics locked unless explicitly authorized.
+
 ## [15.2.0-alpha] - 2025-11-02
 ### Added
 - **Phase 15-3: Federation Range Sync & Discovery**
