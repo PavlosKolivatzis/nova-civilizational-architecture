@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Key insight: "Integrity that never meets another remains sterile; only through federation does truth become civilization."
 
 ### Governance
-- **Tag `governance-topology-seal`** – Authorization topology sealed: "autonomous" scope clarified as internal evaluation only, perimeter enforcement made explicit for operator endpoints, default-inversion invariant documented, and observability-only metrics locked unless explicitly authorized.
+- **Tag `governance-topology-seal`** - Authorization topology sealed: "autonomous" scope clarified as internal evaluation only, perimeter enforcement made explicit for operator endpoints, default-inversion invariant documented, and observability-only metrics locked unless explicitly authorized.
+- **Tag `governance-phase3-audit`** - Phase 3 governance audit: claim–evidence table established in `docs/audits/phase3/PHASE3_CLAIM_EVIDENCE_TABLE.md` for tag `governance-topology-seal`.
 
 ## [15.2.0-alpha] - 2025-11-02
 ### Added
