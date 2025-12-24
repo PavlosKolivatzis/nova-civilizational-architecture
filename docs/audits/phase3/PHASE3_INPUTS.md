@@ -1,0 +1,25 @@
+Tag: governance-topology-seal
+Inputs:
+README.md
+archive/NOVA_PAPER.md
+archive/NOVA_EVIDENCE_TABLE.md
+archive/NOVA_IMPLEMENTATION_STATUS.md
+archive/NOVA_ARCHITECTURE_FINDINGS.md
+archive/NOVA_GLOSSARY_PAPER.md
+docs/architecture/SYSTEM_ARCHITECTURE.md
+docs/SYSTEM_ANALYSIS.md
+docs/NOVA_PRESENTATION.md
+docs/CHANGELOG.md
+config/.env.example
+src/nova/orchestrator/app.py
+src/nova/orchestrator/router/epistemic_router.py
+src/nova/orchestrator/router/anr.py
+src/nova/orchestrator/governance/engine.py
+src/nova/slots/slot06_cultural_synthesis/engine.py
+src/nova/slots/slot06_cultural_synthesis/adapter.py
+src/nova/orchestrator/adapters/slot6_cultural.py
+src/nova/slots/slot10_civilizational_deployment/deployer.py
+src/nova/slots/slot10_civilizational_deployment/mls.py
+src/nova/continuity/risk_reconciliation.py
+src/nova/orchestrator/predictive/ris_calculator.py
+tests
