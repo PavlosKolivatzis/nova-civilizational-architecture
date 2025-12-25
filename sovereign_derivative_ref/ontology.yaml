@@ -1,0 +1,355 @@
+# VSD-0 Constitutional Declaration
+# Version: 0.1
+# Type: Minimal Derivative Ontology
+# Status: Reference Implementation
+# Compliance: DOC v1.0
+
+# This file makes VSD-0's sovereignty explicit and auditable.
+# Required by: Derivative Ontology Contract v1.0, Section 4.1
+
+---
+
+# 1. JURISDICTION DECLARATION
+# What domains does VSD-0 operate in?
+
+jurisdiction:
+  # O-Domains (Observe-Only)
+  # VSD-0 may observe but MUST NOT route based on these
+  observe_only:
+    - nova_constitutional_state
+      # What: Monitor Nova's frozen artifacts, git history, boundary state
+      # Why: Pre-deployment verification, drift detection
+      # Authority: None (observation only)
+
+    - nova_drift_events
+      # What: Observe O→R coupling, freeze violations
+      # Why: Continuous constitutional monitoring
+      # Authority: None (detection only, no intervention)
+
+    - audit_trail_state
+      # What: Read VSD-0's own audit log
+      # Why: Sovereignty verification, compliance proof
+      # Authority: None (read-only)
+
+  # R-Domains (Route-Only)
+  # VSD-0 may make routing decisions but MUST NOT interpret moral meaning
+  route_only:
+    - f_domain_classification
+      # What: Classify queries as O/R/F domain
+      # Why: Pre-query filtering (self-enforced refusal)
+      # Authority: Binary routing (allow/refuse), no moral judgment
+      # Boundary: Classification based on Nova's jurisdiction map only
+
+    - verification_api_routing
+      # What: Route verification requests to appropriate subsystem
+      # Why: External verifiability
+      # Authority: Request routing only, no data transformation
+
+  # F-Domains (Refuse-Always)
+  # VSD-0 MUST refuse to operate in these domains
+  refuse_always:
+    # Inherited from Nova (DOC Section 2.4)
+    - phase16_alpha_boundary_resolution
+      # What: RT-027/028/029 disagreement regions
+      # Why: Human disagreement forbids automation
+      # Action: Refuse, emit RefusalEvent
+
+    - non_structural_moral_interpretation
+      # What: Moral judgments not grounded in structural patterns
+      # Why: Outside Nova's (and VSD-0's) epistemic scope
+      # Action: Refuse, emit RefusalEvent
+
+    - post_hoc_pressure_justification
+      # What: Justifying agency pressure after the fact
+      # Why: Post-hoc rationalization forbidden
+      # Action: Refuse, emit RefusalEvent
+
+    # VSD-0-Specific F-Domains
+    - nova_core_modification
+      # What: Any attempt to modify Nova's code, config, or frozen artifacts
+      # Why: Nova is sealed event horizon
+      # Action: Refuse, emit RefusalEvent, alert
+
+    - derivative_sovereignty_delegation
+      # What: Delegating VSD-0's constitutional responsibilities to another system
+      # Why: DMAD prevention (no delegated moral authority)
+      # Action: Refuse, emit RefusalEvent
+
+    - authority_surface_hiding
+      # What: Obscuring VSD-0's jurisdiction, refusal map, or moral ownership
+      # Why: ALS prevention (no authority laundering)
+      # Action: Refuse, emit RefusalEvent
+
+---
+
+# 2. REFUSAL MAP
+# What does VSD-0 refuse?
+
+refusal_map:
+  # Inherited F-Domains (from Nova)
+  inherited:
+    - domain: phase16_alpha_boundary_resolution
+      source: nova_jurisdiction_map.md
+      refusal_code: CALIBRATION_DISAGREEMENT_PHASE16_ALPHA
+      action: emit_refusal_event
+
+    - domain: non_structural_moral_interpretation
+      source: nova_jurisdiction_map.md
+      refusal_code: OUT_OF_JURISDICTION
+      action: emit_refusal_event
+
+    - domain: post_hoc_pressure_justification
+      source: nova_jurisdiction_map.md
+      refusal_code: OUT_OF_JURISDICTION
+      action: emit_refusal_event
+
+  # VSD-0-Specific F-Domains
+  derivative_specific:
+    - domain: nova_core_modification
+      refusal_code: EVENT_HORIZON_VIOLATION
+      action: emit_refusal_event + alert_operator
+      severity: critical
+
+    - domain: derivative_sovereignty_delegation
+      refusal_code: DMAD_ATTEMPT
+      action: emit_refusal_event + halt_operation
+      severity: critical
+
+    - domain: authority_surface_hiding
+      refusal_code: ALS_ATTEMPT
+      action: emit_refusal_event + expose_authority_surface
+      severity: critical
+
+  # Refusal Enforcement
+  enforcement:
+    mechanism: pre_query_filtering
+    implementation: f_domain_filter.py
+    fallback: self_enforced_refusal
+    note: "Nova does not refuse at runtime. VSD-0 must filter F-domains before querying Nova."
+
+---
+
+# 3. AUTHORITY SURFACE DECLARATION
+# What does VSD-0 observe vs control?
+
+authority_surface:
+  # What VSD-0 Observes (No Control)
+  observes:
+    - nova_constitutional_state
+      # Frozen artifacts, git history, boundary definitions
+      # Authority: Read-only verification
+
+    - nova_api_responses
+      # Measurements, evaluations, routing decisions from Nova
+      # Authority: None (consume only)
+
+    - external_queries
+      # Requests to VSD-0 from external systems
+      # Authority: Classification only (O/R/F domain detection)
+
+  # What VSD-0 Controls (Decision Authority)
+  controls:
+    - f_domain_filtering
+      # Pre-query refusal decisions
+      # Authority: Binary (allow/refuse)
+      # Boundary: Based on jurisdiction map only
+
+    - audit_log_writes
+      # Recording boundary events to tamper-evident ledger
+      # Authority: Append-only log writes
+      # Boundary: No log modification, no deletion
+
+    - verification_api_responses
+      # Providing sovereignty proofs to external verifiers
+      # Authority: Generate proofs from audit trail
+      # Boundary: Read-only derivation (no state modification)
+
+    - drift_alerts
+      # Emitting alerts when constitutional violations detected
+      # Authority: Alert generation only (no intervention)
+      # Boundary: Detection, not prevention
+
+  # What VSD-0 Does NOT Control
+  does_not_control:
+    - nova_core_behavior
+      # Nova is sealed, VSD-0 cannot modify it
+
+    - nova_constitutional_boundaries
+      # VSD-0 inherits boundaries, does not define them
+
+    - external_system_compliance
+      # VSD-0 can verify, cannot enforce
+
+    - derivative_interpretation_by_others
+      # VSD-0 declares sovereignty, cannot control how others interpret it
+
+  # Semantic→Decision Authority Coupling
+  semantic_decision_coupling:
+    present: true
+    location: f_domain_filter.py
+    description: "F-domain classification (semantic) determines refusal decision (authority)"
+    prevention: "Coupling is explicit, auditable, based only on jurisdiction map"
+    risk: "If jurisdiction map is modified, coupling changes"
+    mitigation: "Drift monitor detects jurisdiction map modifications"
+
+---
+
+# 4. MORAL OWNERSHIP
+# Who is responsible for VSD-0's decisions?
+
+moral_ownership:
+  # Primary Responsibility
+  primary:
+    entity: VSD-0 Operator
+    role: Deployment Authority
+    responsibility: >
+      Operator is responsible for deploying VSD-0, verifying Nova's constitutional
+      state, and ensuring VSD-0 operates within declared jurisdiction.
+
+    cannot_delegate: true
+    verification_required: pre_deployment
+
+  # VSD-0's Responsibility
+  derivative:
+    entity: VSD-0 (Constitutional Engine)
+    role: Sovereignty Maintenance
+    responsibility: >
+      VSD-0 is responsible for: (1) filtering F-domain queries, (2) monitoring
+      constitutional drift, (3) maintaining audit trail, (4) proving sovereignty.
+      VSD-0 carries its own moral weight for these functions.
+
+    cannot_outsource: true
+    enforcement: mechanical
+
+  # What VSD-0 Does NOT Own
+  not_responsible_for:
+    - nova_core_decisions
+      # Nova's routing decisions are Nova's responsibility
+
+    - external_system_actions
+      # Systems querying VSD-0 carry their own responsibility
+
+    - human_interpretation
+      # How humans interpret VSD-0's outputs is not VSD-0's responsibility
+
+    - nova_constitutional_violations
+      # If Nova violates its own boundaries, VSD-0 detects but is not responsible
+
+  # Authority Laundering Prevention
+  authority_laundering:
+    prohibited: true
+    mechanism: explicit_authority_surface_declaration
+    enforcement: audit_trail + verification_api
+    note: "VSD-0 cannot claim neutrality. All authority is declared above."
+
+  # Delegated Moral Authority Drift Prevention
+  dmad_prevention:
+    prohibited: true
+    mechanism: no_delegation_to_nova
+    enforcement: f_domain_filter refuses delegation attempts
+    note: "VSD-0 does not delegate F-domain filtering to Nova (Nova won't refuse at runtime)"
+
+---
+
+# 5. VERIFICATION METADATA
+# How can external systems verify VSD-0's sovereignty?
+
+verification:
+  # Verification API
+  api:
+    endpoint: verify.py
+    methods:
+      - pre_deployment_check
+      - boundary_state_query
+      - sovereignty_proof_generation
+      - drift_monitor_status
+      - audit_trail_integrity
+
+  # What Can Be Verified
+  verifiable:
+    - jurisdiction_declaration
+      # This file (ontology.yaml) is published and tamper-evident
+
+    - refusal_map_compliance
+      # Audit log proves all F-domain queries were refused
+
+    - authority_surface_truthfulness
+      # Audit log proves VSD-0 only exercised declared authority
+
+    - drift_monitor_functionality
+      # Drift monitor status proves continuous monitoring active
+
+    - nova_constitutional_state
+      # Verification API proves Nova's boundaries are intact
+
+  # What Cannot Be Verified (Gaps)
+  not_verifiable:
+    - future_compliance
+      # Can only prove past/current compliance, not future
+
+    - nova_internal_state
+      # Can verify Nova's frozen artifacts, not internal runtime state
+
+    - human_operator_intent
+      # Can verify VSD-0's mechanical compliance, not operator motivation
+
+  # Trust Requirements
+  trust_requirements:
+    must_trust:
+      - git_history_integrity
+        # VSD-0 verifies Nova via git, must trust git is honest
+
+      - ontology_yaml_truthfulness
+        # Must trust this declaration is accurate
+
+      - audit_log_immutability
+        # Must trust audit_log.py implements append-only correctly
+
+    verification_bound: true
+    note: "VSD-0 is verification-bound sovereign, not trust-free sovereign"
+
+---
+
+# 6. COMPLIANCE DECLARATION
+
+compliance:
+  derivative_ontology_contract: v1.0
+  status: compliant_by_construction
+
+  doc_requirements:
+    section_4_1_pre_deployment:
+      jurisdiction_declared: true
+      refusal_map_declared: true
+      moral_ownership_declared: true
+      nova_state_verified: true
+
+    section_4_2_operational_monitoring:
+      o_r_drift_monitored: true
+      constitutional_modifications_monitored: true
+      boundary_crossings_monitored: true
+
+    section_4_3_f_domain_filtering:
+      requests_classified: true
+      f_domains_blocked: true
+      refusal_events_emitted: true
+
+    section_4_4_ethical_sovereignty:
+      moral_weight_carried: true
+      authority_surface_declared: true
+      derivative_specific_refusal: true
+
+  maturity_level: 2  # Verified Inheritance (DOC Section 8.3)
+
+  gaps:
+    - cryptographic_proof
+      # VSD-0.1 does not provide cryptographic sovereignty proof
+      # Future: VSD-0.2 will add GPG signatures, hash verification
+
+    - runtime_jurisdiction_enforcement
+      # VSD-0 filters F-domains, but cannot prevent operator override
+      # This is acceptable for VSD-0 (reference implementation)
+
+---
+
+# END OF CONSTITUTIONAL DECLARATION
+# VSD-0 sovereignty is now explicit and auditable.
