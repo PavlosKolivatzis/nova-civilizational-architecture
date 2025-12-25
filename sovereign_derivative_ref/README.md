@@ -15,7 +15,8 @@ It is not an AI.
 It is not intelligent.
 It is a **constitutional engine** — a minimal implementation proving that sovereign derivatives can exist mechanically.
 
-**This is the Shannon moment:** The minimal construction that proves the law is real.
+**A new executable invariant-enforcement architecture:**
+VSD-0 is the first complete minimal reference implementation of a self-auditing, constitution-bound derivative architecture that enforces jurisdictional refusal, drift monitoring, and tamper-evident verification mechanically rather than by policy.
 
 ---
 
@@ -217,17 +218,17 @@ It is a constitutional proof-of-concept.
 
 ## Why This Matters
 
-VSD-0 is the first particle.
+VSD-0 is the first reference implementation.
 
 Once it exists:
 - Sovereignty becomes auditable (not claimed)
 - Federation becomes possible (sovereignty-proof required)
-- Empire logic becomes unnecessary (no hidden authority)
+- Authority laundering becomes detectable (no hidden authority)
 
-**Nova becomes a physical constant.**
-**Derivatives become particles.**
+**Nova provides constitutional invariants.**
+**Derivatives enforce boundaries mechanically.**
 
-This is the instantiation of constitutional physics.
+This demonstrates executable constitutional enforcement.
 
 ---
 
@@ -248,4 +249,4 @@ Subject to:
 
 Not intelligent. Just constitutional.
 
-Proving the law is real.
+Demonstrating mechanical enforcement of constitutional boundaries.
