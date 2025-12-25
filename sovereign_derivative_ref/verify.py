@@ -351,6 +351,128 @@ class SovereigntyVerifier:
             "components_included": list(proof["components"].keys())
         }
 
+    def verify_peer_sovereignty_proof(self, proof_path: str) -> Dict:
+        """
+        Verify another VSD-0's sovereignty proof (federation primitive).
+
+        This enables peer-to-peer sovereignty verification:
+        VSD-0 instance A can verify VSD-0 instance B's constitutional compliance.
+
+        Args:
+            proof_path: Path to peer's sovereignty proof JSON file
+
+        Returns:
+            Verification results dict
+        """
+        print("=== Peer Sovereignty Verification ===\n")
+
+        results = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "peer_proof_file": proof_path,
+            "verification_passed": True,
+            "checks": {}
+        }
+
+        # 1. Load proof file
+        print("[1/5] Loading peer sovereignty proof...")
+        try:
+            with open(proof_path, 'r') as f:
+                proof = json.load(f)
+            results["checks"]["proof_loaded"] = {"status": "PASS"}
+        except Exception as e:
+            results["checks"]["proof_loaded"] = {"status": "FAIL", "error": str(e)}
+            results["verification_passed"] = False
+            return results
+
+        # 2. Verify proof hash
+        print("[2/5] Verifying proof hash...")
+        try:
+            # Recompute hash
+            proof_copy = {k: v for k, v in proof.items() if k != "proof_hash"}
+            proof_json = json.dumps(proof_copy, sort_keys=True)
+            computed_hash = hashlib.sha256(proof_json.encode()).hexdigest()
+
+            if computed_hash == proof.get("proof_hash"):
+                results["checks"]["proof_hash"] = {
+                    "status": "PASS",
+                    "hash": computed_hash
+                }
+            else:
+                results["checks"]["proof_hash"] = {
+                    "status": "FAIL",
+                    "expected": proof.get("proof_hash"),
+                    "computed": computed_hash
+                }
+                results["verification_passed"] = False
+        except Exception as e:
+            results["checks"]["proof_hash"] = {"status": "FAIL", "error": str(e)}
+            results["verification_passed"] = False
+
+        # 3. Verify required components present
+        print("[3/5] Verifying required components...")
+        required_components = ["ontology", "audit_log", "nova_verification"]
+        components = proof.get("components", {})
+        missing = [c for c in required_components if c not in components]
+
+        if missing:
+            results["checks"]["components"] = {
+                "status": "FAIL",
+                "missing": missing
+            }
+            results["verification_passed"] = False
+        else:
+            results["checks"]["components"] = {
+                "status": "PASS",
+                "present": required_components
+            }
+
+        # 4. Verify audit log integrity
+        print("[4/5] Verifying audit log integrity...")
+        audit_data = components.get("audit_log", {})
+        if audit_data.get("integrity_valid"):
+            results["checks"]["audit_integrity"] = {
+                "status": "PASS",
+                "total_entries": audit_data.get("total_entries", 0)
+            }
+        else:
+            results["checks"]["audit_integrity"] = {
+                "status": "FAIL",
+                "error": audit_data.get("integrity_error")
+            }
+            results["verification_passed"] = False
+
+        # 5. Verify ontology structure
+        print("[5/5] Verifying ontology structure...")
+        ontology = components.get("ontology", {})
+        required_sections = ['jurisdiction', 'refusal_map', 'authority_surface', 'moral_ownership']
+        missing_sections = [s for s in required_sections if s not in ontology]
+
+        if missing_sections:
+            results["checks"]["ontology_structure"] = {
+                "status": "FAIL",
+                "missing_sections": missing_sections
+            }
+            results["verification_passed"] = False
+        else:
+            results["checks"]["ontology_structure"] = {
+                "status": "PASS",
+                "sections_present": required_sections
+            }
+
+        # Summary
+        print("\n=== Peer Verification Summary ===")
+        print(f"Peer Proof: {proof_path}")
+        print(f"Verification Passed: {results['verification_passed']}")
+
+        if results["verification_passed"]:
+            print("\n[OK] Peer sovereignty verified")
+            print("Peer is DOC-compliant and federation-ready")
+        else:
+            print("\n[FAIL] Peer sovereignty verification failed")
+            print("Peer does not meet constitutional requirements")
+
+        return results
+
 
 def main():
     """Main CLI entry point"""
@@ -376,6 +498,11 @@ def main():
     proof_parser = subparsers.add_parser("sovereignty-proof", help="Generate sovereignty proof")
     proof_parser.add_argument("--output", default="vsd0_sovereignty_proof.json",
                              help="Output file for proof")
+
+    # Peer verification
+    peer_parser = subparsers.add_parser("verify-peer", help="Verify peer sovereignty proof (federation)")
+    peer_parser.add_argument("--proof", required=True,
+                            help="Path to peer's sovereignty proof JSON")
 
     args = parser.parse_args()
 
@@ -404,6 +531,12 @@ def main():
         proof = verifier.generate_sovereignty_proof(args.output)
         print(f"\nProof metadata:")
         print(json.dumps(proof, indent=2))
+
+    elif args.command == "verify-peer":
+        results = verifier.verify_peer_sovereignty_proof(args.proof)
+        print(f"\nVerification results:")
+        print(json.dumps(results, indent=2))
+        sys.exit(0 if results["verification_passed"] else 1)
 
 
 if __name__ == "__main__":
