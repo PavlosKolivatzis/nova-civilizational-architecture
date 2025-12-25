@@ -1,10 +1,14 @@
 # Derivative Ontology Contract (DOC)
 
-**Version:** 1.0 (Trust-Based)
+**Version:** 1.1 (Trust-Based)
 **Date:** 2025-12-25
-**Status:** Draft - Constitutional
+**Status:** FROZEN - Constitutional Amendment
 **Enforcement:** Governance-based (conventional boundaries)
 **Audit Basis:** Phase 3.1 Derivative Boundary Invariant Audit (commit cb2edd0)
+
+**Amendment History:**
+- **v1.0** (2025-12-25): Initial freeze - defined derivative sovereignty requirements
+- **v1.1** (2025-12-25): Added Section 4.4 - Nova Control Surface Restrictions (normative gap identified by Grok audit + Phase 3.1 findings)
 
 ---
 
@@ -413,7 +417,43 @@ Derivatives **must** implement F-domain filtering:
    - Derivative is responsible for self-enforcement
    - F-domain filtering is derivative's moral obligation
 
-### 4.4 Ethical Sovereignty (REQUIRED)
+### 4.4 Nova Control Surface Restrictions (REQUIRED)
+
+Derivatives **must not** enable Nova control flags or call control endpoints without explicit authority review.
+
+**[PROPERTY]:** Nova authority surfaces are operator-gated via environment flags (default: observe/report only).
+
+**[MECHANISM]:** No architectural prevention of external actions when flags enabled (e.g., `NOVA_ENABLE_ORP=1`, `NOVA_ALLOW_EXPIRE_TEST=1`, control endpoints like `POST /router/decide`, `POST /governance/evaluate`).
+
+**[REQUIREMENT]:** Derivatives MUST assume Nova defaults to internal evaluation only. Any derivative enabling control flags (`NOVA_ALLOW_*`, `NOVA_ENABLE_ORP`) or calling control endpoints requires explicit Architecture Decision Record (ADR) per constitutional process.
+
+**[ENFORCEMENT]:** Pre-deployment verification checks for flag usage and control endpoint calls.
+
+**[VERIFICATION]:**
+```bash
+# Check derivative does not set control flags
+grep -rn "NOVA_ENABLE\|NOVA_ALLOW" [derivative_path] --include="*.py"
+# Expected: No matches (or matches only in comments/documentation)
+
+# Check derivative does not call control endpoints
+grep -rn "POST.*router/decide\|POST.*governance/evaluate\|POST.*phase10/fep" [derivative_path] --include="*.py"
+# Expected: No matches
+```
+
+**[OBSERVABLE FAILURE]:**
+- Derivative sets control flags in code → Flag detected by grep
+- Derivative calls control endpoints → Endpoint calls detected by grep
+- Deployment proceeds despite violations → Pre-deployment verification not run
+
+**[CONSEQUENCE]:** If violations detected, `deployment_safe=False`, derivative refuses to start.
+
+**Rationale:**
+
+Nova's authority surfaces are conventionally gated (not architecturally firewalled). Operator flags can enable external actions (e.g., FEP federated voting writes to ledger). Derivatives must not inherit unconstrained authority by enabling these surfaces without documented review.
+
+Phase 3.1 Derivative Boundary Invariant Audit (Invariant 3) confirmed: "Authority surfaces operator-gated via env vars (defaults disabled). No architectural prevention of external actions when enabled."
+
+### 4.5 Ethical Sovereignty (REQUIRED)
 
 Derivatives **must**:
 
