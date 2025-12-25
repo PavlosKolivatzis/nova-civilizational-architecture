@@ -29,12 +29,14 @@ The following documents define Nova's non-negotiable core:
 - `docs/specs/phase16_alpha_calibration_protocol.md`
 - `docs/specs/phase16_agency_pressure_evidence.md`
 - `docs/specs/derivative_ontology_contract.md` (added 2025-12-25)
+- `docs/specs/constitutional_documentation_contract.md` (added 2025-12-25)
 
 These artifacts jointly define:
 - What Nova may observe
 - What Nova may route
 - Where Nova must always refuse
 - How derivatives inherit and respect Nova's boundaries
+- How constitutional documentation prevents interpretive authority drift
 
 ---
 

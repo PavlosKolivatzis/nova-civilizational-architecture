@@ -1,7 +1,7 @@
 # Constitutional Documentation Contract (CDC) v1.0
 
 **Version:** 1.0
-**Status:** DRAFT
+**Status:** FROZEN
 **Type:** Language Firewall Specification
 **Purpose:** Prevent Interpretive Authority Drift in constitutional documentation
 **Applies to:** All frozen artifacts, derivative constitutions, and constitutional specifications

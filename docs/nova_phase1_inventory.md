@@ -18,6 +18,7 @@
 | Path                                         | Class | Rationale                                                |
 |----------------------------------------------|-------|----------------------------------------------------------|
 | docs/CONTRIBUTING_CONSTITUTIONAL_CHECK.md   | A     | Constitutional review checklist (enforces O/R/F jurisdiction and refusal invariants at design time). |
+| docs/specs/constitutional_documentation_contract.md | A | Constitutional Documentation Contract (language firewall, prevents interpretive authority drift in constitutional documentation). |
 | docs/specs/derivative_ontology_contract.md  | A     | Derivative Ontology Contract (defines sovereign derivative relationship to Nova Core, prevents authority laundering). |
 | docs/specs/flow_mesh_overview.md            | B     | High-level flow/mesh overview (reference architecture). |
 | docs/specs/nova_constitutional_freeze.md    | A     | Constitutional freeze declaration for core domains.     |
