@@ -20,7 +20,7 @@ No further expansion, reinterpretation, or optimization is permitted within thes
 
 ## 2. Frozen Artifacts (Authoritative)
 
-The following documents define Nova’s non-negotiable core:
+The following documents define Nova's non-negotiable core:
 
 - `docs/architecture/ontology/specs/nova_framework_ontology.v1.yaml`
 - `docs/specs/nova_jurisdiction_map.md`
@@ -28,11 +28,13 @@ The following documents define Nova’s non-negotiable core:
 - `docs/specs/refusal_event_exemplars.md`
 - `docs/specs/phase16_alpha_calibration_protocol.md`
 - `docs/specs/phase16_agency_pressure_evidence.md`
+- `docs/specs/derivative_ontology_contract.md` (added 2025-12-25)
 
 These artifacts jointly define:
 - What Nova may observe
 - What Nova may route
 - Where Nova must always refuse
+- How derivatives inherit and respect Nova's boundaries
 
 ---
 

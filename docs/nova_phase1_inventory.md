@@ -17,8 +17,9 @@
 ```markdown
 | Path                                         | Class | Rationale                                                |
 |----------------------------------------------|-------|----------------------------------------------------------|
-| docs/specs/flow_mesh_overview.md            | B     | High-level flow/mesh overview (reference architecture). |
 | docs/CONTRIBUTING_CONSTITUTIONAL_CHECK.md   | A     | Constitutional review checklist (enforces O/R/F jurisdiction and refusal invariants at design time). |
+| docs/specs/derivative_ontology_contract.md  | A     | Derivative Ontology Contract (defines sovereign derivative relationship to Nova Core, prevents authority laundering). |
+| docs/specs/flow_mesh_overview.md            | B     | High-level flow/mesh overview (reference architecture). |
 | docs/specs/nova_constitutional_freeze.md    | A     | Constitutional freeze declaration for core domains.     |
 | docs/specs/nova_jurisdiction_map.md         | A     | Defines O/R/F jurisdictions and negative space.         |
 | docs/specs/nova_system_context_overview.md  | B     | System context overview (reference, non-constitutional).|

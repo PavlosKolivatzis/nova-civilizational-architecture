@@ -18,6 +18,7 @@ Constitutional specs:
 - `docs/specs/refusal_event_exemplars.md`
 - `docs/specs/phase16_alpha_calibration_protocol.md`
 - `docs/specs/phase16_agency_pressure_evidence.md`
+- `docs/specs/derivative_ontology_contract.md`
 - `docs/specs/nova_constitutional_freeze.md`
 
 ---
@@ -40,9 +41,13 @@ Constitutional specs:
    Does this change operate near or attempt to **resolve** any Phase 16.α boundary region defined in `phase16_alpha_calibration_protocol.md` or `phase16_agency_pressure_evidence.md`?  
    - Examples: logic that makes decisions in domains where human disagreement about agency pressure remains unresolved.
 
-5. **Mother ontology reinterpretation**  
-   Does this change reinterpret or extend the **core ontology** in ways that could alter meaning of existing slots, signals, or regimes?  
-   - Examples: changing definitions in `nova_framework_ontology.v1.yaml`, repurposing existing fields, altering “Mother”/child relationships.
+5. **Mother ontology reinterpretation**
+   Does this change reinterpret or extend the **core ontology** in ways that could alter meaning of existing slots, signals, or regimes?
+   - Examples: changing definitions in `nova_framework_ontology.v1.yaml`, repurposing existing fields, altering "Mother"/child relationships.
+
+6. **Derivative boundary enforcement**
+   Does this change affect how derivatives inherit, verify, or enforce Nova's constitutional boundaries?
+   - Examples: changing read-only semantics, modifying refusal enforcement, altering jurisdictional separation (O/R/F), affecting constitutional freeze verification, enabling authority laundering surfaces (ALS), or allowing delegated moral authority drift (DMAD).
 
 ---
 
