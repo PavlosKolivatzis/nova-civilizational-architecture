@@ -28,7 +28,7 @@ The following documents define Nova's non-negotiable core:
 - `docs/specs/refusal_event_exemplars.md`
 - `docs/specs/phase16_alpha_calibration_protocol.md`
 - `docs/specs/phase16_agency_pressure_evidence.md`
-- `docs/specs/derivative_ontology_contract.md` (added 2025-12-25)
+- `docs/specs/derivative_ontology_contract.md` (v1.0: 2025-12-25, v1.1: 2025-12-25 - added Section 4.4)
 - `docs/specs/constitutional_documentation_contract.md` (added 2025-12-25)
 
 These artifacts jointly define:
