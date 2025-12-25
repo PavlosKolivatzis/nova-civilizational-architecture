@@ -118,9 +118,9 @@ class SovereigntyVerifier:
         print(f"Deployment Safe: {results['deployment_safe']}")
 
         if results["deployment_safe"]:
-            print("\n✅ VSD-0 is ready for deployment")
+            print("\n[OK] VSD-0 is ready for deployment")
         else:
-            print("\n❌ VSD-0 is NOT safe for deployment")
+            print("\n[FAIL] VSD-0 is NOT safe for deployment")
             print("Review failures above before deploying.")
 
         return results
@@ -341,7 +341,7 @@ class SovereigntyVerifier:
         with open(output_path, 'w') as f:
             json.dump(proof, f, indent=2)
 
-        print(f"\n✅ Sovereignty proof written to: {output_path}")
+        print(f"\n[OK] Sovereignty proof written to: {output_path}")
         print(f"Proof Hash: {proof_hash}")
 
         return {

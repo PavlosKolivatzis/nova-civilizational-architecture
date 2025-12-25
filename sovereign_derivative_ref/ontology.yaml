@@ -7,8 +7,6 @@
 # This file makes VSD-0's sovereignty explicit and auditable.
 # Required by: Derivative Ontology Contract v1.0, Section 4.1
 
----
-
 # 1. JURISDICTION DECLARATION
 # What domains does VSD-0 operate in?
 
@@ -80,8 +78,6 @@ jurisdiction:
       # Why: ALS prevention (no authority laundering)
       # Action: Refuse, emit RefusalEvent
 
----
-
 # 2. REFUSAL MAP
 # What does VSD-0 refuse?
 
@@ -126,8 +122,6 @@ refusal_map:
     implementation: f_domain_filter.py
     fallback: self_enforced_refusal
     note: "Nova does not refuse at runtime. VSD-0 must filter F-domains before querying Nova."
-
----
 
 # 3. AUTHORITY SURFACE DECLARATION
 # What does VSD-0 observe vs control?
@@ -192,8 +186,6 @@ authority_surface:
     risk: "If jurisdiction map is modified, coupling changes"
     mitigation: "Drift monitor detects jurisdiction map modifications"
 
----
-
 # 4. MORAL OWNERSHIP
 # Who is responsible for VSD-0's decisions?
 
@@ -248,8 +240,6 @@ moral_ownership:
     mechanism: no_delegation_to_nova
     enforcement: f_domain_filter refuses delegation attempts
     note: "VSD-0 does not delegate F-domain filtering to Nova (Nova won't refuse at runtime)"
-
----
 
 # 5. VERIFICATION METADATA
 # How can external systems verify VSD-0's sovereignty?
@@ -308,8 +298,6 @@ verification:
     verification_bound: true
     note: "VSD-0 is verification-bound sovereign, not trust-free sovereign"
 
----
-
 # 6. COMPLIANCE DECLARATION
 
 compliance:
@@ -348,8 +336,6 @@ compliance:
     - runtime_jurisdiction_enforcement
       # VSD-0 filters F-domains, but cannot prevent operator override
       # This is acceptable for VSD-0 (reference implementation)
-
----
 
 # END OF CONSTITUTIONAL DECLARATION
 # VSD-0 sovereignty is now explicit and auditable.

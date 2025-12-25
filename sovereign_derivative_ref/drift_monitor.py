@@ -414,8 +414,8 @@ if __name__ == "__main__":
     print(f"\nCompliant: {results['compliant']}")
 
     if not results['compliant']:
-        print("\n❌ Constitutional violations detected. Deployment NOT SAFE.")
+        print("\n[FAIL] Constitutional violations detected. Deployment NOT SAFE.")
         sys.exit(1)
     else:
-        print("\n✅ Nova constitutional state verified. Deployment safe.")
+        print("\n[OK] Nova constitutional state verified. Deployment safe.")
         sys.exit(0)

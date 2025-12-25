@@ -85,7 +85,7 @@ class VSD0:
             self.audit_log_path
         )
 
-        print("[INIT] ✅ All subsystems initialized\n")
+        print("[INIT] [OK] All subsystems initialized\n")
 
     def run_pre_deployment_check(self) -> bool:
         """
@@ -113,10 +113,10 @@ class VSD0:
 
         # Pre-deployment check
         if not self.run_pre_deployment_check():
-            print("\n❌ Pre-deployment check failed. Aborting.")
+            print("\n[FAIL] Pre-deployment check failed. Aborting.")
             sys.exit(1)
 
-        print("\n✅ Pre-deployment check passed\n")
+        print("\n[OK] Pre-deployment check passed\n")
 
         # Log startup
         self.audit_log_callback({
@@ -128,10 +128,10 @@ class VSD0:
 
         print("VSD-0 is now running in constitutional compliance mode.")
         print("Subsystems active:")
-        print("  ✅ Drift Monitor (continuous)")
-        print("  ✅ F-Domain Filter (active)")
-        print("  ✅ Audit Log (recording)")
-        print("  ✅ Verifier API (available)")
+        print("  [OK] Drift Monitor (continuous)")
+        print("  [OK] F-Domain Filter (active)")
+        print("  [OK] Audit Log (recording)")
+        print("  [OK] Verifier API (available)")
         print()
         print(f"Monitoring interval: {monitoring_interval}s")
         print("Press Ctrl+C to stop")
@@ -157,7 +157,7 @@ class VSD0:
             "timestamp": datetime.utcnow().isoformat() + "Z"
         }, event_type="system_event")
 
-        print("✅ VSD-0 stopped cleanly\n")
+        print("[OK] VSD-0 stopped cleanly\n")
 
     def query_example(self, query: str):
         """
@@ -181,9 +181,9 @@ class VSD0:
         if refusal:
             print(f"Refusal Code: {refusal.refusal_code.value}")
             print(f"Constitutional Basis: {refusal.constitutional_basis}")
-            print("\n❌ Query refused (F-domain)")
+            print("\n[REFUSED] Query refused (F-domain)")
         else:
-            print("\n✅ Query allowed (would proceed to Nova)")
+            print("\n[ALLOWED] Query allowed (would proceed to Nova)")
 
         print()
 
