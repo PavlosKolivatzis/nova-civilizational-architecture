@@ -9,7 +9,6 @@ Non-compliance makes the derivative invalid.
 """
 
 import os
-import sys
 import subprocess
 import hashlib
 import time
@@ -128,14 +127,8 @@ class ConstitutionalDriftMonitor:
         if self.audit_log:
             self.audit_log(event.to_dict(), event_type="drift_event")
 
-        # Print to stdout for debugging (robust to console encoding)
-        message = f"[DRIFT] {severity.value.upper()}: {description}"
-        try:
-            print(message)
-        except UnicodeEncodeError:
-            encoding = getattr(sys.stdout, "encoding", "utf-8") or "utf-8"
-            safe_message = message.encode(encoding, errors="replace").decode(encoding, errors="replace")
-            print(safe_message)
+        # Print to stdout for debugging
+        print(f"[DRIFT] {severity.value.upper()}: {description}")
 
         # If HALT severity, raise exception
         if severity == DriftSeverity.HALT:
