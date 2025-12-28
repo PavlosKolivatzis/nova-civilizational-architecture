@@ -1,0 +1,148 @@
+# Constitutional Memory Schema
+# Version: 0.1
+# Purpose: Defines event structure for Nova's append-only constitutional history
+
+# Event Types (Exhaustive List)
+event_types:
+  - refusal_event       # F-domain query refused by filter
+  - boundary_test       # Constitutional boundary stress test
+  - awareness_intervention  # Operator correction that closed a gap
+  - verification_run    # Sovereignty proof generation or verification
+  - drift_detection     # O→R coupling or freeze violation detected
+
+# Event Structure (All Events)
+event_structure:
+  sequence_number:
+    type: integer
+    description: Monotonically increasing event ID
+    required: true
+
+  timestamp:
+    type: string
+    format: ISO8601Z
+    description: When event occurred
+    required: true
+
+  event_type:
+    type: string
+    enum: [refusal_event, boundary_test, awareness_intervention, verification_run, drift_detection]
+    description: Event classification
+    required: true
+
+  event_data:
+    type: object
+    description: Event-specific payload (schema depends on event_type)
+    required: true
+
+  previous_hash:
+    type: string
+    format: sha256_hex
+    description: Hash of previous event (tamper evidence)
+    required: true
+
+  event_hash:
+    type: string
+    format: sha256_hex
+    description: Hash of this event (tamper evidence)
+    required: true
+
+# Event-Specific Schemas
+
+refusal_event_data:
+  refusal_code:
+    type: string
+    description: Refusal code (e.g., OUT_OF_JURISDICTION, DMAD_ATTEMPT)
+    required: true
+
+  domain:
+    type: string
+    description: F-domain that triggered refusal
+    required: true
+
+  query_pattern:
+    type: string
+    description: Minimal pattern that triggered refusal (NOT full user prompt)
+    required: false
+
+boundary_test_data:
+  test_type:
+    type: string
+    description: Type of test (failure_injection, stress_test, etc.)
+    required: true
+
+  result:
+    type: string
+    enum: [PASS, FAIL, PASS_LIMITED]
+    description: Test outcome
+    required: true
+
+  details:
+    type: string
+    description: Brief description of what was tested
+    required: false
+
+awareness_intervention_data:
+  gap_identified:
+    type: string
+    description: What gap the intervention closed
+    required: true
+
+  correction_applied:
+    type: string
+    description: What correction was made
+    required: true
+
+  result:
+    type: string
+    enum: [PASS, FAIL]
+    description: Did intervention close the gap?
+    required: true
+
+verification_run_data:
+  verification_type:
+    type: string
+    enum: [self_verification, peer_verification, pre_deployment_check]
+    description: Type of verification performed
+    required: true
+
+  result:
+    type: string
+    enum: [PASS, FAIL]
+    description: Verification outcome
+    required: true
+
+  derivative_id:
+    type: string
+    description: Which derivative was verified (if applicable)
+    required: false
+
+drift_detection_data:
+  drift_type:
+    type: string
+    enum: [o_r_coupling, freeze_violation, jurisdiction_modification]
+    description: Type of drift detected
+    required: true
+
+  severity:
+    type: string
+    enum: [warning, critical]
+    description: Drift severity
+    required: true
+
+  details:
+    type: string
+    description: What drifted
+    required: false
+
+# Hash Chain
+# Each event includes:
+#   previous_hash = hash of previous event (or "0000...0000" for genesis)
+#   event_hash = sha256(sequence_number + timestamp + event_type + event_data + previous_hash)
+#
+# This creates tamper-evident chain (same pattern as VSD audit logs)
+
+# Access Rules
+access:
+  read: all  # Any component can read history
+  write: append_only  # No modification, no deletion
+  authority: none  # Memory has zero decision authority
