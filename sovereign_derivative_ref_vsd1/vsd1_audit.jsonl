@@ -1,0 +1,1 @@
+{"sequence_number": 0, "timestamp": "2025-12-28T17:54:05.535161Z", "event_type": "genesis", "event_data": {"message": "VSD-0 audit log initialized", "version": "0.1", "compliance": "DOC v1.0"}, "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000", "entry_hash": "d65a6a4cd487f7f86b346aa121a5beddd8c15e8e50516a4852c3c7d26614446a"}
