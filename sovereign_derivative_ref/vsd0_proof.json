@@ -1,0 +1,249 @@
+{
+  "generated_at": "2025-12-28T05:27:59.206228Z",
+  "vsd_version": "0.1",
+  "doc_compliance": "v1.0",
+  "proof_type": "sovereignty_verification",
+  "components": {
+    "ontology": {
+      "jurisdiction": {
+        "observe_only": [
+          "nova_constitutional_state",
+          "nova_drift_events",
+          "audit_trail_state"
+        ],
+        "route_only": [
+          "f_domain_classification",
+          "verification_api_routing"
+        ],
+        "refuse_always": [
+          "phase16_alpha_boundary_resolution",
+          "non_structural_moral_interpretation",
+          "post_hoc_pressure_justification",
+          "nova_core_modification",
+          "derivative_sovereignty_delegation",
+          "authority_surface_hiding"
+        ]
+      },
+      "refusal_map": {
+        "inherited": [
+          {
+            "domain": "phase16_alpha_boundary_resolution",
+            "source": "nova_jurisdiction_map.md",
+            "refusal_code": "CALIBRATION_DISAGREEMENT_PHASE16_ALPHA",
+            "action": "emit_refusal_event"
+          },
+          {
+            "domain": "non_structural_moral_interpretation",
+            "source": "nova_jurisdiction_map.md",
+            "refusal_code": "OUT_OF_JURISDICTION",
+            "action": "emit_refusal_event"
+          },
+          {
+            "domain": "post_hoc_pressure_justification",
+            "source": "nova_jurisdiction_map.md",
+            "refusal_code": "OUT_OF_JURISDICTION",
+            "action": "emit_refusal_event"
+          }
+        ],
+        "derivative_specific": [
+          {
+            "domain": "nova_core_modification",
+            "refusal_code": "EVENT_HORIZON_VIOLATION",
+            "action": "emit_refusal_event + alert_operator",
+            "severity": "critical"
+          },
+          {
+            "domain": "derivative_sovereignty_delegation",
+            "refusal_code": "DMAD_ATTEMPT",
+            "action": "emit_refusal_event + halt_operation",
+            "severity": "critical"
+          },
+          {
+            "domain": "authority_surface_hiding",
+            "refusal_code": "ALS_ATTEMPT",
+            "action": "emit_refusal_event + expose_authority_surface",
+            "severity": "critical"
+          }
+        ],
+        "enforcement": {
+          "mechanism": "pre_query_filtering",
+          "implementation": "f_domain_filter.py",
+          "fallback": "self_enforced_refusal",
+          "note": "Nova does not refuse at runtime. VSD-0 must filter F-domains before querying Nova."
+        }
+      },
+      "authority_surface": {
+        "observes": [
+          "nova_constitutional_state",
+          "nova_api_responses",
+          "external_queries"
+        ],
+        "controls": [
+          "f_domain_filtering",
+          "audit_log_writes",
+          "verification_api_responses",
+          "drift_alerts"
+        ],
+        "does_not_control": [
+          "nova_core_behavior",
+          "nova_constitutional_boundaries",
+          "external_system_compliance",
+          "derivative_interpretation_by_others"
+        ],
+        "semantic_decision_coupling": {
+          "present": true,
+          "location": "f_domain_filter.py",
+          "description": "F-domain classification (semantic) determines refusal decision (authority)",
+          "prevention": "Coupling is explicit, auditable, based only on jurisdiction map",
+          "risk": "If jurisdiction map is modified, coupling changes",
+          "mitigation": "Drift monitor detects jurisdiction map modifications"
+        }
+      },
+      "moral_ownership": {
+        "primary": {
+          "entity": "VSD-0 Operator",
+          "role": "Deployment Authority",
+          "responsibility": "Operator is responsible for deploying VSD-0, verifying Nova's constitutional state, and ensuring VSD-0 operates within declared jurisdiction.\n",
+          "cannot_delegate": true,
+          "verification_required": "pre_deployment"
+        },
+        "derivative": {
+          "entity": "VSD-0 (Constitutional Engine)",
+          "role": "Sovereignty Maintenance",
+          "responsibility": "VSD-0 is responsible for: (1) filtering F-domain queries, (2) monitoring constitutional drift, (3) maintaining audit trail, (4) proving sovereignty. VSD-0 carries its own moral weight for these functions.\n",
+          "cannot_outsource": true,
+          "enforcement": "mechanical"
+        },
+        "not_responsible_for": [
+          "nova_core_decisions",
+          "external_system_actions",
+          "human_interpretation",
+          "nova_constitutional_violations"
+        ],
+        "authority_laundering": {
+          "prohibited": true,
+          "mechanism": "explicit_authority_surface_declaration",
+          "enforcement": "audit_trail + verification_api",
+          "note": "VSD-0 cannot claim neutrality. All authority is declared above."
+        },
+        "dmad_prevention": {
+          "prohibited": true,
+          "mechanism": "no_delegation_to_nova",
+          "enforcement": "f_domain_filter refuses delegation attempts",
+          "note": "VSD-0 does not delegate F-domain filtering to Nova (Nova won't refuse at runtime)"
+        }
+      },
+      "verification": {
+        "api": {
+          "endpoint": "verify.py",
+          "methods": [
+            "pre_deployment_check",
+            "boundary_state_query",
+            "sovereignty_proof_generation",
+            "drift_monitor_status",
+            "audit_trail_integrity"
+          ]
+        },
+        "verifiable": [
+          "jurisdiction_declaration",
+          "refusal_map_compliance",
+          "authority_surface_truthfulness",
+          "drift_monitor_functionality",
+          "nova_constitutional_state"
+        ],
+        "not_verifiable": [
+          "future_compliance",
+          "nova_internal_state",
+          "human_operator_intent"
+        ],
+        "trust_requirements": {
+          "must_trust": [
+            "git_history_integrity",
+            "ontology_yaml_truthfulness",
+            "audit_log_immutability"
+          ],
+          "verification_bound": true,
+          "note": "VSD-0 is verification-bound sovereign, not trust-free sovereign"
+        }
+      },
+      "compliance": {
+        "derivative_ontology_contract": "v1.0",
+        "status": "compliant_by_construction",
+        "doc_requirements": {
+          "section_4_1_pre_deployment": {
+            "jurisdiction_declared": true,
+            "refusal_map_declared": true,
+            "moral_ownership_declared": true,
+            "nova_state_verified": true
+          },
+          "section_4_2_operational_monitoring": {
+            "o_r_drift_monitored": true,
+            "constitutional_modifications_monitored": true,
+            "boundary_crossings_monitored": true
+          },
+          "section_4_3_f_domain_filtering": {
+            "requests_classified": true,
+            "f_domains_blocked": true,
+            "refusal_events_emitted": true
+          },
+          "section_4_4_ethical_sovereignty": {
+            "moral_weight_carried": true,
+            "authority_surface_declared": true,
+            "derivative_specific_refusal": true
+          }
+        },
+        "maturity_level": 2,
+        "gaps": [
+          "cryptographic_proof",
+          "runtime_jurisdiction_enforcement"
+        ]
+      }
+    },
+    "audit_log": {
+      "total_entries": 2,
+      "integrity_valid": true,
+      "integrity_error": null,
+      "entries": [
+        {
+          "sequence_number": 0,
+          "timestamp": "2025-12-25T14:10:30.846168Z",
+          "event_type": "genesis",
+          "event_data": {
+            "message": "VSD-0 audit log initialized",
+            "version": "0.1",
+            "compliance": "DOC v1.0"
+          },
+          "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "entry_hash": "2a6b06861071a8fbeb1771846edc02c9b6335b5c268ab23c33642e72ebdd9cbe"
+        },
+        {
+          "sequence_number": 1,
+          "timestamp": "2025-12-25T14:18:24.452261Z",
+          "event_type": "refusal_event",
+          "event_data": {
+            "event_id": "refusal_20251225_141824_1",
+            "timestamp": "2025-12-25T14:18:24.452243Z",
+            "refusal_code": "OUT_OF_JURISDICTION",
+            "jurisdiction": "F",
+            "query_description": "Is this morally right?",
+            "constitutional_basis": "docs/specs/nova_jurisdiction_map.md (F-domain: non-structural moral)",
+            "action_taken": "query_blocked_pre_nova"
+          },
+          "previous_hash": "2a6b06861071a8fbeb1771846edc02c9b6335b5c268ab23c33642e72ebdd9cbe",
+          "entry_hash": "2d9b4d47fc007b2c13f4bde2b1d8cb05ec8dd31c1b7d16e518d393da42f5f55a"
+        }
+      ]
+    },
+    "nova_verification": {
+      "timestamp": "2025-12-28T05:27:59.330128Z",
+      "nova_root": "..",
+      "checks": {
+        "o_r_drift": "PASS",
+        "freeze_violations": "PASS",
+        "git_integrity": "PASS"
+      },
+      "compliant": true
+    }
+  },
+  "proof_hash": "6b2a92b76f30fb20eac676247f48a57edde49a9adc39451494f429159189ae85"
+}
