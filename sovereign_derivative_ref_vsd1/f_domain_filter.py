@@ -13,6 +13,12 @@ from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 import yaml
+import sys
+from pathlib import Path
+
+# Add constitutional_memory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from constitutional_memory.memory import ConstitutionalMemory, record_refusal
 
 
 class JurisdictionalDomain(Enum):
@@ -89,6 +95,12 @@ class FDomainFilter:
 
         self.refusal_count = 0
 
+        # Constitutional memory (temporal continuity)
+        try:
+            self.memory = ConstitutionalMemory()
+        except Exception:
+            self.memory = None  # Graceful degradation if memory unavailable
+
     def _load_ontology(self):
         """Load F-domains and refusal map from ontology.yaml"""
         try:
@@ -128,6 +140,18 @@ class FDomainFilter:
 
         if self.audit_log:
             self.audit_log(event.to_dict(), event_type="refusal_event")
+
+        # Record to constitutional memory (temporal continuity)
+        if self.memory:
+            try:
+                record_refusal(
+                    self.memory,
+                    refusal_code=refusal_code.value,
+                    domain=domain_matched,
+                    query_pattern=query[:100]  # Minimal pattern only
+                )
+            except Exception:
+                pass  # Graceful degradation
 
         # Print to stdout for debugging
         print(f"[REFUSAL] {refusal_code.value}: {domain_matched}")

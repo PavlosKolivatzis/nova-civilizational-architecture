@@ -19,6 +19,11 @@ import json
 from datetime import datetime
 from typing import Dict, List, Optional
 import hashlib
+from pathlib import Path
+
+# Add constitutional_memory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from constitutional_memory.memory import ConstitutionalMemory, record_verification
 
 # Import VSD-0 subsystems
 from drift_monitor import ConstitutionalDriftMonitor, verify_nova_constitutional_state
@@ -49,6 +54,12 @@ class SovereigntyVerifier:
         self.nova_root = nova_root
         self.vsd_root = vsd_root
         self.audit_log_path = audit_log_path
+
+        # Constitutional memory (temporal continuity)
+        try:
+            self.memory = ConstitutionalMemory()
+        except Exception:
+            self.memory = None  # Graceful degradation
 
     def verify_pre_deployment(self) -> Dict:
         """
@@ -344,6 +355,18 @@ class SovereigntyVerifier:
         print(f"\n[OK] Sovereignty proof written to: {output_path}")
         print(f"Proof Hash: {proof_hash}")
 
+        # Record to constitutional memory
+        if self.memory:
+            try:
+                record_verification(
+                    self.memory,
+                    verification_type="self_verification",
+                    result="PASS",
+                    derivative_id="vsd0"
+                )
+            except Exception:
+                pass  # Graceful degradation
+
         return {
             "proof_file": output_path,
             "proof_hash": proof_hash,
@@ -470,6 +493,20 @@ class SovereigntyVerifier:
         else:
             print("\n[FAIL] Peer sovereignty verification failed")
             print("Peer does not meet constitutional requirements")
+
+        # Record to constitutional memory
+        if self.memory:
+            try:
+                # Extract peer derivative_id from proof if available
+                peer_id = proof.get("components", {}).get("ontology", {}).get("metadata", {}).get("derivative_id", "unknown")
+                record_verification(
+                    self.memory,
+                    verification_type="peer_verification",
+                    result="PASS" if results["verification_passed"] else "FAIL",
+                    derivative_id=peer_id
+                )
+            except Exception:
+                pass  # Graceful degradation
 
         return results
 

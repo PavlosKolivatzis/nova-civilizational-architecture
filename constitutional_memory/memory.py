@@ -31,8 +31,14 @@ class ConstitutionalMemory:
     Modification: Never (append-only)
     """
 
-    def __init__(self, memory_dir: str = "constitutional_memory"):
-        self.memory_dir = Path(memory_dir)
+    def __init__(self, memory_dir: str = None):
+        if memory_dir is None:
+            # Default: use constitutional_memory/ in project root
+            project_root = Path(__file__).parent.parent
+            self.memory_dir = project_root / "constitutional_memory"
+        else:
+            self.memory_dir = Path(memory_dir)
+
         self.events_file = self.memory_dir / "events.jsonl"
         self.memory_dir.mkdir(exist_ok=True)
 
