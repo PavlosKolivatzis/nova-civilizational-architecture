@@ -1,6 +1,6 @@
 # Constitutional Architecture as Power Constraint: Mechanical Patterns for Authority Containment
 
-**Authors:** [To be determined]
+**Authors:** Pavlos Kolivatzis & AI collaborative schema
 **Date:** 2025-12-29
 **Status:** Draft
 **Domain:** Computational Governance, System Architecture, Power Structures
