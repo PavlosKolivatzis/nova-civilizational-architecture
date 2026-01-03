@@ -9,7 +9,7 @@ Nova exists to observe, stabilize, and coordinate complex intelligent systems wi
 Nova is an autonomous temporal-intelligence system built through multi-AI collaboration and deployed across a 10-slot cognitive architecture.
 
 [![Phase 14.2](https://img.shields.io/badge/phase-14.2--ready-blue)](docs/architecture/phase13b-temporal-snapshot-integration.md)
-[![Tests](https://img.shields.io/badge/tests-2100--passed-green)](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions)
+[![Tests](https://img.shields.io/badge/tests-snapshot-green)](https://github.com/PavlosKolivatzis/nova-civilizational-architecture/actions)
 [![Maturity](https://img.shields.io/badge/maturity-4.0--processual-gold)](docs/maturity.yaml)
 
 **Nova Version:** v14.2-prep | **Ontology Version:** v1.7.1
@@ -115,7 +115,7 @@ pip install --only-binary :all: -r requirements.txt
 # Set required environment
 export JWT_SECRET="test-secret-minimum-32-characters-long-for-security"
 
-# Run full test suite (2100+ tests)
+# Run full test suite (see docs/TESTS_OVERVIEW.md for snapshot counts)
 python -m pytest tests/ -q
 
 # Start Nova with monitoring (Phase 14.6+)
@@ -174,7 +174,7 @@ find contracts/ -name "*.yaml" | head -5 | xargs cat
 ```
 nova-civilizational-architecture/
 ├── src/nova/                    # Core framework (10 slots)
-├── tests/                       # 2100+ test suite
+├── tests/                       # test suite (see docs/TESTS_OVERVIEW.md)
 ├── docs/                        # 📖 Complete documentation
 ├── contracts/                   # API specifications
 ├── scripts/                     # Maintenance utilities
@@ -207,12 +207,12 @@ python -m pytest --collect-only | wc -l  # Count tests
 - **✅ Phase 13b Complete**: Temporal snapshots + dual-modality verification
 - **✅ Phase 14.0 Complete**: Repository consolidation + documentation integrity
 - **✅ Phase 14.2 Ready**: PostgreSQL persistence foundation established
-- **✅ All Tests Passing**: 2100+ tests with 100% success rate
+- **✅ All Tests Passing**: see docs/TESTS_OVERVIEW.md for snapshot counts
 
 ### System Maturity
 - **Slots**: 10/10 at Processual (4.0) maturity ⭐⭐⭐⭐
 - **Contracts**: 100% validated with zero violations
-- **Tests**: 2100+ passing, comprehensive coverage
+- **Tests**: see docs/TESTS_OVERVIEW.md for snapshot counts
 - **Documentation**: Sunlight Doctrine compliant
 
 ### Testing Categories

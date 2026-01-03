@@ -10,7 +10,8 @@
 **System Scale**: 50,000+ lines across 10 slots + orchestrator + supporting infrastructure
 **Maturity Level**: 4.0/4.0 (Full autonomous internal operation; externally gated by configuration)
 **Phase Status**: Phase 14.3 (USM Bias Detection + Persistent Checkpoints)
-**Test Coverage**: 2180 tests passing (2200 collected) with comprehensive integration validation
+**Test Coverage**: Snapshot-based; see `docs/TESTS_OVERVIEW.md`
+**Snapshot**: commit `250d866` (2025-12-23)
 **⚡ Coherence Proof**: ΔC-LIGHTCLOCK temporal synchronization system demonstrates autonomous coherence enforcement across 8/10 slots
 
 ---
@@ -271,7 +272,7 @@ The META_LENS_REPORT@1 system represents Nova's structured epistemological analy
 │  └─ Version control and status tracking                                           │
 │                                                                                     │
 │  CI/CD Pipeline (.github/workflows/)                                             │
-│  ├─ nova-ci.yml - Main test suite (506 tests)                                   │
+│  ├─ nova-ci.yml - Main test suite (snapshot; see docs/TESTS_OVERVIEW.md)        │
 │  ├─ health-config-matrix.yml - Health matrix across Python versions             │
 │  ├─ contracts-freeze.yml - Contract schema protection                            │
 │  ├─ contracts-nightly.yml - Nightly contract validation                          │
@@ -333,7 +334,7 @@ Prometheus Metrics → Governance Tracking → Response Assembly
 - **Total Lines**: 48,000+ across all components
 - **Cognitive Slots**: 10 slots, all at Processual 4.0 maturity
 - **Infrastructure Components**: 25+ supporting systems
-- **Test Coverage**: 506 passing tests with integration validation
+- **Test Coverage**: snapshot-based; see `docs/TESTS_OVERVIEW.md`
 - **CI/CD Pipelines**: 7 automated workflows with matrix testing
 
 ### **Performance Targets**

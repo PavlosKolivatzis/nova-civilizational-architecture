@@ -1,5 +1,7 @@
 # NOVA Testing Overview
 
+Snapshot note: counts and file lists reflect commit `9dfeea1` (2025-09-10).
+
 ## Test Suite Summary
 
 **Total Test Files**: 67 test files with test functions  
