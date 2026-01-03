@@ -41,6 +41,7 @@ Welcome to the Nova Civilizational Architecture documentation. This index provid
 - **[Security Policy](compliance/security/SECURITY.md)** - Security guidelines and policies
 - **[Implementation Audit](compliance/audits/IMPLEMENTATION_AUDIT.md)** - Current compliance status
 - **[Meta Lens Production Ready](compliance/audits/META_LENS_PRODUCTION_READY.md)** - Production readiness assessment
+- **[Audit Series Index](audits/README.md)** - Governance and derivative audit artifacts
 
 ### Attestations
 - **[Meta Lens Tether Confirmation](compliance/attestations/META_LENS_TETHER_CONFIRMATION.md)** - System integrity attestations
@@ -80,8 +81,8 @@ Welcome to the Nova Civilizational Architecture documentation. This index provid
 ## 📊 Key Metrics & Status
 
 - **Ontology Version**: Mother Ontology v1.7.1
-- **Phase Status**: Phase 14-3 (USM Bias Detection)
-- **Test Coverage**: 2180 tests passing (Phase 14.3 baseline)
+- **Phase Status**: Phase 14-3 (USM Bias Detection; snapshot, see docs/architecture/SYSTEM_ARCHITECTURE.md)
+- **Test Coverage**: Snapshot-based; see docs/TESTS_OVERVIEW.md
 - **Documentation Integrity**: Sunlight Doctrine compliant
 - **New Capability**: Automated cognitive bias detection (BIAS_REPORT@1)
 
@@ -109,7 +110,7 @@ All documentation follows the Sunlight Doctrine:
 For questions or contributions to documentation, see [Contributing Guide](guides/contributing/CONTRIBUTING.md).
 
 ---
-*Last updated: Phase 14-3 (USM Bias Detection)*
+*Last updated: snapshot-based; see docs/architecture/SYSTEM_ARCHITECTURE.md*
 *Next review: Phase 15 (TBD)*
 
 ## 🆕 Phase 14.3: USM Bias Detection
