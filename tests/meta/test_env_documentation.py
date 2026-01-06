@@ -17,8 +17,8 @@ def test_env_example_documents_all_env_vars():
     py_files = list(Path('.').rglob('*.py'))
 
     for py_file in py_files:
-        # Skip venv, node_modules, __pycache__, test files
-        if any(x in str(py_file) for x in ['.venv', 'venv', 'node_modules', '__pycache__', 'test_env_documentation.py']):
+        # Skip venv, node_modules, __pycache__, test files, archive
+        if any(x in str(py_file) for x in ['.venv', 'venv', 'node_modules', '__pycache__', 'test_env_documentation.py', 'archive']):
             continue
 
         try:
@@ -62,7 +62,7 @@ def test_no_orphaned_env_documentation():
     py_files = list(Path('.').rglob('*.py'))
 
     for py_file in py_files:
-        if any(x in str(py_file) for x in ['.venv', 'venv', 'node_modules', '__pycache__', 'test_env_documentation.py']):
+        if any(x in str(py_file) for x in ['.venv', 'venv', 'node_modules', '__pycache__', 'test_env_documentation.py', 'archive']):
             continue
 
         try:
