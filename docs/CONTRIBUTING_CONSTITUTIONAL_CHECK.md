@@ -51,6 +51,24 @@ Constitutional specs:
 
 ---
 
+## ARHP Diagnostic Module (Non-Operative)
+
+Nova includes an optional ARHP compliance verifier under `src/nova/compliance/arhp/`.
+
+Important:
+- ARHP is diagnostic-only.
+- It must not be wired into runtime routing, filtering, or refusal logic.
+- It does not emit RefusalEvents, block requests, or alter Nova behavior.
+- Any use of ARHP results is observational (O-domain) unless explicitly promoted by a future ADR.
+
+The configuration flag `NOVA_ENABLE_ARHP_DIAGNOSTICS` enables observation only.
+Default is `0` (off).
+
+Treat ARHP as a lens, not a lever.
+Activation of enforcement semantics requires constitutional review.
+
+---
+
 ## Review Guidance
 
 - If all answers are **NO**: proceed with normal review.  
@@ -64,4 +82,3 @@ Constitutional specs:
 
 This checklist is part of Nova’s **immune system**, not its governance logic.  
 It exists to ensure that any future evolution remains aware of, and accountable to, Nova’s constitutional boundaries.
-

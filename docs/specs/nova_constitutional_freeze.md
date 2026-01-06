@@ -133,6 +133,8 @@ Runtime enforcement provides **guardrails**, not **authority**.
 
 The following boundaries are **documented but not runtime-enforced**:
 
+- ARHP compliance verifier: Present as a diagnostic-only module; produces observational (O-domain) signals only and is not wired to runtime enforcement, routing, or refusal semantics.
+
 ### 8.1 RefusalEvent Schema
 
 - **Status**: Constitutional schema (v0.1), non-operational
