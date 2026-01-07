@@ -160,7 +160,7 @@ These boundaries define what Nova is and is not. Derivatives inheriting Nova mus
 
 **Nova's commitment:**
 - Phases 14-18 are constitutionally frozen (core ontology, jurisdiction map, refusal semantics)
-- 6 frozen artifacts listed in `nova_constitutional_freeze.md`
+- Frozen artifacts listed in `nova_constitutional_freeze.md`
 - Change control process requires ADR + constitutional review for modifications
 
 **Frozen artifacts:**
@@ -170,6 +170,8 @@ These boundaries define what Nova is and is not. Derivatives inheriting Nova mus
 4. `docs/specs/refusal_event_exemplars.md`
 5. `docs/specs/phase16_alpha_calibration_protocol.md`
 6. `docs/specs/phase16_agency_pressure_evidence.md`
+7. `docs/specs/derivative_ontology_contract.md`
+8. `docs/specs/constitutional_documentation_contract.md`
 
 **Architectural reality:**
 - No cryptographic proof of freeze (no GPG signatures, no hash verification)
@@ -240,12 +242,14 @@ These boundaries define what Nova is and is not. Derivatives inheriting Nova mus
 **Signal mappings (from jurisdiction map):**
 
 **O-domains (Observe-only):**
-- A_p, M_p, harm_status (Phase 16/17/18)
+- A_p (Phase 16)
 - Cultural synthesis outputs
 - Temporal usm metrics
 
 **R-domains (Route-only):**
-- bias_vector, extraction_present
+- bias_vector, collapse_score
+- harm_status (Phase 17)
+- M_p, patterns_uninvited (Phase 18)
 - Slot 7 regimes
 - Routing decisions
 

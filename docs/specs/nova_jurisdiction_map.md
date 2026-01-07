@@ -17,7 +17,7 @@ Nova operates under three structural jurisdictions:
    - MUST NOT change user-visible behaviour or regimes based on these signals.
 
 2. **Route-only (R)**  
-   - May use signals to select *which* path to take (e.g. which slot, which regime, whether to show transparency / consent UI).  
+   - May use signals to select routing path.  
    - May not enforce outcomes beyond routing and disclosure.  
    - MUST allow human override (per Phase 15 governance design).
 
@@ -37,13 +37,13 @@ The table below assigns each major signal family to a jurisdiction, with referen
 ```markdown
 | Signal / Layer                           | Jurisdiction | Notes / Constraints                                      |
 |------------------------------------------|--------------|---------------------------------------------------------|
-| Slot02 bias_vector, collapse_score       | R            | May route Slot07 regimes (per current cognitive loop).  |
+| Slot02 bias_vector, collapse_score       | R            | May route Slot07 regimes.                               |
 | Slot02 extraction_present (3-valued)     | O            | Observation-only; MUST NOT drive governance directly.   |
 | Slot02 temporal_usm (H_t, ρ_t, C_t)      | O            | Structural observables only; no direct governance use.  |
-| Phase 16 A_p, primitives (invited-aware) | O            | Observation-only until Phase 16β; no routing yet.       |
-| Phase 17 harm_status                     | R            | May route transparency / consent UI; no enforcement.    |
-| Phase 18 M_p, patterns_uninvited         | R            | May route review / transparency; no direct sanctions.   |
-| Slot07 regimes (Observational…Escalation)| R            | Regimes themselves are routing; no hard enforcement.    |
+| Phase 16 A_p, primitives (invited-aware) | O            | Observation-only; no routing.                           |
+| Phase 17 harm_status                     | R            | Routing-only; no enforcement.                           |
+| Phase 18 M_p, patterns_uninvited         | R            | Routing-only; no enforcement.                           |
+| Slot07 regimes (Observational…Escalation)| R            | Routing-only; no enforcement.                           |
 ```
 
 **Invariants (Mother Ontology, structural):**
@@ -103,4 +103,3 @@ This map is enforced at design and review time via:
 - Observation docs: governance observation and calibration documents (Phases 14–18) must continue to treat F domains as **non-optimisable**.
 
 Runtime enforcement (e.g. refusal events) will be defined separately; this file defines **where Nova must never expand**, not how it enforces that at run time.
-

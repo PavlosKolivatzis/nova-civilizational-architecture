@@ -45,7 +45,7 @@ Every constitutional document creates two surfaces:
 
 ### 1.3 The Core Invariant (Discovered)
 
-**Every constitutional sentence must map 1:1 to an executable, auditable, mechanically testable system property — or it is forbidden.**
+**Every constitutional sentence in a frozen artifact must map 1:1 to an executable, auditable, mechanically testable system property - or it is forbidden.**
 
 This is Plane 3's analog of:
 - Plane 1: No O→R drift without declaration
@@ -256,7 +256,7 @@ After:  "IF ontology.yaml declares jurisdiction AND drift_monitor.py runs contin
 
 ### 4.1 Mechanical Mapping Requirement
 
-**Every constitutional claim must include:**
+**Every constitutional claim in a frozen artifact must include:**
 
 1. **Property statement** (what is true)
 2. **Mechanism reference** (how it is enforced)
@@ -280,7 +280,7 @@ After:  "IF ontology.yaml declares jurisdiction AND drift_monitor.py runs contin
 
 ### 4.2 Authority Declaration Rule
 
-**Every normative statement (MUST/REQUIRED/SHALL) must declare:**
+**Every normative statement (MUST/REQUIRED/SHALL) in a frozen artifact must declare:**
 
 1. **Who enforces** (mechanism, not entity)
 2. **When enforced** (pre-deployment, runtime, manual audit)
@@ -310,7 +310,7 @@ Observable failure: VSD-0 starts despite missing drift_monitor subsystem,
 
 ### 4.3 Claim Classification Taxonomy
 
-**Every claim must be tagged:**
+**Every claim in a frozen artifact must be tagged:**
 
 - **[STRUCTURAL]** — Enforced by code/architecture
 - **[CONVENTIONAL]** — Enforced by governance/review process
@@ -337,7 +337,7 @@ Observable failure: VSD-0 starts despite missing drift_monitor subsystem,
 
 ### 4.4 Citation Survivability Rule
 
-**Constitutional claims must survive formal review contexts:**
+**Constitutional claims in frozen artifacts must survive formal review contexts:**
 
 - Academic citation (peer review)
 - Legal audit (contract analysis)
@@ -591,7 +591,7 @@ CDC v1.0 was discovered through **live fault detection**:
 
 This is not "best practice" or "style guide."
 
-**CDC is a structural requirement** for constitutional systems.
+**CDC is a documentation-layer requirement** for constitutional systems.
 
 Without it:
 - Federation protocols drift through prose
@@ -627,12 +627,12 @@ CDC v1.0 follows the same freeze process as DOC v1.0:
 
 ---
 
-**This document enforces:**
+**This document specifies:**
 - Language firewall against interpretive authority drift
 - 1:1 mapping between claims and verifiable properties
-- Mechanical enforcement of constitutional prose
+- Mechanical requirements for constitutional prose
 
-**This document prevents:**
+**This document prohibits within constitutional documentation:**
 - Mythic anchoring
 - Cultural authority injection
 - Metaphorical law simulation

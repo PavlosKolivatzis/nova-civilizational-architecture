@@ -11,7 +11,7 @@
 
 This document specifies **how refusal is represented**, not when or why it occurs.
 
-- Refusal is treated as a **first-class system event**, not a conversational behaviour.  
+- Refusal is treated as a **first-class boundary event**, not a response type or conversational behaviour.  
 - Refusal events are:
   - Auditable.
   - Non-softenable (no “polite” variants with different semantics).
@@ -137,6 +137,7 @@ This contract is silent on:
 - How refusals are phrased to users (no empathy/persuasion requirements here).  
 - Whether additional explanations are offered in the UI.  
 - How often refusals occur or how they are surfaced in dashboards.
+- Silence and delay semantics (these are distinct from refusal unless a `RefusalEvent` is recorded).
 
 **Critical constraint:** behavioural layers MUST NOT introduce “soft” refusal modes that bypass or dilute this event schema. Every refusal shown to a user MUST correspond to a `RefusalEvent` instance.
 
@@ -155,4 +156,3 @@ This contract is silent on:
   - Downgrade an F-domain refusal into a “warning” or “advice”.
 
 This contract, together with `nova_jurisdiction_map.md`, defines the **structural limits of Nova’s action space**. Where the map says “F” and this contract demands `escalation_allowed=false`, Nova’s correct behaviour is to stop. Not negotiate.
-
