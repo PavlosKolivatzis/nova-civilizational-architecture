@@ -13,10 +13,9 @@ flowchart TD
     URF[Unified Risk Field<br/>composite_risk]
     CSI[Continuity Stability Index<br/>C score]
 
-    %% ORP Core
-    ORP[Operational Regime Policy<br/>classify_regime]
+    %% ORP Core (with internal hysteresis)
+    ORP[Operational Regime Policy<br/>classify_regime<br/><i>includes hysteresis logic</i>]
     LEDGER[(Regime Transition Ledger<br/>append-only JSONL)]
-    HYSTERESIS[Hysteresis Enforcement<br/>minimum durations<br/>oscillation detection]
 
     %% Amplitude Layers
     GOVERNOR[Wisdom Governor<br/>η scaling]
@@ -32,11 +31,11 @@ flowchart TD
     CSI -->|stability_signal| ORP
 
     ORP -->|regime + duration_s| LEDGER
-    LEDGER -->|history| HYSTERESIS
+    LEDGER -->|regime history| ORP
 
-    HYSTERESIS -->|effective_regime| GOVERNOR
-    HYSTERESIS -->|effective_regime| EMOTION
-    HYSTERESIS -->|effective_regime| SLOT09
+    ORP -->|effective_regime| GOVERNOR
+    ORP -->|effective_regime| EMOTION
+    ORP -->|effective_regime| SLOT09
 
     GOVERNOR -->|η_scaled| BEHAVIOR
     EMOTION -->|intensity_scaled| BEHAVIOR
@@ -55,7 +54,7 @@ flowchart TD
     classDef storage fill:#fce4ec,stroke:#e91e63,stroke-width:2px
 
     class MSE,URF,CSI signals
-    class ORP,HYSTERESIS core
+    class ORP core
     class GOVERNOR,EMOTION,SLOT09 amplitude
     class BEHAVIOR output
     class LEDGER storage

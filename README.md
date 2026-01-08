@@ -262,6 +262,7 @@ python -m pytest --collect-only | wc -l  # Count tests
 
 ### Architecture & Design
 - **[System Architecture](docs/architecture/ARCHITECTURE.md)** - Complete technical overview
+- **[Diagram Index](archive/diagrams/NOVA_DIAGRAMS_INDEX.md)** - System diagrams with implementation alignment
 - **[Ontology Reference](docs/architecture/ontology/)** - Mother Ontology v1.7.1
 - **[Slot Documentation](docs/slots/)** - Individual slot specifications
 
