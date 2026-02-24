@@ -39,9 +39,19 @@ from nova.orchestrator.router.temporal_constraints import TemporalConstraintEngi
 from nova.orchestrator.governance import GovernanceEngine, GovernanceLedger
 from nova.orchestrator.control_plane import (
     ControlPlaneDependencies,
+    CoreEventBusAdapter,
+    CoreEventFactory,
     DecisionContext,
+    ExecutionConfig,
+    DictSlotRegistryService,
     ExecutionDependencies,
+    ExecutionService,
+    OrchestratorRunnerAdapter,
     OrchestratorControlPlane,
+    PayloadEventBusAdapter,
+    PayloadEventFactory,
+    RouteDecisionExecutionRoutePolicy,
+    RouterExecutionRoutePolicy,
 )
 from nova.orchestrator.temporal import TemporalLedger
 from nova.orchestrator.temporal.adapters import read_temporal_snapshot, read_temporal_ledger_head
@@ -162,15 +172,53 @@ class ControlPlaneFactory:
         slot_registry,
         orchestrator_runner,
     ) -> None:
-        control_plane_obj.set_execution_dependencies(
-            ExecutionDependencies(
-                router=router,
-                bus=bus,
-                event_cls=event_cls,
-                slot_registry=slot_registry,
-                orchestrator_runner=orchestrator_runner,
+        bus_adapter = self._adapt_bus(bus)
+        event_factory = self._build_event_factory(bus_adapter, event_cls)
+        slot_registry_service = DictSlotRegistryService(slot_registry)
+        runner_adapter = OrchestratorRunnerAdapter(orchestrator_runner) if orchestrator_runner else None
+        control_plane_obj.set_execution_service(
+            ExecutionService(
+                ExecutionDependencies(
+                    route_policy=self._build_route_policy(router),
+                    bus=bus_adapter,
+                    event_factory=event_factory,
+                    slot_registry=slot_registry_service,
+                    config=ExecutionConfig(event_topic="invoke"),
+                    orchestrator_runner=runner_adapter,
+                )
             )
         )
+
+    @staticmethod
+    def _adapt_bus(bus):
+        try:
+            from nova.orchestrator.core.event_bus import EventBus as CoreBus
+        except Exception:  # pragma: no cover
+            CoreBus = None  # type: ignore[assignment]
+        try:
+            from nova.orchestrator.bus import EventBus as PayloadBus
+        except Exception:  # pragma: no cover
+            PayloadBus = None  # type: ignore[assignment]
+
+        if CoreBus is not None and isinstance(bus, CoreBus):
+            return CoreEventBusAdapter(bus)
+        if PayloadBus is not None and isinstance(bus, PayloadBus):
+            return PayloadEventBusAdapter(bus)
+        return CoreEventBusAdapter(bus)
+
+    @staticmethod
+    def _build_event_factory(bus_adapter, event_cls):
+        if isinstance(bus_adapter, PayloadEventBusAdapter):
+            return PayloadEventFactory()
+        return CoreEventFactory(event_cls)
+
+    @staticmethod
+    def _build_route_policy(router):
+        if hasattr(router, "get_route"):
+            return RouterExecutionRoutePolicy(router, original_timeout=2.0)
+        if hasattr(router, "decide"):
+            return RouteDecisionExecutionRoutePolicy(router, default_timeout=2.0)
+        raise TypeError("Unsupported execution router: expected get_route(...) or decide(...)")
 
 
 control_plane_factory = ControlPlaneFactory()

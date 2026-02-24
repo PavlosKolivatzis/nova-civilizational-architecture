@@ -62,7 +62,12 @@ async def test_handle_request_invokes_orchestrator(monkeypatch):
 
     result = await app_mod.handle_request("slot02_deltathresh", {"payload": True}, "req-123")
 
-    assert result == {"result": "ok"}
+    assert result.executed is True
+    assert result.blocked is False
+    assert result.reason == "executed"
+    assert result.result == {"result": "ok"}
+    assert result.slot_id == "slot02_deltathresh"
+    assert result.timeout == 3.5
     assert captured["slot_name"] == "slot02_deltathresh"
     assert captured["payload"] == {"payload": True}
     assert captured["request_id"] == "req-123"
@@ -70,7 +75,7 @@ async def test_handle_request_invokes_orchestrator(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_handle_request_no_orchestrator_returns_none(monkeypatch):
+async def test_handle_request_no_orchestrator_returns_structured_result(monkeypatch):
     import nova.orchestrator.app as app_mod
 
     monkeypatch.setattr(
@@ -80,7 +85,12 @@ async def test_handle_request_no_orchestrator_returns_none(monkeypatch):
     )
     monkeypatch.setattr(app_mod, "orch", None)
     result = await app_mod.handle_request("slot02_deltathresh", {"payload": False}, "req-999")
-    assert result is None
+    assert result.executed is False
+    assert result.blocked is False
+    assert result.reason == "no_runner"
+    assert result.result is None
+    assert result.slot_id == "slot02_deltathresh"
+    assert result.timeout == 2.0
 
 
 def test_health_endpoint_returns_status_ok(app_module, client, monkeypatch):
@@ -172,3 +182,149 @@ def test_build_http_decision_context_helper(monkeypatch):
     assert ctx.trace_id == "t-1"
     assert ctx.source == "http:/router/decide"
     assert ctx.flags == {"urf": "1", "mse": "0", "orp": "1"}
+
+
+@pytest.mark.asyncio
+async def test_handle_request_parity_with_control_plane_success(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    class FakeBus:
+        def __init__(self):
+            self.events = []
+
+        async def publish(self, topic, event):
+            self.events.append((topic, event))
+            return []
+
+    class FakeRouter:
+        def get_route(self, target_slot, original_timeout=2.0):
+            return ("slot02_deltathresh", 3.5)
+
+    captured = []
+
+    async def fake_invoke(slot_fn, slot_name, payload, request_id, timeout=None):
+        captured.append(
+            {
+                "slot_name": slot_name,
+                "payload": dict(payload),
+                "request_id": request_id,
+                "timeout": timeout,
+            }
+        )
+        return {"result": "ok", "slot": slot_name, "timeout": timeout}
+
+    fake_orch = type("FakeOrchestrator", (), {"invoke_slot": staticmethod(fake_invoke)})
+
+    monkeypatch.setattr(app_mod, "bus", FakeBus())
+    monkeypatch.setattr(app_mod, "router", FakeRouter())
+    monkeypatch.setattr(app_mod, "orch", fake_orch)
+    monkeypatch.setattr(app_mod, "SLOT_REGISTRY", {"slot02_deltathresh": object()})
+
+    app_mod.control_plane_factory.configure_execution(
+        app_mod.control_plane,
+        router=app_mod.router,
+        bus=app_mod.bus,
+        event_cls=app_mod.Event,
+        slot_registry=app_mod.SLOT_REGISTRY,
+        orchestrator_runner=app_mod.orch,
+    )
+
+    via_app = await app_mod.handle_request("slot02_deltathresh", {"x": 1}, "req-1")
+    via_cp = await app_mod.control_plane.handle_request("slot02_deltathresh", {"x": 1}, "req-1")
+
+    assert via_app == via_cp
+    assert captured[0] == captured[1]
+
+
+@pytest.mark.asyncio
+async def test_handle_request_parity_with_control_plane_no_runner(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    class FakeBus:
+        async def publish(self, topic, event):
+            return []
+
+    class FakeRouter:
+        def get_route(self, target_slot, original_timeout=2.0):
+            return ("slot02_deltathresh", 2.0)
+
+    monkeypatch.setattr(app_mod, "bus", FakeBus())
+    monkeypatch.setattr(app_mod, "router", FakeRouter())
+    monkeypatch.setattr(app_mod, "orch", None)
+    monkeypatch.setattr(app_mod, "SLOT_REGISTRY", {"slot02_deltathresh": object()})
+
+    app_mod.control_plane_factory.configure_execution(
+        app_mod.control_plane,
+        router=app_mod.router,
+        bus=app_mod.bus,
+        event_cls=app_mod.Event,
+        slot_registry=app_mod.SLOT_REGISTRY,
+        orchestrator_runner=app_mod.orch,
+    )
+
+    via_app = await app_mod.handle_request("slot02_deltathresh", {"x": 0}, "req-2")
+    via_cp = await app_mod.control_plane.handle_request("slot02_deltathresh", {"x": 0}, "req-2")
+
+    assert via_app == via_cp
+    assert via_app.executed is False
+    assert via_app.blocked is False
+    assert via_app.reason == "no_runner"
+    assert via_app.result is None
+
+
+@pytest.mark.asyncio
+async def test_handle_request_parity_with_control_plane_fallback_branch(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    class FakeBus:
+        def __init__(self):
+            self.seen_slots = []
+
+        async def publish(self, topic, event):
+            self.seen_slots.append(getattr(event, "target_slot", None))
+            return []
+
+    class FakeRouter:
+        def get_route(self, target_slot, original_timeout=2.0):
+            return ("slot08_memory_ethics", 4.0)
+
+    calls = []
+
+    async def fake_invoke(slot_fn, slot_name, payload, request_id, timeout=None):
+        calls.append((slot_name, timeout, request_id))
+        return {"slot": slot_name, "timeout": timeout}
+
+    fake_orch = type("FakeOrchestrator", (), {"invoke_slot": staticmethod(fake_invoke)})
+
+    monkeypatch.setattr(app_mod, "bus", FakeBus())
+    monkeypatch.setattr(app_mod, "router", FakeRouter())
+    monkeypatch.setattr(app_mod, "orch", fake_orch)
+    monkeypatch.setattr(
+        app_mod,
+        "SLOT_REGISTRY",
+        {
+            "slot02_deltathresh": object(),
+            "slot08_memory_ethics": object(),
+        },
+    )
+
+    app_mod.control_plane_factory.configure_execution(
+        app_mod.control_plane,
+        router=app_mod.router,
+        bus=app_mod.bus,
+        event_cls=app_mod.Event,
+        slot_registry=app_mod.SLOT_REGISTRY,
+        orchestrator_runner=app_mod.orch,
+    )
+
+    via_app = await app_mod.handle_request("slot02_deltathresh", {"y": 2}, "req-fb")
+    via_cp = await app_mod.control_plane.handle_request("slot02_deltathresh", {"y": 2}, "req-fb")
+
+    assert via_app == via_cp
+    assert via_app.executed is True
+    assert via_app.blocked is False
+    assert via_app.reason == "executed"
+    assert via_app.slot_id == "slot08_memory_ethics"
+    assert via_app.timeout == 4.0
+    assert via_app.result == {"slot": "slot08_memory_ethics", "timeout": 4.0}
+    assert calls[0] == calls[1]
