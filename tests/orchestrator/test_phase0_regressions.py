@@ -22,7 +22,11 @@ def test_single_federation_health_route():
 
 def test_app_import_without_fastapi(monkeypatch):
     module_name = "nova.orchestrator.app"
+    parent_module_name = "nova.orchestrator"
     original_app_module = sys.modules.get(module_name)
+    parent_module = sys.modules.get(parent_module_name)
+    had_parent_app_attr = hasattr(parent_module, "app") if parent_module is not None else False
+    original_parent_app_attr = getattr(parent_module, "app", None) if had_parent_app_attr else None
     saved_fastapi_modules = {
         name: mod
         for name, mod in list(sys.modules.items())
@@ -54,4 +58,9 @@ def test_app_import_without_fastapi(monkeypatch):
         sys.modules.update(saved_fastapi_modules)
         if original_app_module is not None:
             sys.modules[module_name] = original_app_module
-
+        restored_parent = sys.modules.get(parent_module_name)
+        if restored_parent is not None:
+            if had_parent_app_attr:
+                setattr(restored_parent, "app", original_parent_app_attr)
+            elif hasattr(restored_parent, "app"):
+                delattr(restored_parent, "app")
