@@ -115,6 +115,16 @@ class ExecutionResult:
     slot_id: str = ""
     timeout: Optional[float] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "executed": self.executed,
+            "blocked": self.blocked,
+            "reason": self.reason,
+            "result": self.result,
+            "slot_id": self.slot_id,
+            "timeout": self.timeout,
+        }
+
 
 class RouterExecutionRoutePolicy:
     """Adapter over legacy router.get_route(...) tuple contract."""

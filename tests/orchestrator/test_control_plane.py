@@ -561,6 +561,26 @@ def test_route_decision_dataclass_shape():
     assert decision.timeout == 1.5
 
 
+def test_execution_result_to_dict():
+    result = ExecutionResult(
+        executed=False,
+        blocked=True,
+        reason="capability_invoke_disabled",
+        result=None,
+        slot_id="slot02_deltathresh",
+        timeout=2.0,
+    )
+
+    assert result.to_dict() == {
+        "executed": False,
+        "blocked": True,
+        "reason": "capability_invoke_disabled",
+        "result": None,
+        "slot_id": "slot02_deltathresh",
+        "timeout": 2.0,
+    }
+
+
 @pytest.mark.asyncio
 async def test_execution_service_blocks_on_capability_flags_before_publish_and_invoke():
     class _Bus:
