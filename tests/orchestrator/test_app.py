@@ -151,3 +151,24 @@ def test_force_expire_now_uses_semantic_mirror(app_module, monkeypatch):
         assert data["status"] == "ok"
         assert data["expired_count"] >= 1
         assert data["pulses_delta"] >= 1
+
+
+def test_build_http_decision_context_helper(monkeypatch):
+    import types
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.setenv("NOVA_ENABLE_URF", "1")
+    monkeypatch.setenv("NOVA_ENABLE_MSE", "0")
+    monkeypatch.setenv("NOVA_ENABLE_ORP", "1")
+
+    req = types.SimpleNamespace(
+        headers={"x-request-id": "r-1", "x-trace-id": "t-1"},
+        url=types.SimpleNamespace(path="/router/decide"),
+    )
+
+    ctx = app_mod.build_http_decision_context(req)
+
+    assert ctx.request_id == "r-1"
+    assert ctx.trace_id == "t-1"
+    assert ctx.source == "http:/router/decide"
+    assert ctx.flags == {"urf": "1", "mse": "0", "orp": "1"}

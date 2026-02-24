@@ -136,6 +136,7 @@ class GovernanceEngine:
         self._governance_history: Deque[Dict[str, Any]] = deque(maxlen=50)  # EPD history
         self._router_history: Deque[Dict[str, Any]] = deque(maxlen=50)  # EPD history
         self._active_patterns: Dict[str, PatternAlert] = {}  # Debounce state
+        self._state: Dict[str, Any] = {}
         self._last_result: Optional[GovernanceResult] = None
 
     def evaluate(

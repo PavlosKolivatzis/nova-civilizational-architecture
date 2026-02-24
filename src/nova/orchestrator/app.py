@@ -37,6 +37,12 @@ from nova.orchestrator.health import health_payload, prometheus_metrics
 from nova.orchestrator.router.epistemic_router import EpistemicRouter
 from nova.orchestrator.router.temporal_constraints import TemporalConstraintEngine
 from nova.orchestrator.governance import GovernanceEngine, GovernanceLedger
+from nova.orchestrator.control_plane import (
+    ControlPlaneDependencies,
+    DecisionContext,
+    ExecutionDependencies,
+    OrchestratorControlPlane,
+)
 from nova.orchestrator.temporal import TemporalLedger
 from nova.orchestrator.temporal.adapters import read_temporal_snapshot, read_temporal_ledger_head
 from nova.orchestrator.predictive import PredictiveLedger, PredictiveTrajectoryEngine
@@ -130,6 +136,67 @@ except Exception:  # pragma: no cover - orchestrator runner not available
 
 _peer_store = None
 _peer_sync = None
+
+
+class ControlPlaneFactory:
+    """Centralized control-plane wiring for app runtime and tests."""
+
+    def create(self, *, router, governance_engine) -> OrchestratorControlPlane:
+        return OrchestratorControlPlane(
+            dependencies=ControlPlaneDependencies(
+                router=router,
+                governance_engine=governance_engine,
+            )
+        )
+
+    def configure_http(self, control_plane_obj: OrchestratorControlPlane, builder) -> None:
+        control_plane_obj.set_http_context_builder(builder)
+
+    def configure_execution(
+        self,
+        control_plane_obj: OrchestratorControlPlane,
+        *,
+        router,
+        bus,
+        event_cls,
+        slot_registry,
+        orchestrator_runner,
+    ) -> None:
+        control_plane_obj.set_execution_dependencies(
+            ExecutionDependencies(
+                router=router,
+                bus=bus,
+                event_cls=event_cls,
+                slot_registry=slot_registry,
+                orchestrator_runner=orchestrator_runner,
+            )
+        )
+
+
+control_plane_factory = ControlPlaneFactory()
+control_plane = control_plane_factory.create(
+    router=deterministic_router,
+    governance_engine=governance_engine,
+)
+
+
+def build_http_decision_context(request) -> DecisionContext:
+    """Construct DecisionContext from an HTTP request for router decisions."""
+    path = getattr(getattr(request, "url", None), "path", "/router/decide")
+    headers = getattr(request, "headers", {}) or {}
+    return DecisionContext(
+        request_id=headers.get("x-request-id", ""),
+        trace_id=headers.get("x-trace-id", ""),
+        source=f"http:{path}",
+        flags={
+            "urf": os.getenv("NOVA_ENABLE_URF", "0"),
+            "mse": os.getenv("NOVA_ENABLE_MSE", "0"),
+            "orp": os.getenv("NOVA_ENABLE_ORP", "0"),
+        },
+    )
+
+
+control_plane_factory.configure_http(control_plane, build_http_decision_context)
 
 
 def get_peer_store():
@@ -654,18 +721,6 @@ if FastAPI is not None:
         except Exception as e:
             logger.warning(f"Phase 10 metrics update failed: {e}")
 
-    @app.get("/federation/health")
-    async def federation_health():
-        """Return current federation health telemetry."""
-        try:
-            from nova.orchestrator.federation_health import get_peer_health
-        except Exception as exc:  # pragma: no cover - health optional
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"federation health unavailable: {exc}",
-            ) from exc
-
-        return get_peer_health()
     @app.get("/metrics")
     async def metrics() -> Response:
         """Prometheus-compatible metrics for all slots."""
@@ -702,46 +757,14 @@ if FastAPI is not None:
         return Response(content=data, media_type=content_type)
 
     @app.post("/router/decide")
-    async def router_decide(payload: Optional[dict] = None):
+    async def router_decide(request: Request, payload: Optional[dict] = None):
         """Deterministic routing decision endpoint."""
-        payload = payload or {}
-        precheck = governance_engine.evaluate(payload, record=False)
-        if not precheck.allowed:
-            return {
-                "route": "hold",
-                "governance": precheck.to_dict(),
-                "constraints": {
-                    "allowed": False,
-                    "reasons": ["governance_precheck"],
-                    "snapshot": {},
-                },
-            }
-
-        decision = deterministic_router.decide(payload)
-        decision_dict = decision.to_dict()
-        enriched_state = dict(payload)
-        enriched_state["routing_decision"] = decision_dict
-        final_governance = governance_engine.evaluate(
-            enriched_state,
-            routing_decision=decision_dict,
-            record=True,
-        )
-        response = dict(decision_dict)
-        response["governance"] = final_governance.to_dict()
-        return response
+        return control_plane.decide_http(payload or {}, request)
 
     @app.get("/router/debug")
     async def router_debug():
         """Return the latest routing decision (or generate one with safe defaults)."""
-        last_decision = deterministic_router.last_decision
-        if last_decision is None:
-            last_decision = deterministic_router.decide({})
-        body = last_decision.to_dict()
-        body.setdefault("metadata", {})["mode"] = "deterministic"
-        governance = governance_engine.last_result
-        if governance:
-            body["governance"] = governance.to_dict()
-        return body
+        return control_plane.router_debug()
 
     @app.post("/governance/evaluate")
     async def governance_evaluate(payload: Optional[dict] = None):
@@ -752,10 +775,7 @@ if FastAPI is not None:
     @app.get("/governance/debug")
     async def governance_debug():
         """Return last governance evaluation."""
-        last = governance_engine.last_result
-        if last is None:
-            last = governance_engine.evaluate({}, record=False)
-        return last.to_dict()
+        return control_plane.governance_debug()
 
     @app.post("/dev/slot02")
     async def dev_slot02(payload: Optional[dict] = None):
@@ -923,70 +943,73 @@ else:  # pragma: no cover - FastAPI not installed
 
 async def handle_request(target_slot: str, payload: dict, request_id: str):
     """Route request based on slot health and invoke the orchestrator."""
-    slot, timeout = router.get_route(target_slot, original_timeout=2.0)
-    evt = Event(target_slot=slot, payload=payload)
-    await bus.publish("invoke", evt)
-    slot_fn = SLOT_REGISTRY.get(slot)
-    if orch and slot_fn:
-        return await orch.invoke_slot(slot_fn, slot, payload, request_id, timeout=timeout)
-    return None
+    control_plane_factory.configure_execution(
+        control_plane,
+        router=router,
+        bus=bus,
+        event_cls=Event,
+        slot_registry=SLOT_REGISTRY,
+        orchestrator_runner=orch,
+    )
+    return await control_plane.handle_request(target_slot, payload, request_id)
 
 
-@app.get("/temporal/snapshot")
-async def temporal_snapshot():
-    mirror_snapshot = read_temporal_snapshot("temporal_api")
-    if mirror_snapshot:
-        return {"snapshot": mirror_snapshot}
-    return {"snapshot": temporal_ledger.head()}
+if app is not None:
+    @app.get("/temporal/snapshot")
+    async def temporal_snapshot():
+        mirror_snapshot = read_temporal_snapshot("temporal_api")
+        if mirror_snapshot:
+            return {"snapshot": mirror_snapshot}
+        return {"snapshot": temporal_ledger.head()}
 
 
-@app.get("/temporal/ledger")
-async def temporal_ledger_endpoint():
-    entries = temporal_ledger.snapshot()
-    if entries:
-        return {"entries": entries}
-    head = read_temporal_ledger_head("temporal_api")
-    return {"entries": [head] if head else []}
+    @app.get("/temporal/ledger")
+    async def temporal_ledger_endpoint():
+        entries = temporal_ledger.snapshot()
+        if entries:
+            return {"entries": entries}
+        head = read_temporal_ledger_head("temporal_api")
+        return {"entries": [head] if head else []}
 
 
-@app.get("/temporal/debug")
-async def temporal_debug():
-    return {
-        "entries": len(temporal_ledger.snapshot()),
-        "head": temporal_ledger.head(),
-    }
+    @app.get("/temporal/debug")
+    async def temporal_debug():
+        return {
+            "entries": len(temporal_ledger.snapshot()),
+            "head": temporal_ledger.head(),
+        }
 
 
-@app.get("/predictive/ledger")
-async def predictive_ledger_endpoint():
-    return {"entries": predictive_ledger.snapshot()}
+    @app.get("/predictive/ledger")
+    async def predictive_ledger_endpoint():
+        return {"entries": predictive_ledger.snapshot()}
 
 
-@app.get("/predictive/debug")
-async def predictive_debug():
-    return {
-        "entries": len(predictive_ledger.snapshot()),
-        "head": predictive_ledger.head(),
-    }
+    @app.get("/predictive/debug")
+    async def predictive_debug():
+        return {
+            "entries": len(predictive_ledger.snapshot()),
+            "head": predictive_ledger.head(),
+        }
 
 
-@app.get("/metrics/temporal")
-async def metrics_temporal() -> Response:
-    flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
-    if flag != "1":
-        return Response(content=b"", status_code=404, media_type="text/plain")
-    from nova.orchestrator.prometheus_metrics import get_temporal_metrics_response
+    @app.get("/metrics/temporal")
+    async def metrics_temporal() -> Response:
+        flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
+        if flag != "1":
+            return Response(content=b"", status_code=404, media_type="text/plain")
+        from nova.orchestrator.prometheus_metrics import get_temporal_metrics_response
 
-    data, content_type = get_temporal_metrics_response()
-    return Response(content=data, media_type=content_type)
+        data, content_type = get_temporal_metrics_response()
+        return Response(content=data, media_type=content_type)
 
 
-@app.get("/metrics/predictive")
-async def metrics_predictive() -> Response:
-    flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
-    if flag != "1":
-        return Response(content=b"", status_code=404, media_type="text/plain")
-    from nova.orchestrator.prometheus_metrics import get_predictive_metrics_response
+    @app.get("/metrics/predictive")
+    async def metrics_predictive() -> Response:
+        flag = os.getenv("NOVA_ENABLE_PROMETHEUS", "0").strip()
+        if flag != "1":
+            return Response(content=b"", status_code=404, media_type="text/plain")
+        from nova.orchestrator.prometheus_metrics import get_predictive_metrics_response
 
-    data, content_type = get_predictive_metrics_response()
-    return Response(content=data, media_type=content_type)
+        data, content_type = get_predictive_metrics_response()
+        return Response(content=data, media_type=content_type)
