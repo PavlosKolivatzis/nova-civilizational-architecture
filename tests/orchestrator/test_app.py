@@ -93,6 +93,207 @@ async def test_handle_request_no_orchestrator_returns_structured_result(monkeypa
     assert result.timeout == 2.0
 
 
+def test_execution_mode_aliases_and_default(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.delenv("NOVA_EXECUTION_MODE", raising=False)
+    assert app_mod._execution_mode() == "unified"
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "legacy")
+    assert app_mod._execution_mode() == "legacy"
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "unified_shadow")
+    assert app_mod._execution_mode() == "shadow"
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "unified_live")
+    assert app_mod._execution_mode() == "unified"
+
+
+@pytest.mark.asyncio
+async def test_handle_request_legacy_mode_dispatch(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "legacy")
+    calls = []
+
+    async def fake_legacy(target_slot, payload, request_id):
+        calls.append(("legacy", target_slot, dict(payload), request_id))
+        return app_mod.ExecutionResult(
+            executed=True,
+            blocked=False,
+            reason="executed",
+            result={"ok": True},
+            slot_id="slot02_deltathresh",
+            timeout=2.0,
+        )
+
+    async def fake_unified(*args, **kwargs):
+        raise AssertionError("unified path should not run in legacy mode")
+
+    monkeypatch.setattr(app_mod, "_legacy_handle_request", fake_legacy)
+    monkeypatch.setattr(app_mod, "_unified_handle_request", fake_unified)
+
+    out = await app_mod.handle_request("slot02_deltathresh", {"x": 1}, "req-legacy")
+
+    assert out.executed is True
+    assert calls == [("legacy", "slot02_deltathresh", {"x": 1}, "req-legacy")]
+
+
+@pytest.mark.asyncio
+async def test_handle_request_shadow_mode_returns_legacy_and_compares(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "shadow")
+    calls = []
+    compare_calls = []
+
+    legacy_result = app_mod.ExecutionResult(
+        executed=True,
+        blocked=False,
+        reason="executed",
+        result={"path": "legacy"},
+        slot_id="slot02_deltathresh",
+        timeout=2.0,
+    )
+    unified_result = app_mod.ExecutionResult(
+        executed=True,
+        blocked=False,
+        reason="executed",
+        result={"path": "unified"},
+        slot_id="slot02_deltathresh",
+        timeout=2.0,
+    )
+
+    async def fake_legacy(target_slot, payload, request_id):
+        calls.append(("legacy", target_slot, dict(payload), request_id))
+        return legacy_result
+
+    async def fake_unified(target_slot, payload, request_id):
+        calls.append(("unified", target_slot, dict(payload), request_id))
+        return unified_result
+
+    def fake_compare(**kwargs):
+        compare_calls.append(kwargs)
+
+    monkeypatch.setattr(app_mod, "_legacy_handle_request", fake_legacy)
+    monkeypatch.setattr(app_mod, "_unified_handle_request", fake_unified)
+    monkeypatch.setattr(app_mod, "_log_shadow_execution_mismatch", fake_compare)
+
+    out = await app_mod.handle_request("slot02_deltathresh", {"x": 9}, "req-shadow")
+
+    assert out is legacy_result
+    assert calls == [
+        ("legacy", "slot02_deltathresh", {"x": 9}, "req-shadow"),
+        ("unified", "slot02_deltathresh", {"x": 9}, "req-shadow"),
+    ]
+    assert len(compare_calls) == 1
+    assert compare_calls[0]["legacy_result"] is legacy_result
+    assert compare_calls[0]["unified_result"] is unified_result
+
+
+@pytest.mark.asyncio
+async def test_handle_request_mode_parity_success(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    class FakeBus:
+        async def publish(self, topic, event):
+            return []
+
+    class FakeRouter:
+        def get_route(self, target_slot, original_timeout=2.0):
+            return ("slot02_deltathresh", 3.5)
+
+    async def fake_invoke(slot_fn, slot_name, payload, request_id, timeout=None):
+        return {"slot": slot_name, "timeout": timeout, "request_id": request_id}
+
+    fake_orch = type("FakeOrchestrator", (), {"invoke_slot": staticmethod(fake_invoke)})
+
+    monkeypatch.setattr(app_mod, "bus", FakeBus())
+    monkeypatch.setattr(app_mod, "router", FakeRouter())
+    monkeypatch.setattr(app_mod, "orch", fake_orch)
+    monkeypatch.setattr(app_mod, "SLOT_REGISTRY", {"slot02_deltathresh": object()})
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "legacy")
+    legacy = await app_mod.handle_request("slot02_deltathresh", {"x": 1}, "req-mode-1")
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "unified")
+    unified = await app_mod.handle_request("slot02_deltathresh", {"x": 1}, "req-mode-1")
+
+    assert legacy == unified
+    assert legacy.executed is True
+    assert legacy.reason == "executed"
+
+
+@pytest.mark.asyncio
+async def test_handle_request_mode_parity_no_runner(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    class FakeBus:
+        async def publish(self, topic, event):
+            return []
+
+    class FakeRouter:
+        def get_route(self, target_slot, original_timeout=2.0):
+            return ("slot02_deltathresh", 2.0)
+
+    monkeypatch.setattr(app_mod, "bus", FakeBus())
+    monkeypatch.setattr(app_mod, "router", FakeRouter())
+    monkeypatch.setattr(app_mod, "orch", None)
+    monkeypatch.setattr(app_mod, "SLOT_REGISTRY", {"slot02_deltathresh": object()})
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "legacy")
+    legacy = await app_mod.handle_request("slot02_deltathresh", {"x": 0}, "req-mode-2")
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "unified")
+    unified = await app_mod.handle_request("slot02_deltathresh", {"x": 0}, "req-mode-2")
+
+    assert legacy == unified
+    assert legacy.executed is False
+    assert legacy.blocked is False
+    assert legacy.reason == "no_runner"
+
+
+@pytest.mark.asyncio
+async def test_handle_request_mode_parity_fallback_route(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    class FakeBus:
+        async def publish(self, topic, event):
+            return []
+
+    class FakeRouter:
+        def get_route(self, target_slot, original_timeout=2.0):
+            return ("slot08_memory_ethics", 4.0)
+
+    async def fake_invoke(slot_fn, slot_name, payload, request_id, timeout=None):
+        return {"slot": slot_name, "timeout": timeout, "request_id": request_id}
+
+    fake_orch = type("FakeOrchestrator", (), {"invoke_slot": staticmethod(fake_invoke)})
+
+    monkeypatch.setattr(app_mod, "bus", FakeBus())
+    monkeypatch.setattr(app_mod, "router", FakeRouter())
+    monkeypatch.setattr(app_mod, "orch", fake_orch)
+    monkeypatch.setattr(
+        app_mod,
+        "SLOT_REGISTRY",
+        {
+            "slot02_deltathresh": object(),
+            "slot08_memory_ethics": object(),
+        },
+    )
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "legacy")
+    legacy = await app_mod.handle_request("slot02_deltathresh", {"y": 2}, "req-mode-fb")
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "unified")
+    unified = await app_mod.handle_request("slot02_deltathresh", {"y": 2}, "req-mode-fb")
+
+    assert legacy == unified
+    assert legacy.executed is True
+    assert legacy.slot_id == "slot08_memory_ethics"
+    assert legacy.timeout == 4.0
+
+
 def test_health_endpoint_returns_status_ok(app_module, client, monkeypatch):
     monkeypatch.setattr(
         app_module,
@@ -123,6 +324,110 @@ def test_metrics_endpoint_respects_flag(app_module, monkeypatch):
         assert resp.status_code == 200
         assert resp.content == b"metrics-data"
         assert resp.headers["content-type"].startswith("text/custom")
+
+
+def test_ops_self_check_reports_execution_mode(app_module, client, monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.setenv("NOVA_EXECUTION_MODE", "unified_shadow")
+    monkeypatch.setenv("NOVA_SHADOW_EXECUTION_MISMATCH_RATE_SLO", "0.2")
+    monkeypatch.setattr(
+        app_mod,
+        "_shadow_execution_metrics",
+        {"comparisons_total": 3, "matches_total": 2, "mismatches_total": 1, "reasons": {"result": 1}},
+    )
+
+    response = client.get("/ops/self-check")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["execution_mode"] == "shadow"
+    assert body["execution_mode_raw"] == "unified_shadow"
+    assert body["shadow_execution"] == {
+        "comparisons_total": 3,
+        "matches_total": 2,
+        "mismatches_total": 1,
+        "mismatch_rate": 1 / 3,
+        "reasons": {"result": 1},
+    }
+    assert body["shadow_execution_slo"] == {
+        "status": "out_of_threshold",
+        "within_threshold": False,
+        "threshold_mismatch_rate": 0.2,
+        "observed_mismatch_rate": 1 / 3,
+        "comparisons_total": 3,
+        "mismatches_total": 1,
+    }
+
+
+def test_shadow_execution_metrics_record_match_and_mismatch(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.setattr(
+        app_mod,
+        "_shadow_execution_metrics",
+        {"comparisons_total": 0, "matches_total": 0, "mismatches_total": 0, "reasons": {}},
+    )
+
+    same_a = app_mod.ExecutionResult(
+        executed=True,
+        blocked=False,
+        reason="executed",
+        result={"ok": True},
+        slot_id="slot02_deltathresh",
+        timeout=2.0,
+    )
+    same_b = app_mod.ExecutionResult(
+        executed=True,
+        blocked=False,
+        reason="executed",
+        result={"ok": True},
+        slot_id="slot02_deltathresh",
+        timeout=2.0,
+    )
+    diff = app_mod.ExecutionResult(
+        executed=True,
+        blocked=False,
+        reason="executed",
+        result={"ok": False},
+        slot_id="slot02_deltathresh",
+        timeout=2.0,
+    )
+
+    assert app_mod._record_shadow_execution_comparison(same_a, same_b) == []
+    assert app_mod._record_shadow_execution_comparison(same_a, diff) == ["result"]
+    assert app_mod._shadow_execution_metrics_snapshot() == {
+        "comparisons_total": 2,
+        "matches_total": 1,
+        "mismatches_total": 1,
+        "mismatch_rate": 0.5,
+        "reasons": {"result": 1},
+    }
+
+
+def test_shadow_execution_slo_status_helper(monkeypatch):
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.setenv("NOVA_SHADOW_EXECUTION_MISMATCH_RATE_SLO", "0.25")
+    no_data = app_mod._shadow_execution_slo_status(
+        {"comparisons_total": 0, "mismatches_total": 0, "mismatch_rate": 0.0}
+    )
+    assert no_data["status"] == "no_data"
+    assert no_data["within_threshold"] is None
+    assert no_data["threshold_mismatch_rate"] == 0.25
+
+    within = app_mod._shadow_execution_slo_status(
+        {"comparisons_total": 10, "mismatches_total": 2, "mismatch_rate": 0.2}
+    )
+    assert within["status"] == "within_threshold"
+    assert within["within_threshold"] is True
+
+    outside = app_mod._shadow_execution_slo_status(
+        {"comparisons_total": 10, "mismatches_total": 3, "mismatch_rate": 0.3}
+    )
+    assert outside["status"] == "out_of_threshold"
+    assert outside["within_threshold"] is False
 
 
 def test_force_expire_now_uses_semantic_mirror(app_module, monkeypatch):

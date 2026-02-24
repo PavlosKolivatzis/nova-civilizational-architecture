@@ -50,6 +50,7 @@ def test_router_debug_endpoint(monkeypatch):
     body = response.json()
     assert "metadata" in body
     assert body["metadata"]["mode"] == "deterministic"
+    assert body["metadata"]["execution_mode"] in {"legacy", "shadow", "unified"}
 
 
 def test_router_debug_schema_parity_snapshot(monkeypatch):
@@ -89,7 +90,18 @@ def test_router_debug_schema_parity_snapshot(monkeypatch):
             "reason": "<str>",
             "snapshot": {},
         },
-        "metadata": {"mode": "<str>", "predictive": {}},
+        "metadata": {
+            "execution_mode": "<str>",
+            "mode": "<str>",
+            "predictive": {},
+            "shadow_execution": {
+                "comparisons_total": "<int>",
+                "matches_total": "<int>",
+                "mismatch_rate": "<float>",
+                "mismatches_total": "<int>",
+                "reasons": {},
+            },
+        },
         "policy": {"details": {}, "route": "<str>", "score": "<float>"},
         "route": "<str>",
     }

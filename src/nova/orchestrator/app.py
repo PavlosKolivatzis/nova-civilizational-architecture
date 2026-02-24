@@ -16,6 +16,7 @@ import pkgutil
 import sys
 import time
 from contextlib import asynccontextmanager
+from threading import Lock
 from typing import Optional
 
 import nova.slots as nova_slots
@@ -43,6 +44,7 @@ from nova.orchestrator.control_plane import (
     CoreEventFactory,
     DecisionContext,
     ExecutionConfig,
+    ExecutionResult,
     DictSlotRegistryService,
     ExecutionDependencies,
     ExecutionService,
@@ -58,6 +60,14 @@ from nova.orchestrator.temporal.adapters import read_temporal_snapshot, read_tem
 from nova.orchestrator.predictive import PredictiveLedger, PredictiveTrajectoryEngine
 
 logger = logging.getLogger(__name__)
+
+_shadow_execution_metrics_lock = Lock()
+_shadow_execution_metrics = {
+    "comparisons_total": 0,
+    "matches_total": 0,
+    "mismatches_total": 0,
+    "reasons": {},
+}
 
 # Load environment variables from .env file (Phase 2: production hardening)
 try:
@@ -781,6 +791,7 @@ if FastAPI is not None:
         try:
             # New export path
             from nova.orchestrator.prometheus_metrics import get_metrics_response
+            _ensure_shadow_execution_metrics_provider_registered()
             # Phase 10: Update metrics before export
             _update_phase10_metrics()
             data, content_type = get_metrics_response()
@@ -800,6 +811,7 @@ if FastAPI is not None:
             return Response(content=b"", status_code=404, media_type="text/plain")
 
         from nova.orchestrator.prometheus_metrics import get_internal_metrics_response
+        _ensure_shadow_execution_metrics_provider_registered()
         _update_phase10_metrics()
         data, content_type = get_internal_metrics_response()
         return Response(content=data, media_type=content_type)
@@ -812,7 +824,7 @@ if FastAPI is not None:
     @app.get("/router/debug")
     async def router_debug():
         """Return the latest routing decision (or generate one with safe defaults)."""
-        return control_plane.router_debug()
+        return _with_execution_mode_metadata(control_plane.router_debug())
 
     @app.post("/governance/evaluate")
     async def governance_evaluate(payload: Optional[dict] = None):
@@ -823,7 +835,7 @@ if FastAPI is not None:
     @app.get("/governance/debug")
     async def governance_debug():
         """Return last governance evaluation."""
-        return control_plane.governance_debug()
+        return _with_execution_mode_metadata(control_plane.governance_debug())
 
     @app.post("/dev/slot02")
     async def dev_slot02(payload: Optional[dict] = None):
@@ -985,12 +997,65 @@ if FastAPI is not None:
         except Exception as e:
             logger.exception("expire-now failed")
             return {"status": "error", "error": str(e)}
+
+    @app.get("/ops/self-check")
+    async def ops_self_check():
+        shadow_execution = _shadow_execution_metrics_snapshot()
+        return {
+            "status": "ok",
+            "execution_mode": _execution_mode(),
+            "execution_mode_raw": os.getenv("NOVA_EXECUTION_MODE", ""),
+            "shadow_execution": shadow_execution,
+            "shadow_execution_slo": _shadow_execution_slo_status(shadow_execution),
+        }
 else:  # pragma: no cover - FastAPI not installed
     app = None
 
 
 async def handle_request(target_slot: str, payload: dict, request_id: str):
     """Route request based on slot health and invoke the orchestrator."""
+    mode = _execution_mode()
+    if mode == "legacy":
+        return await _legacy_handle_request(target_slot, payload, request_id)
+    if mode == "shadow":
+        legacy_result = await _legacy_handle_request(target_slot, payload, request_id)
+        unified_result = await _unified_handle_request(target_slot, payload, request_id)
+        _log_shadow_execution_mismatch(
+            target_slot=target_slot,
+            request_id=request_id,
+            legacy_result=legacy_result,
+            unified_result=unified_result,
+        )
+        return legacy_result
+    return await _unified_handle_request(target_slot, payload, request_id)
+
+
+def _execution_mode() -> str:
+    raw = os.getenv("NOVA_EXECUTION_MODE", "unified").strip().lower()
+    if raw in {"legacy"}:
+        return "legacy"
+    if raw in {"shadow", "unified_shadow"}:
+        return "shadow"
+    if raw in {"unified", "unified_live", "live"}:
+        return "unified"
+    logger.warning("Unknown NOVA_EXECUTION_MODE=%s; defaulting to unified", raw)
+    return "unified"
+
+
+def _with_execution_mode_metadata(payload: dict) -> dict:
+    body = dict(payload or {})
+    metadata = body.get("metadata")
+    if isinstance(metadata, dict):
+        metadata = dict(metadata)
+    else:
+        metadata = {}
+    metadata["execution_mode"] = _execution_mode()
+    metadata["shadow_execution"] = _shadow_execution_metrics_snapshot()
+    body["metadata"] = metadata
+    return body
+
+
+async def _unified_handle_request(target_slot: str, payload: dict, request_id: str) -> ExecutionResult:
     control_plane_factory.configure_execution(
         control_plane,
         router=router,
@@ -1000,6 +1065,181 @@ async def handle_request(target_slot: str, payload: dict, request_id: str):
         orchestrator_runner=orch,
     )
     return await control_plane.handle_request(target_slot, payload, request_id)
+
+
+async def _legacy_handle_request(target_slot: str, payload: dict, request_id: str) -> ExecutionResult:
+    slot_name, timeout = router.get_route(target_slot, original_timeout=2.0)
+    timeout = float(timeout)
+    await bus.publish("invoke", Event(target_slot=slot_name, payload=payload))
+    slot_fn = SLOT_REGISTRY.get(slot_name)
+    if slot_fn is None:
+        return ExecutionResult(
+            executed=False,
+            blocked=False,
+            reason="slot_not_found",
+            slot_id=slot_name,
+            timeout=timeout,
+        )
+    if orch is None:
+        return ExecutionResult(
+            executed=False,
+            blocked=False,
+            reason="no_runner",
+            slot_id=slot_name,
+            timeout=timeout,
+        )
+    result = await orch.invoke_slot(
+        slot_fn,
+        slot_name,
+        payload,
+        request_id,
+        timeout=timeout,
+    )
+    return ExecutionResult(
+        executed=True,
+        blocked=False,
+        reason="executed",
+        result=result,
+        slot_id=slot_name,
+        timeout=timeout,
+    )
+
+
+def _log_shadow_execution_mismatch(
+    *,
+    target_slot: str,
+    request_id: str,
+    legacy_result: ExecutionResult,
+    unified_result: ExecutionResult,
+) -> None:
+    mismatch_reasons = _record_shadow_execution_comparison(legacy_result, unified_result)
+    if not mismatch_reasons:
+        return
+    logger.warning(
+        "Execution shadow mismatch",
+        extra={
+            "target_slot": target_slot,
+            "request_id": request_id,
+            "mismatch_reasons": mismatch_reasons,
+            "legacy_result": legacy_result.to_dict(),
+            "unified_result": unified_result.to_dict(),
+        },
+    )
+
+
+def _record_shadow_execution_comparison(
+    legacy_result: ExecutionResult,
+    unified_result: ExecutionResult,
+) -> list[str]:
+    mismatch_reasons = _shadow_execution_mismatch_reasons(legacy_result, unified_result)
+    with _shadow_execution_metrics_lock:
+        _shadow_execution_metrics["comparisons_total"] += 1
+        if mismatch_reasons:
+            _shadow_execution_metrics["mismatches_total"] += 1
+            reasons = _shadow_execution_metrics["reasons"]
+            for reason in mismatch_reasons:
+                reasons[reason] = int(reasons.get(reason, 0)) + 1
+        else:
+            _shadow_execution_metrics["matches_total"] += 1
+    return mismatch_reasons
+
+
+def _shadow_execution_mismatch_reasons(
+    legacy_result: ExecutionResult,
+    unified_result: ExecutionResult,
+) -> list[str]:
+    reasons: list[str] = []
+    if legacy_result.executed != unified_result.executed:
+        reasons.append("executed")
+    if legacy_result.blocked != unified_result.blocked:
+        reasons.append("blocked")
+    if legacy_result.reason != unified_result.reason:
+        reasons.append("reason")
+    if legacy_result.slot_id != unified_result.slot_id:
+        reasons.append("slot_id")
+    if legacy_result.timeout != unified_result.timeout:
+        reasons.append("timeout")
+    if legacy_result.result != unified_result.result:
+        reasons.append("result")
+    return reasons
+
+
+def _shadow_execution_metrics_snapshot() -> dict:
+    with _shadow_execution_metrics_lock:
+        comparisons_total = int(_shadow_execution_metrics["comparisons_total"])
+        matches_total = int(_shadow_execution_metrics["matches_total"])
+        mismatches_total = int(_shadow_execution_metrics["mismatches_total"])
+        reasons = dict(_shadow_execution_metrics["reasons"])
+    mismatch_rate = (mismatches_total / comparisons_total) if comparisons_total else 0.0
+    return {
+        "comparisons_total": comparisons_total,
+        "matches_total": matches_total,
+        "mismatches_total": mismatches_total,
+        "mismatch_rate": mismatch_rate,
+        "reasons": reasons,
+    }
+
+
+def _shadow_execution_slo_threshold() -> float:
+    raw = os.getenv("NOVA_SHADOW_EXECUTION_MISMATCH_RATE_SLO", "0.05").strip()
+    try:
+        value = float(raw)
+    except ValueError:
+        logger.warning(
+            "Invalid NOVA_SHADOW_EXECUTION_MISMATCH_RATE_SLO=%s; defaulting to 0.05",
+            raw,
+        )
+        return 0.05
+    if value < 0.0:
+        return 0.0
+    if value > 1.0:
+        return 1.0
+    return value
+
+
+def _shadow_execution_slo_status(snapshot: dict) -> dict:
+    comparisons_total = int(snapshot.get("comparisons_total", 0) or 0)
+    mismatches_total = int(snapshot.get("mismatches_total", 0) or 0)
+    observed_mismatch_rate = float(snapshot.get("mismatch_rate", 0.0) or 0.0)
+    threshold = _shadow_execution_slo_threshold()
+
+    if comparisons_total <= 0:
+        return {
+            "status": "no_data",
+            "within_threshold": None,
+            "threshold_mismatch_rate": threshold,
+            "observed_mismatch_rate": observed_mismatch_rate,
+            "comparisons_total": comparisons_total,
+            "mismatches_total": mismatches_total,
+        }
+
+    within_threshold = observed_mismatch_rate <= threshold
+    return {
+        "status": "within_threshold" if within_threshold else "out_of_threshold",
+        "within_threshold": within_threshold,
+        "threshold_mismatch_rate": threshold,
+        "observed_mismatch_rate": observed_mismatch_rate,
+        "comparisons_total": comparisons_total,
+        "mismatches_total": mismatches_total,
+    }
+
+
+try:  # pragma: no cover - best effort wiring for metrics export
+    from nova.orchestrator.prometheus_metrics import set_shadow_execution_metrics_provider
+except Exception:
+    set_shadow_execution_metrics_provider = None  # type: ignore[assignment]
+else:
+    set_shadow_execution_metrics_provider(_shadow_execution_metrics_snapshot)
+
+
+def _ensure_shadow_execution_metrics_provider_registered() -> None:
+    setter = globals().get("set_shadow_execution_metrics_provider")
+    if setter is None:
+        return
+    try:
+        setter(_shadow_execution_metrics_snapshot)
+    except Exception:
+        logger.debug("Shadow execution metrics provider registration refresh failed", exc_info=True)
 
 
 if app is not None:

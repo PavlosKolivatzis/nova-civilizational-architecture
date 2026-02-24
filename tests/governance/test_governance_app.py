@@ -32,7 +32,9 @@ def test_governance_debug_endpoint(monkeypatch):
     client = _client()
     response = client.get("/governance/debug")
     assert response.status_code == 200
-    assert "allowed" in response.json()
+    body = response.json()
+    assert "allowed" in body
+    assert body["metadata"]["execution_mode"] in {"legacy", "shadow", "unified"}
 
 
 def test_governance_debug_schema_parity_snapshot(monkeypatch):
@@ -56,7 +58,17 @@ def test_governance_debug_schema_parity_snapshot(monkeypatch):
     assert _schema_snapshot(body) == {
         "allowed": "<bool>",
         "ethics": ["<list>"],
-        "metadata": {"stability_score": "<float>"},
+        "metadata": {
+            "execution_mode": "<str>",
+            "shadow_execution": {
+                "comparisons_total": "<int>",
+                "matches_total": "<int>",
+                "mismatch_rate": "<float>",
+                "mismatches_total": "<int>",
+                "reasons": {},
+            },
+            "stability_score": "<float>",
+        },
         "reason": "<str>",
         "snapshot": {"tri_signal": {}},
     }

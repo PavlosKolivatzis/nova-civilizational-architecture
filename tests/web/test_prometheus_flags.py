@@ -108,3 +108,31 @@ def test_internal_metrics_endpoint(monkeypatch):
     r = _client().get("/metrics/internal")
     assert r.status_code == 200
     assert 'nova_feature_flag_enabled{flag="NOVA_SLOT01_ROOT_MODE"} 1' in r.text
+
+
+def test_shadow_execution_metrics_exported(monkeypatch):
+    """Shadow execution rollout metrics are exported via Prometheus endpoints."""
+    import nova.orchestrator.app as app_mod
+
+    monkeypatch.setenv("NOVA_ENABLE_PROMETHEUS", "1")
+    monkeypatch.setattr(
+        app_mod,
+        "_shadow_execution_metrics",
+        {
+            "comparisons_total": 8,
+            "matches_total": 6,
+            "mismatches_total": 2,
+            "reasons": {"result": 2, "timeout": 1},
+        },
+    )
+
+    r = _client().get("/metrics")
+    assert r.status_code == 200
+    body = r.text
+
+    assert "nova_shadow_execution_comparisons " in body
+    assert "nova_shadow_execution_matches " in body
+    assert "nova_shadow_execution_mismatches " in body
+    assert "nova_shadow_execution_mismatch_rate " in body
+    assert "nova_shadow_execution_mismatch_reason_count{reason=\"result\"} 2.0" in body
+    assert "nova_shadow_execution_mismatch_reason_count{reason=\"timeout\"} 1.0" in body

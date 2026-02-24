@@ -49,6 +49,8 @@ def _get_or_register_counter(name: str, documentation: str, *, labelnames=(), re
         return existing
     return Counter(name, documentation, labelnames=labelnames, registry=registry)
 logger = logging.getLogger(__name__)
+_shadow_execution_metrics_provider = None
+_shadow_execution_reason_labels_seen: set[str] = set()
 
 # --- Build provenance metric ------------------------------------
 def _get_git_sha_short():
@@ -112,6 +114,60 @@ feature_flag_gauge_public = Gauge(
     "nova_feature_flag_enabled",
     "Nova Phase-2 feature flag states",
     ["flag"],
+    registry=_PUBLIC_REGISTRY,
+)
+
+# Shadow execution rollout metrics (Phase 2 transition observability)
+shadow_execution_comparisons_gauge_internal = _get_or_register_gauge(
+    "nova_shadow_execution_comparisons",
+    "Total shadow execution comparisons performed",
+    registry=_INTERNAL_REGISTRY,
+)
+shadow_execution_matches_gauge_internal = _get_or_register_gauge(
+    "nova_shadow_execution_matches",
+    "Total shadow execution comparisons that matched",
+    registry=_INTERNAL_REGISTRY,
+)
+shadow_execution_mismatches_gauge_internal = _get_or_register_gauge(
+    "nova_shadow_execution_mismatches",
+    "Total shadow execution comparisons that mismatched",
+    registry=_INTERNAL_REGISTRY,
+)
+shadow_execution_mismatch_rate_gauge_internal = _get_or_register_gauge(
+    "nova_shadow_execution_mismatch_rate",
+    "Shadow execution mismatch rate (mismatches/comparisons)",
+    registry=_INTERNAL_REGISTRY,
+)
+shadow_execution_reason_count_gauge_internal = _get_or_register_gauge(
+    "nova_shadow_execution_mismatch_reason_count",
+    "Shadow execution mismatch counts by reason",
+    labelnames=["reason"],
+    registry=_INTERNAL_REGISTRY,
+)
+shadow_execution_comparisons_gauge_public = _get_or_register_gauge(
+    "nova_shadow_execution_comparisons",
+    "Total shadow execution comparisons performed",
+    registry=_PUBLIC_REGISTRY,
+)
+shadow_execution_matches_gauge_public = _get_or_register_gauge(
+    "nova_shadow_execution_matches",
+    "Total shadow execution comparisons that matched",
+    registry=_PUBLIC_REGISTRY,
+)
+shadow_execution_mismatches_gauge_public = _get_or_register_gauge(
+    "nova_shadow_execution_mismatches",
+    "Total shadow execution comparisons that mismatched",
+    registry=_PUBLIC_REGISTRY,
+)
+shadow_execution_mismatch_rate_gauge_public = _get_or_register_gauge(
+    "nova_shadow_execution_mismatch_rate",
+    "Shadow execution mismatch rate (mismatches/comparisons)",
+    registry=_PUBLIC_REGISTRY,
+)
+shadow_execution_reason_count_gauge_public = _get_or_register_gauge(
+    "nova_shadow_execution_mismatch_reason_count",
+    "Shadow execution mismatch counts by reason",
+    labelnames=["reason"],
     registry=_PUBLIC_REGISTRY,
 )
 
@@ -984,6 +1040,50 @@ def update_flag_metrics() -> None:
     _set_flag("NOVA_SLOT01_ROOT_MODE", slot01_root_mode)
 
 
+def set_shadow_execution_metrics_provider(provider) -> None:
+    """Register callback returning shadow execution metrics snapshot."""
+    global _shadow_execution_metrics_provider
+    _shadow_execution_metrics_provider = provider
+
+
+def update_shadow_execution_metrics() -> None:
+    """Update shadow execution rollout metrics from registered snapshot provider."""
+    provider = _shadow_execution_metrics_provider
+    if provider is None:
+        return
+    try:
+        snapshot = provider() or {}
+    except Exception as exc:  # pragma: no cover - best-effort metrics
+        logger.debug("Shadow execution metrics provider failed: %s", exc)
+        return
+
+    comparisons = float(snapshot.get("comparisons_total", 0) or 0)
+    matches = float(snapshot.get("matches_total", 0) or 0)
+    mismatches = float(snapshot.get("mismatches_total", 0) or 0)
+    mismatch_rate = float(snapshot.get("mismatch_rate", 0.0) or 0.0)
+
+    for gauge in (shadow_execution_comparisons_gauge_internal, shadow_execution_comparisons_gauge_public):
+        gauge.set(comparisons)
+    for gauge in (shadow_execution_matches_gauge_internal, shadow_execution_matches_gauge_public):
+        gauge.set(matches)
+    for gauge in (shadow_execution_mismatches_gauge_internal, shadow_execution_mismatches_gauge_public):
+        gauge.set(mismatches)
+    for gauge in (shadow_execution_mismatch_rate_gauge_internal, shadow_execution_mismatch_rate_gauge_public):
+        gauge.set(mismatch_rate)
+
+    reason_counts = snapshot.get("reasons") or {}
+    if not isinstance(reason_counts, dict):
+        reason_counts = {}
+    normalized_reasons = {str(k): float(v or 0) for k, v in reason_counts.items()}
+
+    all_labels = _shadow_execution_reason_labels_seen | set(normalized_reasons.keys())
+    for reason in all_labels:
+        value = normalized_reasons.get(reason, 0.0)
+        shadow_execution_reason_count_gauge_internal.labels(reason=reason).set(value)
+        shadow_execution_reason_count_gauge_public.labels(reason=reason).set(value)
+    _shadow_execution_reason_labels_seen.update(normalized_reasons.keys())
+
+
 def update_lightclock_metrics() -> None:
     """Update LightClock phase lock metrics from Slot3."""
     try:
@@ -1506,6 +1606,7 @@ def record_orp(orp_snapshot: dict, transition_from: str | None = None) -> None:
 def _refresh_metrics() -> None:
     update_slot6_metrics()
     update_flag_metrics()
+    update_shadow_execution_metrics()
     update_slot1_metrics()
     update_lightclock_metrics()
     update_system_health_metrics()
